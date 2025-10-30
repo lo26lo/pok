@@ -230,7 +230,11 @@ pip install -r requirements.txt
 **🎯 Lancement Rapide**
 
 ```batch
+# Avec console (développement)
 run_gui_v2_with_env.bat
+
+# Sans console (utilisation)
+Pokemon_Dataset_Generator.bat
 ```
 
 **Interface moderne avec workflow complet**
@@ -245,9 +249,43 @@ run_gui_v2_with_env.bat
 ✅ Barre de progression  
 ✅ Validation automatique  
 ✅ Multi-threading  
+✅ Sans fenêtre console  
 
 </td>
 </tr>
+</table>
+
+<details>
+<summary>📦 <b>Créer un Executable Windows (.exe)</b></summary>
+
+<br/>
+
+Pour créer une version portable sans Python :
+
+```batch
+# 1️⃣ Lancer la création (une seule fois)
+create_exe.bat
+
+# Résultat après 5-10 minutes :
+# ✅ dist/Pokemon_Dataset_Generator.exe (executable seul)
+# ✅ dist/Pokemon_Dataset_Generator_Portable/ (package complet)
+```
+
+**📦 Package Portable Créé :**
+- ✅ **Aucune installation** Python requise
+- ✅ **Toutes les dépendances** incluses
+- ✅ **Prêt à distribuer** (zipper le dossier Portable)
+- ✅ **Double-clic** pour lancer
+- ✅ **~200 MB** (taille totale)
+
+**🛠️ Personnalisation :**
+
+Éditez `create_exe.py` pour :
+- Ajouter une icône personnalisée (`--icon=mon_icone.ico`)
+- Modifier les fichiers inclus
+- Ajuster les options PyInstaller
+
+</details>
 </table>
 
 <div align="center">
@@ -381,9 +419,61 @@ Pokemons/
     └── RECAPITULATIF_FINAL.md    # Récapitulatif projet
 ```
 
+---
+
 ## 🖥️ GUI v2.0
 
-### Onglets
+<div align="center">
+
+### 🎮 Interface Graphique Moderne
+
+<img src="examples/gui_dashboard.png" alt="Pokemon Dataset Generator GUI" width="90%"/>
+
+<sub>*Dashboard avec statistiques en temps réel, workflow automatique et validation des prérequis*</sub>
+
+</div>
+
+### ✨ Fonctionnalités Principales
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+#### 📊 Dashboard Intelligent
+- ✅ **Statistiques en temps réel**
+  - 257 images sources
+  - 3855 images augmentées
+  - 482 mosaïques générées
+- ✅ **Actions rapides**
+  - Ouvrir dossiers
+  - Ouvrir Excel
+  - Nettoyer outputs
+- ✅ **Workflow automatique complet**
+  - Un seul clic pour tout générer
+  - Validation automatique
+  - Barre de progression
+
+</td>
+<td width="50%" valign="top">
+
+#### 🎨 Contrôle Total
+- ✅ **6 onglets spécialisés**
+  - Dashboard, Augmentation, Mosaïques
+  - Fausses Cartes, Utilitaires, Logs
+- ✅ **Configuration flexible**
+  - Presets (Rapide/Standard/Intensif)
+  - Paramètres personnalisables
+  - Chemins configurables
+- ✅ **Multi-threading**
+  - Interface non-bloquante
+  - Annulation possible
+  - Logs en temps réel
+
+</td>
+</tr>
+</table>
+
+### 📑 Onglets Détaillés
 
 #### 📊 Dashboard
 - Statistiques en temps réel
