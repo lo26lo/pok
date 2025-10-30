@@ -30,9 +30,21 @@ desktop.ini
 # Project specific
 *.log
 
-# Output directories (commentez si vous voulez versionner les résultats)
-# output/
-# fakeimg_augmented/
+# Output directories - Generated files (not versioned)
+output/augmented/images/*
+output/augmented/labels/*
+!output/augmented/images/.gitkeep
+!output/augmented/labels/.gitkeep
+output/yolov8/images/*
+output/yolov8/labels/*
+!output/yolov8/images/.gitkeep
+!output/yolov8/labels/.gitkeep
+
+# Generated fake images
+fakeimg/*
+!fakeimg/.gitkeep
+fakeimg_augmented/*
+!fakeimg_augmented/.gitkeep
 
 # Configuration locale (décommentez si vous ne voulez pas versionner la config)
 # gui_config.json
