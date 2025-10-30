@@ -28,7 +28,7 @@ NUM_VARIATIONS_ALL = 50
 
 # Répertoires d'entrée et de sortie
 INPUT_DIRS = [os.path.join("output", "augmented", "images")]
-FAKE_DIR = "fakeimg"
+FAKE_DIR = "fakeimg_augmented"  # Utilise les fausses cartes augmentées
 MOSAIC_DIR = "mosaic"  # pour background_mode==1
 
 # ----- Nouveaux dossiers pour YOLOv8 -----

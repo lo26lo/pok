@@ -15,7 +15,7 @@ Un outil complet pour générer des datasets d'images de cartes Pokémon augment
 <br/>
 <strong>Fake Background</strong>
 <br/>
-<em>Carte avec Random Erasing</em>
+<em>Random Erasing + Augmentation</em>
 </td>
 <td align="center">
 <img src="examples/example_augmented.png" alt="Augmented Card" width="250"/>
@@ -65,9 +65,10 @@ Un outil complet pour générer des datasets d'images de cartes Pokémon augment
 - Annotations YOLO avec polygones à 4 points
 
 ### 🖼️ Fausses Cartes (Random Erasing)
-- Génération de cartes avec zones effacées
+- Génération de cartes avec zones effacées (**Random Erasing**)
 - Probabilité d'effacement configurable (0.0 - 1.0)
-- Utilisées comme fond de mosaïque
+- **Workflow** : `images/` → Random Erasing → `fakeimg/` → Augmentation → `fakeimg_augmented/`
+- Les images dans `fakeimg_augmented/` sont utilisées comme **fond de mosaïque**
 
 ### 🖥️ Interface Graphique Moderne (GUI v2.0)
 - **Dashboard** avec statistiques en temps réel
@@ -175,8 +176,8 @@ Pokemons/
 │
 ├── 📂 Dossiers de Données
 │   ├── images/                    # 📥 Cartes sources (INPUT)
-│   ├── fakeimg/                   # Fausses cartes temporaires (générées)
-│   ├── fakeimg_augmented/         # Fausses cartes traitées (générées)
+│   ├── fakeimg/                   # Fausses cartes brutes (générées par Random Erasing)
+│   ├── fakeimg_augmented/         # Fausses cartes augmentées (utilisées comme fond pour mosaïques)
 │   ├── examples/                  # 🖼️ Images d'exemple pour README
 │   └── output/
 │       ├── augmented/
