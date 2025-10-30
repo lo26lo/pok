@@ -15,6 +15,8 @@
 
 ---
 
+[🇬🇧 English Version](README_EN.md)
+
 </div>
 
 ## 🖼️ Exemples de Génération
