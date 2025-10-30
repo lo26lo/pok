@@ -677,18 +677,86 @@ Ces dossiers seront **créés automatiquement** lors de l'exécution des scripts
 
 Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
+---
+
+## � Crédits et Remerciements
+
+### 📚 Librairies Python Utilisées
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+#### 🖼️ Traitement d'Images
+
+| Librairie | Version | Usage |
+|-----------|---------|-------|
+| **[OpenCV](https://opencv.org/)** | ~4.9.0 | Traitement et manipulation d'images |
+| **[Pillow (PIL)](https://python-pillow.org/)** | Latest | Chargement et sauvegarde d'images |
+| **[scikit-image](https://scikit-image.org/)** | Latest | Algorithmes de traitement avancés |
+| **[imgaug](https://github.com/aleju/imgaug)** | 0.4.0 | Pipeline d'augmentation d'images |
+| **[imagecorruptions](https://github.com/bethgelab/imagecorruptions)** | Latest | Corruptions réalistes (fog, etc.) |
+
+</td>
+<td width="50%" valign="top">
+
+#### 🧮 Calcul et Données
+
+| Librairie | Version | Usage |
+|-----------|---------|-------|
+| **[NumPy](https://numpy.org/)** | <2.0 | Calculs numériques et matrices |
+| **[pandas](https://pandas.pydata.org/)** | Latest | Lecture et manipulation Excel |
+| **[SciPy](https://scipy.org/)** | Latest | Calculs scientifiques |
+| **[openpyxl](https://openpyxl.readthedocs.io/)** | Latest | Support fichiers .xlsx |
+
+</td>
+</tr>
+</table>
+
+### 🎓 Références Académiques
+
+<div align="center">
+
+📄 **[Real-Time Pokemon Card Detection from Tournament Footage](https://cs231n.stanford.edu/2024/papers/real-time-pokemon-card-detection-from-tournament-footage.pdf)**
+
+*Stanford CS231n - Computer Vision Course (2024)*
+
+</div>
+
+Ce travail s'inspire des techniques de détection d'objets en temps réel appliquées aux cartes Pokémon dans des tournois. Le paper présente des approches similaires pour la génération de datasets d'entraînement YOLO avec augmentation d'images.
+
+### 🏆 Frameworks et Standards
+
+| Technologie | Rôle | Lien |
+|-------------|------|------|
+| **[YOLOv8](https://docs.ultralytics.com/)** | Format d'annotations | [Ultralytics Docs](https://docs.ultralytics.com/) |
+| **[YOLO](https://pjreddie.com/darknet/yolo/)** | Architecture de détection | [Original Paper](https://arxiv.org/abs/1506.02640) |
+| **[Python 3.12](https://www.python.org/)** | Langage de programmation | [Python.org](https://www.python.org/) |
+
+### 💡 Inspirations et Techniques
+
+- **Random Erasing** : Technique d'augmentation pour améliorer la robustesse des modèles
+- **Data Augmentation** : Pipeline inspiré des meilleures pratiques en Computer Vision
+- **Mosaic Augmentation** : Technique populaire dans YOLOv4/v5 pour entraînement
+- **Bounding Box Annotations** : Standard YOLO (normalized coordinates)
+
+### 🌟 Communauté Open Source
+
+Un grand merci à toute la communauté open source qui rend ce projet possible :
+
+- **imgaug** - [@aleju](https://github.com/aleju) pour cette excellente librairie d'augmentation
+- **OpenCV** - Pour le traitement d'images rapide et efficace
+- **Ultralytics** - Pour la documentation YOLOv8 et les outils
+- **NumPy & SciPy** - Fondations du calcul scientifique en Python
+- **pandas** - Manipulation de données simplifiée
+
+---
+
 ## 👤 Auteur
 
 **lo26lo**
 - GitHub: [@lo26lo](https://github.com/lo26lo)
 - Repository: [pok](https://github.com/lo26lo/pok)
-
-## 🙏 Remerciements
-
-- **imgaug** - Librairie d'augmentation d'images
-- **OpenCV** - Traitement d'images
-- **YOLOv8** - Format d'annotations
-- **Ultralytics** - Documentation YOLO
 
 ## 📞 Support
 
