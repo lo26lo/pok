@@ -65,6 +65,9 @@ pika.png
 # Configuration locale (décommentez si vous ne voulez pas versionner la config)
 # gui_config.json
 
+# API Keys (NEVER commit these!)
+api_config.json
+
 # OLD folder (fichiers archivés)
 OLD/
 

@@ -31,6 +31,9 @@ class PokemonDatasetGUI:
         self.config_file = "gui_config.json"
         self.load_config()
         
+        # Charger la clé API
+        self.api_key = self.load_api_key()
+        
         # Variables pour le threading
         self.current_process = None
         self.is_running = False
@@ -38,6 +41,26 @@ class PokemonDatasetGUI:
         # Créer l'interface
         self.create_menu()
         self.create_main_interface()
+    
+    def load_api_key(self):
+        """Charge la clé API depuis api_config.json"""
+        api_config_file = "api_config.json"
+        try:
+            if os.path.exists(api_config_file):
+                with open(api_config_file, 'r') as f:
+                    config = json.load(f)
+                    return config.get("pokemon_tcg_api_key", "")
+            else:
+                messagebox.showwarning(
+                    "Configuration API manquante",
+                    f"Le fichier '{api_config_file}' est manquant.\n\n"
+                    "Créez-le à partir de 'api_config.json.example' et ajoutez votre clé API.\n"
+                    "Fonctionnalités API désactivées jusqu'à configuration."
+                )
+                return ""
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors du chargement de la clé API: {str(e)}")
+            return ""
         
     def load_config(self):
         """Charge la configuration depuis le fichier JSON"""
@@ -1004,7 +1027,13 @@ class PokemonDatasetGUI:
                 
                 # URL de base de l'API Pokémon TCG
                 BASE_URL = "https://api.pokemontcg.io/v2/cards"
-                API_KEY = "d71261e0-202c-41a6-93a9-fdcb3a7f9790"
+                API_KEY = self.api_key
+                
+                if not API_KEY:
+                    self.log("❌ Clé API non configurée")
+                    messagebox.showerror("Erreur", "Clé API non configurée. Voir api_config.json")
+                    return
+                
                 HEADERS = {"X-Api-Key": API_KEY}
                 
                 cards = []
@@ -1157,7 +1186,13 @@ class PokemonDatasetGUI:
                 import concurrent.futures
                 
                 BASE_URL = "https://api.pokemontcg.io/v2/cards"
-                API_KEY = "d71261e0-202c-41a6-93a9-fdcb3a7f9790"
+                API_KEY = self.api_key
+                
+                if not API_KEY:
+                    self.log("❌ Clé API non configurée")
+                    messagebox.showerror("Erreur", "Clé API non configurée. Voir api_config.json")
+                    return
+                
                 HEADERS = {"X-Api-Key": API_KEY}
                 
                 # Cache pour éviter les requêtes répétées
@@ -1377,7 +1412,13 @@ class PokemonDatasetGUI:
                 import requests
                 
                 BASE_URL = "https://api.pokemontcg.io/v2/cards"
-                API_KEY = "d71261e0-202c-41a6-93a9-fdcb3a7f9790"
+                API_KEY = self.api_key
+                
+                if not API_KEY:
+                    self.log("❌ Clé API non configurée")
+                    messagebox.showerror("Erreur", "Clé API non configurée. Voir api_config.json")
+                    return
+                
                 HEADERS = {"X-Api-Key": API_KEY}
                 
                 params = {"q": f'name:"{card_name}"'}
