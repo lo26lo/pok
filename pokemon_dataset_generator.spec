@@ -1,48 +1,34 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""
-Fichier spec pour PyInstaller - Pokemon Dataset Generator
-Pour utiliser : pyinstaller pokemon_dataset_generator.spec
-"""
+from PyInstaller.utils.hooks import collect_all
 
-block_cipher = None
+datas = [('cards_info.xlsx', '.'), ('gui_config.json', '.')]
+binaries = []
+hiddenimports = ['cv2', 'pandas', 'numpy', 'imgaug', 'PIL', 'openpyxl', 'tkinter']
+tmp_ret = collect_all('imgaug')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('imagecorruptions')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+
 
 a = Analysis(
     ['GUI_v2.py'],
     pathex=[],
-    binaries=[],
-    datas=[
-        ('cards_info.xlsx', '.'),
-        ('gui_config.json', '.') if os.path.exists('gui_config.json') else None,
-    ],
-    hiddenimports=[
-        'cv2',
-        'pandas',
-        'numpy',
-        'imgaug',
-        'PIL',
-        'openpyxl',
-        'tkinter',
-        'scipy',
-        'scikit-image',
-        'imagecorruptions',
-    ],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
+    optimize=0,
 )
-
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
-    a.zipfiles,
     a.datas,
     [],
     name='Pokemon_Dataset_Generator',
@@ -52,11 +38,11 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # Pas de console
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,  # Ajoutez un chemin vers un .ico si vous en avez un
+    icon='pikachu.ico',  # Icône Pikachu personnalisée
 )

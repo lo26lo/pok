@@ -56,6 +56,9 @@ dist/
 !pokemon_dataset_generator.spec
 # Note: pokemon_dataset_generator.spec is versioned for customization
 
+# Icon preview (only .ico is versioned)
+pikachu_preview.png
+
 # Configuration locale (décommentez si vous ne voulez pas versionner la config)
 # gui_config.json
 

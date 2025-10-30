@@ -73,8 +73,14 @@ def create_exe():
         "--hidden-import=tkinter",
         "--collect-all=imgaug",
         "--collect-all=imagecorruptions",
-        "GUI_v2.py"
     ]
+    
+    # Ajouter l'icône Pikachu si elle existe
+    if os.path.exists("pikachu.ico"):
+        cmd.append("--icon=pikachu.ico")
+        print("   🎨 Icône Pikachu détectée et ajoutée !")
+    
+    cmd.append("GUI_v2.py")
     
     try:
         subprocess.check_call(cmd)
