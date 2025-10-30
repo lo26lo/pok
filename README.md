@@ -10,26 +10,44 @@ Un outil complet pour générer des datasets d'images de cartes Pokémon augment
 
 <table>
 <tr>
-<td align="center">
-<img src="examples/example_fakeimg.png" alt="Fake Background" width="250"/>
+<td align="center" colspan="3">
+<img src="examples/example_fakeimg.png" alt="Fake Background" width="220"/>
 <br/>
-<strong>Fake Background</strong>
+<strong>1. Fake Background</strong>
 <br/>
 <em>Random Erasing + Augmentation</em>
 </td>
+</tr>
+<tr>
 <td align="center">
-<img src="examples/example_augmented.png" alt="Augmented Card" width="250"/>
+<img src="examples/example_augmented.png" alt="Augmented Card" width="220"/>
 <br/>
-<strong>Augmented Card</strong>
+<strong>2. Augmented Card</strong>
 <br/>
-<em>Augmentation avec imgaug</em>
+<em>Pipeline avec 22 transformations</em>
 </td>
 <td align="center">
-<img src="examples/example_layout.png" alt="YOLO Layout" width="250"/>
+<img src="examples/example_layout.png" alt="YOLO Layout" width="350"/>
 <br/>
-<strong>YOLO Layout</strong>
+<strong>3. YOLO Layout</strong>
 <br/>
-<em>Mosaïque 8 cartes annotées</em>
+<em>Mosaïque 8 cartes</em>
+</td>
+<td align="center">
+<img src="examples/example_layout_annotated.png" alt="YOLO Annotated" width="350"/>
+<br/>
+<strong>4. YOLO Bounding Boxes</strong>
+<br/>
+<em>Annotations visualisées</em>
+</td>
+</tr>
+<tr>
+<td align="center" colspan="3">
+<img src="examples/example_annotation.png" alt="YOLO Annotation File" width="700"/>
+<br/>
+<strong>5. Fichier d'Annotation YOLO</strong>
+<br/>
+<em>Format: class_id x_center y_center width height (normalisé 0-1)</em>
 </td>
 </tr>
 </table>
