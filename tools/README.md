@@ -4,9 +4,6 @@ Ce dossier contient les scripts utilitaires et outils de développement du proje
 
 ## 📝 Scripts Utilitaires
 
-### Création d'Icône
-- **`create_pikachu_icon.py`** - Génère l'icône Mimikyu pour l'application
-
 ### Création d'Exemples
 - **`create_annotated_example.py`** - Crée des exemples avec bounding boxes YOLO
 - **`create_annotation_text_image.py`** - Visualise les fichiers d'annotations .txt
