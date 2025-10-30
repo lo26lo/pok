@@ -1021,6 +1021,11 @@ class PokemonDatasetGUI:
                     }
                     response = requests.get(BASE_URL, headers=HEADERS, params=params)
                     
+                    # Si erreur 404, c'est qu'on a atteint la fin des pages
+                    if response.status_code == 404:
+                        self.log(f"ℹ️ Fin de la pagination (page {page} non trouvée)")
+                        break
+                    
                     if response.status_code != 200:
                         self.log(f"❌ Erreur {response.status_code}: {response.text}")
                         messagebox.showerror("Erreur", f"Erreur API: {response.status_code}")
