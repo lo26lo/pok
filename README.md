@@ -6,6 +6,34 @@
 
 Un outil complet pour générer des datasets d'images de cartes Pokémon augmentées avec annotations YOLO pour l'entraînement de modèles de détection d'objets.
 
+## 🖼️ Exemples de Génération
+
+<table>
+<tr>
+<td align="center">
+<img src="examples/example_fakeimg.png" alt="Fake Background" width="250"/>
+<br/>
+<strong>Fake Background</strong>
+<br/>
+<em>Carte avec Random Erasing</em>
+</td>
+<td align="center">
+<img src="examples/example_augmented.png" alt="Augmented Card" width="250"/>
+<br/>
+<strong>Augmented Card</strong>
+<br/>
+<em>Augmentation avec imgaug</em>
+</td>
+<td align="center">
+<img src="examples/example_layout.png" alt="YOLO Layout" width="250"/>
+<br/>
+<strong>YOLO Layout</strong>
+<br/>
+<em>Mosaïque 8 cartes annotées</em>
+</td>
+</tr>
+</table>
+
 ![Pokemon Dataset Generator Banner](https://via.placeholder.com/800x200/0078D4/FFFFFF?text=Pokemon+Dataset+Generator+v2.0)
 
 ## 📋 Table des Matières
@@ -147,16 +175,17 @@ Pokemons/
 │
 ├── 📂 Dossiers de Données
 │   ├── images/                    # 📥 Cartes sources (INPUT)
-│   ├── fakeimg/                   # Fausses cartes temporaires
-│   ├── fakeimg_augmented/         # Fausses cartes traitées
+│   ├── fakeimg/                   # Fausses cartes temporaires (générées)
+│   ├── fakeimg_augmented/         # Fausses cartes traitées (générées)
+│   ├── examples/                  # 🖼️ Images d'exemple pour README
 │   └── output/
 │       ├── augmented/
-│       │   ├── images/            # 📤 Images augmentées (OUTPUT)
-│       │   ├── labels/            # Annotations YOLO
+│       │   ├── images/            # 📤 Images augmentées (OUTPUT - générées)
+│       │   ├── labels/            # Annotations YOLO (générées)
 │       │   └── data.yaml          # Config YOLO
 │       └── yolov8/
-│           ├── images/            # 📤 Mosaïques (OUTPUT)
-│           ├── labels/            # Annotations YOLO
+│           ├── images/            # 📤 Mosaïques (OUTPUT - générées)
+│           ├── labels/            # Annotations YOLO (générées)
 │           └── data.yaml          # Config YOLO
 │
 └── 📚 Documentation
@@ -442,9 +471,22 @@ Les contributions sont les bienvenues ! Pour contribuer :
 - ✨ Configuration persistante
 - 🐛 Support format PNG RGBA
 - 🐛 Détection améliorée des numéros de cartes
+- 🐛 Fix ID mapping YOLO (ID = numéro de carte)
 - ⚡ Optimisation mosaic.py (préchargement fake images)
+- 📦 .gitignore optimisé (exclusion fichiers générés)
 
 Voir [CHANGELOG_GUI_V2.md](CHANGELOG_GUI_V2.md) pour plus de détails.
+
+---
+
+## ⚠️ Note sur les Fichiers Générés
+
+Les dossiers suivants contiennent des fichiers **générés automatiquement** et ne sont **pas versionnés sur GitHub** :
+- `output/augmented/images/` et `output/augmented/labels/`
+- `output/yolov8/images/` et `output/yolov8/labels/`
+- `fakeimg/` et `fakeimg_augmented/`
+
+Ces dossiers seront **créés automatiquement** lors de l'exécution des scripts. Les images d'exemple se trouvent dans le dossier `examples/`.
 
 ## 📄 Licence
 
