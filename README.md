@@ -9,21 +9,21 @@
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.9-green.svg)](https://opencv.org/)
 [![imgaug](https://img.shields.io/badge/imgaug-latest-orange.svg)](https://github.com/aleju/imgaug)
 
-**Générateur automatique de datasets d'entraînement YOLO pour cartes Pokémon**
+**Automatic YOLO training dataset generator for Pokémon cards**
 
-*Augmentation avancée • Mosaïques annotées • Pipeline complet*
+*Advanced augmentation • Annotated mosaics • Complete pipeline*
 
 ---
 
-[🇬🇧 English Version](README_EN.md)
+[🇫🇷 Version Française](README_FR.md)
 
 </div>
 
-## 🖼️ Exemples de Génération
+## 🖼️ Generation Examples
 
 <div align="center">
 
-### 📸 Workflow Complet
+### 📸 Complete Workflow
 
 </div>
 
@@ -41,100 +41,100 @@
 <br/>
 <strong>② Augmented Card</strong>
 <br/>
-<sub>22 transformations possibles</sub>
+<sub>22 possible transformations</sub>
 </td>
 <td align="center" width="25%">
 <img src="examples/example_layout.png" alt="YOLO Layout" width="280"/>
 <br/>
 <strong>③ YOLO Layout</strong>
 <br/>
-<sub>Mosaïque 8 cartes</sub>
+<sub>8-card mosaic</sub>
 </td>
 <td align="center" width="25%">
 <img src="examples/example_layout_annotated.png" alt="YOLO Annotated" width="280"/>
 <br/>
 <strong>④ Bounding Boxes</strong>
 <br/>
-<sub>Annotations visualisées</sub>
+<sub>Visualized annotations</sub>
 </td>
 </tr>
 </table>
 
 <div align="center">
 
-### 📝 Format d'Annotation YOLO
+### 📝 YOLO Annotation Format
 
 <img src="examples/example_annotation.png" alt="YOLO Annotation File" width="650"/>
 
-<sub>Format: `class_id x_center y_center width height` (normalisé 0-1)</sub>
+<sub>Format: `class_id x_center y_center width height` (normalized 0-1)</sub>
 
 ---
 
 </div>
 
-## 📋 Table des Matières
+## 📋 Table of Contents
 
 <div align="center">
 
 | Section | Description |
 |---------|-------------|
-| [✨ Fonctionnalités](#-fonctionnalités) | Liste complète des fonctionnalités |
-| [🚀 Installation](#-installation) | Guide d'installation rapide |
-| [📖 Utilisation](#-utilisation) | Comment utiliser le générateur |
-| [📁 Structure](#-structure-du-projet) | Organisation des fichiers |
-| [🖥️ GUI v2.0](#️-gui-v20) | Interface graphique moderne |
-| [🔄 Workflow](#-workflow) | Pipeline de génération |
-| [📚 Documentation](#-documentation) | Guides et documentation |
+| [✨ Features](#-features) | Complete feature list |
+| [🚀 Installation](#-installation) | Quick installation guide |
+| [📖 Usage](#-usage) | How to use the generator |
+| [📁 Structure](#-project-structure) | File organization |
+| [🖥️ GUI v2.0](#️-gui-v20) | Modern graphical interface |
+| [🔄 Workflow](#-workflow) | Generation pipeline |
+| [📚 Documentation](#-documentation) | Guides and documentation |
 
 </div>
 
 ---
 
-## ✨ Fonctionnalités
+## ✨ Features
 
 <table>
 <tr>
 <td width="33%" valign="top">
 
-### 🎨 Augmentation d'Images
-- ✅ **22 types de transformations**
-- ✅ **2-5 transformations** par image
-- ✅ **~35,420 combinaisons** possibles
-- ✅ Support **PNG avec alpha** (RGBA)
-- ✅ Annotations **YOLO** automatiques
-- ✅ Seed aléatoire unique
-- 🎯 **Effets** : Flou, contraste, saturation, fog, posterize, sharpen, emboss, bruit, compression JPEG, température couleur
+### 🎨 Image Augmentation
+- ✅ **22 transformation types**
+- ✅ **2-5 transformations** per image
+- ✅ **~35,420 possible combinations**
+- ✅ **PNG with alpha** support (RGBA)
+- ✅ Automatic **YOLO** annotations
+- ✅ Unique random seed
+- 🎯 **Effects**: Blur, contrast, saturation, fog, posterize, sharpen, emboss, noise, JPEG compression, color temperature
 
 </td>
 <td width="33%" valign="top">
 
-### 🧩 Génération de Mosaïques
-- ✅ **3 modes de layout** : Grille, Rotation, Aléatoire
-- ✅ **3 modes de background** : Mosaïque, Local, Web
-- ✅ **2 modes de transformation** : 2D, Perspective 3D
-- ✅ **252 cartes** avec IDs uniques
-- ✅ Annotations **YOLO** polygones 4 points
-- ✅ Format **YOLOv8** compatible
-- 🎯 **Output** : 65 layouts par défaut
+### 🧩 Mosaic Generation
+- ✅ **3 layout modes**: Grid, Rotation, Random
+- ✅ **3 background modes**: Mosaic, Local, Web
+- ✅ **2 transformation modes**: 2D, 3D Perspective
+- ✅ **252 cards** with unique IDs
+- ✅ **YOLO** 4-point polygon annotations
+- ✅ **YOLOv8** compatible format
+- 🎯 **Output**: 65 layouts by default
 
 </td>
 <td width="33%" valign="top">
 
-### 🖼️ Fausses Cartes
-- ✅ **Random Erasing** configurable
-- ✅ Probabilité **0.0 - 1.0**
-- ✅ Workflow automatique
-- ✅ Utilisées comme **fond** de mosaïque
-- 🔄 **Pipeline** : images → Random Erasing → fakeimg → Augmentation → fakeimg_augmented
+### 🖼️ Fake Cards
+- ✅ Configurable **Random Erasing**
+- ✅ Probability **0.0 - 1.0**
+- ✅ Automatic workflow
+- ✅ Used as mosaic **backgrounds**
+- 🔄 **Pipeline**: images → Random Erasing → fakeimg → Augmentation → fakeimg_augmented
 
 </td>
 </tr>
 <tr>
 <td colspan="3" align="center">
 
-### 🖥️ Interface Graphique v2.0
+### 🖥️ Graphical Interface v2.0
 
-**Dashboard** • **Validation automatique** • **Barre de progression** • **Multi-threading** • **Configuration persistante**
+**Dashboard** • **Automatic validation** • **Progress bar** • **Multi-threading** • **Persistent configuration**
 
 </td>
 </tr>
@@ -148,80 +148,99 @@
 <tr>
 <td width="50%" valign="top">
 
-### 📋 Prérequis
+### 📋 Prerequisites
 
-| Élément | Version | Statut |
-|---------|---------|--------|
-| **Python** | 3.12+ | ✅ Recommandé |
-| **OS** | Windows 10/11 | ✅ Scripts batch |
-| **Git** | Dernière | ⚠️ Optionnel |
-| **Espace disque** | ~2 GB | Pour env + datasets |
+| Item | Version | Status |
+|------|---------|--------|
+| **Python** | 3.12+ | ✅ Recommended |
+| **OS** | Windows 10/11 | ✅ Batch scripts |
+| **Git** | Latest | ⚠️ Optional |
+| **Disk space** | ~2 GB | For env + datasets |
 
 </td>
 <td width="50%" valign="top">
 
-### ⚡ Installation Rapide
+### ⚡ Quick Install
 
 ```batch
-# 1️⃣ Cloner le dépôt
+# 1️⃣ Clone the repository
 git clone https://github.com/lo26lo/pok.git
 cd pok/Pokemons
 
-# 2️⃣ Installation automatique
+# 2️⃣ Automatic installation
 install_env.bat
 ```
 
-**✨ L'installateur configure tout automatiquement !**
+**✨ The installer configures everything automatically!**
 
 </td>
 </tr>
 </table>
 
 <details>
-<summary>📦 <b>Que fait install_env.bat ?</b></summary>
+<summary>📦 <b>What does install_env.bat do?</b></summary>
 
 <br/>
 
 ```
-1. 🔍 Détecte Python 3.12 (ou installe si absent)
-2. 📦 Crée environnement virtuel .venv
-3. ⬇️  Installe toutes les dépendances :
-   - opencv-python (traitement d'images)
-   - pandas (manipulation Excel)
+1. 🔍 Detects Python 3.12 (or installs if missing)
+2. 📦 Creates virtual environment .venv
+3. ⬇️  Installs all dependencies:
+   - opencv-python (image processing)
+   - pandas (Excel manipulation)
    - imgaug (augmentation)
-   - numpy < 2.0 (compatibilité)
+   - numpy < 2.0 (compatibility)
    - pillow, requests, scipy, scikit-image
-4. ✅ Vérifie l'installation
-5. 🎉 Prêt à utiliser !
+4. ✅ Verifies installation
+5. 🎉 Ready to use!
 ```
 
 </details>
 
 <details>
-<summary>🛠️ <b>Installation Manuelle</b></summary>
+<summary>🛠️ <b>Manual Installation</b></summary>
 
 <br/>
 
 ```batch
-# Créer l'environnement virtuel
+# Create virtual environment
 python -m venv .venv
 
-# Activer
+# Activate
 .venv\Scripts\activate
 
-# Installer
+# Install dependencies
 pip install -r requirements.txt
 ```
 
 </details>
 
+<details>
+<summary>🔑 <b>API Configuration (Optional)</b></summary>
+
+<br/>
+
+For API features (card list generation, price updates):
+
+```batch
+# 1. Copy the example file
+copy api_config.json.example api_config.json
+
+# 2. Edit api_config.json with your API key
+# Get a free key at: https://pokemontcg.io/
+```
+
+See [API_CONFIG_README.md](API_CONFIG_README.md) for details.
+
+</details>
+
 ---
 
-## 📖 Utilisation
+## 📖 Usage
 
 <div align="center">
 
-### 🖥️ Méthode 1 : Interface Graphique (Recommandé)
+### 🖥️ Method 1: Graphical Interface (Recommended)
 
 </div>
 
@@ -229,211 +248,208 @@ pip install -r requirements.txt
 <tr>
 <td width="50%" align="center">
 
-**🎯 Lancement Rapide**
+**🎯 Quick Launch**
 
 ```batch
-# Avec console (développement)
+# With console (development)
 run_gui_v2_with_env.bat
 
-# Sans console (utilisation)
+# Without console (usage)
 Pokemon_Dataset_Generator.bat
 ```
 
-**Interface moderne avec workflow complet**
+**Modern interface with complete workflow**
 
 </td>
 <td width="50%" align="center">
 
-**✨ Fonctionnalités GUI**
+**✨ GUI Features**
 
-✅ Dashboard statistiques  
-✅ Configuration visuelle  
-✅ Barre de progression  
-✅ Validation automatique  
+✅ Statistics dashboard  
+✅ Visual configuration  
+✅ Progress bar  
+✅ Automatic validation  
 ✅ Multi-threading  
-✅ Sans fenêtre console  
+✅ No console window  
 
 </td>
 </tr>
 </table>
 
 <details>
-<summary>📦 <b>Créer un Executable Windows (.exe)</b></summary>
+<summary>📦 <b>Create Windows Executable (.exe)</b></summary>
 
 <br/>
 
-Pour créer une version portable sans Python :
+To create a portable version without Python:
 
 ```batch
-# 1️⃣ Lancer la création (une seule fois)
+# 1️⃣ Launch creation (one time)
 tools\create_exe.bat
 
-# Résultat après 5-10 minutes :
-# ✅ dist/Pokemon_Dataset_Generator.exe (executable seul)
-# ✅ dist/Pokemon_Dataset_Generator_Portable/ (package complet)
+# Result after 5-10 minutes:
+# ✅ dist/Pokemon_Dataset_Generator.exe (standalone executable)
+# ✅ dist/Pokemon_Dataset_Generator_Portable/ (complete package)
 ```
 
-**📦 Package Portable Créé :**
-- ✅ **Aucune installation** Python requise
-- ✅ **Toutes les dépendances** incluses
-- ✅ **Prêt à distribuer** (zipper le dossier Portable)
-- ✅ **Double-clic** pour lancer
-- ✅ **~200 MB** (taille totale)
+**📦 Created Portable Package:**
+- ✅ **No Python installation** required
+- ✅ **All dependencies** included
+- ✅ **Ready to distribute** (zip the Portable folder)
+- ✅ **Double-click** to launch
+- ✅ **~200 MB** (total size)
 
-**🛠️ Personnalisation :**
+**🛠️ Customization:**
 
-Éditez `tools/create_exe.py` pour :
-- Ajouter une icône personnalisée (`--icon=mon_icone.ico`)
-- Modifier les fichiers inclus
-- Ajuster les options PyInstaller
+Edit `tools/create_exe.py` to:
+- Add custom icon (`--icon=my_icon.ico`)
+- Modify included files
+- Adjust PyInstaller options
 
-📖 Guide complet : [docs/CREATION_EXE.md](docs/CREATION_EXE.md)
+📖 Complete guide: [docs/CREATION_EXE.md](docs/CREATION_EXE.md)
 
 </details>
-</table>
 
 <div align="center">
 
-### ⌨️ Méthode 2 : Ligne de Commande
+### ⌨️ Method 2: Command Line
 
 </div>
 
 <details>
-<summary>🎨 <b>Augmentation d'Images</b></summary>
+<summary>🎨 <b>Image Augmentation</b></summary>
 
 <br/>
 
 ```batch
-# Activer l'environnement
+# Activate environment
 .venv\Scripts\activate
 
-# Générer 30 augmentations par carte
+# Generate 30 augmentations per card
 python augmentation.py --num_aug 30 --target augmented
 
-# Test rapide (5 augmentations)
-test_augmentation.bat
+# Quick test (5 augmentations)
+tools\test_augmentation.bat
 ```
 
-**Options disponibles :**
-- `--num_aug` : Nombre d'augmentations par image (défaut: 30)
-- `--target` : Destination (`augmented` ou `images_aug`)
+**Available options:**
+- `--num_aug`: Number of augmentations per image (default: 30)
+- `--target`: Destination (`augmented` or `images_aug`)
 
 </details>
 
 <details>
-<summary>🧩 <b>Génération de Mosaïques</b></summary>
+<summary>🧩 <b>Mosaic Generation</b></summary>
 
 <br/>
 
 ```batch
-# Syntaxe : python mosaic.py <layout_mode> <background_mode> <transform_mode>
+# Syntax: python mosaic.py <layout_mode> <background_mode> <transform_mode>
 python mosaic.py 1 0 0
 
-# Layout: 0=Grille, 1=Rotation, 2=Aléatoire
-# Background: 0=Mosaïque, 1=Local, 2=Web
-# Transform: 0=2D, 1=Perspective 3D
+# Layout: 0=Grid, 1=Rotation, 2=Random
+# Background: 0=Mosaic, 1=Local, 2=Web
+# Transform: 0=2D, 1=3D Perspective
 ```
 
-**Exemples :**
+**Examples:**
 ```batch
-python mosaic.py 1 0 0  # Rotation + Mosaïque + 2D
-python mosaic.py 2 1 1  # Aléatoire + Local + 3D
-python mosaic.py 0 2 0  # Grille + Web + 2D
+python mosaic.py 1 0 0  # Rotation + Mosaic + 2D
+python mosaic.py 2 1 1  # Random + Local + 3D
+python mosaic.py 0 2 0  # Grid + Web + 2D
 ```
 
 </details>
 
 <details>
-<summary>🖼️ <b>Fausses Cartes (Random Erasing)</b></summary>
+<summary>🖼️ <b>Fake Cards (Random Erasing)</b></summary>
 
 <br/>
 
 ```batch
-# Générer des fausses cartes
-python randomerasing.py --input_dir images --output_dir fakeimg --p 0.8 --sh 0.5
+# Generate fake cards
+python tools\randomerasing.py --input_dir images --output_dir fakeimg --p 0.8 --sh 0.5
 ```
 
-**Options :**
-- `--p` : Probabilité d'effacement (0.0 - 1.0)
-- `--sh` : Ratio d'effacement (0.0 - 1.0)
-- `--input_dir` : Dossier source
-- `--output_dir` : Dossier destination
+**Options:**
+- `--p`: Erasing probability (0.0 - 1.0)
+- `--sh`: Erasing ratio (0.0 - 1.0)
+- `--input_dir`: Source folder
+- `--output_dir`: Destination folder
 
 </details>
 
 <details>
-<summary>🧪 <b>Test de Variété des Augmentations</b></summary>
+<summary>🧪 <b>Augmentation Variety Test</b></summary>
 
 <br/>
 
 ```batch
-# Générer 10 augmentations d'une carte pour comparer
-test_augmentation_variety.bat
+# Generate 10 augmentations of one card to compare
+tools\test_augmentation_variety.bat
 
-# Résultats dans : test_augmentation_output/
+# Results in: test_augmentation_output/
 ```
 
-Compare visuellement la variété du pipeline amélioré (22 transformations).
+Visually compare the variety of the improved pipeline (22 transformations).
 
 </details>
 
 ---
 
-## 📁 Structure du Projet
+## 📁 Project Structure
 
 ```
 Pokemons/
-├── 📱 GUI_v2.py                    # Interface graphique moderne
-├── 🎨 augmentation.py              # Script d'augmentation
-├── 🧩 mosaic.py                    # Génération de mosaïques
-├── � cards_info.xlsx              # Informations des cartes
-├── 📦 requirements.txt             # Dépendances Python
-├── 🔧 gui_config.json              # Configuration GUI (auto-généré)
-├── � pikachu.ico                  # Icône Mimikyu
+├── 📱 GUI_v2.py                    # Modern graphical interface
+├── 🎨 augmentation.py              # Augmentation script
+├── 🧩 mosaic.py                    # Mosaic generation
+├── 📊 cards_info.xlsx              # Card information
+├── 📦 requirements.txt             # Python dependencies
+├── 🔧 gui_config.json              # GUI configuration (auto-generated)
+├── 🔑 api_config.json              # API key (gitignored - create from .example)
+├── 🎨 pikachu.ico                  # Mimikyu icon
 │
-├── 🚀 Fichiers de Lancement
-│   ├── Pokemon_Dataset_Generator.bat    # 🔇 Lancer sans console
-│   ├── run_gui_v2_with_env.bat          # �️ Lancer avec console
-│   ├── run_gui_silent.bat               # Launcher pythonw
-│   ├── invisible.vbs                    # Script VBS silencieux
-│   ├── install_env.bat                  # Installation environnement
-│   └── pokemon_dataset_generator.spec   # Config PyInstaller
+├── 🚀 Launch Files
+│   ├── Pokemon_Dataset_Generator.bat    # 🔇 Launch without console
+│   ├── run_gui_v2_with_env.bat          # 🖥️ Launch with console
+│   ├── install_env.bat                  # Environment installation
+│   └── pokemon_dataset_generator.spec   # PyInstaller config
 │
-├── 📂 tools/                       # 🛠️ Utilitaires et scripts de développement
-│   ├── create_pikachu_icon.py     # Générateur d'icône
-│   ├── create_exe.py              # Créer executable Windows
-│   ├── create_exe.bat             # Wrapper création exe
-│   ├── test_*.bat                 # Scripts de test
-│   ├── check_excel.py             # Vérification Excel
-│   └── ...autres utilitaires
+├── 📂 tools/                       # 🛠️ Utilities and development scripts
+│   ├── create_exe.py              # Create Windows executable
+│   ├── create_exe.bat             # Exe creation wrapper
+│   ├── test_*.bat                 # Test scripts
+│   ├── check_excel.py             # Excel verification
+│   ├── randomerasing.py           # Random erasing utility
+│   └── ...other utilities
 │
-├── 📂 docs/                        # 📚 Documentation complète
-│   ├── GUIDE_UTILISATION.md       # Guide utilisateur
-│   ├── CREATION_EXE.md            # Guide création executable
-│   ├── CHANGELOG_GUI_V2.md        # Historique GUI
-│   └── ...autres docs
+├── 📂 docs/                        # 📚 Complete documentation
+│   ├── GUIDE_UTILISATION.md       # User guide (French)
+│   ├── CREATION_EXE.md            # Executable creation guide
+│   ├── CHANGELOG_GUI_V2.md        # GUI changelog
+│   └── ...other docs
 │
-├── 📂 Dossiers de Données
-│   ├── images/                    # 📥 Cartes sources (INPUT)
-│   ├── fakeimg/                   # Fausses cartes brutes (générées par Random Erasing)
-│   ├── fakeimg_augmented/         # Fausses cartes augmentées (utilisées comme fond pour mosaïques)
-│   ├── examples/                  # 🖼️ Images d'exemple pour README
+├── 📂 Data Folders
+│   ├── images/                    # 📥 Source cards (INPUT)
+│   ├── fakeimg/                   # Raw fake cards (generated by Random Erasing)
+│   ├── fakeimg_augmented/         # Augmented fake cards (used as mosaic backgrounds)
+│   ├── examples/                  # 🖼️ Example images for README
 │   └── output/
 │       ├── augmented/
-│       │   ├── images/            # 📤 Images augmentées (OUTPUT - générées)
-│       │   ├── labels/            # Annotations YOLO (générées)
-│       │   └── data.yaml          # Config YOLO
+│       │   ├── images/            # 📤 Augmented images (OUTPUT - generated)
+│       │   ├── labels/            # YOLO annotations (generated)
+│       │   └── data.yaml          # YOLO config
 │       └── yolov8/
-│           ├── images/            # 📤 Mosaïques (OUTPUT - générées)
-│           ├── labels/            # Annotations YOLO (générées)
-│           └── data.yaml          # Config YOLO
+│           ├── images/            # 📤 Mosaics (OUTPUT - generated)
+│           ├── labels/            # YOLO annotations (generated)
+│           └── data.yaml          # YOLO config
 │
 └── 📚 Documentation
-    ├── README.md                  # Ce fichier
-    ├── README_GUI_V2.md          # Guide GUI v2.0
-    ├── CHANGELOG_GUI_V2.md       # Changements v2.0
-    ├── GUIDE_UTILISATION.md      # Guide complet
-    └── RECAPITULATIF_FINAL.md    # Récapitulatif projet
+    ├── README.md                  # This file (English)
+    ├── README_FR.md              # French version
+    ├── API_CONFIG_README.md      # API configuration guide
+    └── GIT_HISTORY_CLEANUP.md    # Git history cleanup guide
 ```
 
 ---
@@ -442,173 +458,177 @@ Pokemons/
 
 <div align="center">
 
-### 🎮 Interface Graphique Moderne
+### 🎮 Modern Graphical Interface
 
 <img src="examples/gui_dashboard.png" alt="Pokemon Dataset Generator GUI" width="90%"/>
 
-<sub>*Dashboard avec statistiques en temps réel, workflow automatique et validation des prérequis*</sub>
+<sub>*Dashboard with real-time statistics, automatic workflow, and prerequisite validation*</sub>
 
 </div>
 
-### ✨ Fonctionnalités Principales
+### ✨ Main Features
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-#### 📊 Dashboard Intelligent
-- ✅ **Statistiques en temps réel**
-  - 257 images sources
-  - 3855 images augmentées
-  - 482 mosaïques générées
-- ✅ **Actions rapides**
-  - Ouvrir dossiers
-  - Ouvrir Excel
-  - Nettoyer outputs
-- ✅ **Workflow automatique complet**
-  - Un seul clic pour tout générer
-  - Validation automatique
-  - Barre de progression
+#### 📊 Smart Dashboard
+- ✅ **Real-time statistics**
+  - 257 source images
+  - 3855 augmented images
+  - 482 generated mosaics
+- ✅ **Quick actions**
+  - Open folders
+  - Open Excel
+  - Clean outputs
+- ✅ **Complete automatic workflow**
+  - One-click generation
+  - Automatic validation
+  - Progress bar
 
 </td>
 <td width="50%" valign="top">
 
-#### 🎨 Contrôle Total
-- ✅ **6 onglets spécialisés**
-  - Dashboard, Augmentation, Mosaïques
-  - Fausses Cartes, Utilitaires, Logs
-- ✅ **Configuration flexible**
-  - Presets (Rapide/Standard/Intensif)
-  - Paramètres personnalisables
-  - Chemins configurables
+#### 🎨 Total Control
+- ✅ **6 specialized tabs**
+  - Dashboard, Augmentation, Mosaics
+  - Fake Cards, Utilities, Logs
+- ✅ **Flexible configuration**
+  - Presets (Quick/Standard/Intensive)
+  - Customizable parameters
+  - Configurable paths
 - ✅ **Multi-threading**
-  - Interface non-bloquante
-  - Annulation possible
-  - Logs en temps réel
+  - Non-blocking interface
+  - Cancellable operations
+  - Real-time logs
 
 </td>
 </tr>
 </table>
 
-### 📑 Onglets Détaillés
+### 📑 Detailed Tabs
 
 #### 📊 Dashboard
-- Statistiques en temps réel
-- Actions rapides (ouvrir dossiers, nettoyer)
-- **Workflow complet automatique**
+- Real-time statistics
+- Quick actions (open folders, clean)
+- **Complete automatic workflow**
 
 #### 🎨 Augmentation
-- Validation automatique des images sources
-- Presets : Rapide (5), Standard (15), Intensif (100)
-- Configuration du nombre d'augmentations
+- Automatic source image validation
+- Presets: Quick (5), Standard (15), Intensive (100)
+- Augmentation count configuration
 
-#### 🧩 Mosaïques
-- Configuration des 3 modes (layout, background, transform)
-- Validation des images augmentées
+#### 🧩 Mosaics
+- Configuration of 3 modes (layout, background, transform)
+- Augmented image validation
 
-#### 🖼️ Fausses Cartes
-- Nombre de cartes : 10-50 (slider)
-- Random Erasing : On/Off
-- Probabilité : 0.0-1.0 (slider)
+#### 🖼️ Fake Cards
+- Card count: 10-50 (slider)
+- Random Erasing: On/Off
+- Probability: 0.0-1.0 (slider)
 
-#### � Utilitaires
-**Intégration complète de l'API Pokémon TCG :**
+#### 🛠️ Utilities
+**Complete Pokémon TCG API integration:**
 
-##### 📋 Générer Liste de Cartes
-- Saisir nom de l'extension (ex: "Surging Sparks")
-- Choisir nom du fichier Excel de sortie
-- Génère automatiquement toutes les cartes avec `Set #` et `Name`
+##### 📋 Generate Card List
+- Enter set name (e.g., "Surging Sparks")
+- Choose Excel output filename
+- Automatically generates all cards with `Set #` and `Name`
 
-##### 💰 Mettre à Jour les Prix
-- Charger un fichier Excel avec `Set #`, `Name`, `Set`
-- Interroge l'API pour chaque carte (parallélisé)
-- Ajoute colonnes `Prix` et `Prix max`
-- Résumé des erreurs affiché à la fin
+##### 💰 Update Prices
+- Load Excel file with `Set #`, `Name`, `Set`
+- Queries API for each card (parallelized)
+- Adds `Price` and `Max Price` columns
+- Error summary displayed at the end
 
-##### 🔍 Recherche Rapide
-- Saisir nom de la carte (requis)
-- Numéro et Set optionnels pour filtrer
-- Affiche popup avec tous les prix disponibles
+##### 🔍 Quick Search
+- Enter card name (required)
+- Number and Set optional for filtering
+- Displays popup with all available prices
 
-**💡 Clé API incluse** - Aucune configuration nécessaire!
+**💡 API key required** - See [API_CONFIG_README.md](API_CONFIG_README.md)
 
-#### �📝 Logs
-- Horodatage automatique
-- Copier / Sauvegarder / Effacer
-- Export en fichier .log
+#### 📝 Logs
+- Automatic timestamps
+- Copy / Save / Clear
+- Export to .log file
 
-### Menu Settings ⚙️
+### Settings Menu ⚙️
 
-Personnalisation complète des chemins :
-- 📁 Dossier Images Sources
-- 🖼️ Dossier Fausses Cartes
-- 📤 Sortie Augmentation
-- 🧩 Sortie Mosaïques
-- 📊 Fichier Excel
+Complete path customization:
+- 📁 Source Images Folder
+- 🖼️ Fake Cards Folder
+- 📤 Augmentation Output
+- 🧩 Mosaics Output
+- 📊 Excel File
+
+---
 
 ## 🔄 Workflow
 
-### Option 1 : Workflow Automatique
+### Option 1: Automatic Workflow
 
-1. Lancer le GUI : `run_gui_v2_with_env.bat`
-2. Dashboard → **▶️ Démarrer Workflow**
-3. Le système exécute automatiquement :
-   - Génération de 20 fausses cartes (Random Erasing p=0.8)
-   - Augmentation de toutes les images (15 par carte)
-   - Génération des mosaïques YOLO
+1. Launch GUI: `run_gui_v2_with_env.bat`
+2. Dashboard → **▶️ Start Workflow**
+3. System automatically executes:
+   - Generation of 20 fake cards (Random Erasing p=0.8)
+   - Augmentation of all images (15 per card)
+   - YOLO mosaic generation
 
-### Option 2 : Workflow Manuel
+### Option 2: Manual Workflow
 
-#### Étape 1 : Préparer les Données
+#### Step 1: Prepare Data
 ```
-1. Placer les images de cartes dans images/
-2. Créer/vérifier cards_info.xlsx avec colonnes:
-   - Set # (ex: 001/191)
-   - Name (ex: Pikachu)
+1. Place card images in images/
+2. Create/verify cards_info.xlsx with columns:
+   - Set # (e.g., 001/191)
+   - Name (e.g., Pikachu)
 ```
 
-#### Étape 2 : Générer les Fausses Cartes
+#### Step 2: Generate Fake Cards
 ```batch
-# GUI: Onglet 🖼️ Fausses Cartes
-# - Nombre: 20
+# GUI: 🖼️ Fake Cards tab
+# - Count: 20
 # - Random Erasing: ✅
-# - Probabilité: 0.8
-# - Cliquer "▶️ Générer"
+# - Probability: 0.8
+# - Click "▶️ Generate"
 ```
 
-#### Étape 3 : Augmentation
+#### Step 3: Augmentation
 ```batch
-# GUI: Onglet 🎨 Augmentation
+# GUI: 🎨 Augmentation tab
 # - Preset: Standard (15)
-# - Cible: augmented
-# - Cliquer "▶️ Lancer"
+# - Target: augmented
+# - Click "▶️ Start"
 
-# OU en ligne de commande:
+# OR command line:
 python augmentation.py --num_aug 15 --target augmented
 ```
 
-#### Étape 4 : Mosaïques
+#### Step 4: Mosaics
 ```batch
-# GUI: Onglet 🧩 Mosaïques
-# - Configurer les modes
-# - Cliquer "▶️ Générer"
+# GUI: 🧩 Mosaics tab
+# - Configure modes
+# - Click "▶️ Generate"
 
-# OU en ligne de commande:
+# OR command line:
 python mosaic.py 1 0 0
 ```
 
+---
+
 ## ⚙️ Configuration
 
-### Format des Noms de Fichiers
+### File Naming Format
 
-Le système supporte plusieurs formats :
+The system supports several formats:
 - `SSP_001_R_EN_SM.png` ✅
 - `pokemon_en_001_xyz.jpg` ✅
 - `card_001.png` ✅
 
-Le numéro à 3 chiffres doit correspondre au **Set #** dans `cards_info.xlsx`.
+The 3-digit number must match **Set #** in `cards_info.xlsx`.
 
-### Fichier Excel (cards_info.xlsx)
+### Excel File (cards_info.xlsx)
 
 | Set #   | Name      |
 |---------|-----------|
@@ -616,7 +636,7 @@ Le numéro à 3 chiffres doit correspondre au **Set #** dans `cards_info.xlsx`.
 | 002/191 | Raichu    |
 | 003/191 | Mewtwo    |
 
-### Configuration GUI (gui_config.json)
+### GUI Configuration (gui_config.json)
 
 ```json
 {
@@ -638,9 +658,21 @@ Le numéro à 3 chiffres doit correspondre au **Set #** dans `cards_info.xlsx`.
 }
 ```
 
-## 📊 Formats de Sortie
+### API Configuration (api_config.json)
 
-### Structure YOLO
+```json
+{
+    "pokemon_tcg_api_key": "YOUR_API_KEY_HERE"
+}
+```
+
+Get a free API key at: https://pokemontcg.io/
+
+---
+
+## 📊 Output Formats
+
+### YOLO Structure
 
 ```
 output/yolov8/
@@ -655,7 +687,7 @@ output/yolov8/
 └── data.yaml
 ```
 
-### Format des Annotations (.txt)
+### Annotation Format (.txt)
 
 ```
 class_id center_x center_y width height
@@ -663,164 +695,190 @@ class_id center_x center_y width height
 1 0.789012 0.456789 0.098765 0.187654
 ```
 
-Coordonnées normalisées (0.0 - 1.0)
+Normalized coordinates (0.0 - 1.0)
+
+---
 
 ## 📚 Documentation
 
-- **[README_GUI_V2.md](README_GUI_V2.md)** - Guide détaillé du GUI v2.0
-- **[CHANGELOG_GUI_V2.md](CHANGELOG_GUI_V2.md)** - Liste des changements v2.0
-- **[GUIDE_UTILISATION.md](GUIDE_UTILISATION.md)** - Guide utilisateur complet
-- **[RECAPITULATIF_FINAL.md](RECAPITULATIF_FINAL.md)** - Récapitulatif projet
+- **[README.md](README.md)** - This file (English)
+- **[README_FR.md](README_FR.md)** - Version Française
+- **[API_CONFIG_README.md](API_CONFIG_README.md)** - API configuration
+- **[GIT_HISTORY_CLEANUP.md](GIT_HISTORY_CLEANUP.md)** - Git history cleanup
+- **[docs/GUIDE_UTILISATION.md](docs/GUIDE_UTILISATION.md)** - Complete user guide (French)
+- **[docs/CREATION_EXE.md](docs/CREATION_EXE.md)** - Executable creation guide
 
-## 🛠️ Dépendances
+---
 
-### Principales
+## 🛠️ Dependencies
 
-- **Python 3.12** - Environnement d'exécution
-- **NumPy < 2.0** - Calculs numériques (compatibilité imgaug)
-- **OpenCV < 4.10.0** - Traitement d'images (compatibilité NumPy 1.x)
-- **imgaug 0.4.0** - Augmentations d'images
-- **pandas** - Lecture du fichier Excel
-- **openpyxl** - Support Excel (.xlsx)
-- **Pillow** - Manipulation d'images
-- **scikit-image** - Traitement d'images avancé
-- **scipy** - Calculs scientifiques
+### Main Dependencies
 
-### Complètes
+- **Python 3.12** - Runtime environment
+- **NumPy < 2.0** - Numerical computations (imgaug compatibility)
+- **OpenCV < 4.10.0** - Image processing (NumPy 1.x compatibility)
+- **imgaug 0.4.0** - Image augmentations
+- **pandas** - Excel file reading
+- **openpyxl** - Excel (.xlsx) support
+- **Pillow** - Image manipulation
+- **scikit-image** - Advanced image processing
+- **scipy** - Scientific computing
+- **requests** - HTTP requests for API
 
-Voir [requirements.txt](requirements.txt)
+### Complete List
 
-## 🐛 Dépannage
+See [requirements.txt](requirements.txt)
 
-### Erreur "ModuleNotFoundError: No module named 'cv2'"
+---
+
+## 🐛 Troubleshooting
+
+### Error "ModuleNotFoundError: No module named 'cv2'"
 
 ```batch
-# Réinstaller l'environnement
+# Reinstall environment
 install_env.bat
 ```
 
-### Erreur "No module named 'openpyxl'"
+### Error "No module named 'openpyxl'"
 
 ```batch
 .venv\Scripts\activate
 pip install openpyxl
 ```
 
-### Images RGBA (4 canaux)
+### RGBA Images (4 channels)
 
-✅ **Géré automatiquement** - Conversion RGBA → RGB incluse
+✅ **Automatically handled** - RGBA → RGB conversion included
 
-### "Aucune image valide trouvée"
+### "No valid images found"
 
-Vérifier :
-1. Les images sont dans `images/`
-2. Le format des noms correspond au pattern (ex: `SSP_001_...`)
-3. Les numéros correspondent à `cards_info.xlsx`
+Check:
+1. Images are in `images/`
+2. Filename format matches pattern (e.g., `SSP_001_...`)
+3. Numbers match `cards_info.xlsx`
 
-### Diagnostic Complet
+### API Not Working
 
-Dans le GUI : **Menu Outils → Diagnostiquer Environnement**
+1. Check `api_config.json` exists
+2. Verify API key is valid
+3. Test API connectivity: https://api.pokemontcg.io/v2/cards
 
-## 📈 Résultats Typiques
+### Complete Diagnosis
 
-Pour 257 cartes sources avec 15 augmentations :
+In GUI: **Tools Menu → Diagnose Environment**
+
+---
+
+## 📈 Typical Results
+
+For 257 source cards with 15 augmentations:
 
 ```
 📥 INPUT
-├── 257 images sources (PNG)
-└── 1 fichier Excel
+├── 257 source images (PNG)
+└── 1 Excel file
 
 ⚙️ PROCESSING
-├── 20 fausses cartes générées
-├── 514 images augmentées (257 × 2)
-└── ~65 mosaïques
+├── 20 fake cards generated
+├── 514 augmented images (257 × 2)
+└── ~65 mosaics
 
 📤 OUTPUT
-├── 514 images augmentées + labels YOLO
-└── 65 mosaïques + labels YOLO
+├── 514 augmented images + YOLO labels
+└── 65 mosaics + YOLO labels
 ```
 
-## 🤝 Contribution
+---
 
-Les contributions sont les bienvenues ! Pour contribuer :
+## 🤝 Contributing
 
-1. Fork le projet
-2. Créer une branche (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
+Contributions are welcome! To contribute:
+
+1. Fork the project
+2. Create a branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
 
 ## 📝 Changelog
 
-### Version 2.0 (Octobre 2025)
-- ✨ GUI modernisé avec Dashboard
-- ✨ Menu Settings pour configuration des chemins
-- ✨ Validation automatique des prérequis
-- ✨ Barre de progression avec annulation
-- ✨ Multi-threading (interface non-bloquante)
-- ✨ Onglet Fausses Cartes intégré
-- ✨ Workflow complet automatique
-- ✨ Configuration persistante
-- 🐛 Support format PNG RGBA
-- 🐛 Détection améliorée des numéros de cartes
-- 🐛 Fix ID mapping YOLO (ID = numéro de carte)
-- ⚡ Optimisation mosaic.py (préchargement fake images)
-- 📦 .gitignore optimisé (exclusion fichiers générés)
+### Version 2.0 (October 2025)
+- ✨ Modernized GUI with Dashboard
+- ✨ Settings menu for path configuration
+- ✨ Automatic prerequisite validation
+- ✨ Progress bar with cancellation
+- ✨ Multi-threading (non-blocking interface)
+- ✨ Integrated Fake Cards tab
+- ✨ Complete automatic workflow
+- ✨ Persistent configuration
+- ✨ Pokémon TCG API integration
+- 🔒 API key security (separate config file)
+- 🐛 PNG RGBA format support
+- 🐛 Improved card number detection
+- 🐛 Fixed YOLO ID mapping (ID = card number)
+- ⚡ Optimized mosaic.py (fake images preloading)
+- 📦 Optimized .gitignore (exclude generated files)
 
-Voir [CHANGELOG_GUI_V2.md](CHANGELOG_GUI_V2.md) pour plus de détails.
-
----
-
-## ⚠️ Note sur les Fichiers Générés
-
-Les dossiers suivants contiennent des fichiers **générés automatiquement** et ne sont **pas versionnés sur GitHub** :
-- `output/augmented/images/` et `output/augmented/labels/`
-- `output/yolov8/images/` et `output/yolov8/labels/`
-- `fakeimg/` et `fakeimg_augmented/`
-
-Ces dossiers seront **créés automatiquement** lors de l'exécution des scripts. Les images d'exemple se trouvent dans le dossier `examples/`.
-
-## 📄 Licence
-
-Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+See [docs/CHANGELOG_GUI_V2.md](docs/CHANGELOG_GUI_V2.md) for more details.
 
 ---
 
-## � Crédits et Remerciements
+## ⚠️ Note on Generated Files
 
-### 📚 Librairies Python Utilisées
+The following folders contain **automatically generated** files and are **not versioned on GitHub**:
+- `output/augmented/images/` and `output/augmented/labels/`
+- `output/yolov8/images/` and `output/yolov8/labels/`
+- `fakeimg/` and `fakeimg_augmented/`
+
+These folders will be **automatically created** when running the scripts. Example images are in the `examples/` folder.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Credits and Acknowledgments
+
+### 📚 Python Libraries Used
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-#### 🖼️ Traitement d'Images
+#### 🖼️ Image Processing
 
-| Librairie | Version | Usage |
-|-----------|---------|-------|
-| **[OpenCV](https://opencv.org/)** | ~4.9.0 | Traitement et manipulation d'images |
-| **[Pillow (PIL)](https://python-pillow.org/)** | Latest | Chargement et sauvegarde d'images |
-| **[scikit-image](https://scikit-image.org/)** | Latest | Algorithmes de traitement avancés |
-| **[imgaug](https://github.com/aleju/imgaug)** | 0.4.0 | Pipeline d'augmentation d'images |
-| **[imagecorruptions](https://github.com/bethgelab/imagecorruptions)** | Latest | Corruptions réalistes (fog, etc.) |
+| Library | Version | Usage |
+|---------|---------|-------|
+| **[OpenCV](https://opencv.org/)** | ~4.9.0 | Image processing and manipulation |
+| **[Pillow (PIL)](https://python-pillow.org/)** | Latest | Image loading and saving |
+| **[scikit-image](https://scikit-image.org/)** | Latest | Advanced processing algorithms |
+| **[imgaug](https://github.com/aleju/imgaug)** | 0.4.0 | Image augmentation pipeline |
+| **[imagecorruptions](https://github.com/bethgelab/imagecorruptions)** | Latest | Realistic corruptions (fog, etc.) |
 
 </td>
 <td width="50%" valign="top">
 
-#### 🧮 Calcul et Données
+#### 🧮 Computation and Data
 
-| Librairie | Version | Usage |
-|-----------|---------|-------|
-| **[NumPy](https://numpy.org/)** | <2.0 | Calculs numériques et matrices |
-| **[pandas](https://pandas.pydata.org/)** | Latest | Lecture et manipulation Excel |
-| **[SciPy](https://scipy.org/)** | Latest | Calculs scientifiques |
-| **[openpyxl](https://openpyxl.readthedocs.io/)** | Latest | Support fichiers .xlsx |
+| Library | Version | Usage |
+|---------|---------|-------|
+| **[NumPy](https://numpy.org/)** | <2.0 | Numerical computations and matrices |
+| **[pandas](https://pandas.pydata.org/)** | Latest | Excel reading and manipulation |
+| **[SciPy](https://scipy.org/)** | Latest | Scientific computing |
+| **[openpyxl](https://openpyxl.readthedocs.io/)** | Latest | .xlsx file support |
+| **[requests](https://requests.readthedocs.io/)** | Latest | HTTP requests for API |
 
 </td>
 </tr>
 </table>
 
-### 🎓 Références Académiques
+### 🎓 Academic References
 
 <div align="center">
 
@@ -830,49 +888,59 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de
 
 </div>
 
-Ce travail s'inspire des techniques de détection d'objets en temps réel appliquées aux cartes Pokémon dans des tournois. Le paper présente des approches similaires pour la génération de datasets d'entraînement YOLO avec augmentation d'images.
+This work is inspired by real-time object detection techniques applied to Pokémon cards in tournaments. The paper presents similar approaches for generating YOLO training datasets with image augmentation.
 
-### 🏆 Frameworks et Standards
+### 🏆 Frameworks and Standards
 
-| Technologie | Rôle | Lien |
-|-------------|------|------|
-| **[YOLOv8](https://docs.ultralytics.com/)** | Format d'annotations | [Ultralytics Docs](https://docs.ultralytics.com/) |
-| **[YOLO](https://pjreddie.com/darknet/yolo/)** | Architecture de détection | [Original Paper](https://arxiv.org/abs/1506.02640) |
-| **[Python 3.12](https://www.python.org/)** | Langage de programmation | [Python.org](https://www.python.org/) |
+| Technology | Role | Link |
+|------------|------|------|
+| **[YOLOv8](https://docs.ultralytics.com/)** | Annotation format | [Ultralytics Docs](https://docs.ultralytics.com/) |
+| **[YOLO](https://pjreddie.com/darknet/yolo/)** | Detection architecture | [Original Paper](https://arxiv.org/abs/1506.02640) |
+| **[Python 3.12](https://www.python.org/)** | Programming language | [Python.org](https://www.python.org/) |
+| **[Pokémon TCG API](https://pokemontcg.io/)** | Card data and prices | [API Docs](https://docs.pokemontcg.io/) |
 
-### 💡 Inspirations et Techniques
+### 💡 Inspirations and Techniques
 
-- **Random Erasing** : Technique d'augmentation pour améliorer la robustesse des modèles
-- **Data Augmentation** : Pipeline inspiré des meilleures pratiques en Computer Vision
-- **Mosaic Augmentation** : Technique populaire dans YOLOv4/v5 pour entraînement
-- **Bounding Box Annotations** : Standard YOLO (normalized coordinates)
+- **Random Erasing**: Augmentation technique to improve model robustness
+- **Data Augmentation**: Pipeline inspired by Computer Vision best practices
+- **Mosaic Augmentation**: Popular technique in YOLOv4/v5 for training
+- **Bounding Box Annotations**: YOLO standard (normalized coordinates)
+- **API Integration**: Real-world data enrichment from Pokémon TCG API
 
-### 🌟 Communauté Open Source
+### 🌟 Open Source Community
 
-Un grand merci à toute la communauté open source qui rend ce projet possible :
+A big thank you to the entire open source community that makes this project possible:
 
-- **imgaug** - [@aleju](https://github.com/aleju) pour cette excellente librairie d'augmentation
-- **OpenCV** - Pour le traitement d'images rapide et efficace
-- **Ultralytics** - Pour la documentation YOLOv8 et les outils
-- **NumPy & SciPy** - Fondations du calcul scientifique en Python
-- **pandas** - Manipulation de données simplifiée
+- **imgaug** - [@aleju](https://github.com/aleju) for this excellent augmentation library
+- **OpenCV** - For fast and efficient image processing
+- **Ultralytics** - For YOLOv8 documentation and tools
+- **NumPy & SciPy** - Foundations of scientific computing in Python
+- **pandas** - Simplified data manipulation
+- **Pokémon TCG Developers** - For the comprehensive card database API
 
 ---
 
-## 👤 Auteur
+## 👤 Author
 
 **lo26lo**
 - GitHub: [@lo26lo](https://github.com/lo26lo)
 - Repository: [pok](https://github.com/lo26lo/pok)
 
+---
+
 ## 📞 Support
 
-Pour toute question ou problème :
-1. Consulter la [documentation](GUIDE_UTILISATION.md)
-2. Vérifier les [issues existantes](https://github.com/lo26lo/pok/issues)
-3. Créer une [nouvelle issue](https://github.com/lo26lo/pok/issues/new)
+For any questions or issues:
+1. Check the [documentation](docs/GUIDE_UTILISATION.md)
+2. Review [existing issues](https://github.com/lo26lo/pok/issues)
+3. Create a [new issue](https://github.com/lo26lo/pok/issues/new)
 
 ---
 
-⭐ **N'oubliez pas de mettre une étoile si ce projet vous a été utile !** ⭐
+<div align="center">
 
+⭐ **Don't forget to star if this project helped you!** ⭐
+
+[🇫🇷 Version Française](README_FR.md)
+
+</div>
