@@ -1010,24 +1010,87 @@ class PokemonDatasetGUI:
                 cards = []
                 page = 1
                 pageSize = 100
+                max_retries = 3
+                retry_delay = 5  # secondes
                 
                 self.log(f"🌐 Récupération des cartes de l'extension '{extension}'...")
                 
+                # Vérifier d'abord la connectivité de l'API
+                try:
+                    import time
+                    test_response = requests.get("https://api.pokemontcg.io/v2/sets", 
+                                                  headers=HEADERS, timeout=10)
+                    if test_response.status_code != 200:
+                        self.log(f"⚠️ L'API semble avoir des problèmes (status: {test_response.status_code})")
+                except Exception as e:
+                    self.log(f"⚠️ L'API ne répond pas : {str(e)}")
+                    messagebox.showwarning("Attention", "L'API Pokémon TCG semble avoir des problèmes de disponibilité.\nRéessayez dans quelques minutes.")
+                    return
+                
                 while True:
+                    # Essayer avec set.name ou set.id (si contient un tiret, probablement un ID)
+                    if '-' in extension or len(extension) <= 5:
+                        query = f'set.id:"{extension}"'
+                    else:
+                        query = f'set.name:"{extension}"'
+                    
                     params = {
-                        "q": f'set.name:"{extension}"',
+                        "q": query,
                         "page": page,
                         "pageSize": pageSize
                     }
-                    response = requests.get(BASE_URL, headers=HEADERS, params=params)
+                    
+                    # Système de retry pour gérer les timeouts
+                    retry_count = 0
+                    response = None
+                    
+                    while retry_count < max_retries:
+                        try:
+                            response = requests.get(BASE_URL, headers=HEADERS, params=params, timeout=30)
+                            break  # Succès, sortir de la boucle de retry
+                        except requests.exceptions.Timeout:
+                            retry_count += 1
+                            if retry_count < max_retries:
+                                self.log(f"⏱️ Timeout - Nouvelle tentative {retry_count}/{max_retries-1} dans {retry_delay}s...")
+                                time.sleep(retry_delay)
+                            else:
+                                self.log(f"❌ Timeout après {max_retries} tentatives")
+                                if cards:
+                                    self.log(f"ℹ️ Sauvegarde des {len(cards)} cartes récupérées avant l'erreur...")
+                                    break
+                                else:
+                                    messagebox.showerror("Erreur", "L'API ne répond pas (timeout)\nRéessayez dans quelques minutes.")
+                                    return
+                        except Exception as e:
+                            self.log(f"❌ Erreur réseau: {str(e)}")
+                            messagebox.showerror("Erreur", f"Erreur réseau: {str(e)}")
+                            return
+                    
+                    if response is None:
+                        break  # Sortir de la boucle principale si timeout définitif
                     
                     # Si erreur 404, c'est qu'on a atteint la fin des pages
                     if response.status_code == 404:
-                        self.log(f"ℹ️ Fin de la pagination (page {page} non trouvée)")
-                        break
+                        if page == 1:
+                            self.log(f"❌ Extension '{extension}' introuvable")
+                            messagebox.showwarning("Attention", f"Extension '{extension}' introuvable.\nVérifiez le nom ou essayez avec l'ID (ex: sv08)")
+                            return
+                        else:
+                            self.log(f"ℹ️ Fin de la pagination (page {page} non trouvée)")
+                            break
+                    
+                    # Si erreur 504 (Gateway Timeout)
+                    if response.status_code == 504:
+                        self.log(f"⏱️ Gateway Timeout (504) - L'API est surchargée")
+                        if cards:
+                            self.log(f"ℹ️ Sauvegarde des {len(cards)} cartes récupérées avant l'erreur...")
+                            break
+                        else:
+                            messagebox.showerror("Erreur", "L'API Pokémon TCG est surchargée (504)\nRéessayez dans quelques minutes.")
+                            return
                     
                     if response.status_code != 200:
-                        self.log(f"❌ Erreur {response.status_code}: {response.text}")
+                        self.log(f"❌ Erreur {response.status_code}: {response.text[:200]}")
                         messagebox.showerror("Erreur", f"Erreur API: {response.status_code}")
                         return
                     
@@ -1108,10 +1171,36 @@ class PokemonDatasetGUI:
                         return cache[cache_key]
                     
                     params = {"q": f'name:"{card_name}"'}
-                    response = session.get(BASE_URL, params=params, headers=HEADERS)
                     
-                    if response.status_code != 200:
-                        return (None, None)
+                    # Retry avec timeout
+                    max_retries = 2
+                    for attempt in range(max_retries):
+                        try:
+                            response = session.get(BASE_URL, params=params, headers=HEADERS, timeout=15)
+                            
+                            if response.status_code == 404:
+                                return (None, None)
+                            
+                            if response.status_code != 200:
+                                if attempt < max_retries - 1:
+                                    import time
+                                    time.sleep(1)
+                                    continue
+                                return (None, None)
+                            
+                            break
+                        except requests.exceptions.Timeout:
+                            if attempt < max_retries - 1:
+                                import time
+                                time.sleep(2)
+                                continue
+                            return (None, None)
+                        except Exception:
+                            if attempt < max_retries - 1:
+                                import time
+                                time.sleep(1)
+                                continue
+                            return (None, None)
                     
                     data = response.json()
                     results = data.get("data", [])
@@ -1189,11 +1278,15 @@ class PokemonDatasetGUI:
                     set_name = row.get("Set", None)
                     
                     try:
+                        # Petit délai pour éviter de surcharger l'API
+                        import time
+                        import random
+                        time.sleep(random.uniform(0.1, 0.3))
+                        
                         result = search_card(card_name, card_number=card_number, set_name=set_name, session=session)
                         processed += 1
                         
                         # Logger toutes les 10 cartes ou toutes les 5 secondes
-                        import time
                         current_time = time.time()
                         if processed % 10 == 0 or (current_time - last_log_time[0]) >= 5:
                             self.log(f"📊 Progression: {processed}/{total} cartes ({int(processed/total*100)}%)")
@@ -1204,13 +1297,13 @@ class PokemonDatasetGUI:
                         processed += 1
                         return index, (None, None), str(e)
                 
-                self.log(f"🔄 Traitement de {total} cartes avec 10 workers parallèles...")
+                self.log(f"🔄 Traitement de {total} cartes avec 5 workers parallèles...")
                 
                 import time
                 start_time = time.time()
                 
                 with requests.Session() as session:
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                         futures = {
                             executor.submit(worker, idx, row, session): idx
                             for idx, row in df.iterrows()
