@@ -702,7 +702,7 @@ class PokemonDatasetGUI:
             # Appliquer Random Erasing si demandé
             if apply_erasing:
                 cmd = [
-                    sys.executable, "randomerasing.py",
+                    sys.executable, os.path.join("tools", "randomerasing.py"),
                     "--input_dir", fakeimg_path,
                     "--output_dir", "fakeimg_augmented",
                     "--p", str(p_value),
@@ -786,7 +786,7 @@ class PokemonDatasetGUI:
                 
                 # Appliquer Random Erasing
                 cmd = [
-                    sys.executable, "randomerasing.py",
+                    sys.executable, os.path.join("tools", "randomerasing.py"),
                     "--input_dir", fakeimg_path,
                     "--output_dir", "fakeimg_augmented",
                     "--p", str(p_value),
