@@ -22,6 +22,11 @@ env/
 ~$*.xlsx
 ~$*.xls
 
+# Generated Excel files (may contain personal data or test data)
+*_updated.xlsx
+extension_cards.xlsx
+test_*.xlsx
+
 # OS
 .DS_Store
 Thumbs.db
