@@ -58,6 +58,8 @@ dist/
 
 # Icon preview (only .ico is versioned)
 pikachu_preview.png
+pikachu_old.ico
+pika.png
 
 # Configuration locale (décommentez si vous ne voulez pas versionner la config)
 # gui_config.json
