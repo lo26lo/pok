@@ -1,175 +1,341 @@
-# 🎮 Pokemon Dataset Generator
+<div align="center">
+
+<img src="examples/banner.png" alt="Pokemon Dataset Generator Banner" width="100%"/>
+
+# 🎮 Pokémon Dataset Generator
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.9-green.svg)](https://opencv.org/)
+[![imgaug](https://img.shields.io/badge/imgaug-latest-orange.svg)](https://github.com/aleju/imgaug)
 
-Un outil complet pour générer des datasets d'images de cartes Pokémon augmentées avec annotations YOLO pour l'entraînement de modèles de détection d'objets.
+**Générateur automatique de datasets d'entraînement YOLO pour cartes Pokémon**
+
+*Augmentation avancée • Mosaïques annotées • Pipeline complet*
+
+---
+
+</div>
 
 ## 🖼️ Exemples de Génération
 
+<div align="center">
+
+### 📸 Workflow Complet
+
+</div>
+
 <table>
 <tr>
-<td align="center" colspan="3">
-<img src="examples/example_fakeimg.png" alt="Fake Background" width="220"/>
+<td align="center" width="25%">
+<img src="examples/example_fakeimg.png" alt="Fake Background" width="180"/>
 <br/>
-<strong>1. Fake Background</strong>
+<strong>① Fake Background</strong>
 <br/>
-<em>Random Erasing + Augmentation</em>
+<sub>Random Erasing + Augmentation</sub>
 </td>
-</tr>
-<tr>
-<td align="center">
-<img src="examples/example_augmented.png" alt="Augmented Card" width="220"/>
+<td align="center" width="25%">
+<img src="examples/example_augmented.png" alt="Augmented Card" width="180"/>
 <br/>
-<strong>2. Augmented Card</strong>
+<strong>② Augmented Card</strong>
 <br/>
-<em>Pipeline avec 22 transformations</em>
+<sub>22 transformations possibles</sub>
 </td>
-<td align="center">
-<img src="examples/example_layout.png" alt="YOLO Layout" width="350"/>
+<td align="center" width="25%">
+<img src="examples/example_layout.png" alt="YOLO Layout" width="280"/>
 <br/>
-<strong>3. YOLO Layout</strong>
+<strong>③ YOLO Layout</strong>
 <br/>
-<em>Mosaïque 8 cartes</em>
+<sub>Mosaïque 8 cartes</sub>
 </td>
-<td align="center">
-<img src="examples/example_layout_annotated.png" alt="YOLO Annotated" width="350"/>
+<td align="center" width="25%">
+<img src="examples/example_layout_annotated.png" alt="YOLO Annotated" width="280"/>
 <br/>
-<strong>4. YOLO Bounding Boxes</strong>
+<strong>④ Bounding Boxes</strong>
 <br/>
-<em>Annotations visualisées</em>
-</td>
-</tr>
-<tr>
-<td align="center" colspan="3">
-<img src="examples/example_annotation.png" alt="YOLO Annotation File" width="700"/>
-<br/>
-<strong>5. Fichier d'Annotation YOLO</strong>
-<br/>
-<em>Format: class_id x_center y_center width height (normalisé 0-1)</em>
+<sub>Annotations visualisées</sub>
 </td>
 </tr>
 </table>
 
-![Pokemon Dataset Generator Banner](https://via.placeholder.com/800x200/0078D4/FFFFFF?text=Pokemon+Dataset+Generator+v2.0)
+<div align="center">
+
+### 📝 Format d'Annotation YOLO
+
+<img src="examples/example_annotation.png" alt="YOLO Annotation File" width="650"/>
+
+<sub>Format: `class_id x_center y_center width height` (normalisé 0-1)</sub>
+
+---
+
+</div>
 
 ## 📋 Table des Matières
 
-- [Fonctionnalités](#-fonctionnalités)
-- [Installation](#-installation)
-- [Utilisation](#-utilisation)
-- [Structure du Projet](#-structure-du-projet)
-- [GUI v2.0](#-gui-v20)
-- [Workflow](#-workflow)
-- [Configuration](#-configuration)
-- [Documentation](#-documentation)
-- [Contribution](#-contribution)
-- [Licence](#-licence)
+<div align="center">
+
+| Section | Description |
+|---------|-------------|
+| [✨ Fonctionnalités](#-fonctionnalités) | Liste complète des fonctionnalités |
+| [🚀 Installation](#-installation) | Guide d'installation rapide |
+| [📖 Utilisation](#-utilisation) | Comment utiliser le générateur |
+| [📁 Structure](#-structure-du-projet) | Organisation des fichiers |
+| [🖥️ GUI v2.0](#️-gui-v20) | Interface graphique moderne |
+| [🔄 Workflow](#-workflow) | Pipeline de génération |
+| [📚 Documentation](#-documentation) | Guides et documentation |
+
+</div>
+
+---
 
 ## ✨ Fonctionnalités
 
+<table>
+<tr>
+<td width="33%" valign="top">
+
 ### 🎨 Augmentation d'Images
-- **Augmentations multiples** par image avec imgaug
-- Support des formats **PNG avec canal alpha** (RGBA → RGB)
-- Génération automatique d'annotations **YOLO**
-- Effets variés : flou, contraste, saturation, fog, posterize, sharpen, emboss
+- ✅ **22 types de transformations**
+- ✅ **2-5 transformations** par image
+- ✅ **~35,420 combinaisons** possibles
+- ✅ Support **PNG avec alpha** (RGBA)
+- ✅ Annotations **YOLO** automatiques
+- ✅ Seed aléatoire unique
+- 🎯 **Effets** : Flou, contraste, saturation, fog, posterize, sharpen, emboss, bruit, compression JPEG, température couleur
+
+</td>
+<td width="33%" valign="top">
 
 ### 🧩 Génération de Mosaïques
-- **3 modes de layout** : Grille, Rotation forte, Aléatoire
-- **3 modes de background** : Mosaïque, Local, Web
-- **2 modes de transformation** : Rotation 2D, Perspective 3D
-- **Fusion de classes** pour variantes de cartes
-- Annotations YOLO avec polygones à 4 points
+- ✅ **3 modes de layout** : Grille, Rotation, Aléatoire
+- ✅ **3 modes de background** : Mosaïque, Local, Web
+- ✅ **2 modes de transformation** : 2D, Perspective 3D
+- ✅ **252 cartes** avec IDs uniques
+- ✅ Annotations **YOLO** polygones 4 points
+- ✅ Format **YOLOv8** compatible
+- 🎯 **Output** : 65 layouts par défaut
 
-### 🖼️ Fausses Cartes (Random Erasing)
-- Génération de cartes avec zones effacées (**Random Erasing**)
-- Probabilité d'effacement configurable (0.0 - 1.0)
-- **Workflow** : `images/` → Random Erasing → `fakeimg/` → Augmentation → `fakeimg_augmented/`
-- Les images dans `fakeimg_augmented/` sont utilisées comme **fond de mosaïque**
+</td>
+<td width="33%" valign="top">
 
-### 🖥️ Interface Graphique Moderne (GUI v2.0)
-- **Dashboard** avec statistiques en temps réel
-- **Validation automatique** des prérequis
-- **Barre de progression** avec annulation
-- **Multi-threading** (interface non-bloquante)
-- **Configuration persistante** (gui_config.json)
-- **Workflow complet automatique**
+### 🖼️ Fausses Cartes
+- ✅ **Random Erasing** configurable
+- ✅ Probabilité **0.0 - 1.0**
+- ✅ Workflow automatique
+- ✅ Utilisées comme **fond** de mosaïque
+- 🔄 **Pipeline** : images → Random Erasing → fakeimg → Augmentation → fakeimg_augmented
 
-### 🔧 Utilitaires API Pokémon TCG (Nouveau!)
-- **Génération automatique** de listes de cartes par extension
-- **Mise à jour des prix** TCGPlayer depuis l'API
-- **Recherche rapide** d'une carte avec affichage des prix
-- **Clé API incluse** - prêt à l'emploi
-- **Traitement parallélisé** pour performances optimales
+</td>
+</tr>
+<tr>
+<td colspan="3" align="center">
+
+### 🖥️ Interface Graphique v2.0
+
+**Dashboard** • **Validation automatique** • **Barre de progression** • **Multi-threading** • **Configuration persistante**
+
+</td>
+</tr>
+</table>
+
+---
 
 ## 🚀 Installation
 
-### Prérequis
-- **Python 3.12** (recommandé pour les wheels pré-compilés)
-- **Windows** (scripts batch fournis)
-- **Git** (optionnel)
+<table>
+<tr>
+<td width="50%" valign="top">
 
-### Installation Automatique
+### 📋 Prérequis
+
+| Élément | Version | Statut |
+|---------|---------|--------|
+| **Python** | 3.12+ | ✅ Recommandé |
+| **OS** | Windows 10/11 | ✅ Scripts batch |
+| **Git** | Dernière | ⚠️ Optionnel |
+| **Espace disque** | ~2 GB | Pour env + datasets |
+
+</td>
+<td width="50%" valign="top">
+
+### ⚡ Installation Rapide
 
 ```batch
-# 1. Cloner le dépôt
+# 1️⃣ Cloner le dépôt
 git clone https://github.com/lo26lo/pok.git
 cd pok/Pokemons
 
-# 2. Installer l'environnement (Python 3.12 + dépendances)
+# 2️⃣ Installation automatique
 install_env.bat
 ```
 
-L'installateur va :
-- ✅ Détecter ou installer Python 3.12
-- ✅ Créer un environnement virtuel `.venv`
-- ✅ Installer toutes les dépendances compatibles
-- ✅ Configurer NumPy < 2.0 pour compatibilité imgaug
+**✨ L'installateur configure tout automatiquement !**
 
-### Installation Manuelle
+</td>
+</tr>
+</table>
+
+<details>
+<summary>📦 <b>Que fait install_env.bat ?</b></summary>
+
+<br/>
+
+```
+1. 🔍 Détecte Python 3.12 (ou installe si absent)
+2. 📦 Crée environnement virtuel .venv
+3. ⬇️  Installe toutes les dépendances :
+   - opencv-python (traitement d'images)
+   - pandas (manipulation Excel)
+   - imgaug (augmentation)
+   - numpy < 2.0 (compatibilité)
+   - pillow, requests, scipy, scikit-image
+4. ✅ Vérifie l'installation
+5. 🎉 Prêt à utiliser !
+```
+
+</details>
+
+<details>
+<summary>🛠️ <b>Installation Manuelle</b></summary>
+
+<br/>
 
 ```batch
 # Créer l'environnement virtuel
 python -m venv .venv
 
-# Activer l'environnement
+# Activer
 .venv\Scripts\activate
 
-# Installer les dépendances
+# Installer
 pip install -r requirements.txt
 ```
 
+</details>
+
+---
+
 ## 📖 Utilisation
 
-### Lancement du GUI v2.0 (Recommandé)
+<div align="center">
+
+### 🖥️ Méthode 1 : Interface Graphique (Recommandé)
+
+</div>
+
+<table>
+<tr>
+<td width="50%" align="center">
+
+**🎯 Lancement Rapide**
 
 ```batch
 run_gui_v2_with_env.bat
 ```
 
-### Utilisation en Ligne de Commande
+**Interface moderne avec workflow complet**
 
-#### Augmentation
+</td>
+<td width="50%" align="center">
+
+**✨ Fonctionnalités GUI**
+
+✅ Dashboard statistiques  
+✅ Configuration visuelle  
+✅ Barre de progression  
+✅ Validation automatique  
+✅ Multi-threading  
+
+</td>
+</tr>
+</table>
+
+<div align="center">
+
+### ⌨️ Méthode 2 : Ligne de Commande
+
+</div>
+
+<details>
+<summary>🎨 <b>Augmentation d'Images</b></summary>
+
+<br/>
+
 ```batch
 # Activer l'environnement
 .venv\Scripts\activate
 
-# Générer 15 augmentations par image
-python augmentation.py --num_aug 15 --target augmented
+# Générer 30 augmentations par carte
+python augmentation.py --num_aug 30 --target augmented
+
+# Test rapide (5 augmentations)
+test_augmentation.bat
 ```
 
-#### Mosaïques
+**Options disponibles :**
+- `--num_aug` : Nombre d'augmentations par image (défaut: 30)
+- `--target` : Destination (`augmented` ou `images_aug`)
+
+</details>
+
+<details>
+<summary>🧩 <b>Génération de Mosaïques</b></summary>
+
+<br/>
+
 ```batch
-# Layout=1 (Grille), Background=0 (Mosaïque), Transform=0 (2D)
+# Syntaxe : python mosaic.py <layout_mode> <background_mode> <transform_mode>
 python mosaic.py 1 0 0
+
+# Layout: 0=Grille, 1=Rotation, 2=Aléatoire
+# Background: 0=Mosaïque, 1=Local, 2=Web
+# Transform: 0=2D, 1=Perspective 3D
 ```
 
-#### Fausses Cartes
+**Exemples :**
 ```batch
-# Probabilité 0.8, sh=0.5
-python randomerasing.py --input_dir fakeimg --output_dir fakeimg_augmented --p 0.8 --sh 0.5
+python mosaic.py 1 0 0  # Rotation + Mosaïque + 2D
+python mosaic.py 2 1 1  # Aléatoire + Local + 3D
+python mosaic.py 0 2 0  # Grille + Web + 2D
 ```
+
+</details>
+
+<details>
+<summary>🖼️ <b>Fausses Cartes (Random Erasing)</b></summary>
+
+<br/>
+
+```batch
+# Générer des fausses cartes
+python randomerasing.py --input_dir images --output_dir fakeimg --p 0.8 --sh 0.5
+```
+
+**Options :**
+- `--p` : Probabilité d'effacement (0.0 - 1.0)
+- `--sh` : Ratio d'effacement (0.0 - 1.0)
+- `--input_dir` : Dossier source
+- `--output_dir` : Dossier destination
+
+</details>
+
+<details>
+<summary>🧪 <b>Test de Variété des Augmentations</b></summary>
+
+<br/>
+
+```batch
+# Générer 10 augmentations d'une carte pour comparer
+test_augmentation_variety.bat
+
+# Résultats dans : test_augmentation_output/
+```
+
+Compare visuellement la variété du pipeline amélioré (22 transformations).
+
+</details>
+
+---
 
 ## 📁 Structure du Projet
 
