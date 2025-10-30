@@ -49,6 +49,13 @@ fakeimg_augmented/*
 # Test outputs
 test_augmentation_output/
 
+# PyInstaller builds (executables ~200MB)
+build/
+dist/
+*.spec
+!pokemon_dataset_generator.spec
+# Note: pokemon_dataset_generator.spec is versioned for customization
+
 # Configuration locale (décommentez si vous ne voulez pas versionner la config)
 # gui_config.json
 
