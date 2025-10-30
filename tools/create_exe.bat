@@ -6,7 +6,8 @@ echo   Pokemon Dataset Generator v2.0
 echo ========================================
 echo.
 
-cd /d "%~dp0"
+REM Se placer à la racine du projet (dossier parent)
+cd /d "%~dp0\.."
 
 REM Vérifier l'environnement virtuel
 if not exist ".venv\Scripts\activate.bat" (
@@ -31,7 +32,7 @@ echo ======================================================
 echo.
 pause
 
-python create_exe.py
+python tools\create_exe.py
 
 echo.
 echo ========================================

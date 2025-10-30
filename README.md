@@ -264,7 +264,7 @@ Pour créer une version portable sans Python :
 
 ```batch
 # 1️⃣ Lancer la création (une seule fois)
-create_exe.bat
+tools\create_exe.bat
 
 # Résultat après 5-10 minutes :
 # ✅ dist/Pokemon_Dataset_Generator.exe (executable seul)
@@ -280,10 +280,12 @@ create_exe.bat
 
 **🛠️ Personnalisation :**
 
-Éditez `create_exe.py` pour :
+Éditez `tools/create_exe.py` pour :
 - Ajouter une icône personnalisée (`--icon=mon_icone.ico`)
 - Modifier les fichiers inclus
 - Ajuster les options PyInstaller
+
+📖 Guide complet : [docs/CREATION_EXE.md](docs/CREATION_EXE.md)
 
 </details>
 </table>
@@ -382,19 +384,32 @@ Pokemons/
 ├── 📱 GUI_v2.py                    # Interface graphique moderne
 ├── 🎨 augmentation.py              # Script d'augmentation
 ├── 🧩 mosaic.py                    # Génération de mosaïques
-├── 🖼️ randomerasing.py             # Random Erasing
-├── 🛠️ pokemon_utils.py             # Utilitaires
-├── ⚙️ config.py                    # Configuration
-│
+├── � cards_info.xlsx              # Informations des cartes
 ├── 📦 requirements.txt             # Dépendances Python
-├── 🔧 gui_config.json             # Configuration GUI (auto-généré)
-├── 📊 cards_info.xlsx             # Informations des cartes
+├── 🔧 gui_config.json              # Configuration GUI (auto-généré)
+├── � pikachu.ico                  # Icône Mimikyu
 │
-├── 🚀 Fichiers Batch
-│   ├── install_env.bat            # Installation environnement
-│   ├── run_gui_v2_with_env.bat    # Lancer GUI v2
-│   ├── test_augmentation.bat      # Test rapide (5 aug)
-│   └── generate_fakeimages.bat    # Générer fausses cartes
+├── 🚀 Fichiers de Lancement
+│   ├── Pokemon_Dataset_Generator.bat    # 🔇 Lancer sans console
+│   ├── run_gui_v2_with_env.bat          # �️ Lancer avec console
+│   ├── run_gui_silent.bat               # Launcher pythonw
+│   ├── invisible.vbs                    # Script VBS silencieux
+│   ├── install_env.bat                  # Installation environnement
+│   └── pokemon_dataset_generator.spec   # Config PyInstaller
+│
+├── 📂 tools/                       # 🛠️ Utilitaires et scripts de développement
+│   ├── create_pikachu_icon.py     # Générateur d'icône
+│   ├── create_exe.py              # Créer executable Windows
+│   ├── create_exe.bat             # Wrapper création exe
+│   ├── test_*.bat                 # Scripts de test
+│   ├── check_excel.py             # Vérification Excel
+│   └── ...autres utilitaires
+│
+├── 📂 docs/                        # 📚 Documentation complète
+│   ├── GUIDE_UTILISATION.md       # Guide utilisateur
+│   ├── CREATION_EXE.md            # Guide création executable
+│   ├── CHANGELOG_GUI_V2.md        # Historique GUI
+│   └── ...autres docs
 │
 ├── 📂 Dossiers de Données
 │   ├── images/                    # 📥 Cartes sources (INPUT)

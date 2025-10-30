@@ -2,12 +2,26 @@
 """
 Script pour créer un executable Windows (.exe) du Pokemon Dataset Generator
 Utilise PyInstaller pour empaqueter l'application complète
+
+⚠️ Ce script doit être exécuté depuis la RACINE du projet :
+   cd C:\\Users\\...\\Pokemons
+   python tools\\create_exe.py
 """
 import os
 import sys
 import subprocess
 import shutil
 from pathlib import Path
+
+def check_working_directory():
+    """Vérifie qu'on est dans le bon répertoire"""
+    if not os.path.exists("GUI_v2.py"):
+        print("❌ Erreur : GUI_v2.py non trouvé")
+        print("\n⚠️  Ce script doit être exécuté depuis la RACINE du projet :")
+        print("   cd C:\\Users\\...\\Pokemons")
+        print("   python tools\\create_exe.py")
+        return False
+    return True
 
 def check_pyinstaller():
     """Vérifie si PyInstaller est installé"""
@@ -181,6 +195,11 @@ def main():
     if not os.path.exists("GUI_v2.py"):
         print("❌ Erreur : GUI_v2.py non trouvé")
         print("   Lancez ce script depuis le dossier Pokemons/")
+        input("\nAppuyez sur Entrée pour quitter...")
+        return
+    
+    # Vérifier le répertoire de travail
+    if not check_working_directory():
         input("\nAppuyez sur Entrée pour quitter...")
         return
     
