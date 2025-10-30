@@ -67,3 +67,6 @@ pika.png
 
 # OLD folder (fichiers archivés)
 OLD/
+
+# Local batch files with absolute paths
+run_with_env.bat
