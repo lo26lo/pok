@@ -110,18 +110,41 @@ def resize_cards(image_paths, target_size=TARGET_SIZE):
         resized_images.append((img, img_path))
     return resized_images
 
-# Pipeline d'augmentation avec imgaug (sans rotation)
-seq = iaa.SomeOf((1, 3), [
-    iaa.Add((-10, 10)),                    # Ajoute une valeur constante aux pixels
-    iaa.Multiply((0.9, 1.1)),               # Multiplie les valeurs des pixels
-    iaa.GaussianBlur((0, 3.0)),             # Flou gaussien
-    iaa.AddToHueAndSaturation((-20, 20)),    # Modification de la teinte et saturation
-    iaa.LinearContrast((0.75, 1.5)),         # Modification du contraste
-    iaa.EdgeDetect(alpha=(0.0, 0.7)),         # Détection d'arêtes
-    iaa.imgcorruptlike.Fog(severity=(1, 3)),   # Simule du brouillard
-    iaa.Posterize((4, 8)),                   # Réduction du nombre de bits par canal (effet artistique)
-    iaa.Sharpen(alpha=(0, 1.0), lightness=(0.75, 1.5)),  # Accentue les contours
-    iaa.Emboss(alpha=(0, 1.0), strength=(0, 2.0))         # Effet emboss
+# Pipeline d'augmentation avec imgaug - VERSION AMÉLIORÉE (plus de variété)
+# Applique 2 à 5 transformations aléatoires parmi une liste étendue
+seq = iaa.SomeOf((2, 5), [
+    # Luminosité et contraste
+    iaa.Add((-20, 20)),                            # Brightness
+    iaa.Multiply((0.8, 1.2)),                      # Contrast multiplier
+    iaa.LinearContrast((0.6, 1.6)),                # Linear contrast
+    iaa.GammaContrast((0.7, 1.5)),                 # Gamma contrast
+    
+    # Couleurs
+    iaa.AddToHueAndSaturation((-30, 30)),          # Hue/Saturation
+    iaa.ChangeColorTemperature((3000, 10000)),     # Temperature
+    iaa.MultiplyHueAndSaturation((0.8, 1.2)),      # Saturation multiply
+    
+    # Flou et netteté
+    iaa.GaussianBlur((0, 2.0)),                    # Blur
+    iaa.AverageBlur(k=(1, 5)),                     # Average blur
+    iaa.Sharpen(alpha=(0, 0.5), lightness=(0.8, 1.3)),  # Sharpen
+    
+    # Bruit
+    iaa.AdditiveGaussianNoise(scale=(0, 0.05*255)),     # Gaussian noise
+    iaa.ImpulseNoise(0.02),                             # Salt & pepper
+    iaa.SaltAndPepper(0.01),                            # Salt and pepper
+    
+    # Effets visuels
+    iaa.imgcorruptlike.Fog(severity=(1, 2)),       # Fog (réduit)
+    iaa.Posterize((5, 8)),                         # Posterize
+    iaa.Emboss(alpha=(0, 0.3), strength=(0.5, 1.5)),    # Emboss (réduit)
+    iaa.EdgeDetect(alpha=(0.0, 0.3)),              # Edge detect (réduit)
+    
+    # Compression JPEG (simule une photo de mauvaise qualité)
+    iaa.JpegCompression(compression=(50, 99)),
+    
+    # Élastique (légère déformation)
+    iaa.ElasticTransformation(alpha=(0, 5), sigma=0.5),
 ], random_order=True)
 
 def main():
@@ -144,6 +167,10 @@ def main():
         # Pour YOLO, la première classe (1 dans l'Excel) devient 0
         class_id = class_map[card_number] - 1
         for i in range(NUM_AUG_PER_IMAGE):
+            # Réinitialiser le seed aléatoire pour chaque augmentation (plus de variété)
+            np.random.seed(int(time.time() * 1000000) % (2**31) + i)
+            random.seed(int(time.time() * 1000000) % (2**31) + i)
+            
             aug_img = seq(image=img)
             out_img_name = f"{base_name}_aug_{i:03d}.png"
             out_img_path = os.path.join(AUG_IMAGES_DIR, out_img_name)

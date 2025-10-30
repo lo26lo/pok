@@ -46,6 +46,9 @@ fakeimg/*
 fakeimg_augmented/*
 !fakeimg_augmented/.gitkeep
 
+# Test outputs
+test_augmentation_output/
+
 # Configuration locale (décommentez si vous ne voulez pas versionner la config)
 # gui_config.json
 
