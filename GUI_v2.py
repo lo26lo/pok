@@ -20,6 +20,13 @@ class PokemonDatasetGUI:
         self.root.title("Pokemon Dataset Generator v2.0.1")
         self.root.geometry("1000x700")
         
+        # Définir l'icône Pikachu si elle existe
+        if os.path.exists("pikachu.ico"):
+            try:
+                self.root.iconbitmap("pikachu.ico")
+            except Exception as e:
+                print(f"⚠️ Impossible de charger l'icône : {e}")
+        
         # Configuration par défaut
         self.config_file = "gui_config.json"
         self.load_config()
