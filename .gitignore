@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Excel temporary files
+~$*.xlsx
+~$*.xls
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project specific
+*.log
+
+# Output directories (commentez si vous voulez versionner les résultats)
+# output/
+# fakeimg_augmented/
+
+# Configuration locale (décommentez si vous ne voulez pas versionner la config)
+# gui_config.json
+
+# OLD folder (fichiers archivés)
+OLD/

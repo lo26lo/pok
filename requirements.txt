@@ -1,0 +1,14 @@
+# Requirements for Pokemon Dataset Generator
+# NumPy pinned to < 2.0 for imgaug compatibility (np.sctypes removed in NumPy 2.0)
+numpy<2.0
+# OpenCV pinned to version compatible with NumPy 1.x
+opencv-python<4.10.0
+# Core dependencies
+pandas
+openpyxl
+imgaug>=0.4.0
+pillow
+requests
+scipy
+scikit-image
+imagecorruptions

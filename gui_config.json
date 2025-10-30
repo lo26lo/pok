@@ -1,0 +1,18 @@
+{
+    "paths": {
+        "images_source": "images",
+        "fakeimg": "fakeimg",
+        "output_augmented": "output\\augmented",
+        "output_mosaic": "output\\yolov8",
+        "excel_file": "cards_info.xlsx"
+    },
+    "last_used": {
+        "num_aug": 15,
+        "target": "augmented",
+        "layout_mode": 1,
+        "background_mode": 0,
+        "transform_mode": 0,
+        "random_erasing_p": 0.2
+    },
+    "theme": "light"
+}
