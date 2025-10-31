@@ -60,6 +60,7 @@ class SettingsDialog:
         self.default_images_dir = tk.StringVar(value=config.get("default_images_dir", "images"))
         self.default_output_dir = tk.StringVar(value=config.get("default_output_dir", "output"))
         self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 15))
+        self.default_augmentation_type = tk.StringVar(value=config.get("default_augmentation_type", "standard"))
         self.default_mosaic_mode = tk.StringVar(value=config.get("default_mosaic_mode", "standard"))
         self.default_model = tk.StringVar(value=config.get("default_model", "yolov8n.pt"))
         self.default_epochs = tk.IntVar(value=config.get("default_epochs", 50))
@@ -68,6 +69,12 @@ class SettingsDialog:
         self.tcgdex_api_key = tk.StringVar(value=config.get("tcgdex_api_key", ""))
         self.auto_save_logs = tk.BooleanVar(value=config.get("auto_save_logs", True))
         self.enable_notifications = tk.BooleanVar(value=config.get("enable_notifications", True))
+        
+        # Fake image generation settings
+        self.fakeimg_count = tk.IntVar(value=config.get("fakeimg_count", 100))
+        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "fakeimg"))
+        self.fakeimg_min_noise = tk.IntVar(value=config.get("fakeimg_min_noise", 20))
+        self.fakeimg_max_noise = tk.IntVar(value=config.get("fakeimg_max_noise", 60))
     
     def create_ui(self):
         """Créer l'interface du dialog"""
@@ -300,6 +307,122 @@ class SettingsDialog:
         )
         mosaic_combo.grid(row=3, column=0, sticky='w', pady=(0, 20))
         
+        # Default augmentation type
+        tk.Label(
+            container,
+            text="✨ Default Augmentation Type:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=4, column=0, sticky='w', pady=(0, 5))
+        
+        aug_type_combo = ttk.Combobox(
+            container,
+            textvariable=self.default_augmentation_type,
+            values=["standard", "holographic", "both"],
+            state='readonly',
+            font=('Segoe UI', 10),
+            width=18
+        )
+        aug_type_combo.grid(row=5, column=0, sticky='w', pady=(0, 20))
+        
+        # Fake image settings section
+        tk.Label(
+            container,
+            text="📋 Fake Background Generation:",
+            bg=colors['bg_dark'],
+            fg=colors['accent'],
+            font=('Segoe UI', 11, 'bold')
+        ).grid(row=6, column=0, sticky='w', pady=(10, 10))
+        
+        # Fake image count
+        tk.Label(
+            container,
+            text="Default number of fake images:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10)
+        ).grid(row=7, column=0, sticky='w', pady=(0, 5))
+        
+        tk.Spinbox(
+            container,
+            from_=10,
+            to=1000,
+            textvariable=self.fakeimg_count,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=10
+        ).grid(row=8, column=0, sticky='w', pady=(0, 10))
+        
+        # Fake image output directory
+        tk.Label(
+            container,
+            text="Fake images output directory:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10)
+        ).grid(row=9, column=0, sticky='w', pady=(0, 5))
+        
+        tk.Entry(
+            container,
+            textvariable=self.fakeimg_output_dir,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=25
+        ).grid(row=10, column=0, sticky='w', pady=(0, 10))
+        
+        # Noise range
+        tk.Label(
+            container,
+            text="Noise intensity (min-max):",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10)
+        ).grid(row=11, column=0, sticky='w', pady=(0, 5))
+        
+        noise_frame = tk.Frame(container, bg=colors['bg_dark'])
+        noise_frame.grid(row=12, column=0, sticky='w', pady=(0, 10))
+        
+        tk.Spinbox(
+            noise_frame,
+            from_=0,
+            to=100,
+            textvariable=self.fakeimg_min_noise,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=8
+        ).pack(side=tk.LEFT)
+        
+        tk.Label(
+            noise_frame,
+            text=" - ",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10)
+        ).pack(side=tk.LEFT, padx=5)
+        
+        tk.Spinbox(
+            noise_frame,
+            from_=0,
+            to=100,
+            textvariable=self.fakeimg_max_noise,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=8
+        ).pack(side=tk.LEFT)
+        
         container.grid_columnconfigure(0, weight=1)
     
     def create_training_tab(self, parent):
@@ -441,6 +564,7 @@ class SettingsDialog:
             "default_images_dir": self.default_images_dir.get(),
             "default_output_dir": self.default_output_dir.get(),
             "default_augmentations": self.default_augmentations.get(),
+            "default_augmentation_type": self.default_augmentation_type.get(),
             "default_mosaic_mode": self.default_mosaic_mode.get(),
             "default_model": self.default_model.get(),
             "default_epochs": self.default_epochs.get(),
@@ -448,7 +572,11 @@ class SettingsDialog:
             "default_device": self.default_device.get(),
             "tcgdex_api_key": self.tcgdex_api_key.get(),
             "auto_save_logs": self.auto_save_logs.get(),
-            "enable_notifications": self.enable_notifications.get()
+            "enable_notifications": self.enable_notifications.get(),
+            "fakeimg_count": self.fakeimg_count.get(),
+            "fakeimg_output_dir": self.fakeimg_output_dir.get(),
+            "fakeimg_min_noise": self.fakeimg_min_noise.get(),
+            "fakeimg_max_noise": self.fakeimg_max_noise.get()
         }
         
         try:
@@ -1313,6 +1441,20 @@ class ModernPokemonGUI:
         self.aug_num_var.pack(side=tk.LEFT, padx=10)
         self.aug_num_var.set(15)
         
+        # Augmentation type
+        type_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        type_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(type_frame, text="Augmentation type:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        self.aug_type_var = ttk.Combobox(type_frame,
+            values=["Standard", "Holographic", "Both"],
+            state='readonly', width=25)
+        self.aug_type_var.pack(side=tk.LEFT, padx=10)
+        self.aug_type_var.current(0)
+        
         # Output directory
         output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
         output_frame.pack(fill=tk.X, pady=10)
@@ -1394,6 +1536,10 @@ class ModernPokemonGUI:
         ttk.Button(btn_frame, text="🧩 GENERATE MOSAICS",
                   style='Accent.TButton',
                   command=self.start_mosaic,
+                  width=30).pack(pady=5)
+        
+        ttk.Button(btn_frame, text="📋 Generate Fake Backgrounds",
+                  command=self.start_fake_generator,
                   width=30).pack(pady=5)
     
     def create_validation_view(self):
@@ -1774,10 +1920,6 @@ class ModernPokemonGUI:
         
         ttk.Button(tools_content, text="⚖️ Auto-Balance Classes",
                   command=self.start_balancing,
-                  width=40).pack(pady=5, fill=tk.X)
-        
-        ttk.Button(tools_content, text="✨ Holographic Augmenter",
-                  command=self.start_holographic,
                   width=40).pack(pady=5, fill=tk.X)
         
         ttk.Button(tools_content, text="🎴 TCG API Browser",
@@ -2583,40 +2725,77 @@ Continuer ?"""
         try:
             num_aug = int(self.aug_num_var.get())
             target = self.aug_output_var.get()
+            aug_type = self.aug_type_var.get()  # Standard / Holographic / Both
         except Exception as e:
             messagebox.showerror("Error", f"Configuration invalide:\n{e}")
             return
         
-        self.log(f"🎨 Augmentation: {num_aug} variations → {target}/")
+        self.log(f"🎨 Augmentation ({aug_type}): {num_aug} variations → {target}/")
         self.start_operation("Augmentation")
         
         def task():
             try:
-                cmd = [sys.executable, "-u", "core/augmentation.py",
-                      "--num_aug", str(num_aug),
-                      "--target", target]
-                
-                self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                          stderr=subprocess.STDOUT, text=True,
-                                          encoding='utf-8', errors='replace', bufsize=1)
-                
-                for line in iter(self.current_process.stdout.readline, ''):
-                    if line and self.current_process:
-                        self.log(line.strip())
-                
-                if self.current_process:
-                    self.current_process.wait()
+                # Standard augmentation
+                if aug_type in ["Standard", "Both"]:
+                    self.log("🎨 Running standard augmentation...")
+                    cmd = [sys.executable, "-u", "core/augmentation.py",
+                          "--num_aug", str(num_aug),
+                          "--target", target]
                     
-                    if self.current_process.returncode == 0:
-                        self.log("✅ Augmentation terminée!")
-                        messagebox.showinfo("Succès", "Augmentation terminée avec succès!")
-                    elif self.current_process.returncode is not None:
-                        self.log("❌ Augmentation échouée")
-                        messagebox.showerror("Erreur", "Augmentation échouée!")
+                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                              stderr=subprocess.STDOUT, text=True,
+                                              encoding='utf-8', errors='replace', bufsize=1)
+                    
+                    for line in iter(self.current_process.stdout.readline, ''):
+                        if line and self.current_process:
+                            self.log(line.strip())
+                    
+                    if self.current_process:
+                        self.current_process.wait()
+                        if self.current_process.returncode != 0:
+                            self.log("❌ Standard augmentation failed!")
+                            if aug_type == "Standard":
+                                messagebox.showerror("Error", "Augmentation failed!")
+                                return
+                        else:
+                            self.log("✅ Standard augmentation completed!")
+                
+                # Holographic augmentation
+                if aug_type in ["Holographic", "Both"]:
+                    self.log("✨ Running holographic augmentation...")
+                    output_dir = target + "_holographic" if aug_type == "Both" else target
+                    
+                    cmd = [sys.executable, "-u", "core/holographic_augmenter.py",
+                           "--input", "images",
+                           "--output", output_dir,
+                           "--intensity", "0.7",
+                           "--variations", str(num_aug)]
+                    
+                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                              stderr=subprocess.STDOUT, text=True,
+                                              encoding='utf-8', errors='replace', bufsize=1)
+                    
+                    for line in iter(self.current_process.stdout.readline, ''):
+                        if line and self.current_process:
+                            self.log(line.strip())
+                    
+                    if self.current_process:
+                        self.current_process.wait()
+                        if self.current_process.returncode != 0:
+                            self.log("❌ Holographic augmentation failed!")
+                            messagebox.showerror("Error", "Holographic augmentation failed!")
+                            return
+                        else:
+                            self.log("✅ Holographic augmentation completed!")
+                
+                # Success message
+                self.log("✅ All augmentations completed successfully!")
+                messagebox.showinfo("Success", "Augmentation completed successfully!")
+                self.update_stats()
                     
             except Exception as e:
-                self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.log(f"❌ Error: {e}")
+                messagebox.showerror("Error", f"Error:\n{e}")
             finally:
                 self.end_operation()
         
@@ -2975,6 +3154,189 @@ Continuer ?"""
         tk.Button(
             btn_frame,
             text="❌ Cancel",
+            command=dialog.destroy,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text'],
+            font=('Segoe UI', 10),
+            relief='flat',
+            padx=20,
+            pady=8,
+            cursor='hand2'
+        ).pack(side='left', padx=5)
+    
+    def start_fake_generator(self):
+        """Générer des fausses images de background"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title("📋 Fake Background Generator")
+        dialog.geometry("500x450")
+        dialog.configure(bg=self.colors['bg_dark'])
+        dialog.transient(self.root)
+        
+        # Header
+        header = tk.Label(dialog,
+            text="📋 Fake Background Generator",
+            font=('Segoe UI', 16, 'bold'),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['text']
+        )
+        header.pack(pady=20)
+        
+        subtitle = tk.Label(dialog,
+            text="Generate realistic fake backgrounds for training",
+            font=('Segoe UI', 10),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['text_dim']
+        )
+        subtitle.pack(pady=(0, 20))
+        
+        # Config frame
+        config_frame = tk.Frame(dialog, bg=self.colors['bg_card'])
+        config_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
+        
+        content = tk.Frame(config_frame, bg=self.colors['bg_card'])
+        content.pack(fill=tk.BOTH, expand=True, padx=30, pady=20)
+        
+        # Number of images
+        count_frame = tk.Frame(content, bg=self.colors['bg_card'])
+        count_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(count_frame,
+            text="Number of images:",
+            bg=self.colors['bg_card'],
+            fg='#FFFFFF',
+            font=('Segoe UI', 10, 'bold')
+        ).pack(side=tk.LEFT)
+        
+        count_var = tk.IntVar(value=self.settings_dialog.fakeimg_count.get() if hasattr(self, 'settings_dialog') else 100)
+        count_spinbox = ttk.Spinbox(count_frame, from_=10, to=1000, textvariable=count_var, width=15)
+        count_spinbox.pack(side=tk.LEFT, padx=10)
+        
+        # Output directory
+        output_frame = tk.Frame(content, bg=self.colors['bg_card'])
+        output_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(output_frame,
+            text="Output directory:",
+            bg=self.colors['bg_card'],
+            fg='#FFFFFF',
+            font=('Segoe UI', 10, 'bold')
+        ).pack(side=tk.LEFT)
+        
+        output_var = tk.StringVar(value=self.settings_dialog.fakeimg_output_dir.get() if hasattr(self, 'settings_dialog') else "fakeimg")
+        output_entry = ttk.Entry(output_frame, textvariable=output_var, width=20)
+        output_entry.pack(side=tk.LEFT, padx=10)
+        
+        # Noise range
+        tk.Label(content,
+            text="Noise Intensity Range:",
+            bg=self.colors['bg_card'],
+            fg='#FFFFFF',
+            font=('Segoe UI', 10, 'bold')
+        ).pack(anchor='w', pady=(15, 5))
+        
+        noise_frame = tk.Frame(content, bg=self.colors['bg_card'])
+        noise_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(noise_frame,
+            text="Min:",
+            bg=self.colors['bg_card'],
+            fg='#FFFFFF',
+            font=('Segoe UI', 9)
+        ).pack(side=tk.LEFT)
+        
+        min_noise_var = tk.IntVar(value=self.settings_dialog.fakeimg_min_noise.get() if hasattr(self, 'settings_dialog') else 20)
+        min_noise = ttk.Scale(noise_frame, from_=0, to=100, variable=min_noise_var, orient='horizontal', length=150)
+        min_noise.pack(side=tk.LEFT, padx=5)
+        
+        tk.Label(noise_frame, textvariable=min_noise_var,
+            bg=self.colors['bg_card'],
+            fg='#FFFFFF',
+            width=3
+        ).pack(side=tk.LEFT)
+        
+        tk.Label(noise_frame,
+            text="Max:",
+            bg=self.colors['bg_card'],
+            fg='#FFFFFF',
+            font=('Segoe UI', 9)
+        ).pack(side=tk.LEFT, padx=(20, 0))
+        
+        max_noise_var = tk.IntVar(value=self.settings_dialog.fakeimg_max_noise.get() if hasattr(self, 'settings_dialog') else 60)
+        max_noise = ttk.Scale(noise_frame, from_=0, to=100, variable=max_noise_var, orient='horizontal', length=150)
+        max_noise.pack(side=tk.LEFT, padx=5)
+        
+        tk.Label(noise_frame, textvariable=max_noise_var,
+            bg=self.colors['bg_card'],
+            fg='#FFFFFF',
+            width=3
+        ).pack(side=tk.LEFT)
+        
+        # Button frame
+        btn_frame = tk.Frame(dialog, bg=self.colors['bg_dark'])
+        btn_frame.pack(pady=20)
+        
+        def run_fake_generator():
+            dialog.destroy()
+            self.log(f"📋 Generating {count_var.get()} fake backgrounds...")
+            self.start_operation("Fake Background Generation")
+            
+            def task():
+                try:
+                    output_dir = output_var.get()
+                    cmd = [sys.executable, "-u", "tools/generate_fake_backgrounds.py",
+                           "--count", str(count_var.get()),
+                           "--output", output_dir,
+                           "--min-noise", str(min_noise_var.get()),
+                           "--max-noise", str(max_noise_var.get())]
+                    
+                    process = subprocess.Popen(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        text=True,
+                        bufsize=1,
+                        universal_newlines=True
+                    )
+                    
+                    for line in process.stdout:
+                        line = line.strip()
+                        if line:
+                            self.log(line)
+                    
+                    process.wait()
+                    
+                    if process.returncode == 0:
+                        self.log(f"✅ {count_var.get()} fake backgrounds generated in {output_dir}/")
+                        messagebox.showinfo("Success", f"Generated {count_var.get()} fake backgrounds!")
+                        self.update_stats()
+                    else:
+                        self.log(f"❌ Fake generation failed (exit code: {process.returncode})")
+                        messagebox.showerror("Error", "Fake generation failed!")
+                
+                except Exception as e:
+                    self.log(f"❌ Error: {e}")
+                    messagebox.showerror("Error", f"Error:\n{e}")
+                finally:
+                    self.end_operation()
+            
+            threading.Thread(target=task, daemon=True).start()
+        
+        tk.Button(
+            btn_frame,
+            text="📋 Generate",
+            command=run_fake_generator,
+            bg=self.colors['success'],
+            fg='#000000',
+            font=('Segoe UI', 10, 'bold'),
+            relief='flat',
+            padx=20,
+            pady=8,
+            cursor='hand2'
+        ).pack(side='left', padx=5)
+        
+        tk.Button(
+            btn_frame,
+            text="Cancel",
             command=dialog.destroy,
             bg=self.colors['bg_card'],
             fg=self.colors['text'],
