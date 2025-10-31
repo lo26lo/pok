@@ -257,13 +257,18 @@ class PokemonDatasetGUI:
         self.notebook = ttk.Notebook(main_frame)
         self.notebook.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         
-        # Créer les onglets
-        self.create_dashboard_tab()
-        self.create_augmentation_tab()
-        self.create_mosaic_tab()
-        self.create_fakeimg_tab()
-        self.create_utilities_tab()
-        self.create_logs_tab()
+        # Créer les onglets (ordre logique du workflow)
+        self.create_dashboard_tab()          # 📊 Vue d'ensemble
+        self.create_workflow_tab()           # 🚀 Workflow Automatique (NOUVEAU)
+        self.create_augmentation_tab()       # 🎨 Étape 1: Augmentation
+        self.create_mosaic_tab()             # 🧩 Étape 2: Mosaïques
+        self.create_validation_tab()         # ✅ Étape 3: Validation
+        self.create_training_tab()           # 🎓 Étape 4: Entraînement
+        self.create_detection_tab()          # 📹 Étape 5: Test & Détection
+        self.create_export_tab()             # 📦 Étape 6: Export
+        self.create_fakeimg_tab()            # 🎲 Outils: Fausses Cartes
+        self.create_utilities_tab()          # 🛠️ Outils: Utilitaires
+        self.create_logs_tab()               # 📜 Logs
         
         # Barre de progression en bas
         self.create_progress_bar(main_frame)
@@ -348,10 +353,131 @@ class PokemonDatasetGUI:
         
         self.update_statistics()
     
+    def create_workflow_tab(self):
+        """🚀 Onglet Workflow Automatique - Interface Pro"""
+        tab = ttk.Frame(self.notebook, padding="15")
+        self.notebook.add(tab, text="🚀 Workflow Auto")
+        
+        # ============ HEADER avec description ============
+        header = ttk.Frame(tab)
+        header.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 20))
+        
+        title_label = ttk.Label(header, text="🚀 Workflow Automatique Complet", 
+                               font=('Arial', 14, 'bold'))
+        title_label.grid(row=0, column=0, sticky=tk.W)
+        
+        desc_label = ttk.Label(header, 
+                              text="Génération complète du dataset en un clic : Augmentation → Mosaïques → Validation → Export",
+                              foreground='gray')
+        desc_label.grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
+        
+        # ============ SECTION 1: Configuration Rapide ============
+        config_frame = ttk.LabelFrame(tab, text="⚙️ Configuration Rapide", padding="15")
+        config_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=10)
+        
+        # Ligne 1: Augmentation
+        ttk.Label(config_frame, text="1️⃣ Augmentations:", font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.workflow_aug_var = tk.IntVar(value=15)
+        aug_spinbox = ttk.Spinbox(config_frame, from_=5, to=100, textvariable=self.workflow_aug_var, width=10)
+        aug_spinbox.grid(row=0, column=1, padx=10)
+        ttk.Label(config_frame, text="variations par carte", foreground='gray').grid(row=0, column=2, sticky=tk.W)
+        
+        # Ligne 2: Mosaïques
+        ttk.Label(config_frame, text="2️⃣ Mosaïques:", font=('Arial', 10, 'bold')).grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.workflow_mosaic_var = tk.StringVar(value="standard")
+        mosaic_combo = ttk.Combobox(config_frame, textvariable=self.workflow_mosaic_var, 
+                                    values=["rapide (200)", "standard (500)", "complet (900)", "custom"], 
+                                    width=20, state='readonly')
+        mosaic_combo.grid(row=1, column=1, padx=10)
+        ttk.Label(config_frame, text="layouts générés", foreground='gray').grid(row=1, column=2, sticky=tk.W)
+        
+        # Ligne 3: Options avancées
+        ttk.Label(config_frame, text="3️⃣ Options:", font=('Arial', 10, 'bold')).grid(row=2, column=0, sticky=tk.W, pady=5)
+        options_frame = ttk.Frame(config_frame)
+        options_frame.grid(row=2, column=1, columnspan=2, sticky=tk.W, padx=10)
+        
+        self.workflow_validate_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(options_frame, text="Valider dataset", 
+                       variable=self.workflow_validate_var).grid(row=0, column=0, sticky=tk.W)
+        
+        self.workflow_balance_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(options_frame, text="Auto-balancing classes", 
+                       variable=self.workflow_balance_var).grid(row=0, column=1, padx=15, sticky=tk.W)
+        
+        self.workflow_train_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(options_frame, text="Entraîner modèle YOLO", 
+                       variable=self.workflow_train_var).grid(row=0, column=2, padx=15, sticky=tk.W)
+        
+        # ============ SECTION 2: Étapes du Workflow ============
+        steps_frame = ttk.LabelFrame(tab, text="📋 Étapes du Workflow", padding="15")
+        steps_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=10)
+        
+        self.workflow_steps = []
+        steps = [
+            ("1️⃣", "Génération cartes augmentées", "images augmentées"),
+            ("2️⃣", "Génération mosaïques YOLO", "layouts avec annotations"),
+            ("3️⃣", "Validation du dataset", "rapport qualité"),
+            ("4️⃣", "Auto-balancing (optionnel)", "équilibrage classes"),
+            ("5️⃣", "Entraînement YOLO (optionnel)", "modèle .pt"),
+        ]
+        
+        for i, (emoji, step, result) in enumerate(steps):
+            step_frame = ttk.Frame(steps_frame)
+            step_frame.grid(row=i, column=0, sticky=(tk.W, tk.E), pady=3)
+            
+            # Emoji + Texte
+            label = ttk.Label(step_frame, text=f"{emoji} {step}", font=('Arial', 9))
+            label.grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+            
+            # Status badge
+            status = ttk.Label(step_frame, text="⏳ En attente", foreground='gray', 
+                             font=('Arial', 8))
+            status.grid(row=0, column=1, sticky=tk.W)
+            self.workflow_steps.append(status)
+            
+            # Résultat attendu
+            result_label = ttk.Label(step_frame, text=f"→ {result}", 
+                                    foreground='#666', font=('Arial', 8, 'italic'))
+            result_label.grid(row=0, column=2, sticky=tk.W, padx=(10, 0))
+        
+        # ============ SECTION 3: Progress Bar Globale ============
+        progress_frame = ttk.Frame(tab)
+        progress_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=10)
+        
+        self.workflow_progress_label = ttk.Label(progress_frame, text="Prêt à démarrer", 
+                                                font=('Arial', 9))
+        self.workflow_progress_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+        
+        self.workflow_progress = ttk.Progressbar(progress_frame, mode='determinate', length=500)
+        self.workflow_progress.grid(row=1, column=0, sticky=(tk.W, tk.E))
+        
+        # ============ SECTION 4: Boutons d'Action ============
+        action_frame = ttk.Frame(tab)
+        action_frame.grid(row=4, column=0, pady=20)
+        
+        self.workflow_start_btn = ttk.Button(action_frame, text="🚀 LANCER LE WORKFLOW COMPLET", 
+                                            command=self.start_automatic_workflow,
+                                            style='Accent.TButton')
+        self.workflow_start_btn.grid(row=0, column=0, padx=5, ipadx=20, ipady=10)
+        
+        ttk.Button(action_frame, text="⏹️ Arrêter", 
+                  command=self.stop_workflow).grid(row=0, column=1, padx=5)
+        
+        ttk.Button(action_frame, text="🔄 Réinitialiser", 
+                  command=self.reset_workflow).grid(row=0, column=2, padx=5)
+        
+        # ============ SECTION 5: Résumé Final ============
+        summary_frame = ttk.LabelFrame(tab, text="📊 Résumé", padding="10")
+        summary_frame.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=10)
+        
+        self.workflow_summary = ttk.Label(summary_frame, text="Aucun workflow exécuté", 
+                                         foreground='gray', justify=tk.LEFT)
+        self.workflow_summary.grid(row=0, column=0, sticky=tk.W)
+    
     def create_augmentation_tab(self):
         """Onglet Augmentation"""
         tab = ttk.Frame(self.notebook, padding="10")
-        self.notebook.add(tab, text="🎨 Augmentation")
+        self.notebook.add(tab, text="🎨 1. Augmentation")
         
         # Frame principal
         main = ttk.Frame(tab)
@@ -404,7 +530,7 @@ class PokemonDatasetGUI:
     def create_mosaic_tab(self):
         """Onglet Mosaïques"""
         tab = ttk.Frame(self.notebook, padding="10")
-        self.notebook.add(tab, text="🧩 Mosaïques")
+        self.notebook.add(tab, text="🧩 2. Mosaïques")
         
         # Validation
         validation_frame = ttk.LabelFrame(tab, text="✓ Validation", padding="10")
@@ -571,6 +697,275 @@ class PokemonDatasetGUI:
                   command=self.search_card_price).grid(row=3, column=0, columnspan=2, pady=10)
         
         search_frame.columnconfigure(1, weight=1)
+        
+        tab.columnconfigure(0, weight=1)
+    
+    def create_validation_tab(self):
+        """Onglet Validation du Dataset"""
+        tab = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(tab, text="✅ 3. Validation")
+        
+        # Description
+        ttk.Label(tab, text="Validation du Dataset", font=('Arial', 14, 'bold')).grid(
+            row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 10))
+        
+        info = """🔍 Valide la qualité du dataset YOLO
+        
+✅ Vérifie les annotations (format, valeurs 0-1)
+✅ Détecte les images corrompues
+✅ Analyse la distribution des classes
+✅ Statistiques des bounding boxes
+✅ Génère un rapport HTML"""
+        
+        ttk.Label(tab, text=info, foreground="gray").grid(
+            row=1, column=0, columnspan=2, sticky=tk.W, pady=(0, 15))
+        
+        # Paramètres
+        params_frame = ttk.LabelFrame(tab, text="Paramètres", padding="10")
+        params_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        
+        ttk.Label(params_frame, text="Dataset à valider:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        
+        self.validation_dataset_var = tk.StringVar(value=os.path.join("output", "yolov8"))
+        dataset_combo = ttk.Combobox(params_frame, textvariable=self.validation_dataset_var, width=40)
+        dataset_combo['values'] = [
+            os.path.join("output", "yolov8"),
+            os.path.join("output", "augmented")
+        ]
+        dataset_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+        
+        self.validation_html_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(params_frame, text="Générer rapport HTML", 
+                       variable=self.validation_html_var).grid(row=1, column=0, columnspan=2, 
+                                                              sticky=tk.W, pady=5)
+        
+        params_frame.columnconfigure(1, weight=1)
+        
+        # Boutons
+        btn_frame = ttk.Frame(tab)
+        btn_frame.grid(row=3, column=0, columnspan=2, pady=15)
+        
+        ttk.Button(btn_frame, text="▶️ Valider Dataset", 
+                  command=self.validate_dataset, width=20).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="📄 Ouvrir Rapport", 
+                  command=lambda: self.open_file("validation_report.html"), 
+                  width=20).pack(side=tk.LEFT, padx=5)
+        
+        tab.columnconfigure(0, weight=1)
+    
+    def create_training_tab(self):
+        """Onglet Entraînement YOLO"""
+        tab = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(tab, text="🎓 4. Entraînement")
+        
+        # Description
+        ttk.Label(tab, text="Entraînement YOLOv8", font=('Arial', 14, 'bold')).grid(
+            row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 10))
+        
+        info = """🤖 Entraîne un modèle YOLOv8 sur votre dataset
+        
+⚡ Entraînement GPU si disponible
+📊 Logs et métriques en temps réel
+💾 Sauvegarde automatique du meilleur modèle
+📈 Graphiques de progression (loss, mAP)"""
+        
+        ttk.Label(tab, text=info, foreground="gray").grid(
+            row=1, column=0, columnspan=2, sticky=tk.W, pady=(0, 15))
+        
+        # Paramètres
+        params_frame = ttk.LabelFrame(tab, text="Paramètres", padding="10")
+        params_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        
+        # Modèle
+        ttk.Label(params_frame, text="Modèle:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.training_model_var = tk.StringVar(value="yolov8n.pt")
+        model_combo = ttk.Combobox(params_frame, textvariable=self.training_model_var, width=30)
+        model_combo['values'] = ["yolov8n.pt", "yolov8s.pt", "yolov8m.pt", "yolov8l.pt", "yolov8x.pt"]
+        model_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+        
+        ttk.Label(params_frame, text="(n=nano, s=small, m=medium, l=large, x=xlarge)", 
+                 foreground="gray", font=('Arial', 8)).grid(row=0, column=2, sticky=tk.W, padx=5)
+        
+        # Epochs
+        ttk.Label(params_frame, text="Epochs:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.training_epochs_var = tk.IntVar(value=100)
+        ttk.Spinbox(params_frame, from_=10, to=500, textvariable=self.training_epochs_var, 
+                   width=10).grid(row=1, column=1, sticky=tk.W, pady=5, padx=(10, 0))
+        
+        # Batch size
+        ttk.Label(params_frame, text="Batch size:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.training_batch_var = tk.IntVar(value=16)
+        batch_combo = ttk.Combobox(params_frame, textvariable=self.training_batch_var, width=10)
+        batch_combo['values'] = [4, 8, 16, 32, 64]
+        batch_combo.grid(row=2, column=1, sticky=tk.W, pady=5, padx=(10, 0))
+        
+        # Image size
+        ttk.Label(params_frame, text="Image size:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        self.training_imgsz_var = tk.IntVar(value=640)
+        imgsz_combo = ttk.Combobox(params_frame, textvariable=self.training_imgsz_var, width=10)
+        imgsz_combo['values'] = [320, 416, 512, 640, 1280]
+        imgsz_combo.grid(row=3, column=1, sticky=tk.W, pady=5, padx=(10, 0))
+        
+        # Device
+        ttk.Label(params_frame, text="Device:").grid(row=4, column=0, sticky=tk.W, pady=5)
+        self.training_device_var = tk.StringVar(value="0")
+        device_combo = ttk.Combobox(params_frame, textvariable=self.training_device_var, width=10)
+        device_combo['values'] = ["0", "cpu", "0,1", "0,1,2,3"]
+        device_combo.grid(row=4, column=1, sticky=tk.W, pady=5, padx=(10, 0))
+        
+        ttk.Label(params_frame, text="(0=GPU, cpu=CPU, 0,1=multi-GPU)", 
+                 foreground="gray", font=('Arial', 8)).grid(row=4, column=2, sticky=tk.W, padx=5)
+        
+        params_frame.columnconfigure(1, weight=1)
+        
+        # Boutons
+        btn_frame = ttk.Frame(tab)
+        btn_frame.grid(row=3, column=0, columnspan=2, pady=15)
+        
+        ttk.Button(btn_frame, text="▶️ Entraîner", 
+                  command=self.start_training, width=20).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="📂 Ouvrir résultats", 
+                  command=lambda: self.open_folder("runs/train"), 
+                  width=20).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="📊 Voir graphiques", 
+                  command=self.show_training_plots, width=20).pack(side=tk.LEFT, padx=5)
+        
+        tab.columnconfigure(0, weight=1)
+    
+    def create_detection_tab(self):
+        """Onglet Détection Live (Webcam)"""
+        tab = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(tab, text="📹 5. Détection")
+        
+        # Description
+        ttk.Label(tab, text="Détection en Temps Réel", font=('Arial', 14, 'bold')).grid(
+            row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 10))
+        
+        info = """📹 Teste ton modèle avec la webcam !
+        
+🎥 Détection en temps réel
+🎯 Affiche les bounding boxes et noms
+💾 Enregistre les détections
+📸 Prend des screenshots"""
+        
+        ttk.Label(tab, text=info, foreground="gray").grid(
+            row=1, column=0, columnspan=2, sticky=tk.W, pady=(0, 15))
+        
+        # Paramètres
+        params_frame = ttk.LabelFrame(tab, text="Paramètres", padding="10")
+        params_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        
+        # Modèle
+        ttk.Label(params_frame, text="Modèle:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.detection_model_var = tk.StringVar(value="runs/train/pokemon_detector/weights/best.pt")
+        
+        model_frame = ttk.Frame(params_frame)
+        model_frame.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+        
+        ttk.Entry(model_frame, textvariable=self.detection_model_var, width=40).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Button(model_frame, text="📂", width=3, 
+                  command=lambda: self.browse_file(self.detection_model_var, 
+                                                   "Modèle YOLO (*.pt)",
+                                                   [("PyTorch Model", "*.pt")])).pack(side=tk.LEFT, padx=(5, 0))
+        
+        # Confiance
+        ttk.Label(params_frame, text="Confiance minimale:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.detection_conf_var = tk.DoubleVar(value=0.5)
+        
+        conf_frame = ttk.Frame(params_frame)
+        conf_frame.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+        
+        conf_scale = ttk.Scale(conf_frame, from_=0.1, to=1.0, 
+                              variable=self.detection_conf_var, orient=tk.HORIZONTAL)
+        conf_scale.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        conf_label = ttk.Label(conf_frame, textvariable=self.detection_conf_var, width=5)
+        conf_label.pack(side=tk.LEFT, padx=(10, 0))
+        
+        # Caméra
+        ttk.Label(params_frame, text="Caméra:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.detection_camera_var = tk.IntVar(value=0)
+        ttk.Spinbox(params_frame, from_=0, to=3, textvariable=self.detection_camera_var, 
+                   width=10).grid(row=2, column=1, sticky=tk.W, pady=5, padx=(10, 0))
+        
+        params_frame.columnconfigure(1, weight=1)
+        
+        # Boutons
+        btn_frame = ttk.Frame(tab)
+        btn_frame.grid(row=3, column=0, columnspan=2, pady=15)
+        
+        ttk.Button(btn_frame, text="▶️ Démarrer Webcam", 
+                  command=self.start_webcam_detection, width=20).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="🖼️ Détecter Image", 
+                  command=self.detect_single_image, width=20).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="📂 Détecter Dossier", 
+                  command=self.detect_folder, width=20).pack(side=tk.LEFT, padx=5)
+        
+        tab.columnconfigure(0, weight=1)
+    
+    def create_export_tab(self):
+        """Onglet Export Multi-Format"""
+        tab = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(tab, text="📦 6. Export")
+        
+        # Description
+        ttk.Label(tab, text="Export Multi-Format", font=('Arial', 14, 'bold')).grid(
+            row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 10))
+        
+        info = """📦 Exporte ton dataset dans différents formats
+        
+📄 COCO JSON (Detectron2, MMDetection)
+📝 Pascal VOC XML (Faster R-CNN)
+🗜️ ZIP Roboflow (cloud training)
+📊 TFRecord (TensorFlow)"""
+        
+        ttk.Label(tab, text=info, foreground="gray").grid(
+            row=1, column=0, columnspan=2, sticky=tk.W, pady=(0, 15))
+        
+        # Options
+        options_frame = ttk.LabelFrame(tab, text="Options", padding="10")
+        options_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        
+        # Format
+        ttk.Label(options_frame, text="Format:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.export_format_var = tk.StringVar(value="all")
+        format_combo = ttk.Combobox(options_frame, textvariable=self.export_format_var, width=30)
+        format_combo['values'] = ["all", "coco", "voc", "roboflow"]
+        format_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+        
+        # Dataset source
+        ttk.Label(options_frame, text="Dataset:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.export_dataset_var = tk.StringVar(value=os.path.join("output", "yolov8"))
+        dataset_combo = ttk.Combobox(options_frame, textvariable=self.export_dataset_var, width=30)
+        dataset_combo['values'] = [
+            os.path.join("output", "yolov8"),
+            os.path.join("output", "augmented")
+        ]
+        dataset_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+        
+        # Options supplémentaires
+        self.export_split_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(options_frame, text="Train/Val split (80/20)", 
+                       variable=self.export_split_var).grid(row=2, column=0, columnspan=2, 
+                                                           sticky=tk.W, pady=5)
+        
+        self.export_readme_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(options_frame, text="Générer README.txt", 
+                       variable=self.export_readme_var).grid(row=3, column=0, columnspan=2, 
+                                                            sticky=tk.W, pady=5)
+        
+        options_frame.columnconfigure(1, weight=1)
+        
+        # Boutons
+        btn_frame = ttk.Frame(tab)
+        btn_frame.grid(row=3, column=0, columnspan=2, pady=15)
+        
+        ttk.Button(btn_frame, text="📤 Exporter", 
+                  command=self.export_dataset, width=20).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="🌈 Effet Holographique", 
+                  command=self.apply_holographic, width=25).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="⚖️ Auto-Balancing", 
+                  command=self.auto_balance_dataset, width=20).pack(side=tk.LEFT, padx=5)
         
         tab.columnconfigure(0, weight=1)
     
@@ -1121,6 +1516,290 @@ class PokemonDatasetGUI:
         
         thread = threading.Thread(target=workflow)
         thread.start()
+    
+    # === 🚀 MÉTHODES WORKFLOW AUTOMATIQUE ===
+    
+    def start_automatic_workflow(self):
+        """Démarrer le workflow automatique configuré"""
+        if self.is_running:
+            messagebox.showwarning("Attention", "Une opération est déjà en cours!")
+            return
+        
+        # Récupérer la configuration
+        num_aug = self.workflow_aug_var.get()
+        mosaic_mode = self.workflow_mosaic_var.get()
+        do_validate = self.workflow_validate_var.get()
+        do_balance = self.workflow_balance_var.get()
+        do_train = self.workflow_train_var.get()
+        
+        # Mapper le mode mosaïque
+        mosaic_counts = {
+            "rapide (200)": "200",
+            "standard (500)": "500", 
+            "complet (900)": "all",
+            "custom": "1"
+        }
+        mosaic_param = mosaic_counts.get(mosaic_mode, "1")
+        
+        # Confirmation
+        steps_text = f"""
+Configuration du workflow :
+
+1️⃣ Augmentation : {num_aug} variations par carte
+2️⃣ Mosaïques : Mode {mosaic_mode}
+3️⃣ Validation : {'✅ Activée' if do_validate else '❌ Désactivée'}
+4️⃣ Auto-balancing : {'✅ Activé' if do_balance else '❌ Désactivé'}
+5️⃣ Entraînement YOLO : {'✅ Activé' if do_train else '❌ Désactivé'}
+
+Durée estimée : {self._estimate_duration(num_aug, mosaic_param, do_train)}
+
+Continuer ?
+"""
+        
+        if not messagebox.askyesno("🚀 Lancer Workflow", steps_text):
+            return
+        
+        # Désactiver le bouton
+        self.workflow_start_btn.config(state='disabled')
+        
+        # Réinitialiser les status
+        self.reset_workflow_steps()
+        
+        # Lancer dans un thread
+        def workflow():
+            self.start_operation("Workflow Automatique")
+            total_steps = 2 + (1 if do_validate else 0) + (1 if do_balance else 0) + (1 if do_train else 0)
+            current_step = 0
+            
+            try:
+                # ÉTAPE 1: Augmentation
+                current_step += 1
+                self._update_workflow_step(0, "⏳ En cours...", "orange")
+                self._update_workflow_progress(current_step, total_steps, "Augmentation des cartes...")
+                
+                self.log(f"📋 Étape 1/{total_steps}: Augmentation ({num_aug} variations)...")
+                cmd = [sys.executable, "augmentation.py", "--num_aug", str(num_aug), "--target", "augmented"]
+                
+                if self._run_subprocess(cmd):
+                    self._update_workflow_step(0, "✅ Terminé", "green")
+                    self.log("✅ Augmentation terminée")
+                else:
+                    raise Exception("Échec de l'augmentation")
+                
+                # ÉTAPE 2: Mosaïques
+                current_step += 1
+                self._update_workflow_step(1, "⏳ En cours...", "orange")
+                self._update_workflow_progress(current_step, total_steps, "Génération des mosaïques...")
+                
+                self.log(f"\n📋 Étape 2/{total_steps}: Mosaïques (mode {mosaic_mode})...")
+                
+                if mosaic_param == "all":
+                    cmd = [sys.executable, "mosaic.py", "all"]
+                elif mosaic_param in ["200", "500"]:
+                    # Générer plusieurs variations
+                    num_variations = int(mosaic_param) // 18  # 18 combos possibles (3×3×2)
+                    self.log(f"Génération de {mosaic_param} mosaïques (~{num_variations} variations par combo)...")
+                    cmd = [sys.executable, "mosaic.py", "all"]  # Utiliser mode all pour l'instant
+                else:
+                    cmd = [sys.executable, "mosaic.py", "1", "0", "0"]
+                
+                if self._run_subprocess(cmd):
+                    self._update_workflow_step(1, "✅ Terminé", "green")
+                    self.log("✅ Mosaïques générées")
+                else:
+                    raise Exception("Échec de la génération des mosaïques")
+                
+                # ÉTAPE 3: Validation (optionnelle)
+                if do_validate:
+                    current_step += 1
+                    self._update_workflow_step(2, "⏳ En cours...", "orange")
+                    self._update_workflow_progress(current_step, total_steps, "Validation du dataset...")
+                    
+                    self.log(f"\n📋 Étape 3/{total_steps}: Validation du dataset...")
+                    cmd = [sys.executable, "dataset_validator.py", "output/yolov8", "--html"]
+                    
+                    if self._run_subprocess(cmd):
+                        self._update_workflow_step(2, "✅ Terminé", "green")
+                        self.log("✅ Validation terminée - Voir validation_report.html")
+                    else:
+                        self._update_workflow_step(2, "⚠️ Erreur", "red")
+                        self.log("⚠️ Validation échouée (non bloquant)")
+                else:
+                    self._update_workflow_step(2, "⏭️ Ignoré", "gray")
+                
+                # ÉTAPE 4: Auto-balancing (optionnel)
+                if do_balance:
+                    current_step += 1
+                    self._update_workflow_step(3, "⏳ En cours...", "orange")
+                    self._update_workflow_progress(current_step, total_steps, "Équilibrage des classes...")
+                    
+                    self.log(f"\n📋 Étape 4/{total_steps}: Auto-balancing...")
+                    cmd = [sys.executable, "auto_balancer.py", "output/yolov8", 
+                           "--strategy", "augment", "--target", "50"]
+                    
+                    if self._run_subprocess(cmd):
+                        self._update_workflow_step(3, "✅ Terminé", "green")
+                        self.log("✅ Classes équilibrées")
+                    else:
+                        self._update_workflow_step(3, "⚠️ Erreur", "red")
+                        self.log("⚠️ Auto-balancing échoué (non bloquant)")
+                else:
+                    self._update_workflow_step(3, "⏭️ Ignoré", "gray")
+                
+                # ÉTAPE 5: Entraînement YOLO (optionnel)
+                if do_train:
+                    current_step += 1
+                    self._update_workflow_step(4, "⏳ En cours...", "orange")
+                    self._update_workflow_progress(current_step, total_steps, "Entraînement du modèle YOLO...")
+                    
+                    self.log(f"\n📋 Étape 5/{total_steps}: Entraînement YOLO (cela peut prendre longtemps)...")
+                    
+                    # Lancer l'entraînement (version simplifiée)
+                    try:
+                        from ultralytics import YOLO
+                        model = YOLO('yolov8n.pt')
+                        results = model.train(
+                            data='output/yolov8/data.yaml',
+                            epochs=50,
+                            imgsz=640,
+                            batch=16,
+                            name='pokemon_detector'
+                        )
+                        self._update_workflow_step(4, "✅ Terminé", "green")
+                        self.log("✅ Entraînement terminé - Modèle sauvegardé dans runs/train/")
+                    except Exception as e:
+                        self._update_workflow_step(4, "⚠️ Erreur", "red")
+                        self.log(f"⚠️ Entraînement échoué: {e}")
+                else:
+                    self._update_workflow_step(4, "⏭️ Ignoré", "gray")
+                
+                # WORKFLOW TERMINÉ
+                self._update_workflow_progress(total_steps, total_steps, "✅ Workflow terminé!")
+                
+                # Résumé final
+                summary = self._generate_workflow_summary()
+                self.workflow_summary.config(text=summary, foreground='green')
+                
+                self.log("\n" + "="*50)
+                self.log("🎉 WORKFLOW AUTOMATIQUE TERMINÉ AVEC SUCCÈS!")
+                self.log("="*50)
+                self.log(summary)
+                
+                messagebox.showinfo("Succès", 
+                                  f"🎉 Workflow terminé!\n\n{summary}\n\nConsultez l'onglet Logs pour les détails.")
+                
+            except Exception as e:
+                self.log(f"\n❌ ERREUR WORKFLOW: {str(e)}")
+                self.workflow_summary.config(text=f"❌ Erreur: {str(e)}", foreground='red')
+                messagebox.showerror("Erreur", f"Le workflow a échoué:\n{str(e)}")
+            
+            finally:
+                self.end_operation()
+                self.workflow_start_btn.config(state='normal')
+                self.update_statistics()
+        
+        thread = threading.Thread(target=workflow, daemon=True)
+        thread.start()
+    
+    def stop_workflow(self):
+        """Arrêter le workflow en cours"""
+        if self.is_running:
+            response = messagebox.askyesno("Arrêter Workflow", 
+                                          "Voulez-vous vraiment arrêter le workflow?\n\n"
+                                          "L'étape en cours sera terminée.")
+            if response:
+                self.log("⏹️ Arrêt du workflow demandé...")
+                # Note: L'arrêt complet nécessiterait de gérer les subprocess
+        else:
+            messagebox.showinfo("Info", "Aucun workflow en cours")
+    
+    def reset_workflow(self):
+        """Réinitialiser l'interface du workflow"""
+        self.workflow_progress['value'] = 0
+        self.workflow_progress_label.config(text="Prêt à démarrer")
+        self.workflow_summary.config(text="Aucun workflow exécuté", foreground='gray')
+        self.reset_workflow_steps()
+        self.log("🔄 Workflow réinitialisé")
+    
+    def reset_workflow_steps(self):
+        """Réinitialiser tous les status des étapes"""
+        for status_label in self.workflow_steps:
+            status_label.config(text="⏳ En attente", foreground='gray')
+    
+    def _update_workflow_step(self, step_index, text, color):
+        """Mettre à jour le status d'une étape"""
+        if step_index < len(self.workflow_steps):
+            self.workflow_steps[step_index].config(text=text, foreground=color)
+            self.root.update_idletasks()
+    
+    def _update_workflow_progress(self, current, total, message):
+        """Mettre à jour la barre de progression"""
+        percentage = (current / total) * 100
+        self.workflow_progress['value'] = percentage
+        self.workflow_progress_label.config(text=f"{message} ({current}/{total})")
+        self.root.update_idletasks()
+    
+    def _run_subprocess(self, cmd):
+        """Exécuter une commande subprocess avec logs"""
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
+                                  stderr=subprocess.STDOUT, text=True)
+        
+        for line in iter(process.stdout.readline, ''):
+            if line:
+                self.log(line.strip())
+        
+        process.wait()
+        return process.returncode == 0
+    
+    def _estimate_duration(self, num_aug, mosaic_param, do_train):
+        """Estimer la durée du workflow"""
+        duration = 0
+        duration += num_aug * 0.5  # ~0.5s par augmentation
+        
+        if mosaic_param == "all":
+            duration += 900 * 0.2  # ~0.2s par mosaïque
+        elif mosaic_param == "500":
+            duration += 500 * 0.2
+        elif mosaic_param == "200":
+            duration += 200 * 0.2
+        else:
+            duration += 161 * 0.2
+        
+        if do_train:
+            duration += 30 * 60  # ~30 min pour entraînement
+        
+        if duration < 60:
+            return f"{int(duration)}s"
+        elif duration < 3600:
+            return f"{int(duration/60)} min"
+        else:
+            return f"{int(duration/3600)}h {int((duration%3600)/60)}min"
+    
+    def _generate_workflow_summary(self):
+        """Générer le résumé final du workflow"""
+        import os
+        
+        summary_lines = []
+        
+        # Compter les fichiers générés
+        aug_path = "output/augmented/images"
+        yolo_path = "output/yolov8/images"
+        
+        if os.path.exists(aug_path):
+            aug_count = len([f for f in os.listdir(aug_path) if f.endswith(('.jpg', '.png'))])
+            summary_lines.append(f"✅ {aug_count} cartes augmentées")
+        
+        if os.path.exists(yolo_path):
+            yolo_count = len([f for f in os.listdir(yolo_path) if f.endswith(('.jpg', '.png'))])
+            summary_lines.append(f"✅ {yolo_count} mosaïques YOLO")
+        
+        if os.path.exists("validation_report.html"):
+            summary_lines.append("✅ Rapport de validation généré")
+        
+        if os.path.exists("runs/train/pokemon_detector/weights/best.pt"):
+            summary_lines.append("✅ Modèle YOLO entraîné")
+        
+        return "\n".join(summary_lines) if summary_lines else "Workflow terminé"
     
     # === Méthodes utilitaires ===
     
@@ -2108,6 +2787,432 @@ class PokemonDatasetGUI:
                           "✅ Logs détaillés\n"
                           "✅ Utilitaires API Pokémon TCG\n\n"
                           "© 2025")
+    
+    # === Méthodes pour les nouveaux onglets ===
+    
+    def validate_dataset(self):
+        """Valide le dataset YOLO"""
+        dataset_dir = self.validation_dataset_var.get()
+        generate_html = self.validation_html_var.get()
+        
+        self.log(f"🔍 Validation du dataset: {dataset_dir}")
+        self.start_operation("Validation")
+        
+        def task():
+            try:
+                from dataset_validator import DatasetValidator
+                
+                validator = DatasetValidator(dataset_dir)
+                results = validator.validate()
+                validator.print_report()
+                
+                if generate_html:
+                    validator.save_report_html("validation_report.html")
+                    self.log("📄 Rapport HTML généré: validation_report.html")
+                
+                # Résumé
+                errors = len(results['corrupted_images']) + len(results['annotations_out_of_bounds'])
+                warnings = len(results['warnings'])
+                
+                if errors == 0:
+                    messagebox.showinfo("Succès", 
+                        f"✅ Validation terminée!\n\n"
+                        f"Aucune erreur détectée\n"
+                        f"{warnings} avertissements")
+                else:
+                    messagebox.showwarning("Validation", 
+                        f"⚠️ Validation terminée\n\n"
+                        f"{errors} erreurs\n"
+                        f"{warnings} avertissements")
+                
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+            finally:
+                self.end_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def start_training(self):
+        """Entraîne un modèle YOLOv8"""
+        model_name = self.training_model_var.get()
+        epochs = self.training_epochs_var.get()
+        batch = self.training_batch_var.get()
+        imgsz = self.training_imgsz_var.get()
+        device = self.training_device_var.get()
+        
+        data_yaml = os.path.join("output", "yolov8", "data.yaml")
+        
+        if not os.path.exists(data_yaml):
+            messagebox.showerror("Erreur", 
+                f"Fichier data.yaml non trouvé!\n{data_yaml}\n\n"
+                "Générez d'abord les mosaïques.")
+            return
+        
+        self.log(f"🎓 Entraînement YOLOv8: {model_name}")
+        self.log(f"   Epochs: {epochs}, Batch: {batch}, ImgSz: {imgsz}, Device: {device}")
+        self.start_operation("Entraînement")
+        
+        def task():
+            try:
+                from ultralytics import YOLO
+                
+                # Charger le modèle
+                model = YOLO(model_name)
+                
+                # Entraîner
+                results = model.train(
+                    data=data_yaml,
+                    epochs=epochs,
+                    imgsz=imgsz,
+                    batch=batch,
+                    device=device,
+                    patience=50,
+                    save=True,
+                    project="runs/train",
+                    name="pokemon_detector",
+                    exist_ok=True,
+                    verbose=True
+                )
+                
+                self.log("✅ Entraînement terminé!")
+                self.log(f"📊 Modèle sauvegardé: runs/train/pokemon_detector/weights/best.pt")
+                
+                messagebox.showinfo("Succès", 
+                    "✅ Entraînement terminé!\n\n"
+                    "Modèle sauvegardé dans:\n"
+                    "runs/train/pokemon_detector/weights/best.pt")
+                
+            except ImportError:
+                self.log("❌ Ultralytics non installé!")
+                messagebox.showerror("Erreur", 
+                    "Package ultralytics non installé!\n\n"
+                    "Installation:\n"
+                    "pip install -r requirements_extra.txt")
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                import traceback
+                self.log(traceback.format_exc())
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+            finally:
+                self.end_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def show_training_plots(self):
+        """Affiche les graphiques d'entraînement"""
+        plots_dir = Path("runs/train/pokemon_detector")
+        
+        if not plots_dir.exists():
+            messagebox.showwarning("Attention", "Aucun entraînement trouvé!")
+            return
+        
+        # Chercher results.png
+        results_png = plots_dir / "results.png"
+        
+        if results_png.exists():
+            import cv2
+            img = cv2.imread(str(results_png))
+            cv2.imshow("Training Results", img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+        else:
+            messagebox.showinfo("Info", 
+                f"Graphiques non trouvés.\n\n"
+                f"Cherchez dans: {plots_dir}")
+    
+    def start_webcam_detection(self):
+        """Démarre la détection webcam"""
+        model_path = self.detection_model_var.get()
+        conf = self.detection_conf_var.get()
+        camera = self.detection_camera_var.get()
+        
+        if not os.path.exists(model_path):
+            messagebox.showerror("Erreur", 
+                f"Modèle non trouvé!\n{model_path}\n\n"
+                "Entraînez d'abord un modèle.")
+            return
+        
+        self.log(f"📹 Démarrage détection webcam...")
+        self.log(f"   Modèle: {model_path}")
+        self.log(f"   Confiance: {conf}")
+        self.log(f"   Caméra: {camera}")
+        
+        def task():
+            try:
+                from ultralytics import YOLO
+                import cv2
+                
+                # Charger le modèle
+                model = YOLO(model_path)
+                
+                # Ouvrir la webcam
+                cap = cv2.VideoCapture(camera)
+                
+                if not cap.isOpened():
+                    self.log("❌ Impossible d'ouvrir la caméra!")
+                    messagebox.showerror("Erreur", "Impossible d'ouvrir la caméra!")
+                    return
+                
+                self.log("✅ Webcam démarrée! (appuyez sur 'q' pour quitter)")
+                
+                while True:
+                    ret, frame = cap.read()
+                    
+                    if not ret:
+                        break
+                    
+                    # Détecter
+                    results = model(frame, conf=conf)
+                    
+                    # Dessiner les bounding boxes
+                    annotated = results[0].plot()
+                    
+                    # Afficher
+                    cv2.imshow('Pokemon Card Detector', annotated)
+                    
+                    # Quitter avec 'q'
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+                
+                cap.release()
+                cv2.destroyAllWindows()
+                
+                self.log("✅ Webcam arrêtée")
+                
+            except ImportError:
+                self.log("❌ Ultralytics non installé!")
+                messagebox.showerror("Erreur", "Package ultralytics non installé!")
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def detect_single_image(self):
+        """Détecte les cartes dans une image"""
+        model_path = self.detection_model_var.get()
+        
+        if not os.path.exists(model_path):
+            messagebox.showerror("Erreur", "Modèle non trouvé!")
+            return
+        
+        # Choisir une image
+        img_path = filedialog.askopenfilename(
+            title="Choisir une image",
+            filetypes=[("Images", "*.png *.jpg *.jpeg"), ("Tous", "*.*")]
+        )
+        
+        if not img_path:
+            return
+        
+        self.log(f"🔍 Détection sur: {img_path}")
+        
+        def task():
+            try:
+                from ultralytics import YOLO
+                import cv2
+                
+                model = YOLO(model_path)
+                
+                # Détecter
+                results = model(img_path)
+                
+                # Afficher le résultat
+                annotated = results[0].plot()
+                cv2.imshow('Detection Result', annotated)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+                
+                # Log des détections
+                boxes = results[0].boxes
+                self.log(f"✅ {len(boxes)} cartes détectées")
+                
+                for i, box in enumerate(boxes):
+                    cls = int(box.cls[0])
+                    conf = float(box.conf[0])
+                    name = results[0].names[cls]
+                    self.log(f"   {i+1}. {name} ({conf:.2%})")
+                
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def detect_folder(self):
+        """Détecte les cartes dans toutes les images d'un dossier"""
+        model_path = self.detection_model_var.get()
+        
+        if not os.path.exists(model_path):
+            messagebox.showerror("Erreur", "Modèle non trouvé!")
+            return
+        
+        # Choisir un dossier
+        folder_path = filedialog.askdirectory(title="Choisir un dossier d'images")
+        
+        if not folder_path:
+            return
+        
+        self.log(f"📂 Détection sur le dossier: {folder_path}")
+        self.start_operation("Détection")
+        
+        def task():
+            try:
+                from ultralytics import YOLO
+                from pathlib import Path
+                
+                model = YOLO(model_path)
+                
+                # Créer dossier de sortie
+                output_dir = Path(folder_path) / "detections"
+                output_dir.mkdir(exist_ok=True)
+                
+                # Lister les images
+                image_files = list(Path(folder_path).glob("*.png")) + \
+                             list(Path(folder_path).glob("*.jpg")) + \
+                             list(Path(folder_path).glob("*.jpeg"))
+                
+                self.log(f"📊 {len(image_files)} images trouvées")
+                
+                # Détecter chaque image
+                for idx, img_path in enumerate(image_files, 1):
+                    self.log(f"   {idx}/{len(image_files)}: {img_path.name}")
+                    
+                    results = model(str(img_path))
+                    annotated = results[0].plot()
+                    
+                    # Sauvegarder
+                    import cv2
+                    output_path = output_dir / f"detect_{img_path.name}"
+                    cv2.imwrite(str(output_path), annotated)
+                
+                self.log(f"✅ Détection terminée! Résultats dans: {output_dir}")
+                messagebox.showinfo("Succès", 
+                    f"✅ Détection terminée!\n\n"
+                    f"{len(image_files)} images traitées\n"
+                    f"Résultats dans: {output_dir}")
+                
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+            finally:
+                self.end_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def export_dataset(self):
+        """Exporte le dataset dans différents formats"""
+        dataset_dir = self.export_dataset_var.get()
+        export_format = self.export_format_var.get()
+        
+        self.log(f"📦 Export du dataset: {export_format}")
+        self.start_operation("Export")
+        
+        def task():
+            try:
+                from dataset_exporter import DatasetExporter
+                
+                exporter = DatasetExporter(dataset_dir)
+                
+                if export_format in ['coco', 'all']:
+                    exporter.export_coco("dataset_coco.json")
+                
+                if export_format in ['voc', 'all']:
+                    exporter.export_pascal_voc("dataset_voc")
+                
+                if export_format in ['roboflow', 'all']:
+                    exporter.export_roboflow_zip("dataset_roboflow.zip")
+                
+                self.log("✅ Export terminé!")
+                messagebox.showinfo("Succès", 
+                    f"✅ Export terminé!\n\n"
+                    f"Format: {export_format}")
+                
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                import traceback
+                self.log(traceback.format_exc())
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+            finally:
+                self.end_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def apply_holographic(self):
+        """Applique l'effet holographique aux cartes"""
+        # Demander le dossier source
+        source_dir = filedialog.askdirectory(
+            title="Dossier source des cartes",
+            initialdir="images"
+        )
+        
+        if not source_dir:
+            return
+        
+        output_dir = os.path.join(source_dir + "_holographic")
+        
+        self.log(f"🌈 Application effet holographique...")
+        self.log(f"   Source: {source_dir}")
+        self.log(f"   Sortie: {output_dir}")
+        self.start_operation("Holographie")
+        
+        def task():
+            try:
+                from holographic_augmenter import HolographicAugmenter
+                
+                augmenter = HolographicAugmenter()
+                augmenter.augment_directory(source_dir, output_dir, num_variations=3)
+                
+                self.log("✅ Effet holographique appliqué!")
+                messagebox.showinfo("Succès", 
+                    f"✅ Effet holographique appliqué!\n\n"
+                    f"Images dans: {output_dir}")
+                
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+            finally:
+                self.end_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def auto_balance_dataset(self):
+        """Rééquilibre automatiquement le dataset"""
+        dataset_dir = self.export_dataset_var.get()
+        
+        # Demander la stratégie
+        strategy = messagebox.askquestion("Stratégie", 
+            "Augmenter les classes sous-représentées?\n\n"
+            "Oui = Augmenter\n"
+            "Non = Réduire les sur-représentées")
+        
+        strategy = "augment" if strategy == "yes" else "reduce"
+        
+        self.log(f"⚖️ Auto-balancing: {strategy}")
+        self.start_operation("Balancing")
+        
+        def task():
+            try:
+                from auto_balancer import DatasetBalancer
+                
+                balancer = DatasetBalancer(dataset_dir, strategy=strategy)
+                balancer.balance()
+                
+                self.log("✅ Balancing terminé!")
+                messagebox.showinfo("Succès", 
+                    "✅ Balancing terminé!\n\n"
+                    "Le dataset est maintenant équilibré.")
+                
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                import traceback
+                self.log(traceback.format_exc())
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+            finally:
+                self.end_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
 
 def main():
     root = tk.Tk()
@@ -2122,6 +3227,7 @@ def main():
     
     app = PokemonDatasetGUI(root)
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()

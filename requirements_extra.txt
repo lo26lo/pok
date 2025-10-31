@@ -1,0 +1,19 @@
+# Dépendances supplémentaires pour les nouvelles fonctionnalités
+# Installation: pip install -r requirements_extra.txt
+
+# === Pour l'entraînement YOLO ===
+ultralytics>=8.0.0
+
+# === Pour l'API REST ===
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# === Pour le mode collaboratif ===
+SQLAlchemy>=2.0.0
+
+# === Déjà dans requirements.txt mais rappel ===
+# opencv-python>=4.9.0
+# numpy>=1.26.0
+# pandas>=2.0.0
+# openpyxl>=3.1.0
+# imgaug>=0.4.0
