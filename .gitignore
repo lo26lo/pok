@@ -26,6 +26,8 @@ env/
 *_updated.xlsx
 extension_cards.xlsx
 test_*.xlsx
+cards_list.xlsx
+cards_with_prices.xlsx
 
 # OS
 .DS_Store
@@ -78,3 +80,15 @@ OLD/
 
 # Local batch files with absolute paths
 run_with_env.bat
+
+# Session logs and work documents
+SESSION_COMPLETE_*.md
+FINALISATION_DOCUMENTATION.md
+NOUVELLES_FONCTIONNALITES.md
+README_OLD_BACKUP.md
+
+# Generated reports
+validation_report.html
+
+# Generated images folders
+images_holographic/
