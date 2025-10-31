@@ -46,16 +46,16 @@
 </td>
 <td align="center" width="33%">
 
-![Mosaic Layout](examples/example_layout_annotated.png)
-**Annotated Mosaic**  
-YOLO format ready
+![Fake Background](examples/example_fakeimg.png)
+**Generated Backgrounds**  
+Realistic training data
 
 </td>
 <td align="center" width="33%">
 
-![Grid Layout](examples/example_layout.png)
-**Grid Mosaic**  
-Structured placement
+![Mosaic Layout](examples/example_layout_annotated.png)
+**Annotated Mosaic**  
+YOLO format ready
 
 </td>
 </tr>
