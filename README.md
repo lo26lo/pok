@@ -19,35 +19,53 @@
 
 </div>
 
-## 🚀 What's New in v3.0
+---
 
-### 🎨 Modern Interface
-- ✨ **Catppuccin Mocha** color scheme
-- 🎯 **Sidebar navigation** with 9 views
-- 📊 **Real-time statistics** dashboard
-- ⏹️ **Stop button** for all operations
-- 🔔 **Environment checks** (venv, Excel file)
-- 💾 **Persistent settings** saved to JSON
+## � Screenshots & Examples
 
-### 🛠️ New Features
-- 📊 **Dataset Validation**: Verify YOLO format, detect corruption, HTML reports
-- 🎓 **YOLOv8 Training**: Train models directly from GUI with real-time logs
-- 📹 **Live Detection**: Real-time webcam detection with your trained models
-- 📦 **Multi-Format Export**: COCO, Pascal VOC, TFRecord, Roboflow ZIP
-- 🌈 **Holographic Effects**: Simulate shiny/holographic Pokemon cards
-- ⚖️ **Auto-Balancing**: Automatically balance class distribution
-- 🌐 **REST API Server**: Flask server for production deployment
-- 🎴 **TCGdex Integration**: Generate card lists, update prices, search cards
-- 📋 **Excel & Prices**: Full API tools for card management
+<div align="center">
 
-### 🏗️ Architecture Improvements
-- 📦 **Modular Core**: 13 specialized modules in `core/` package
-- 🎯 **Type Annotations**: Full typing support for better IDE experience
-- 🔧 **Manager Pattern**: WorkflowManager, TrainingManager, DetectionManager
-- 🌍 **Unicode Support**: Safe print handling for Windows console
-- 🔄 **Threading**: Non-blocking operations with real-time logs
+### Modern GUI Interface
 
-[📚 Read full documentation →](docs/GUI_V3_GUIDE.md)
+![GUI Dashboard](examples/gui_dashboard.png)
+*Real-time dashboard with statistics, environment checks, and quick actions*
+
+---
+
+### Image Processing Pipeline
+
+<table>
+<tr>
+<td align="center" width="50%">
+
+![Augmented Examples](examples/example_augmented.png)
+**Augmented Cards** - 22 transformation types
+
+</td>
+<td align="center" width="50%">
+
+![Mosaic Layout](examples/example_layout_annotated.png)
+**Annotated Mosaic** - YOLO format ready
+
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+
+![Grid Layout](examples/example_layout.png)
+**Grid Mosaic** - Structured card placement
+
+</td>
+<td align="center" width="50%">
+
+![Fake Background](examples/example_fakeimg.png)
+**Generated Backgrounds** - Realistic training data
+
+</td>
+</tr>
+</table>
+
+</div>
 
 ---
 
@@ -252,7 +270,14 @@ run_gui_v3.bat
 
 ---
 
-## �📁 Project Structure
+
+</td>
+</tr>
+</table>
+
+---
+
+## � Project Structure
 
 ```
 pok/
