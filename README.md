@@ -94,12 +94,14 @@ Complete dataset with bounding boxes
 - Custom output directory
 - Multiple augmentation types
 - YOLO annotation generation
+- 🌈 Holographic effects (shiny cards)
 
 ### 🧩 Mosaic Generator
 - 3 layout modes (Grid/Rotation/Random)
 - Background selection
 - Batch generation
 - Annotated output
+- 📋 Fake background generation
 
 ### ✅ Dataset Validation
 - YOLO format verification
@@ -134,8 +136,7 @@ Complete dataset with bounding boxes
 ### 🛠️ Utilities
 - 📋 Excel & Prices (TCGdex API)
 - ⚖️ Auto-balancing
-- 🌈 Holographic augmentation
-- 🌐 TCG Browser
+-  TCG Browser
 - 🧹 Clean & Reset tools
 - ⚙️ Settings dialog
 
@@ -162,80 +163,6 @@ run_gui_v3.bat
 ```
 
 **✨ That's it! The modern interface is ready to use!**
-
----
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### 📊 Dashboard (Home)
-- Real-time statistics
-- Source/Augmented/Mosaic counts
-- Dataset size calculation
-- Environment verification
-- Quick action buttons
-
-### 🔄 Automatic Workflow
-- 5-step pipeline
-- Augmentation → Mosaic → Validation → Balance → Training
-- Configurable steps
-- Progress tracking
-- Real-time logs
-
-### 🎨 Augmentation
-- Configure transformation count
-- Custom output directory
-- Multiple augmentation types
-- YOLO annotation generation
-
-### 🧩 Mosaic Generator
-- 3 layout modes (Grid/Rotation/Random)
-- Background selection
-- Batch generation
-- Annotated output
-
-### ✅ Dataset Validation
-- YOLO format verification
-- Detect corrupted images
-- Class distribution analysis
-- HTML report generation
-
-</td>
-<td width="50%" valign="top">
-
-### 🎓 YOLOv8 Training
-- Model size selection (n/s/m/l/x)
-- Custom epochs
-- Image size configuration
-- Real-time training logs
-- Automatic metric export
-
-### 📹 Live Detection
-- Webcam real-time detection
-- Model selection
-- Confidence threshold
-- Bounding box visualization
-- Detection recording
-
-### 📦 Export Tools
-- COCO JSON format
-- Pascal VOC XML
-- TFRecord (TensorFlow)
-- Roboflow ZIP
-- Multi-format batch export
-
-### 🛠️ Utilities
-- 📋 Excel & Prices (TCGdex API)
-- ⚖️ Auto-balancing
-- 🌈 Holographic augmentation
-- 🌐 TCG Browser
-- 🧹 Clean & Reset tools
-- ⚙️ Settings dialog
-
-</td>
-</tr>
-</table>
 
 ---
 
