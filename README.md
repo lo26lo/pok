@@ -307,47 +307,7 @@ run_gui_v3.bat
 
 ---
 
-### Image Processing Pipeline
-
-<table>
-<tr>
-<td align="center" width="50%">
-
-![Augmented Examples](examples/example_augmented.png)
-**Augmented Cards** - 22 transformation types
-
-</td>
-<td align="center" width="50%">
-
-![Mosaic Layout](examples/example_layout_annotated.png)
-**Annotated Mosaic** - YOLO format ready
-
-</td>
-</tr>
-<tr>
-<td align="center" width="50%">
-
-![Grid Layout](examples/example_layout.png)
-**Grid Mosaic** - Structured card placement
-
-</td>
-<td align="center" width="50%">
-
-![Fake Background](examples/example_fakeimg.png)
-**Generated Backgrounds** - For realistic training
-
-</td>
-</tr>
-</table>
-
 </div>
-
----
-
-
-</td>
-</tr>
-</table>
 
 ---
 
