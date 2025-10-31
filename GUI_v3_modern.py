@@ -2302,41 +2302,23 @@ Continuer ?"""
     def show_help(self):
         """Ouvrir la documentation d'aide dans le navigateur"""
         import webbrowser
-        from pathlib import Path
         
-        help_path = Path("HELP.md").absolute()
+        # Ouvrir directement la version GitHub (bien formatée, toujours accessible)
+        github_url = "https://github.com/lo26lo/pok/blob/main/HELP.md"
         
-        if help_path.exists():
-            try:
-                # Convertir le chemin en URL file://
-                file_url = help_path.as_uri()
-                webbrowser.open(file_url)
-                self.log("📖 Help documentation opened in browser")
-            except Exception as e:
-                self.log(f"⚠️ Could not open browser: {e}")
-                # Fallback: ouvrir la version en ligne
-                try:
-                    webbrowser.open("https://github.com/lo26lo/pok/blob/main/HELP.md")
-                    self.log("📖 Opened online documentation instead")
-                except:
-                    messagebox.showinfo(
-                        "Help Documentation",
-                        f"Local file: {help_path}\n\n"
-                        "📖 Online documentation:\n"
-                        "https://github.com/lo26lo/pok/blob/main/HELP.md"
-                    )
-        else:
-            # Si le fichier n'existe pas, ouvrir la version en ligne
-            try:
-                webbrowser.open("https://github.com/lo26lo/pok/blob/main/HELP.md")
-                self.log("📖 Opened online documentation")
-            except Exception as e:
-                self.log(f"⚠️ Could not open documentation: {e}")
-                messagebox.showwarning(
-                    "Help Not Found",
-                    "HELP.md file not found locally!\n\n"
-                    "📖 Online documentation:\n"
-                    "https://github.com/lo26lo/pok/blob/main/HELP.md"
+        try:
+            webbrowser.open(github_url)
+            self.log("📖 Help documentation opened in browser")
+        except Exception as e:
+            self.log(f"⚠️ Could not open browser: {e}")
+            # Fallback: afficher le lien
+            from pathlib import Path
+            help_local = Path("HELP.md").absolute()
+            messagebox.showinfo(
+                "Help Documentation",
+                f"📖 Online:\n{github_url}\n\n"
+                f"📁 Local:\n{help_local}\n\n"
+                "Copy the online link to your browser"
             )
     
     # ==================== TRAINING METHODS ====================
