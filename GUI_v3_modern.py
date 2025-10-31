@@ -2300,46 +2300,43 @@ Continuer ?"""
         SettingsDialog(self.root, self)
     
     def show_help(self):
-        """Ouvrir le fichier d'aide HELP.md"""
-        help_path = Path("HELP.md")
+        """Ouvrir la documentation d'aide dans le navigateur"""
+        import webbrowser
+        from pathlib import Path
+        
+        help_path = Path("HELP.md").absolute()
         
         if help_path.exists():
             try:
-                # Ouvrir avec le programme par défaut
-                import os
-                import platform
-                
-                system = platform.system()
-                if system == 'Windows':
-                    # Windows: utiliser os.startfile
-                    os.startfile(str(help_path))
-                elif system == 'Darwin':
-                    # macOS: utiliser open
-                    import subprocess
-                    subprocess.run(['open', str(help_path)], check=False)
-                else:
-                    # Linux: utiliser xdg-open
-                    import subprocess
-                    subprocess.run(['xdg-open', str(help_path)], check=False)
-                
-                self.log("📖 Help documentation opened")
+                # Convertir le chemin en URL file://
+                file_url = help_path.as_uri()
+                webbrowser.open(file_url)
+                self.log("📖 Help documentation opened in browser")
             except Exception as e:
-                self.log(f"⚠️ Could not open HELP.md: {e}")
-                # Fallback: afficher un message avec le chemin
-                messagebox.showinfo(
-                    "Help Documentation",
-                    f"Help file location:\n{help_path.absolute()}\n\n"
-                    "Open this file with a Markdown viewer or text editor.\n\n"
+                self.log(f"⚠️ Could not open browser: {e}")
+                # Fallback: ouvrir la version en ligne
+                try:
+                    webbrowser.open("https://github.com/lo26lo/pok/blob/main/HELP.md")
+                    self.log("📖 Opened online documentation instead")
+                except:
+                    messagebox.showinfo(
+                        "Help Documentation",
+                        f"Local file: {help_path}\n\n"
+                        "📖 Online documentation:\n"
+                        "https://github.com/lo26lo/pok/blob/main/HELP.md"
+                    )
+        else:
+            # Si le fichier n'existe pas, ouvrir la version en ligne
+            try:
+                webbrowser.open("https://github.com/lo26lo/pok/blob/main/HELP.md")
+                self.log("📖 Opened online documentation")
+            except Exception as e:
+                self.log(f"⚠️ Could not open documentation: {e}")
+                messagebox.showwarning(
+                    "Help Not Found",
+                    "HELP.md file not found locally!\n\n"
                     "📖 Online documentation:\n"
                     "https://github.com/lo26lo/pok/blob/main/HELP.md"
-                )
-        else:
-            messagebox.showwarning(
-                "Help Not Found",
-                "HELP.md file not found!\n\n"
-                "📖 Online documentation:\n"
-                "https://github.com/lo26lo/pok/blob/main/HELP.md\n\n"
-                "Or check docs/GUI_V3_GUIDE.md"
             )
     
     # ==================== TRAINING METHODS ====================

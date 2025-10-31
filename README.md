@@ -486,7 +486,36 @@ Supported languages: `en`, `fr`, `es`, `it`, `pt`, `de`, `ja`, `zh`, `id`, `th`
 
 ---
 
-## 📄 License
+## � Credits & Acknowledgments
+
+### Inspiration
+
+This project was inspired by the research paper:
+- 📄 **[Real-Time Pokemon Card Detection from Tournament Footage](https://cs231n.stanford.edu/2024/papers/real-time-pokemon-card-detection-from-tournament-footage.pdf)** - Stanford CS231n (2024)
+
+The paper's approach to card detection in tournament settings motivated the development of this comprehensive dataset generation and training pipeline.
+
+### Technologies & Libraries
+
+- 🔥 **[YOLOv8](https://github.com/ultralytics/ultralytics)** - Ultralytics for state-of-the-art object detection
+- 🎨 **[OpenCV](https://opencv.org/)** - Computer vision and image processing
+- 🖼️ **[imgaug](https://github.com/aleju/imgaug)** - Advanced image augmentation
+- 🎴 **[TCGdex API](https://tcgdex.net/)** - Pokemon TCG card database and pricing
+- 🎭 **[Pillow](https://python-pillow.org/)** - Image manipulation
+- 🐼 **[Pandas](https://pandas.pydata.org/)** - Data processing and Excel integration
+- 🌐 **[Flask](https://flask.palletsprojects.com/)** - REST API server
+- 🎨 **[Catppuccin](https://github.com/catppuccin/catppuccin)** - Modern color scheme
+
+### Special Thanks
+
+- Pokemon Company International for the amazing TCG
+- Stanford CS231n course for computer vision research
+- Open source community for incredible tools
+- All contributors and users of this project
+
+---
+
+## �📄 License
 
 MIT License - See [LICENSE](LICENSE) file
 
