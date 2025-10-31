@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 GUI Modernisé pour la génération de Dataset Pokémon
-Version 2.0.1 - Interface améliorée avec settings, progression, validation et utilitaires API
+Version 2.0.2 - Interface améliorée avec settings, progression, validation et utilitaires API
+Améliorations API: Session persistante, retry automatique, health checks
 """
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
@@ -13,11 +14,14 @@ import threading
 import time
 from pathlib import Path
 from datetime import datetime
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 class PokemonDatasetGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Pokemon Dataset Generator v2.0.1")
+        self.root.title("Pokemon Dataset Generator v2.0.2")
         self.root.geometry("1000x700")
         
         # Définir l'icône Pikachu si elle existe
@@ -38,9 +42,108 @@ class PokemonDatasetGUI:
         self.current_process = None
         self.is_running = False
         
+        # Session API réutilisable (sera créée à la demande)
+        self.api_session = None
+        
         # Créer l'interface
         self.create_menu()
         self.create_main_interface()
+    
+    def create_api_session(self):
+        """
+        Crée une session requests optimisée avec retry automatique.
+        Réutilise la connexion TCP pour de meilleures performances.
+        """
+        self.log("🔧 Création de la session API...")
+        
+        # Activer les logs urllib3 pour voir les retries
+        import logging
+        urllib3_logger = logging.getLogger('urllib3.connectionpool')
+        urllib3_logger.setLevel(logging.DEBUG)
+        
+        # Handler pour rediriger vers notre log
+        class LogHandler(logging.Handler):
+            def __init__(self, log_func):
+                super().__init__()
+                self.log_func = log_func
+                
+            def emit(self, record):
+                msg = self.format(record)
+                if 'Retry' in msg or 'retry' in msg.lower():
+                    self.log_func(f"🔁 {msg}")
+                elif 'timeout' in msg.lower():
+                    self.log_func(f"⏱️  {msg}")
+        
+        handler = LogHandler(self.log)
+        handler.setFormatter(logging.Formatter('%(message)s'))
+        urllib3_logger.addHandler(handler)
+        
+        session = requests.Session()
+        
+        # Configuration du retry automatique
+        # - 5 tentatives maximum
+        # - Backoff exponentiel (1, 2, 4, 8, 16 secondes)
+        # - Retry sur les erreurs 429 (rate limit), 500, 502, 503, 504
+        self.log("⚙️  Configuration: 5 retries, backoff exponentiel (1→2→4→8→16s)")
+        self.log("⚙️  Retry sur codes: 429, 500, 502, 503, 504")
+        
+        retry_strategy = Retry(
+            total=5,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["HEAD", "GET", "OPTIONS"]
+        )
+        
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session.mount("https://", adapter)
+        # Pas de mount http:// - l'API Pokemon TCG n'accepte que HTTPS
+        
+        # Headers par défaut
+        session.headers.update({
+            'User-Agent': 'Pokemon-Dataset-Generator/2.0.2',
+            'X-Api-Key': self.api_key
+        })
+        
+        self.log("✅ Session créée avec User-Agent et API Key")
+        
+        return session
+    
+    def get_api_session(self):
+        """Retourne la session API, la crée si nécessaire"""
+        if self.api_session is None:
+            self.api_session = self.create_api_session()
+        return self.api_session
+    
+    def check_api_health(self):
+        """
+        Vérifie que l'API est accessible avant de lancer des opérations longues.
+        Retourne (is_healthy, message)
+        """
+        self.log("🏥 Test de santé de l'API en cours...")
+        self.log("📡 Requête: GET https://api.pokemontcg.io/v2/sets (timeout: 30s)")
+        self.log("⏳ En attente de la réponse (cela peut prendre jusqu'à 30 secondes)...")
+        
+        try:
+            session = self.get_api_session()
+            import time
+            start = time.time()
+            
+            # Ajouter un callback pour montrer la progression
+            response = session.get("https://api.pokemontcg.io/v2/sets", timeout=30)
+            
+            elapsed = time.time() - start
+            self.log(f"⏱️  Réponse health check en {elapsed:.2f}s (status: {response.status_code})")
+            
+            if response.status_code == 200:
+                return True, "API opérationnelle"
+            else:
+                return False, f"API retourne le code {response.status_code}"
+        except requests.exceptions.Timeout:
+            self.log("⚠️  Health check timeout (>30s)")
+            return False, "API lente (timeout) - mais vous pouvez essayer de continuer"
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Health check erreur: {str(e)[:100]}")
+            return False, f"Erreur de connexion: {str(e)}"
     
     def load_api_key(self):
         """Charge la clé API depuis api_config.json"""
@@ -127,6 +230,7 @@ class PokemonDatasetGUI:
         settings_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Settings", menu=settings_menu)
         settings_menu.add_command(label="Chemins et Configuration", command=self.open_settings)
+        settings_menu.add_command(label="Configuration API", command=self.open_api_settings)
         
         # Menu Aide
         help_menu = tk.Menu(menubar, tearoff=0)
@@ -570,6 +674,139 @@ class PokemonDatasetGUI:
             self.log("🔄 Configuration réinitialisée")
             messagebox.showinfo("Succès", "Paramètres réinitialisés!")
     
+    def open_api_settings(self):
+        """Ouvrir la fenêtre de configuration API"""
+        api_window = tk.Toplevel(self.root)
+        api_window.title("🔧 Configuration API TCGdex")
+        api_window.geometry("500x300")
+        
+        # Charger la config actuelle
+        try:
+            with open('api_config.json', 'r') as f:
+                api_config = json.load(f)
+        except:
+            api_config = {
+                "api_source": "tcgdex",
+                "tcgdex": {
+                    "language": "en"
+                }
+            }
+        
+        # Frame principal
+        main_frame = ttk.Frame(api_window, padding="20")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # === SECTION: TCGdex API ===
+        ttk.Label(main_frame, text="🌍 TCGdex API - Gratuit", 
+                 font=('Arial', 14, 'bold'), foreground='green').grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 10))
+        
+        ttk.Label(main_frame, text="✅ Aucune authentification requise", 
+                 foreground="green", font=('Arial', 10)).grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=(0, 5))
+        
+        ttk.Label(main_frame, text="💰 Prix Cardmarket (EUR) + TCGPlayer (USD)", 
+                 foreground="green", font=('Arial', 10)).grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=(0, 20))
+        
+        ttk.Separator(main_frame, orient='horizontal').grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=20)
+        
+        tcgdex_config = api_config.get("tcgdex", {})
+        
+        ttk.Label(main_frame, text="Langue:", font=('Arial', 11)).grid(row=4, column=0, sticky=tk.W, pady=10)
+        tcgdex_lang_var = tk.StringVar(value=tcgdex_config.get("language", "en"))
+        tcgdex_lang_combo = ttk.Combobox(main_frame, textvariable=tcgdex_lang_var, width=30, state='readonly',
+                                         font=('Arial', 11))
+        tcgdex_lang_combo['values'] = ('en - English', 'fr - Français', 'es - Español', 'it - Italiano', 
+                                        'pt - Português', 'de - Deutsch', 'ja - 日本語', 'zh - 中文', 
+                                        'id - Indonesia', 'th - ไทย')
+        
+        # Mapper les valeurs affichées aux codes
+        lang_map = {
+            'en - English': 'en', 'fr - Français': 'fr', 'es - Español': 'es', 'it - Italiano': 'it',
+            'pt - Português': 'pt', 'de - Deutsch': 'de', 'ja - 日本語': 'ja', 'zh - 中文': 'zh',
+            'id - Indonesia': 'id', 'th - ไทย': 'th'
+        }
+        lang_reverse_map = {v: k for k, v in lang_map.items()}
+        
+        # Sélectionner la langue actuelle
+        current_lang = tcgdex_config.get("language", "en")
+        tcgdex_lang_combo.set(lang_reverse_map.get(current_lang, 'en - English'))
+        tcgdex_lang_combo.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=10, padx=(10, 0))
+        
+        ttk.Label(main_frame, text="🌍 Support multilingue : 10+ langues", 
+                 foreground="gray", font=('Arial', 9, 'italic')).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=(0, 10))
+        
+        # Configurer la colonne pour qu'elle s'étende
+        main_frame.columnconfigure(1, weight=1)
+        
+        # === BOUTONS ===
+        button_frame = ttk.Frame(api_window, padding="10")
+        button_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        def save_api_config():
+            """Sauvegarder la configuration API"""
+            selected = tcgdex_lang_combo.get()
+            lang_code = lang_map.get(selected, 'en')
+            
+            new_config = {
+                "api_source": "tcgdex",
+                "tcgdex": {
+                    "language": lang_code
+                }
+            }
+            
+            try:
+                with open('api_config.json', 'w') as f:
+                    json.dump(new_config, f, indent=4)
+                
+                messagebox.showinfo("Succès", f"Configuration sauvegardée!\nLangue: {selected}")
+                self.log(f"✅ Configuration API sauvegardée - TCGdex ({lang_code})")
+                api_window.destroy()
+            except Exception as e:
+                messagebox.showerror("Erreur", f"Erreur lors de la sauvegarde: {str(e)}")
+        
+        def test_api_connection():
+            """Tester la connexion à l'API TCGdex"""
+            self.log(f"🧪 Test de connexion à TCGdex...")
+            
+            try:
+                from tcgdex_api import TCGdexAPI
+                selected = tcgdex_lang_combo.get()
+                lang_code = lang_map.get(selected, 'en')
+                
+                tcgdex = TCGdexAPI(language=lang_code)
+                
+                # Test de recherche simple
+                cards = tcgdex.search_cards("Pikachu")
+                if cards:
+                    # Test de récupération de prix
+                    price_avg, price_max, details = tcgdex.search_card_with_prices("Pikachu")
+                    if price_avg:
+                        messagebox.showinfo("Succès", 
+                            f"✅ Connexion TCGdex réussie!\n\n"
+                            f"🃏 {len(cards)} cartes Pikachu trouvées\n"
+                            f"💰 Prix: {price_avg}€\n"
+                            f"🌍 Langue: {selected}")
+                        self.log(f"✅ Test TCGdex API: OK ({len(cards)} cartes, prix disponibles)")
+                    else:
+                        messagebox.showinfo("Succès", 
+                            f"✅ Connexion TCGdex réussie!\n\n"
+                            f"🃏 {len(cards)} cartes Pikachu trouvées\n"
+                            f"🌍 Langue: {selected}\n\n"
+                            f"(Prix non disponibles pour cette carte)")
+                        self.log(f"✅ Test TCGdex API: OK ({len(cards)} cartes)")
+                else:
+                    messagebox.showwarning("Attention", "Aucune carte trouvée. Vérifiez votre connexion internet.")
+                    self.log(f"⚠️ Test TCGdex API: Aucune carte trouvée")
+            except Exception as e:
+                messagebox.showerror("Erreur", f"❌ Erreur de connexion TCGdex:\n\n{str(e)}")
+                self.log(f"❌ Test TCGdex API échoué: {str(e)}")
+        
+        ttk.Button(button_frame, text="🧪 Tester la connexion", 
+                  command=test_api_connection).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="💾 Sauvegarder", 
+                  command=save_api_config).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="❌ Annuler", 
+                  command=api_window.destroy).pack(side=tk.LEFT, padx=5)
+    
     # === Méthodes de validation ===
     
     def validate_augmentation(self):
@@ -1006,7 +1243,7 @@ class PokemonDatasetGUI:
             var.set(filename)
     
     def generate_extension_excel(self):
-        """Générer un fichier Excel depuis l'API pour une extension"""
+        """Générer un fichier Excel depuis l'API TCGdex pour une extension"""
         extension = self.extension_var.get().strip()
         output = self.extension_output_var.get().strip()
         
@@ -1022,150 +1259,164 @@ class PokemonDatasetGUI:
         
         def task():
             try:
-                import requests
                 import pandas as pd
+                import requests
+                from tcgdex_api import TCGdexAPI
                 
-                # URL de base de l'API Pokémon TCG
-                BASE_URL = "https://api.pokemontcg.io/v2/cards"
-                API_KEY = self.api_key
+                self.log("=" * 60)
+                self.log("🚀 GÉNÉRATION AVEC TCGdex (GRATUIT)")
+                self.log("=" * 60)
                 
-                if not API_KEY:
-                    self.log("❌ Clé API non configurée")
-                    messagebox.showerror("Erreur", "Clé API non configurée. Voir api_config.json")
-                    return
-                
-                HEADERS = {"X-Api-Key": API_KEY}
-                
-                cards = []
-                page = 1
-                pageSize = 100
-                max_retries = 3
-                retry_delay = 5  # secondes
-                
-                self.log(f"🌐 Récupération des cartes de l'extension '{extension}'...")
-                
-                # Vérifier d'abord la connectivité de l'API
+                # Charger la config API pour la langue
                 try:
-                    import time
-                    test_response = requests.get("https://api.pokemontcg.io/v2/sets", 
-                                                  headers=HEADERS, timeout=10)
-                    if test_response.status_code != 200:
-                        self.log(f"⚠️ L'API semble avoir des problèmes (status: {test_response.status_code})")
-                except Exception as e:
-                    self.log(f"⚠️ L'API ne répond pas : {str(e)}")
-                    messagebox.showwarning("Attention", "L'API Pokémon TCG semble avoir des problèmes de disponibilité.\nRéessayez dans quelques minutes.")
-                    return
+                    with open('api_config.json', 'r') as f:
+                        api_config = json.load(f)
+                except:
+                    api_config = {"tcgdex": {"language": "en"}}
                 
-                while True:
-                    # Essayer avec set.name ou set.id (si contient un tiret, probablement un ID)
-                    if '-' in extension or len(extension) <= 5:
-                        query = f'set.id:"{extension}"'
-                    else:
-                        query = f'set.name:"{extension}"'
-                    
-                    params = {
-                        "q": query,
-                        "page": page,
-                        "pageSize": pageSize
-                    }
-                    
-                    # Système de retry pour gérer les timeouts
-                    retry_count = 0
-                    response = None
-                    
-                    while retry_count < max_retries:
-                        try:
-                            response = requests.get(BASE_URL, headers=HEADERS, params=params, timeout=30)
-                            break  # Succès, sortir de la boucle de retry
-                        except requests.exceptions.Timeout:
-                            retry_count += 1
-                            if retry_count < max_retries:
-                                self.log(f"⏱️ Timeout - Nouvelle tentative {retry_count}/{max_retries-1} dans {retry_delay}s...")
-                                time.sleep(retry_delay)
-                            else:
-                                self.log(f"❌ Timeout après {max_retries} tentatives")
-                                if cards:
-                                    self.log(f"ℹ️ Sauvegarde des {len(cards)} cartes récupérées avant l'erreur...")
-                                    break
-                                else:
-                                    messagebox.showerror("Erreur", "L'API ne répond pas (timeout)\nRéessayez dans quelques minutes.")
-                                    return
-                        except Exception as e:
-                            self.log(f"❌ Erreur réseau: {str(e)}")
-                            messagebox.showerror("Erreur", f"Erreur réseau: {str(e)}")
+                tcgdex_config = api_config.get("tcgdex", {})
+                language = tcgdex_config.get("language", "en")
+                
+                self.log(f"🌍 Langue: {language}")
+                self.log(f"🌐 API: TCGdex v2 (gratuite, sans authentification)")
+                
+                # Initialiser le client TCGdex
+                tcgdex = TCGdexAPI(language=language)
+                
+                # Déterminer si c'est un ID ou un nom de set
+                set_lower = extension.lower().strip()
+                set_code = tcgdex.set_mapping.get(set_lower)
+                
+                if set_code:
+                    self.log(f"✅ Set reconnu: '{extension}' → ID TCGdex: '{set_code}'")
+                    set_id = set_code
+                elif '-' in extension or len(extension) <= 6:
+                    self.log(f"🔍 Extension semble être un ID: '{extension}'")
+                    set_id = extension
+                else:
+                    # Essayer de chercher le set par nom
+                    self.log(f"🔍 Recherche du set par nom: '{extension}'...")
+                    try:
+                        url = f"https://api.tcgdex.net/v2/{language}/sets"
+                        response = requests.get(url, timeout=15)
+                        response.raise_for_status()
+                        sets = response.json()
+                        
+                        # Chercher le set
+                        found_sets = [s for s in sets if extension.lower() in s.get('name', '').lower()]
+                        
+                        if not found_sets:
+                            self.log(f"❌ Set '{extension}' non trouvé")
+                            self.log(f"💡 Essayez avec un ID (ex: sv08, sv07, base1, etc.)")
+                            messagebox.showerror("Erreur", f"Set '{extension}' non trouvé.\nEssayez avec l'ID du set (ex: sv08, sv07, etc.)")
                             return
+                        
+                        best_match = found_sets[0]
+                        set_id = best_match.get('id')
+                        set_name = best_match.get('name')
+                        
+                        self.log(f"✅ Set trouvé: '{set_name}' (ID: {set_id})")
+                        
+                    except Exception as e:
+                        self.log(f"❌ Erreur lors de la recherche du set: {e}")
+                        messagebox.showerror("Erreur", f"Impossible de trouver le set.\nEssayez avec l'ID (ex: sv08)")
+                        return
+                
+                # Récupérer toutes les cartes du set
+                self.log(f"📡 Récupération des cartes du set '{set_id}'...")
+                
+                try:
+                    url = f"https://api.tcgdex.net/v2/{language}/sets/{set_id}"
+                    response = requests.get(url, timeout=15)
+                    response.raise_for_status()
+                    set_data = response.json()
                     
-                    if response is None:
-                        break  # Sortir de la boucle principale si timeout définitif
+                    set_name = set_data.get('name', extension)
+                    card_count = set_data.get('cardCount', {})
+                    total_cards = card_count.get('total', 0)
+                    official_cards = card_count.get('official', 0)
                     
-                    # Si erreur 404, c'est qu'on a atteint la fin des pages
-                    if response.status_code == 404:
-                        if page == 1:
-                            self.log(f"❌ Extension '{extension}' introuvable")
-                            messagebox.showwarning("Attention", f"Extension '{extension}' introuvable.\nVérifiez le nom ou essayez avec l'ID (ex: sv08)")
-                            return
-                        else:
-                            self.log(f"ℹ️ Fin de la pagination (page {page} non trouvée)")
-                            break
+                    self.log(f"📊 Set: {set_name}")
+                    self.log(f"� Cartes officielles: {official_cards}")
+                    self.log(f"📊 Cartes totales (avec variantes): {total_cards}")
                     
-                    # Si erreur 504 (Gateway Timeout)
-                    if response.status_code == 504:
-                        self.log(f"⏱️ Gateway Timeout (504) - L'API est surchargée")
-                        if cards:
-                            self.log(f"ℹ️ Sauvegarde des {len(cards)} cartes récupérées avant l'erreur...")
-                            break
-                        else:
-                            messagebox.showerror("Erreur", "L'API Pokémon TCG est surchargée (504)\nRéessayez dans quelques minutes.")
-                            return
+                    # Récupérer la liste des cartes
+                    cards_list = set_data.get('cards', [])
                     
-                    if response.status_code != 200:
-                        self.log(f"❌ Erreur {response.status_code}: {response.text[:200]}")
-                        messagebox.showerror("Erreur", f"Erreur API: {response.status_code}")
+                    if not cards_list:
+                        self.log(f"❌ Aucune carte trouvée dans le set")
+                        messagebox.showwarning("Attention", f"Aucune carte trouvée pour '{set_name}'")
                         return
                     
-                    data = response.json()
-                    batch = data.get("data", [])
+                    self.log(f"✅ {len(cards_list)} cartes récupérées")
                     
-                    if not batch:
-                        break
-                    
-                    cards.extend(batch)
-                    self.log(f"📥 Page {page}: {len(batch)} cartes récupérées (Total: {len(cards)})")
-                    
-                    if len(batch) < pageSize:
-                        break
-                    
-                    page += 1
-                
-                if not cards:
-                    self.log(f"❌ Aucune carte trouvée pour l'extension '{extension}'")
-                    messagebox.showwarning("Attention", f"Aucune carte trouvée pour '{extension}'")
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 404:
+                        self.log(f"❌ Set '{set_id}' non trouvé (404)")
+                        messagebox.showerror("Erreur", f"Set '{set_id}' non trouvé.\nVérifiez l'ID du set.")
+                    else:
+                        self.log(f"❌ Erreur HTTP: {e}")
+                        messagebox.showerror("Erreur", f"Erreur lors de la récupération: {e}")
+                    return
+                except Exception as e:
+                    self.log(f"❌ Erreur: {e}")
+                    messagebox.showerror("Erreur", f"Erreur: {e}")
                     return
                 
                 # Créer le DataFrame
+                self.log(f"\n📝 Création du fichier Excel...")
+                self.log(f"📁 Fichier: {output}")
+                
                 rows = []
-                for card in cards:
-                    card_number = str(card.get("number", "")).zfill(3)
-                    printed_total = card.get("set", {}).get("printedTotal", "")
-                    set_number = f"{card_number}/{printed_total}" if printed_total else card_number
-                    name = card.get("name", "")
-                    rows.append({"Set #": set_number, "Name": name})
+                for card_brief in cards_list:
+                    card_number = card_brief.get('localId', '')
+                    name = card_brief.get('name', '')
+                    
+                    # Format: 001/191
+                    if official_cards > 0:
+                        set_number = f"{card_number}/{official_cards}"
+                    else:
+                        set_number = card_number
+                    
+                    rows.append({
+                        "Set #": set_number,
+                        "Name": name,
+                        "Set": set_name
+                    })
                 
                 df = pd.DataFrame(rows)
+                
+                # Trier par numéro de carte
+                df['_sort'] = df['Set #'].str.extract(r'(\d+)').astype(int)
+                df = df.sort_values('_sort').drop(columns=['_sort'])
+                
+                self.log(f"💾 Écriture dans Excel...")
                 df.to_excel(output, index=False)
                 
-                self.log(f"✅ Fichier généré: {output} ({len(cards)} cartes)")
-                messagebox.showinfo("Succès", f"Fichier généré avec succès!\n{len(cards)} cartes trouvées.")
+                file_size = os.path.getsize(output) / 1024
+                
+                self.log(f"\n{'='*60}")
+                self.log(f"✅ SUCCÈS")
+                self.log(f"{'='*60}")
+                self.log(f"📁 Fichier: {output}")
+                self.log(f"💾 Taille: {file_size:.1f} KB")
+                self.log(f"📊 Cartes: {len(rows)}")
+                self.log(f"🌐 Source: TCGdex API (gratuite)")
+                self.log(f"{'='*60}")
+                
+                messagebox.showinfo("Succès", f"Fichier généré avec succès!\n\n{len(rows)} cartes de '{set_name}'\n\nSource: TCGdex (gratuit)")
                 
             except Exception as e:
                 self.log(f"❌ Erreur: {str(e)}")
+                import traceback
+                self.log(traceback.format_exc())
                 messagebox.showerror("Erreur", f"Une erreur est survenue:\n{str(e)}")
         
-        thread = threading.Thread(target=task)
+        thread = threading.Thread(target=task, daemon=True)
         thread.start()
     
     def update_card_prices(self):
-        """Mettre à jour les prix des cartes dans un fichier Excel"""
+        """Mettre à jour les prix des cartes dans un fichier Excel avec TCGdex"""
         input_file = self.price_input_var.get().strip()
         output_file = self.price_output_var.get().strip()
         
@@ -1177,223 +1428,495 @@ class PokemonDatasetGUI:
             messagebox.showerror("Erreur", "Veuillez saisir le nom du fichier de sortie!")
             return
         
-        self.log(f"💰 Mise à jour des prix depuis: {input_file}")
+        # Charger la config API
+        try:
+            with open('api_config.json', 'r') as f:
+                api_config = json.load(f)
+        except:
+            api_config = {"tcgdex": {"language": "en"}}
         
+        self.log(f"💰 Mise à jour des prix depuis: {input_file}")
+        self.log(f"🌐 API: TCGdex (gratuit)")
+        
+        # Utiliser TCGdex uniquement
+        self._update_prices_tcgdex(input_file, output_file, api_config)
+    
+    def _update_prices_tcgdex(self, input_file, output_file, api_config):
+        """Mise à jour des prix avec l'API TCGdex (gratuit, agrège Cardmarket + TCGPlayer)"""
         def task():
             try:
-                import requests
                 import pandas as pd
                 import concurrent.futures
+                import time
+                from tcgdex_api import TCGdexAPI
                 
-                BASE_URL = "https://api.pokemontcg.io/v2/cards"
-                API_KEY = self.api_key
+                tcgdex_config = api_config.get("tcgdex", {})
+                language = tcgdex_config.get("language", "en")
                 
-                if not API_KEY:
-                    self.log("❌ Clé API non configurée")
-                    messagebox.showerror("Erreur", "Clé API non configurée. Voir api_config.json")
-                    return
+                # Créer le client TCGdex
+                self.log(f"🔧 Initialisation du client TCGdex (langue: {language})...")
+                tcgdex_api = TCGdexAPI(language=language)
                 
-                HEADERS = {"X-Api-Key": API_KEY}
-                
-                # Cache pour éviter les requêtes répétées
-                cache = {}
-                
-                def search_card(card_name, card_number=None, set_name=None, session=None):
-                    """Rechercher une carte et retourner ses prix"""
-                    # Clé de cache
-                    cache_key = f"{card_name}_{card_number}_{set_name}"
-                    if cache_key in cache:
-                        return cache[cache_key]
-                    
-                    params = {"q": f'name:"{card_name}"'}
-                    
-                    # Retry avec timeout
-                    max_retries = 2
-                    for attempt in range(max_retries):
-                        try:
-                            response = session.get(BASE_URL, params=params, headers=HEADERS, timeout=15)
-                            
-                            if response.status_code == 404:
-                                return (None, None)
-                            
-                            if response.status_code != 200:
-                                if attempt < max_retries - 1:
-                                    import time
-                                    time.sleep(1)
-                                    continue
-                                return (None, None)
-                            
-                            break
-                        except requests.exceptions.Timeout:
-                            if attempt < max_retries - 1:
-                                import time
-                                time.sleep(2)
-                                continue
-                            return (None, None)
-                        except Exception:
-                            if attempt < max_retries - 1:
-                                import time
-                                time.sleep(1)
-                                continue
-                            return (None, None)
-                    
-                    data = response.json()
-                    results = data.get("data", [])
-                    
-                    if not results:
-                        return (None, None)
-                    
-                    selected_card = None
-                    
-                    # Filtrer par numéro
-                    if card_number:
-                        if "/" in card_number:
-                            target_number = card_number.split('/')[0].lstrip("0")
-                        else:
-                            target_number = card_number.lstrip("0")
-                        
-                        for card in results:
-                            if "number" in card and card["number"].lstrip("0") == target_number:
-                                selected_card = card
-                                break
-                    
-                    # Filtrer par set
-                    if not selected_card and set_name:
-                        matching = [c for c in results if c.get("set", {}).get("name", "").lower() == set_name.lower()]
-                        if matching:
-                            selected_card = matching[0]
-                    
-                    if not selected_card:
-                        selected_card = results[0]
-                    
-                    # Extraire les prix
-                    if "tcgplayer" in selected_card and "prices" in selected_card["tcgplayer"]:
-                        prices = selected_card["tcgplayer"]["prices"]
-                        default_price = None
-                        
-                        if "normal" in prices and "market" in prices["normal"]:
-                            default_price = prices["normal"]["market"]
-                        elif "holofoil" in prices and "market" in prices["holofoil"]:
-                            default_price = prices["holofoil"]["market"]
-                        
-                        available_prices = []
-                        for fmt, data in prices.items():
-                            if "market" in data:
-                                available_prices.append(data["market"])
-                        
-                        highest_price = max(available_prices) if available_prices else None
-                        result = (default_price, highest_price)
-                        cache[cache_key] = result  # Mettre en cache
-                        return result
-                    
-                    result = (None, None)
-                    cache[cache_key] = result
-                    return result
-                
-                # Charger le fichier Excel
+                # Charger Excel
                 df = pd.read_excel(input_file, engine="openpyxl")
-                
-                # Créer les colonnes si nécessaire
                 if "Prix" not in df.columns:
                     df["Prix"] = None
                 if "Prix max" not in df.columns:
                     df["Prix max"] = None
+                if "SourcePrix" not in df.columns:
+                    df["SourcePrix"] = None
+                
+                total = len(df)
+                processed = 0
+                last_log = [0]
+                failed = []
+                
+                def worker(idx, row):
+                    """Worker thread pour traiter une carte TCGdex"""
+                    nonlocal processed
+                    
+                    name = str(row.get("Name", "")).strip()
+                    set_name = str(row.get("Set", "")).strip() if "Set" in row else None
+                    set_hash = str(row.get("Set #", "")).strip() if "Set #" in row else None
+                    
+                    # Délai entre requêtes (API gratuite, pas de rate limit strict)
+                    if processed > 0:
+                        time.sleep(0.3)  # 0.3s = rapide
+                    
+                    # Rechercher sur TCGdex
+                    try:
+                        price, pmax, details = tcgdex_api.search_card_with_prices(name, set_name, set_hash)
+                        
+                        if details:
+                            # Extraire la source réelle
+                            pricing = details.get('pricing', {})
+                            if pricing.get('cardmarket'):
+                                source = "TCGdex(Cardmarket)"
+                            elif pricing.get('tcgplayer'):
+                                source = "TCGdex(TCGPlayer)"
+                            else:
+                                source = "TCGdex"
+                        else:
+                            source = None
+                    except Exception as e:
+                        price, pmax, source = None, None, None
+                        failed.append((name, set_hash or "", str(e)))
+                    
+                    processed += 1
+                    now = time.time()
+                    if processed % 10 == 0 or (now - last_log[0]) >= 5:
+                        self.log(f"📊 Progression: {processed}/{total} ({int(processed/total*100)}%)")
+                        last_log[0] = now
+                    
+                    return idx, price, pmax, source
+                
+                self.log(f"🔄 Traitement de {total} cartes avec TCGdex (gratuit)")
+                self.log(f"💡 Prix automatiques: Cardmarket (EUR) + TCGPlayer (USD)")
+                self.log(f"⚡ Pas de rate limit: traitement rapide (~{total * 0.3:.0f}s estimé)")
+                
+                start = time.time()
+                
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+                    futures = [ex.submit(worker, idx, row) for idx, row in df.iterrows()]
+                    for fut in concurrent.futures.as_completed(futures):
+                        idx, price, pmax, source = fut.result()
+                        
+                        if price is not None:
+                            df.at[idx, "Prix"] = price
+                        if pmax is not None:
+                            df.at[idx, "Prix max"] = pmax
+                        if source:
+                            df.at[idx, "SourcePrix"] = source
+                
+                elapsed = time.time() - start
+                
+                # Sauvegarder
+                df.to_excel(output_file, index=False)
+                
+                success_count = df["Prix"].notna().sum()
+                self.log(f"✅ Fichier généré: {output_file}")
+                self.log(f"📊 Prix trouvés: {success_count}/{total} ({int(success_count/total*100)}%)")
+                self.log(f"⏱️  Temps total: {elapsed:.1f}s (~{(elapsed/total if total else 0):.2f}s/carte)")
+                
+                if failed:
+                    self.log(f"⚠️  {len(failed)} cartes échouées (exemples):")
+                    for c, num, e in failed[:5]:
+                        self.log(f"   • {c} #{num}: {e[:50]}")
+                
+                messagebox.showinfo("Terminé", f"Prix mis à jour!\n{success_count}/{total} cartes avec prix")
+                
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def _update_prices_cardmarket(self, input_file, output_file, api_config):
+        """Mise à jour des prix avec l'API Cardmarket"""
+        def task():
+            try:
+                import pandas as pd
+                import concurrent.futures
+                import time
+                from cardmarket_api import CardmarketAPI
+                
+                cm_config = api_config.get("cardmarket", {})
+                
+                # Vérifier les credentials
+                if not all([cm_config.get("app_token"), cm_config.get("app_secret"), 
+                           cm_config.get("access_token"), cm_config.get("access_token_secret")]):
+                    self.log("❌ Credentials Cardmarket incomplets")
+                    messagebox.showerror("Erreur", "Configurez vos credentials Cardmarket dans Settings > Configuration API")
+                    return
+                
+                # Créer le client Cardmarket
+                self.log("🔧 Initialisation du client Cardmarket...")
+                cm_api = CardmarketAPI(
+                    app_token=cm_config["app_token"],
+                    app_secret=cm_config["app_secret"],
+                    access_token=cm_config["access_token"],
+                    access_token_secret=cm_config["access_token_secret"]
+                )
+                
+                # Charger Excel
+                df = pd.read_excel(input_file, engine="openpyxl")
+                if "Prix" not in df.columns:
+                    df["Prix"] = None
+                if "Prix max" not in df.columns:
+                    df["Prix max"] = None
+                if "SourcePrix" not in df.columns:
+                    df["SourcePrix"] = None
+                
+                total = len(df)
+                processed = 0
+                last_log = [0]
+                failed = []
+                
+                def worker(idx, row):
+                    """Worker thread pour traiter une carte Cardmarket"""
+                    nonlocal processed
+                    
+                    name = str(row.get("Name", "")).strip()
+                    set_name = str(row.get("Set", "")).strip() if "Set" in row else None
+                    set_hash = str(row.get("Set #", "")).strip() if "Set #" in row else None
+                    
+                    # Délai entre requêtes
+                    if processed > 0:
+                        time.sleep(1)  # 1s pour Cardmarket (rate limit strict)
+                    
+                    # Rechercher sur Cardmarket
+                    try:
+                        price, pmax, details = cm_api.search_card_with_prices(name, set_name, set_hash)
+                    except Exception as e:
+                        price, pmax, details = None, None, None
+                        failed.append((name, set_hash or "", str(e)))
+                    
+                    processed += 1
+                    now = time.time()
+                    if processed % 5 == 0 or (now - last_log[0]) >= 5:
+                        self.log(f"📊 Progression: {processed}/{total} ({int(processed/total*100)}%)")
+                        last_log[0] = now
+                    
+                    return idx, price, pmax, details
+                
+                self.log(f"🔄 Traitement de {total} cartes sur Cardmarket (Europe)")
+                self.log(f"⚠️  Rate limit Cardmarket: 1s entre chaque carte (~{total}s estimé)")
+                
+                start = time.time()
+                
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+                    futures = [ex.submit(worker, idx, row) for idx, row in df.iterrows()]
+                    for fut in concurrent.futures.as_completed(futures):
+                        idx, price, pmax, details = fut.result()
+                        
+                        if price is not None:
+                            df.at[idx, "Prix"] = price
+                        if pmax is not None:
+                            df.at[idx, "Prix max"] = pmax
+                        if price or pmax:
+                            df.at[idx, "SourcePrix"] = "Cardmarket"
+                
+                elapsed = time.time() - start
+                
+                # Sauvegarder
+                df.to_excel(output_file, index=False)
+                
+                success_count = df["Prix"].notna().sum()
+                self.log(f"✅ Fichier généré: {output_file}")
+                self.log(f"📊 Prix trouvés: {success_count}/{total} ({int(success_count/total*100)}%)")
+                self.log(f"⏱️  Temps total: {elapsed:.1f}s (~{(elapsed/total if total else 0):.2f}s/carte)")
+                
+                if failed:
+                    self.log(f"⚠️  {len(failed)} cartes échouées (exemples):")
+                    for c, num, e in failed[:5]:
+                        self.log(f"   • {c} #{num}: {e[:50]}")
+                
+                messagebox.showinfo("Terminé", f"Prix mis à jour!\n{success_count}/{total} cartes avec prix")
+                
+            except Exception as e:
+                self.log(f"❌ Erreur: {str(e)}")
+                messagebox.showerror("Erreur", f"Erreur:\n{str(e)}")
+        
+        threading.Thread(target=task, daemon=True).start()
+    
+    def _update_prices_pokemontcg(self, input_file, output_file, api_config):
+        """Mise à jour des prix avec l'API Pokemon TCG (méthode originale)"""
+        
+        def task():
+            try:
+                import pandas as pd
+                import concurrent.futures
+                import time
+                
+                BASE_CARDS = "https://api.pokemontcg.io/v2/cards"
+                BASE_SETS = "https://api.pokemontcg.io/v2/sets"
+                
+                # Charger ou utiliser la clé de la config
+                pokemon_key = api_config.get("pokemon_tcg_api_key", self.api_key)
+                
+                if not pokemon_key:
+                    self.log("❌ Clé API Pokemon TCG non configurée")
+                    messagebox.showerror("Erreur", "Clé API Pokemon TCG non configurée. Voir Settings > Configuration API")
+                    return
+                
+                # Health check
+                is_healthy, health_msg = self.check_api_health()
+                self.log(f"🏥 Health check: {health_msg}")
+                if not is_healthy:
+                    if "lente" in health_msg.lower():
+                        self.log(f"⚠️  L'API est lente mais on essaie quand même...")
+                    else:
+                        response = messagebox.askyesno(
+                            "API en difficulté", 
+                            f"L'API semble avoir des problèmes:\n{health_msg}\n\nVoulez-vous quand même essayer?"
+                        )
+                        if not response:
+                            return
+                
+                # Utiliser la session réutilisable
+                session = self.get_api_session()
+                HEADERS = {"X-Api-Key": self.api_key}
+                
+                # Charger Excel
+                df = pd.read_excel(input_file, engine="openpyxl")
+                if "Prix" not in df.columns:
+                    df["Prix"] = None
+                if "Prix max" not in df.columns:
+                    df["Prix max"] = None
+                if "SourcePrix" not in df.columns:
+                    df["SourcePrix"] = None
                 if "Set" not in df.columns:
                     df["Set"] = None
                 
-                failed_logs = []
-                total = len(df)
-                processed = 0
-                last_log_time = [0]  # Utiliser une liste pour la mutabilité
+                # Helpers
+                set_id_cache = {}
                 
-                def worker(index, row, session):
-                    nonlocal processed
-                    card_name = row["Name"]
-                    card_number = row["Set #"]
-                    set_name = row.get("Set", None)
+                def resolve_set_id(set_name):
+                    """Résout un nom d'extension vers son ID"""
+                    if not set_name:
+                        return None
+                    key = set_name.lower().strip()
+                    if key in set_id_cache:
+                        return set_id_cache[key]
                     
                     try:
-                        # Petit délai pour éviter de surcharger l'API
-                        import time
-                        import random
-                        time.sleep(random.uniform(0.1, 0.3))
-                        
-                        result = search_card(card_name, card_number=card_number, set_name=set_name, session=session)
-                        processed += 1
-                        
-                        # Logger toutes les 10 cartes ou toutes les 5 secondes
-                        current_time = time.time()
-                        if processed % 10 == 0 or (current_time - last_log_time[0]) >= 5:
-                            self.log(f"📊 Progression: {processed}/{total} cartes ({int(processed/total*100)}%)")
-                            last_log_time[0] = current_time
-                        
-                        return index, result
+                        r = session.get(BASE_SETS, params={"q": f'name:"{set_name}"'}, headers=HEADERS, timeout=45)
+                        if r.status_code == 200:
+                            data = r.json().get("data", []) or []
+                            # Chercher une correspondance exacte
+                            exact = [s for s in data if s.get("name", "").lower() == key]
+                            chosen = exact[0] if exact else (data[0] if data else None)
+                            sid = chosen.get("id") if chosen else None
+                            set_id_cache[key] = sid
+                            return sid
                     except Exception as e:
-                        processed += 1
-                        return index, (None, None), str(e)
+                        self.log(f"⚠️  resolve_set_id error: {e}")
+                    
+                    set_id_cache[key] = None
+                    return None
                 
-                self.log(f"🔄 Traitement de {total} cartes avec 5 workers parallèles...")
+                def parse_number(set_hash):
+                    """Extrait le numéro de carte: '057/153' -> '57'"""
+                    if not set_hash or not isinstance(set_hash, str):
+                        return None
+                    num = set_hash.split("/")[0].strip()
+                    num = num.lstrip("0") or "0"
+                    return num
                 
-                import time
-                start_time = time.time()
+                def extract_prices(card_obj):
+                    """Extrait les prix d'une carte (TCGplayer puis Cardmarket)"""
+                    # 1) TCGplayer (US)
+                    tcg = (card_obj.get("tcgplayer") or {}).get("prices") or {}
+                    tcg_vals = []
+                    for variant_data in tcg.values():
+                        if isinstance(variant_data, dict) and isinstance(variant_data.get("market"), (int, float)):
+                            tcg_vals.append(variant_data["market"])
+                    
+                    if tcg_vals:
+                        return tcg_vals[0], max(tcg_vals), "TCGPlayer"
+                    
+                    # 2) Cardmarket (EU)
+                    cm = (card_obj.get("cardmarket") or {}).get("prices") or {}
+                    candidates = []
+                    main_price = None
+                    
+                    # Priorité: trendPrice > averageSellPrice > avg7 > avg30 > lowPrice > suggestedPrice
+                    for key in ("trendPrice", "averageSellPrice", "avg7", "avg30", "lowPrice", "suggestedPrice"):
+                        val = cm.get(key)
+                        if isinstance(val, (int, float)):
+                            candidates.append(val)
+                            if main_price is None:
+                                main_price = val
+                    
+                    if candidates:
+                        return main_price, max(candidates), "Cardmarket"
+                    
+                    return None, None, None
                 
-                with requests.Session() as session:
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                        futures = {
-                            executor.submit(worker, idx, row, session): idx
-                            for idx, row in df.iterrows()
-                        }
+                cache = {}
+                total = len(df)
+                processed = 0
+                last_log = [0]
+                
+                def fetch_card_best(name, set_hash=None, set_name=None):
+                    """Cherche une carte avec résolution d'extension"""
+                    key = f"{name}|{set_hash}|{set_name}"
+                    if key in cache:
+                        return cache[key]
+                    
+                    # Construire la query
+                    q_parts = [f'name:"{name}"']
+                    num = parse_number(set_hash) if set_hash else None
+                    sid = resolve_set_id(set_name) if set_name else None
+                    
+                    if sid:
+                        q_parts.append(f'set.id:"{sid}"')
+                    
+                    params = {"q": " ".join(q_parts), "pageSize": 50}
+                    
+                    # Gestion du rate limiting 429
+                    while True:
+                        try:
+                            r = session.get(BASE_CARDS, params=params, headers=HEADERS, timeout=45)
+                        except requests.exceptions.RequestException as e:
+                            cache[key] = (None, f"Erreur réseau: {e}")
+                            return cache[key]
                         
-                        for future in concurrent.futures.as_completed(futures):
-                            idx = futures[future]
-                            try:
-                                result_tuple = future.result()
-                                
-                                if len(result_tuple) == 3:
-                                    index, (price, highest_price), error_msg = result_tuple
-                                    failed_logs.append((df.at[index, "Name"], df.at[index, "Set #"], error_msg))
-                                else:
-                                    index, (price, highest_price) = result_tuple
-                                    
-                                    if price is not None:
-                                        df.at[index, "Prix"] = price
-                                    else:
-                                        failed_logs.append((df.at[index, "Name"], df.at[index, "Set #"], "Prix non trouvé"))
-                                    
-                                    if highest_price is not None:
-                                        df.at[index, "Prix max"] = highest_price
-                            
-                            except Exception as e:
-                                failed_logs.append((df.at[idx, "Name"], df.at[idx, "Set #"], str(e)))
+                        if r.status_code == 429:
+                            retry_after = int(r.headers.get("Retry-After", "5"))
+                            self.log(f"⏸️  Rate limit (429) - attente {retry_after}s")
+                            time.sleep(retry_after)
+                            continue
+                        
+                        if r.status_code != 200:
+                            cache[key] = (None, f"HTTP {r.status_code}")
+                            return cache[key]
+                        
+                        break
+                    
+                    results = r.json().get("data", []) or []
+                    if not results:
+                        cache[key] = (None, "Aucun résultat")
+                        return cache[key]
+                    
+                    # Filtrage intelligent
+                    selected = None
+                    
+                    # 1) Par numéro de carte
+                    if num:
+                        for c in results:
+                            if c.get("number", "").lstrip("0") == num:
+                                selected = c
+                                break
+                    
+                    # 2) Par nom d'extension
+                    if not selected and set_name:
+                        for c in results:
+                            if (c.get("set", {}).get("name", "")).lower() == set_name.lower():
+                                selected = c
+                                break
+                    
+                    # 3) Premier résultat
+                    if not selected:
+                        selected = results[0]
+                    
+                    cache[key] = (selected, None)
+                    return cache[key]
                 
-                elapsed = time.time() - start_time
-                avg_time = elapsed / total if total > 0 else 0
+                def worker(idx, row):
+                    """Worker thread pour traiter une carte"""
+                    nonlocal processed
+                    
+                    name = str(row.get("Name", "")).strip()
+                    set_hash = str(row.get("Set #", "")).strip() if "Set #" in row else None
+                    set_name_val = str(row.get("Set", "")).strip() if "Set" in row else None
+                    
+                    # Petit délai pour laisser respirer l'API
+                    if processed > 0:
+                        time.sleep(0.5)  # 0.5s entre chaque carte
+                    
+                    card, err = fetch_card_best(name, set_hash, set_name_val)
+                    price, pmax, src = (None, None, None)
+                    
+                    if card:
+                        price, pmax, src = extract_prices(card)
+                    
+                    processed += 1
+                    now = time.time()
+                    if processed % 10 == 0 or (now - last_log[0]) >= 5:
+                        self.log(f"📊 Progression: {processed}/{total} ({int(processed/total*100)}%)")
+                        last_log[0] = now
+                    
+                    return idx, price, pmax, src, err
+                
+                self.log(f"🔄 Traitement de {total} cartes SÉQUENTIELLEMENT (1 à la fois)")
+                self.log(f"💡 Sources de prix: TCGPlayer (US) puis Cardmarket (EU)")
+                self.log(f"⚠️  Mode lent: L'API est surchargée, patience requise (~{total * 0.5:.0f}s estimé)")
+                
+                start = time.time()
+                failed = []
+                
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+                    futures = [ex.submit(worker, idx, row) for idx, row in df.iterrows()]
+                    for fut in concurrent.futures.as_completed(futures):
+                        idx, price, pmax, src, err = fut.result()
+                        
+                        if price is not None:
+                            df.at[idx, "Prix"] = price
+                        if pmax is not None:
+                            df.at[idx, "Prix max"] = pmax
+                        if src:
+                            df.at[idx, "SourcePrix"] = src
+                        
+                        if err and price is None:
+                            card_name = df.at[idx, "Name"]
+                            card_num = df.at[idx, "Set #"] if "Set #" in df.columns else ""
+                            failed.append((card_name, card_num, err))
+                
+                elapsed = time.time() - start
                 
                 # Sauvegarder
                 df.to_excel(output_file, index=False)
                 
                 self.log(f"✅ Fichier généré: {output_file}")
-                self.log(f"⏱️ Temps total: {elapsed:.1f}s ({avg_time:.2f}s/carte)")
+                self.log(f"⏱️  Temps total: {elapsed:.1f}s (~{(elapsed/total if total else 0):.2f}s/carte)")
                 
-                if failed_logs:
-                    self.log(f"⚠️ {len(failed_logs)} cartes avec erreurs:")
-                    for card, num, error in failed_logs[:5]:
-                        self.log(f"  - {card} ({num}): {error}")
-                    if len(failed_logs) > 5:
-                        self.log(f"  ... et {len(failed_logs) - 5} autres")
+                if failed:
+                    self.log(f"⚠️  {len(failed)} cartes sans prix (exemples):")
+                    for c, num, e in failed[:8]:
+                        self.log(f"   - {c} ({num}): {e}")
                 
-                messagebox.showinfo("Succès", 
-                    f"Mise à jour terminée!\n"
-                    f"Fichier: {output_file}\n"
-                    f"Succès: {total - len(failed_logs)}/{total}\n"
-                    f"Erreurs: {len(failed_logs)}")
+                messagebox.showinfo("Succès",
+                    f"Mise à jour terminée!\nFichier: {output_file}\n"
+                    f"Prix trouvés: {total-len(failed)}/{total}\nErreurs: {len(failed)}")
             
             except Exception as e:
                 self.log(f"❌ Erreur: {str(e)}")
+                import traceback
+                self.log(traceback.format_exc())
                 messagebox.showerror("Erreur", f"Une erreur est survenue:\n{str(e)}")
         
-        thread = threading.Thread(target=task)
-        thread.start()
+        threading.Thread(target=task, daemon=True).start()
     
     def search_card_price(self):
         """Rechercher le prix d'une carte spécifique"""
@@ -1409,24 +1932,24 @@ class PokemonDatasetGUI:
         
         def task():
             try:
-                import requests
-                
                 BASE_URL = "https://api.pokemontcg.io/v2/cards"
-                API_KEY = self.api_key
                 
-                if not API_KEY:
+                if not self.api_key:
                     self.log("❌ Clé API non configurée")
                     messagebox.showerror("Erreur", "Clé API non configurée. Voir api_config.json")
                     return
                 
-                HEADERS = {"X-Api-Key": API_KEY}
+                # Utiliser la session réutilisable
+                session = self.get_api_session()
                 
                 params = {"q": f'name:"{card_name}"'}
-                response = requests.get(BASE_URL, params=params, headers=HEADERS)
                 
-                if response.status_code != 200:
-                    self.log(f"❌ Erreur API: {response.status_code}")
-                    messagebox.showerror("Erreur", f"Erreur API: {response.status_code}")
+                try:
+                    response = session.get(BASE_URL, params=params, timeout=15)
+                    response.raise_for_status()
+                except requests.exceptions.RequestException as e:
+                    self.log(f"❌ Erreur API: {str(e)}")
+                    messagebox.showerror("Erreur", f"Erreur réseau: {str(e)}")
                     return
                 
                 data = response.json()

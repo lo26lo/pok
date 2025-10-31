@@ -215,6 +215,41 @@ pip install -r requirements.txt
 
 </details>
 
+<details>
+<summary>🔑 <b>Configuration API (Optionnel)</b></summary>
+
+<br/>
+
+Pour les fonctionnalités API (génération de listes, mise à jour des prix) :
+
+```batch
+# 1. Copier le fichier exemple
+copy api_config.json.example api_config.json
+
+# 2. Choisir votre source API dans api_config.json
+```
+
+**🆕 NOUVEAU :** 3 sources API disponibles !
+
+| Source API | Région | Authentification | Vitesse | Coût |
+|------------|--------|------------------|---------|------|
+| **TCGdex** ⭐ | 🌍 Mondial | ❌ Aucune | ⚡ Ultra-rapide | 💰 GRATUIT |
+| **Pokemon TCG** | 🇺🇸 USA | ✅ Clé API | 🐌 Moyen | 💰 GRATUIT |
+| **Cardmarket** | 🇪🇺 Europe | ✅ OAuth 1.0 | 🐌 Lent | 💰 GRATUIT |
+
+**⭐ Recommandé : TCGdex** (aucune configuration, combine prix Cardmarket + TCGPlayer)
+
+**Configuration :**
+- **TCGdex** : Sélectionnez simplement la langue (fr, en, es, it, pt, de, ja, zh, id, th)
+- **Pokemon TCG** : Obtenez une clé sur https://pokemontcg.io/
+- **Cardmarket** : Créez une App dédiée sur https://cardmarket.com/API
+
+Voir documentation :
+- [INTEGRATION_CARDMARKET.md](docs/INTEGRATION_CARDMARKET.md) - Configuration Cardmarket
+- [API_CONFIG_README.md](API_CONFIG_README.md) - Guide API général
+
+</details>
+
 ---
 
 ## 📖 Utilisation
@@ -522,18 +557,31 @@ Pokemons/
 
 ##### 💰 Mettre à Jour les Prix
 - Charger un fichier Excel avec `Set #`, `Name`, `Set`
-- Interroge l'API pour chaque carte (parallélisé)
-- Ajoute colonnes `Prix` et `Prix max`
-- Résumé des erreurs affiché à la fin
+#### 🛠️ Utilitaires
+**Intégration API complète pour la gestion des cartes :**
+
+##### 📋 Générer Liste de Cartes (API TCGdex - GRATUITE)
+- Entrez le nom du set (ex : "Surging Sparks") ou l'ID (ex : "sv08")
+- **Ultra-rapide** : 1 requête au lieu d'une pagination
+- **Aucune authentification requise**
+- **Support multilingue** : 10+ langues
+- Génère un Excel avec colonnes `Set #`, `Name`, `Set`
+- Parfait pour démarrer une nouvelle collection
+
+##### 💰 Mettre à Jour les Prix (3 APIs disponibles)
+- **TCGdex** ⭐ (Recommandé) : GRATUIT, combine Cardmarket + TCGPlayer
+- **Pokemon TCG** : Prix USA (TCGPlayer)
+- **Cardmarket** : Prix Europe (EUR)
+- Lit un Excel avec colonnes `Set #`, `Name`, `Set`
+- Ajoute les colonnes `Prix`, `Prix max`, `SourcePrix`
+- Choisissez votre API préférée dans Configuration
 
 ##### 🔍 Recherche Rapide
 - Saisir nom de la carte (requis)
 - Numéro et Set optionnels pour filtrer
 - Affiche popup avec tous les prix disponibles
 
-**💡 Clé API incluse** - Aucune configuration nécessaire!
-
-#### �📝 Logs
+#### 📝 Logs
 - Horodatage automatique
 - Copier / Sauvegarder / Effacer
 - Export en fichier .log

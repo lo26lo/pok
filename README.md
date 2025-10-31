@@ -226,11 +226,27 @@ For API features (card list generation, price updates):
 # 1. Copy the example file
 copy api_config.json.example api_config.json
 
-# 2. Edit api_config.json with your API key
-# Get a free key at: https://pokemontcg.io/
+# 2. Choose your API source in api_config.json
 ```
 
-See [API_CONFIG_README.md](API_CONFIG_README.md) for details.
+**🆕 NEW:** 3 API sources available!
+
+| API Source | Region | Authentication | Speed | Cost |
+|------------|--------|---------------|-------|------|
+| **TCGdex** ⭐ | 🌍 Global | ❌ None | ⚡ Ultra-fast | 💰 FREE |
+| **Pokemon TCG** | 🇺🇸 USA | ✅ API Key | 🐌 Medium | 💰 FREE |
+| **Cardmarket** | 🇪🇺 Europe | ✅ OAuth 1.0 | 🐌 Slow | 💰 FREE |
+
+**⭐ Recommended: TCGdex** (no setup, combines Cardmarket + TCGPlayer prices)
+
+**Configuration:**
+- **TCGdex**: Just select the language (en, fr, es, it, pt, de, ja, zh, id, th)
+- **Pokemon TCG**: Get key at https://pokemontcg.io/
+- **Cardmarket**: Create Dedicated App at https://cardmarket.com/API
+
+See documentation:
+- [INTEGRATION_CARDMARKET.md](docs/INTEGRATION_CARDMARKET.md) - Cardmarket setup
+- [API_CONFIG_README.md](API_CONFIG_README.md) - General API guide
 
 </details>
 
@@ -528,10 +544,26 @@ Pokemons/
 - Probability: 0.0-1.0 (slider)
 
 #### 🛠️ Utilities
-**Complete Pokémon TCG API integration:**
+**Complete API integration for card management:**
 
-##### 📋 Generate Card List
-- Enter set name (e.g., "Surging Sparks")
+##### 📋 Generate Card List (TCGdex API - FREE)
+- Enter set name (e.g., "Surging Sparks") or ID (e.g., "sv08")
+- **Ultra-fast**: 1 request instead of pagination
+- **No authentication required**
+- **Multilingual support**: 10+ languages
+- Generates Excel with `Set #`, `Name`, `Set` columns
+- Perfect for starting a new collection
+
+##### 💰 Update Card Prices (3 APIs available)
+- **TCGdex** ⭐ (Recommended): FREE, combines Cardmarket + TCGPlayer
+- **Pokemon TCG**: USA prices (TCGPlayer)
+- **Cardmarket**: Europe prices (EUR)
+- Reads Excel with `Set #`, `Name`, `Set` columns
+- Adds `Prix`, `Prix max`, `SourcePrix` columns
+- Choose your preferred API in Configuration
+
+##### 🔍 Quick Card Search
+- Search by name, set, number
 - Choose Excel output filename
 - Automatically generates all cards with `Set #` and `Name`
 
@@ -660,13 +692,28 @@ The 3-digit number must match **Set #** in `cards_info.xlsx`.
 
 ### API Configuration (api_config.json)
 
+**3 API sources available:**
+
 ```json
 {
-    "pokemon_tcg_api_key": "YOUR_API_KEY_HERE"
+    "api_source": "tcgdex",
+    "tcgdex": {
+        "language": "en"
+    },
+    "pokemon_tcg_api_key": "YOUR_API_KEY_HERE",
+    "cardmarket": {
+        "app_token": "YOUR_APP_TOKEN",
+        "app_secret": "YOUR_APP_SECRET",
+        "access_token": "YOUR_ACCESS_TOKEN",
+        "access_secret": "YOUR_ACCESS_SECRET"
+    }
 }
 ```
 
-Get a free API key at: https://pokemontcg.io/
+**Choose your API:**
+- **tcgdex** ⭐ (Recommended): No auth, combines CM+TCP prices, ultra-fast
+- **pokemontcg**: USA prices, requires free API key from https://pokemontcg.io/
+- **cardmarket**: Europe prices, requires OAuth setup from https://cardmarket.com/API
 
 ---
 

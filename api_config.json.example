@@ -1,0 +1,52 @@
+{
+    "_comment": "Configuration API pour Pokemon Dataset Generator",
+    "_version": "3.0",
+    "_apis_available": ["tcgdex", "pokemontcg", "cardmarket"],
+    
+    "api_source": "tcgdex",
+    
+    "_tcgdex_info": {
+        "description": "API gratuite communautaire (RECOMMANDÉE)",
+        "authentication": "Aucune",
+        "pricing": "Gratuit",
+        "regions": "Global (Cardmarket EUR + TCGPlayer USD)",
+        "speed": "Ultra-rapide",
+        "languages": ["en", "fr", "es", "it", "pt", "de", "ja", "zh", "id", "th"],
+        "documentation": "https://www.tcgdex.net/"
+    },
+    "tcgdex": {
+        "language": "en"
+    },
+    
+    "_pokemontcg_info": {
+        "description": "API officielle Pokemon TCG (USA)",
+        "authentication": "Clé API requise",
+        "pricing": "Gratuit",
+        "regions": "USA (TCGPlayer USD uniquement)",
+        "speed": "Moyen",
+        "setup": "https://pokemontcg.io/"
+    },
+    "pokemon_tcg_api_key": "VOTRE_CLE_POKEMON_TCG_ICI",
+    
+    "_cardmarket_info": {
+        "description": "API Cardmarket (Europe)",
+        "authentication": "OAuth 1.0 requis",
+        "pricing": "Gratuit",
+        "regions": "Europe (Cardmarket EUR uniquement)",
+        "speed": "Lent (rate limits stricts)",
+        "setup": "https://cardmarket.com/API → Create Dedicated App"
+    },
+    "cardmarket": {
+        "app_token": "VOTRE_APP_TOKEN_ICI",
+        "app_secret": "VOTRE_APP_SECRET_ICI",
+        "access_token": "VOTRE_ACCESS_TOKEN_ICI",
+        "access_token_secret": "VOTRE_ACCESS_TOKEN_SECRET_ICI"
+    },
+    
+    "_usage": {
+        "quickstart_tcgdex": "1. Set api_source to 'tcgdex', 2. Choose language, 3. Done!",
+        "quickstart_pokemontcg": "1. Get free key at pokemontcg.io, 2. Set api_source to 'pokemontcg'",
+        "quickstart_cardmarket": "1. Create app at cardmarket.com/API, 2. Copy tokens, 3. Set api_source to 'cardmarket'"
+    }
+}
+
