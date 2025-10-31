@@ -223,19 +223,6 @@ run_gui_v3.bat
 
 ---
 
-##  Screenshots & Examples
-
-<div align="center">
-
-### GUI v3.0 Interface
-
-![GUI Dashboard](examples/gui_dashboard.png)
-*Modern dashboard with real-time statistics and environment checks*
-
----
-
-</div>
-
 ---
 
 ## � Project Structure
