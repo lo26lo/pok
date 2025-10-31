@@ -138,7 +138,6 @@ run_gui_v3.bat
 - ⚖️ Auto-balancing
 - 🌈 Holographic augmentation
 - 🌐 TCG Browser
-- 🧹 Clean & Reset tools
 - ⚙️ Settings dialog
 
 </td>
@@ -336,26 +335,6 @@ balancer.balance()
 ```
 
 **Strategies:** `augment` (increase), `reduce` (decrease), `both` (equalize)
-
-### 🧹 Clean & Reset Tools
-
-Clean generated files and folders with safety confirmations:
-
-**Individual Clean Actions:**
-- 🗑️ **Clean Output**: Delete entire `output/` folder
-- 🎨 **Clean Augmented**: Delete `output/augmented/`
-- 🧩 **Clean Mosaics**: Delete `output/yolov8/`
-- 🎓 **Clean Training**: Delete `runs/` (trained models)
-- 🌈 **Clean Holographic**: Delete `images_holographic/`
-- 📋 **Clean Fakeimg**: Delete fake background folders
-
-**Clean All:**
-- 🚨 Deletes all generated folders (output, runs, holographic, fakeimg)
-- Optional: Include `images/` folder (unchecked by default)
-- Double confirmation for safety
-- Detailed logs of deleted folders
-
-**Access:** GUI → Tools → Clean & Reset section
 
 ### 📦 Multi-Format Export
 
