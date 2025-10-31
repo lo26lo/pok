@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 <img src="examples/banner.png" alt="Pokemon Dataset Generator Banner" width="100%"/>
 
@@ -21,7 +21,7 @@
 
 ---
 
-## � Screenshots & Examples
+##  Screenshots & Examples
 
 <div align="center">
 
@@ -36,36 +36,108 @@
 
 <table>
 <tr>
-<td align="center" width="50%">
+<td align="center" width="33%">
 
-![Augmented Examples](examples/example_augmented.png)
-**Augmented Cards** - 22 transformation types
+<img src="examples/example_augmented.png" width="200"/>
+
+**Augmented Cards**  
+22 transformation types
 
 </td>
-<td align="center" width="50%">
+<td align="center" width="33%">
 
 ![Mosaic Layout](examples/example_layout_annotated.png)
-**Annotated Mosaic** - YOLO format ready
+**Annotated Mosaic**  
+YOLO format ready
 
 </td>
-</tr>
-<tr>
-<td align="center" width="50%">
+<td align="center" width="33%">
 
 ![Grid Layout](examples/example_layout.png)
-**Grid Mosaic** - Structured card placement
-
-</td>
-<td align="center" width="50%">
-
-![Fake Background](examples/example_fakeimg.png)
-**Generated Backgrounds** - Realistic training data
+**Grid Mosaic**  
+Structured placement
 
 </td>
 </tr>
 </table>
 
 </div>
+
+---
+
+## 🖥️ GUI v3.0 Features
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 📊 Dashboard (Home)
+- Real-time statistics
+- Source/Augmented/Mosaic counts
+- Dataset size calculation
+- Environment verification
+- Quick action buttons
+
+### 🔄 Automatic Workflow
+- 5-step pipeline
+- Augmentation → Mosaic → Validation → Balance → Training
+- Configurable steps
+- Progress tracking
+- Real-time logs
+
+### 🎨 Augmentation
+- Configure transformation count
+- Custom output directory
+- Multiple augmentation types
+- YOLO annotation generation
+
+### 🧩 Mosaic Generator
+- 3 layout modes (Grid/Rotation/Random)
+- Background selection
+- Batch generation
+- Annotated output
+
+### ✅ Dataset Validation
+- YOLO format verification
+- Detect corrupted images
+- Class distribution analysis
+- HTML report generation
+
+</td>
+<td width="50%" valign="top">
+
+### 🎓 YOLOv8 Training
+- Model size selection (n/s/m/l/x)
+- Custom epochs
+- Image size configuration
+- Real-time training logs
+- Automatic metric export
+
+### 📹 Live Detection
+- Webcam real-time detection
+- Model selection
+- Confidence threshold
+- Bounding box visualization
+- Detection recording
+
+### 📦 Export Tools
+- COCO JSON format
+- Pascal VOC XML
+- TFRecord (TensorFlow)
+- Roboflow ZIP
+- Multi-format batch export
+
+### 🛠️ Utilities
+- 📋 Excel & Prices (TCGdex API)
+- ⚖️ Auto-balancing
+- 🌈 Holographic augmentation
+- 🌐 TCG Browser
+- 🧹 Clean & Reset tools
+- ⚙️ Settings dialog
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -88,8 +160,6 @@ run_gui_v3.bat
 **✨ That's it! The modern interface is ready to use!**
 
 ---
-
-## 🖥️ GUI v3.0 Features
 
 <table>
 <tr>
@@ -222,7 +292,7 @@ run_gui_v3.bat
 
 ---
 
-## � Screenshots & Examples
+##  Screenshots & Examples
 
 <div align="center">
 
