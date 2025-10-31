@@ -15,7 +15,7 @@
 
 ---
 
-[🇫🇷 Version Française](README_FR.md) • [📖 Help Documentation](HELP.md) • [✨ Changelog](NOUVELLES_FONCTIONNALITES.md)
+[📖 Help Documentation](HELP.md) • [✨ Changelog](NOUVELLES_FONCTIONNALITES.md)
 
 </div>
 
@@ -641,8 +641,7 @@ Contributions welcome! Please:
 
 ## 📧 Support
 
-- 📝 [Open an issue](https://github.com/lo26lo/pok/issues)
-- 📖 [Read documentation](docs/)
+-  [Read documentation](docs/)
 - 💬 [Discussions](https://github.com/lo26lo/pok/discussions)
 
 ---
