@@ -36,26 +36,30 @@
 
 <table>
 <tr>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
-<img src="examples/example_augmented.png" width="200"/>
+<img src="examples/example_augmented.png" width="240"/>
 
 **Augmented Cards**  
 22 transformation types
 
 </td>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
-![Fake Background](examples/example_fakeimg.png)
+<img src="examples/example_fakeimg.png" width="240"/>
+
 **Generated Backgrounds**  
 Realistic training data
 
 </td>
-<td align="center" width="33%">
+</tr>
+<tr>
+<td align="center" colspan="2">
 
-![Mosaic Layout](examples/example_layout_annotated.png)
-**Annotated Mosaic**  
-YOLO format ready
+![Annotated Mosaic](examples/example_layout_annotated.png)
+
+**Annotated Mosaic - YOLO Format Ready**  
+Complete dataset with bounding boxes
 
 </td>
 </tr>
