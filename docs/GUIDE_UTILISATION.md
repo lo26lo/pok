@@ -98,6 +98,62 @@ Génère des images augmentées à partir des cartes originales avec diverses tr
 
 ---
 
+## 🌟 1.2. AUGMENTATION HOLOGRAPHIQUE
+
+### Script : `holographic_augmenter.py`
+
+**🆕 NOUVEAUTÉ GUI v3.0** : Génère des effets holographiques réalistes sur les cartes Pokémon pour simuler les finitions brillantes et irisées des vraies cartes.
+
+### Utilisation via GUI
+```batch
+.\run_with_env.bat GUI_v3_modern.py
+```
+→ Vue **"Augmentation"** → Sélectionner type : **"Holographic"** ou **"Both"**
+
+### Utilisation en ligne de commande
+```batch
+.\run_with_env.bat holographic_augmenter.py --input images --output images_holographic --intensity 0.7 --variations 3
+```
+
+### Options disponibles
+
+| Option | Valeur | Description |
+|--------|--------|-------------|
+| `--input` | Dossier | Dossier source des images (défaut: `images`) |
+| `--output` | Dossier | Dossier de sortie (défaut: `images_holographic`) |
+| `--intensity` | 0.1-1.0 (défaut: 0.7) | Intensité de l'effet holographique |
+| `--variations` | 1-10 (défaut: 3) | Nombre de variations par image |
+
+### Exemples
+```batch
+# Effet standard (intensité 0.7, 3 variations)
+.\run_with_env.bat holographic_augmenter.py --input images --output images_holographic
+
+# Effet léger (intensité 0.3, 5 variations)
+.\run_with_env.bat holographic_augmenter.py --intensity 0.3 --variations 5
+
+# Effet intense (intensité 1.0, 10 variations)
+.\run_with_env.bat holographic_augmenter.py --intensity 1.0 --variations 10
+```
+
+### Effets appliqués
+- **Gradient arc-en-ciel** : Simulation du reflet holographique
+- **Variations d'angle** : Différentes orientations de lumière
+- **Intensité variable** : Contrôle de la force de l'effet
+- **Préservation qualité** : Sans perte de détails de la carte
+
+### Configuration dans Settings
+Dans le **Settings Dialog** → Onglet **"Augmentation"** :
+- **Holographic Intensity** : Curseur 0.1 à 1.0
+- **Holographic Variations** : Spinbox 1 à 10
+
+### Sortie
+- **Dossier** : `images_holographic/` (ou dossier spécifié)
+- **Format** : Images PNG avec effet holographique appliqué
+- **Nomenclature** : `original_name_holo_X.png` (X = numéro variation)
+
+---
+
 ## 🧩 2. GÉNÉRATION DE MOSAÏQUES
 
 ### Script : `mosaic.py`
@@ -108,13 +164,40 @@ Crée des mosaïques de 8 cartes sur des fonds variés avec différents layouts 
 
 ### Utilisation via GUI
 ```batch
-.\run_with_env.bat GUI.py
+.\run_with_env.bat GUI_v3_modern.py
 ```
-→ Onglet **"Génération de Mosaïques"**
+→ Vue **"Mosaic Generation"**
 
 ### Utilisation en ligne de commande
 ```batch
-.\run_with_env.bat mosaic.py <layout_mode> <background_mode> <transform_mode>
+.\run_with_env.bat mosaic.py <layout_mode> <background_mode> <transform_mode> [max_groups]
+```
+
+**🆕 Nouveau paramètre optionnel** : `max_groups` - Limite le nombre de groupes à générer (1 groupe = 8 cartes)
+
+### Modes de génération
+
+**🆕 GUI v3.0** propose 3 modes prédéfinis :
+
+| Mode | Groupes | Mosaïques | Description |
+|------|---------|-----------|-------------|
+| **Quick** | 25 | ~200 | Génération rapide pour tests |
+| **Standard** | 62 | ~500 | Génération équilibrée (recommandé) |
+| **Complete** | Tous | ~900 | Toutes les combinaisons (3×3×2×50) |
+
+### Exemples de génération
+```batch
+# Génération standard (mode recommandé)
+.\run_with_env.bat mosaic.py 1 0 0
+
+# Quick test (limite à 25 groupes = 200 mosaïques)
+.\run_with_env.bat mosaic.py 1 0 0 25
+
+# Standard (limite à 62 groupes = 500 mosaïques)
+.\run_with_env.bat mosaic.py 2 0 1 62
+
+# Mode ALL via GUI (toutes les combinaisons)
+.\run_with_env.bat mosaic.py ALL
 ```
 
 ### Paramètres
@@ -167,13 +250,69 @@ Crée des mosaïques de 8 cartes sur des fonds variés avec différents layouts 
 
 ---
 
-## 🖼️ 3. GÉNÉRATION DE FAUSSES CARTES
+## 🖼️ 3. GÉNÉRATION DE FAUSSES CARTES (FAKE BACKGROUNDS)
+
+### 🆕 Méthode recommandée : GUI v3.0
+
+**🆕 NOUVEAUTÉ** : Vue dédiée avec configuration avancée dans le GUI v3.0
+
+### Script moderne : `generate_fake_backgrounds.py`
+
+Génère des fonds synthétiques avec bruit Perlin pour simuler des surfaces réalistes.
+
+### Utilisation via GUI
+```batch
+.\run_with_env.bat GUI_v3_modern.py
+```
+→ Vue **"Fake Background Generator"** ou bouton dans vue **"Mosaic Generation"**
+
+### Utilisation en ligne de commande
+```batch
+.\run_with_env.bat tools\generate_fake_backgrounds.py --count 100 --noise_min 10 --noise_max 50
+```
+
+### Options disponibles
+
+| Option | Valeur | Description |
+|--------|--------|-------------|
+| `--count` | 10-1000 (défaut: 100) | Nombre de backgrounds à générer |
+| `--noise_min` | 0-100 (défaut: 10) | Intensité minimale du bruit |
+| `--noise_max` | 0-100 (défaut: 50) | Intensité maximale du bruit |
+
+### Configuration dans Settings
+Dans le **Settings Dialog** → Onglet **"Fake Backgrounds"** :
+- **Default Count** : 10-1000 (défaut: 100)
+- **Noise Min** : 0-100 (défaut: 10)
+- **Noise Max** : 0-100 (défaut: 50)
+
+### Exemples
+```batch
+# Génération standard (100 backgrounds)
+.\run_with_env.bat tools\generate_fake_backgrounds.py
+
+# Génération rapide (20 backgrounds)
+.\run_with_env.bat tools\generate_fake_backgrounds.py --count 20
+
+# Bruit intense (pour plus de variation)
+.\run_with_env.bat tools\generate_fake_backgrounds.py --count 50 --noise_min 30 --noise_max 80
+```
+
+### Sortie
+- **Dossier** : `fakeimg/`
+- **Format** : PNG avec bruit Perlin
+- **Utilisation** : Backgrounds pour mosaïques (background_mode=0)
+
+---
+
+### 📦 Méthode alternative : Random Erasing (ancienne méthode)
+
+**Note** : Méthode toujours disponible mais moins flexible que le nouveau générateur.
 
 ### Script : `randomerasing.py` + `generate_fakeimages.bat`
 
 Crée des fausses cartes Pokémon en copiant 20 cartes aléatoires depuis `images/` vers `fakeimg/`, puis applique Random Erasing pour les modifier.
 
-### Utilisation via batch (RECOMMANDÉ)
+### Utilisation via batch
 ```batch
 .\generate_fakeimages.bat
 ```
@@ -190,9 +329,6 @@ Crée des fausses cartes Pokémon en copiant 20 cartes aléatoires depuis `image
 ```batch
 .\run_with_env.bat randomerasing.py --input_dir fakeimg --output_dir fakeimg_augmented --p 0.8
 ```
-
-### Fonds générés
-20 cartes Pokémon aléatoires copiées depuis `images/`, avec Random Erasing appliqué pour créer des variations visuelles (zones effacées aléatoirement remplies de bruit).
 
 ---
 
@@ -212,31 +348,104 @@ Génère quelques mosaïques avec les paramètres par défaut.
 
 ---
 
-## 🎮 Interface Graphique (GUI)
+## 🎮 Interface Graphique (GUI v3.0)
+
+### 🆕 Version moderne avec design Catppuccin Mocha
 
 ### Lancement
 ```batch
-.\run_with_env.bat GUI.py
+.\run_with_env.bat GUI_v3_modern.py
+```
+ou
+```batch
+.\run_gui_v3.bat
 ```
 
-### Onglets disponibles
+### 10 Vues disponibles
 
-#### 📊 Onglet 1 : Augmentation de Dataset
-- **Nombre d'augmentations** : Combien de variations par image
-- **Cible** : Dossier de sortie (`augmented` ou `images_aug`)
-- **Bouton** : Lancer Augmentation
+#### 📊 Dashboard
+- **Statistiques** : Compteurs d'images/augmentations/mosaïques
+- **Quick Actions** : Raccourcis vers fonctions principales
+- **System Info** : Python version, packages installés
+- **Charts** : Graphiques de distribution (si matplotlib disponible)
 
-#### 🧩 Onglet 2 : Génération de Mosaïques
-- **Layout Mode** : Type de disposition (1, 2 ou 3)
-- **Background Mode** : Type de fond (0, 1 ou 2)
-- **Transform Mode** : Type de transformation (0 ou 1)
-- **Bouton** : Lancer Mosaïque
+#### 🎨 Augmentation
+- **Nombre d'augmentations** : 1-100 (défaut: 15)
+- **Type** : Standard / Holographic / Both
+- **Output directory** : augmented, images_aug, output/augmented
+- **Bouton** : START AUGMENTATION
 
-#### 🛠️ Onglet 3 : Outils
-- Options supplémentaires (si disponibles)
+#### 📋 Fake Backgrounds
+- **Vue dédiée** pour génération de fonds synthétiques
+- **Configuration** : Count (10-1000), Noise min/max (0-100)
+- **Statistiques** : Nombre de backgrounds actuels
+- **Bouton** : GENERATE FAKE BACKGROUNDS
 
-#### 📝 Onglet 4 : Logs
-- Affichage des logs d'exécution
+#### 🧩 Mosaic Generation
+- **Mode** : Quick (200), Standard (500), Complete (All)
+- **Card Layout** : Grid, 3D Rotation, Random Placement
+- **Background** : Fake Cards Mosaic, Local Image, Web Image
+- **Rotation** : 2D Rotation, 3D Perspective Projection
+- **Boutons** : GENERATE MOSAICS, Generate Fake Backgrounds
+
+#### ✅ Validation
+- **Dataset path** : Chemin du dataset YOLO
+- **Validation complète** : Vérification annotations et images
+- **Rapport HTML** : Génération automatique
+- **Bouton** : VALIDATE DATASET
+
+#### 🎓 Training
+- **YOLOv8 intégré** : Entraînement depuis le GUI
+- **Configuration** : Model, epochs, batch size, device
+- **Logs temps réel** : Suivi de l'entraînement
+- **Visualisation** : Affichage des résultats
+
+#### 🔍 Detection
+- **3 modes** : Webcam, Video, Image
+- **Configuration** : Model, confidence threshold, camera ID
+- **Real-time** : Détection en direct
+- **Boutons** : START WEBCAM, Detect Video, Detect Image
+
+#### 🌐 API Server
+- **TCGdex API** : Intégration gratuite (pas d'auth)
+- **Flask REST** : Serveur API local
+- **Endpoints** : Search cards, prices, Excel export
+- **Status** : Monitoring du serveur
+
+#### 🔄 Workflow
+- **Quick Pipeline** : Fake → Augment → Mosaic → Train
+- **Full Pipeline** : Processus complet automatisé
+- **Custom** : Configuration personnalisée
+- **Sauvegarde** : Export/Import workflows
+
+#### ⚙️ Settings
+**6 onglets de configuration** :
+- **General** : 6 chemins (images, output, augmented, mosaic, fakeimg, holographic)
+- **Augmentation** : Count, type, holographic params (intensity, variations)
+- **Mosaic** : Mode, layout, background, transform
+- **Fake Backgrounds** : Count, noise min/max
+- **Training** : Model, epochs, batch, device
+- **Advanced** : TCGdex API key
+
+### Menu Tools (🛠️)
+
+7 actions de nettoyage disponibles :
+1. **Clean Outputs** : Supprime output/augmented/ et output/yolov8/
+2. **Clean Fake Images** : Vide fakeimg/ et fakeimg_augmented/
+3. **Clean Holographic** : Supprime images_holographic/
+4. **Clean Web Backgrounds** : Vide web/
+5. **Clean Training Results** : Supprime runs/train/
+6. **Clean All Generated** : Tout sauf images sources
+7. **Clean Everything** : Reset complet (confirmation double)
+
+### Fonctionnalités supplémentaires
+- **Logs temps réel** : Colorés avec émojis
+- **Bouton Stop** : Annulation des opérations en cours
+- **Auto-save config** : Sauvegarde automatique dans `gui_config.json`
+- **Help button** : Lien direct vers le repository GitHub
+- **Notifications** : Messages de succès/erreur
+
+**📘 Documentation complète** : Voir `docs/GUI_V3_GUIDE.md`
 
 ---
 
@@ -344,15 +553,58 @@ names:
    .\run_with_env.bat augmentation.py --num_aug 15
    ```
 
+## 💡 Workflow recommandé
+
+### Avec GUI v3.0 (RECOMMANDÉ)
+1. **Préparation**
+   ```batch
+   .\install_env.bat
+   .\run_gui_v3.bat
+   ```
+
+2. **Pipeline automatique** (via vue Workflow)
+   - **Quick Pipeline** : Fake → Augment → Mosaic → Train
+   - **Full Pipeline** : Processus complet automatisé
+   
+3. **OU étape par étape**
+   - Vue **Fake Backgrounds** → Générer 100 backgrounds
+   - Vue **Augmentation** → Type "Both" (Standard + Holographic)
+   - Vue **Mosaic** → Mode "Standard (500)"
+   - Vue **Training** → Entraîner YOLOv8
+
+### En ligne de commande (traditionnel)
+1. **Préparation**
+   ```batch
+   .\install_env.bat
+   ```
+
+2. **Générer des fonds** (première fois seulement)
+   ```batch
+   .\run_with_env.bat tools\generate_fake_backgrounds.py --count 100
+   ```
+
+3. **Augmenter les images**
+   ```batch
+   # Standard
+   .\run_with_env.bat augmentation.py --num_aug 15
+   
+   # Holographic
+   .\run_with_env.bat holographic_augmenter.py --intensity 0.7 --variations 3
+   ```
+
 4. **Générer des mosaïques**
    ```batch
-   .\run_with_env.bat mosaic.py 1 0 0
-   .\run_with_env.bat mosaic.py 2 0 1
-   .\run_with_env.bat mosaic.py 3 2 0
+   # Standard (500 mosaïques)
+   .\run_with_env.bat mosaic.py 1 0 0 62
+   .\run_with_env.bat mosaic.py 2 0 1 62
+   
+   # Quick test (200 mosaïques)
+   .\run_with_env.bat mosaic.py 1 0 0 25
    ```
 
 5. **Vérifier les résultats**
    - Images augmentées : `output/augmented/images/`
+   - Images holographic : `images_holographic/`
    - Mosaïques : `output/yolov8/images/`
    - Configurations YOLO : `*.yaml`
 
@@ -361,10 +613,38 @@ names:
 ## 📞 Support
 
 Pour toute question, consultez :
-- `STRUCTURE_RECOMMANDEE.md` pour l'architecture du projet
-- Les scripts de test : `test_augmentation.bat`, `test_mosaic.bat`
+- **`docs/GUI_V3_GUIDE.md`** : Documentation complète du GUI v3.0
+- **`VERIFICATION_GUIDE.md`** : Vérification conformité guide ↔ code
+- **`README.md`** : Vue d'ensemble du projet
+- **`HELP.md`** : FAQ et dépannage
+- Scripts de test : `test_augmentation.bat`, `test_mosaic.bat`
 
 ---
 
-**Version** : 1.0  
-**Dernière mise à jour** : 29 octobre 2025
+## 📝 Changelog
+
+### Version 3.0 (Novembre 2025)
+- 🆕 GUI v3.0 moderne avec design Catppuccin Mocha
+- 🆕 Augmentation holographique (intensity, variations)
+- 🆕 Modes Quick/Standard/Complete pour mosaïques
+- 🆕 Générateur fake backgrounds avancé avec bruit Perlin
+- 🆕 Dashboard avec statistiques et graphiques
+- 🆕 Menu Clean Tools (7 actions)
+- 🆕 Settings Dialog (6 onglets)
+- 🆕 Workflow Manager (pipelines automatisés)
+- 🆕 10 vues spécialisées
+- ✅ Correction labels mosaic (Background 0=Fake, 1=Local, 2=Web)
+- ✅ Limitation groupes via paramètre max_groups
+
+### Version 1.0 (Octobre 2025)
+- ✅ Augmentation standard avec imgaug
+- ✅ Génération mosaïques YOLO
+- ✅ Interface GUI basique
+- ✅ Scripts CLI
+
+---
+
+**Version actuelle** : 3.0  
+**Dernière mise à jour** : 2 novembre 2025  
+**Auteur** : lo26lo  
+**License** : MIT
