@@ -91,6 +91,17 @@ Complete dataset with bounding boxes
 - Real-time logs with colors
 - **Stop button** for cancellation
 
+### ⬇️ Image Download (NEW)
+- **TCGdex API Integration**: Download card images directly
+- **20 Popular Sets**: Quick selection dropdown
+- **Manual Entry**: Support for any set name/ID
+- **Multi-language**: 10 languages (EN, FR, DE, IT, ES, PT, JA, KO, ZH, TH)
+- **Quality Options**: High/Low resolution
+- **Format Support**: PNG/JPG/WebP
+- **Parallel Downloads**: 1-16 workers for speed
+- **Auto Manifest**: CSV generation with metadata
+- **Free API**: No authentication required
+
 ### 🎨 Augmentation
 - 1-100 transformations per image
 - **Type selection**: Standard / Holographic / Both
@@ -193,12 +204,39 @@ run_gui_v3.bat
 
 **✨ That's it! The modern interface is ready to use!**
 
+### 🎯 Optional: Download Pokemon Card Images
+
+Before augmentation, you can download card sets directly from TCGdex API:
+
+```powershell
+# Via CLI
+python core/image_downloader.py --set "Surging Sparks" --lang "en" --quality "high"
+
+# Or use GUI: ⬇️ Image Download view
+# Select a popular set or enter manually → Download to images/
+```
+
 ---
 
 ## ✨ Core Features
 
 <table>
 <tr>
+<td width="33%" valign="top">
+
+### ⬇️ Image Download (NEW)
+- ✅ **TCGdex API** integration (free, no auth)
+- ✅ **20 popular sets** quick selection
+- ✅ **10 languages** support
+- ✅ **Multi-format**: PNG/JPG/WebP
+- ✅ **High/Low quality** options
+- ✅ **Parallel downloads** (1-16 workers)
+- ✅ **Auto manifest** CSV generation
+- ✅ **GUI + CLI** interfaces
+
+**Sets:** Surging Sparks, Stellar Crown, Base Set, and more!
+
+</td>
 <td width="33%" valign="top">
 
 ### 🎨 Advanced Augmentation
@@ -229,7 +267,9 @@ run_gui_v3.bat
 **Output:** Fully configurable (200-900 mosaics)
 
 </td>
-<td width="33%" valign="top">
+</tr>
+<tr>
+<td colspan="3" valign="top">
 
 ### 🎓 YOLOv8 Integration
 - ✅ **Complete pipeline** in GUI
@@ -349,7 +389,7 @@ pok/
 
 ```mermaid
 graph LR
-    A[📸 Source Images] --> B[🎨 Augmentation]
+    A[⬇️ Download Sets] --> B[🎨 Augmentation]
     B --> C[🧩 Mosaic Generation]
     C --> D[✅ Validation]
     D --> E[⚖️ Auto-Balance]
@@ -360,6 +400,7 @@ graph LR
 
 ### Step-by-Step
 
+0. **⬇️ Download Sets** *(Optional)*: Download card images from TCGdex API
 1. **📸 Prepare Images**: Place PNG cards in `images/` folder
 2. **🎨 Augmentation**: Generate variations with transformations
 3. **🧩 Mosaics**: Create YOLO training layouts
@@ -372,6 +413,70 @@ graph LR
 ---
 
 ## 🎯 Advanced Features
+
+### ⬇️ Image Download (TCGdex API)
+
+**🆕 NEW in v3.0**: Download Pokemon card images directly from TCGdex API with full language and quality support.
+
+#### GUI Usage
+- **View**: ⬇️ Image Download (first in GENERATION section)
+- **Parameters**:
+  - **Set Selection**: Choose from 20 popular sets or enter custom name/ID
+  - **Language**: 10 languages (EN, FR, DE, IT, ES, PT, JA, KO, ZH, TH)
+  - **Quality**: High or Low resolution
+  - **Format**: PNG (recommended), JPG, or WebP
+  - **Workers**: 1-16 parallel downloads (default: 8)
+
+#### CLI Usage
+```powershell
+# Download Surging Sparks in English (PNG, high quality)
+python core/image_downloader.py --set "Surging Sparks" --lang "en" --quality "high" --ext "png"
+
+# Download Stellar Crown in French with 12 workers
+python core/image_downloader.py --set "sv07" --lang "fr" --workers 12
+
+# Download Base Set in German (JPG, low quality for testing)
+python core/image_downloader.py --set "base1" --lang "de" --quality "low" --ext "jpg"
+```
+
+#### Python API
+```python
+from core.image_downloader import ImageDownloader
+
+downloader = ImageDownloader()
+
+# Download set
+ok, fail, total = downloader.download_set(
+    set_query="Surging Sparks",
+    output_dir="images",
+    lang="en",
+    quality="high",
+    ext="png",
+    workers=8
+)
+
+print(f"Downloaded {ok}/{total} cards successfully")
+```
+
+**Features:**
+- ✅ **Free API** - No authentication required
+- ✅ **20 Popular Sets** - Quick selection (sv08, sv07, base1, etc.)
+- ✅ **10 Languages** - Multi-language support
+- ✅ **Retry Logic** - Automatic retry on network errors
+- ✅ **Manifest Generation** - CSV file with card metadata
+- ✅ **Progress Tracking** - Real-time progress updates
+
+**Output Structure:**
+```
+images/
+└── sv08/              # Set folder
+    ├── 001.png        # Card images (named by set number)
+    ├── 002.png
+    ├── ...
+    └── manifest.csv   # Metadata (filename, card_id, name, set_number, url)
+```
+
+---
 
 ### 🌈 Holographic Augmentation
 

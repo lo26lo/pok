@@ -85,6 +85,13 @@ class SettingsDialog:
         self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "fakeimg"))
         self.fakeimg_min_noise = tk.IntVar(value=config.get("fakeimg_min_noise", 20))
         self.fakeimg_max_noise = tk.IntVar(value=config.get("fakeimg_max_noise", 60))
+        
+        # Image download settings
+        self.default_download_dir = tk.StringVar(value=config.get("default_download_dir", "images"))
+        self.default_download_lang = tk.StringVar(value=config.get("default_download_lang", "English"))
+        self.default_download_quality = tk.StringVar(value=config.get("default_download_quality", "high"))
+        self.default_download_format = tk.StringVar(value=config.get("default_download_format", "png"))
+        self.default_download_workers = tk.IntVar(value=config.get("default_download_workers", 8))
     
     def create_ui(self):
         """Créer l'interface du dialog"""
@@ -146,6 +153,11 @@ class SettingsDialog:
         fake_frame = tk.Frame(notebook, bg=colors['bg_dark'])
         notebook.add(fake_frame, text="  Fake Backgrounds  ")
         self.create_fakebackgrounds_tab(fake_frame)
+        
+        # Onglet Image Download
+        download_frame = tk.Frame(notebook, bg=colors['bg_dark'])
+        notebook.add(download_frame, text="  Image Download  ")
+        self.create_download_tab(download_frame)
         
         # Onglet Training
         train_frame = tk.Frame(notebook, bg=colors['bg_dark'])
@@ -914,6 +926,160 @@ class SettingsDialog:
         
         container.grid_columnconfigure(0, weight=1)
     
+    def create_download_tab(self, parent):
+        """Onglet paramètres Image Download"""
+        colors = self.app.colors
+        
+        container = tk.Frame(parent, bg=colors['bg_dark'])
+        container.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Default output directory
+        tk.Label(
+            container,
+            text="💾 Default Output Directory:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
+        
+        dir_frame = tk.Frame(container, bg=colors['bg_dark'])
+        dir_frame.grid(row=1, column=0, sticky='ew', pady=(0, 20))
+        
+        download_dir_entry = tk.Entry(
+            dir_frame,
+            textvariable=self.default_download_dir,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2
+        )
+        download_dir_entry.pack(side=tk.LEFT, fill='x', expand=True, ipady=8)
+        
+        tk.Button(
+            dir_frame,
+            text="📁",
+            command=lambda: self.browse_dir(self.default_download_dir),
+            bg=colors['accent'],
+            fg='#000000',
+            font=('Segoe UI', 10, 'bold'),
+            relief='flat',
+            padx=10,
+            cursor='hand2'
+        ).pack(side=tk.LEFT, padx=(5, 0))
+        
+        # Default language
+        tk.Label(
+            container,
+            text="🌍 Default Language:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=2, column=0, sticky='w', pady=(0, 5))
+        
+        try:
+            from core.image_downloader import LANGUAGES
+            lang_choices = list(LANGUAGES.keys())
+        except:
+            lang_choices = ["English", "Français", "Deutsch", "Italiano", "Español"]
+        
+        lang_combo = ttk.Combobox(
+            container,
+            textvariable=self.default_download_lang,
+            values=lang_choices,
+            state='readonly',
+            font=('Segoe UI', 10),
+            width=20
+        )
+        lang_combo.grid(row=3, column=0, sticky='w', pady=(0, 20))
+        
+        # Default quality
+        tk.Label(
+            container,
+            text="🎨 Default Quality:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=4, column=0, sticky='w', pady=(0, 5))
+        
+        quality_combo = ttk.Combobox(
+            container,
+            textvariable=self.default_download_quality,
+            values=["high", "low"],
+            state='readonly',
+            font=('Segoe UI', 10),
+            width=15
+        )
+        quality_combo.grid(row=5, column=0, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="High quality recommended for training datasets",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=6, column=0, sticky='w', pady=(0, 20))
+        
+        # Default format
+        tk.Label(
+            container,
+            text="📁 Default Format:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=7, column=0, sticky='w', pady=(0, 5))
+        
+        format_combo = ttk.Combobox(
+            container,
+            textvariable=self.default_download_format,
+            values=["png", "jpg", "jpeg", "webp"],
+            state='readonly',
+            font=('Segoe UI', 10),
+            width=18
+        )
+        format_combo.grid(row=8, column=0, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="PNG recommended for lossless quality",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=9, column=0, sticky='w', pady=(0, 20))
+        
+        # Default workers
+        tk.Label(
+            container,
+            text="⚡ Default Parallel Workers:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=10, column=0, sticky='w', pady=(0, 5))
+        
+        workers_spinbox = tk.Spinbox(
+            container,
+            from_=1,
+            to=16,
+            textvariable=self.default_download_workers,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=10
+        )
+        workers_spinbox.grid(row=11, column=0, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="More workers = faster download (4-8 recommended)",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=12, column=0, sticky='w', pady=(0, 10))
+        
+        container.grid_columnconfigure(0, weight=1)
+    
     def browse_dir(self, var):
         """Parcourir pour choisir un dossier"""
         directory = filedialog.askdirectory(title="Select Directory")
@@ -947,7 +1113,12 @@ class SettingsDialog:
             "fakeimg_count": self.fakeimg_count.get(),
             "fakeimg_output_dir": self.fakeimg_output_dir.get(),
             "fakeimg_min_noise": self.fakeimg_min_noise.get(),
-            "fakeimg_max_noise": self.fakeimg_max_noise.get()
+            "fakeimg_max_noise": self.fakeimg_max_noise.get(),
+            "default_download_dir": self.default_download_dir.get(),
+            "default_download_lang": self.default_download_lang.get(),
+            "default_download_quality": self.default_download_quality.get(),
+            "default_download_format": self.default_download_format.get(),
+            "default_download_workers": self.default_download_workers.get()
         }
         
         try:
@@ -1281,6 +1452,7 @@ class ModernPokemonGUI:
         
         # Groupe: Generation
         self.create_nav_section(sidebar, "GENERATION")
+        self.create_nav_button(sidebar, "download", "⬇️ Image Download", self.colors['text'])
         self.create_nav_button(sidebar, "augmentation", "🎨 Augmentation", self.colors['text'])
         self.create_nav_button(sidebar, "fakeimg", "📋 Fake Backgrounds", self.colors['text'])
         self.create_nav_button(sidebar, "mosaic", "🧩 Mosaics", self.colors['text'])
@@ -1298,9 +1470,12 @@ class ModernPokemonGUI:
         # Séparateur
         self.create_separator(sidebar)
         
-        # Groupe: Tools
-        self.create_nav_section(sidebar, "TOOLS")
-        self.create_nav_button(sidebar, "tools", "🛠️ Utilities", self.colors['text_dim'])
+        # Groupe: Tools (will be shown/hidden based on current view)
+        self.tools_section = tk.Frame(sidebar, bg=self.colors['bg_sidebar'])
+        self.tools_section.pack(fill=tk.X)
+        
+        self.create_nav_section(self.tools_section, "TOOLS")
+        self.create_nav_button(self.tools_section, "tools", "🛠️ Utilities", self.colors['text_dim'])
         
         # Spacer
         tk.Frame(sidebar, bg=self.colors['bg_sidebar']).pack(expand=True)
@@ -1446,6 +1621,14 @@ class ModernPokemonGUI:
         # Mettre à jour current_view
         self.current_view = view_id
         
+        # Cacher/afficher Tools section selon la vue
+        # On cache Tools pour les vues qui ont besoin de plus d'espace pour les logs
+        views_without_tools = ['download', 'augmentation', 'training', 'workflow']
+        if view_id in views_without_tools:
+            self.tools_section.pack_forget()
+        else:
+            self.tools_section.pack(fill=tk.X)
+        
         # Mettre à jour les boutons de navigation
         for vid, (btn, indicator) in self.nav_buttons.items():
             if vid == view_id:
@@ -1468,6 +1651,8 @@ class ModernPokemonGUI:
             self.create_home_view()
         elif view_id == 'workflow':
             self.create_workflow_view()
+        elif view_id == 'download':
+            self.create_download_view()
         elif view_id == 'augmentation':
             self.create_augmentation_view()
         elif view_id == 'fakeimg':
@@ -1766,6 +1951,184 @@ class ModernPokemonGUI:
                   command=self.start_workflow,
                   width=30).pack(pady=10)
     
+    def create_download_view(self):
+        """Vue Image Download"""
+        container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
+        container.pack(fill=tk.BOTH, expand=True, padx=30, pady=20)
+        
+        # Header
+        title = tk.Label(container,
+            text="⬇️ Image Download",
+            font=('Segoe UI', 24, 'bold'),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['text']
+        )
+        title.pack(anchor='w', pady=(0, 10))
+        
+        subtitle = tk.Label(container,
+            text="Download Pokemon card images from TCGdex API",
+            font=('Segoe UI', 11),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['text_dim']
+        )
+        subtitle.pack(anchor='w', pady=(0, 30))
+        
+        # Main content frame (2 colonnes)
+        main_frame = tk.Frame(container, bg=self.colors['bg_dark'])
+        main_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
+        
+        # Left column: Configuration Card
+        config_card = tk.Frame(main_frame, bg=self.colors['bg_card'])
+        config_card.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+        
+        card_title = tk.Label(config_card,
+            text="⚙️ Configuration",
+            font=('Segoe UI', 14, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        )
+        card_title.pack(anchor='w', padx=20, pady=(20, 15))
+        
+        config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
+        config_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
+        
+        # Set selection
+        set_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        set_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(set_frame, text="Pokemon Set:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        # Load all sets from TCGdex API
+        set_choices = []
+        try:
+            import requests
+            response = requests.get("https://api.tcgdex.net/v2/en/sets", timeout=5)
+            if response.status_code == 200:
+                sets_data = response.json()
+                # Sort by id (most recent first)
+                sets_data.sort(key=lambda x: x.get('id', ''), reverse=True)
+                set_choices = [f"{s.get('name', 'Unknown')} ({s.get('id', '')})" for s in sets_data if s.get('id')]
+                self.log("✅ Loaded all Pokemon sets from TCGdex API")
+        except Exception as e:
+            self.log(f"⚠️ Could not load sets from API: {e}")
+            # Fallback to popular sets
+            try:
+                from core.image_downloader import POPULAR_SETS
+                set_choices = [f"{name} ({sid})" for name, sid in POPULAR_SETS]
+            except:
+                set_choices = ["Surging Sparks (sv08)", "Stellar Crown (sv07)"]
+        
+        self.download_set_var = ttk.Combobox(set_frame,
+            values=set_choices,
+            state='normal',  # Allow manual entry
+            width=40)
+        self.download_set_var.pack(side=tk.LEFT, padx=10)
+        if set_choices:
+            self.download_set_var.set(set_choices[0])
+        
+        # Language selection
+        lang_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        lang_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(lang_frame, text="Language:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        try:
+            from core.image_downloader import LANGUAGES
+            lang_choices = list(LANGUAGES.keys())
+        except:
+            lang_choices = ["English", "Français", "Deutsch", "Italiano", "Español"]
+        
+        self.download_lang_var = ttk.Combobox(lang_frame,
+            values=lang_choices,
+            state='readonly',
+            width=20)
+        self.download_lang_var.pack(side=tk.LEFT, padx=10)
+        
+        # Set default from settings
+        default_lang = self.config.get("default_download_lang", "English")
+        if default_lang in lang_choices:
+            self.download_lang_var.set(default_lang)
+        else:
+            self.download_lang_var.current(0)
+        
+        # Quality & Format
+        quality_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        quality_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(quality_frame, text="Quality:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        self.download_quality_var = ttk.Combobox(quality_frame,
+            values=["high", "low"],
+            state='readonly',
+            width=15)
+        self.download_quality_var.pack(side=tk.LEFT, padx=10)
+        self.download_quality_var.set(self.config.get("default_download_quality", "high"))
+        
+        tk.Label(quality_frame, text="Format:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT, padx=(20, 0))
+        
+        self.download_format_var = ttk.Combobox(quality_frame,
+            values=["png", "jpg", "jpeg", "webp"],
+            state='readonly',
+            width=18)
+        self.download_format_var.pack(side=tk.LEFT, padx=10)
+        self.download_format_var.set(self.config.get("default_download_format", "png"))
+        
+        # Output directory
+        output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        output_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(output_frame, text="Output directory:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        self.download_output_var = ttk.Entry(output_frame, width=30)
+        self.download_output_var.pack(side=tk.LEFT, padx=10)
+        self.download_output_var.insert(0, self.config.get("default_download_dir", "images"))
+        
+        # Right column: Info Card
+        info_card = tk.Frame(main_frame, bg=self.colors['bg_card'])
+        info_card.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(10, 0))
+        
+        info_title = tk.Label(info_card,
+            text="ℹ️ About TCGdex API",
+            font=('Segoe UI', 14, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        )
+        info_title.pack(anchor='w', padx=20, pady=(20, 15))
+        
+        info_content = tk.Frame(info_card, bg=self.colors['bg_card'])
+        info_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
+        
+        tk.Label(info_content,
+            text="• Free API - No authentication required\n"
+                 "• High quality card images (PNG recommended)\n"
+                 "• Multiple languages supported\n"
+                 "• Images named with Set # for easy identification\n"
+                 "• manifest.csv generated with download details",
+            font=('Segoe UI', 10),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text'],
+            justify='left'
+        ).pack(anchor='w')
+        
+        # Button frame
+        btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
+        btn_frame.pack(pady=20)
+        
+        ttk.Button(btn_frame, text="⬇️ START DOWNLOAD",
+                  style='Accent.TButton',
+                  command=self.start_image_download,
+                  width=30).pack(pady=5)
+    
     def create_augmentation_view(self):
         """Vue Augmentation détaillée"""
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
@@ -1874,12 +2237,20 @@ class ModernPokemonGUI:
         )
         subtitle.pack(anchor='w', pady=(0, 30))
         
+        # Main content frame (2 colonnes)
+        main_frame = tk.Frame(container, bg=self.colors['bg_dark'])
+        main_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
+        
+        # Left column: Info & Stats
+        left_column = tk.Frame(main_frame, bg=self.colors['bg_dark'])
+        left_column.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+        
         # Info Card
-        info_card = tk.Frame(container, bg=self.colors['bg_card'])
+        info_card = tk.Frame(left_column, bg=self.colors['bg_card'])
         info_card.pack(fill=tk.X, pady=(0, 20))
         
         info_content = tk.Frame(info_card, bg=self.colors['bg_card'])
-        info_content.pack(fill=tk.X, padx=30, pady=20)
+        info_content.pack(fill=tk.X, padx=20, pady=20)
         
         tk.Label(info_content,
             text="ℹ️ About Fake Backgrounds",
@@ -1895,7 +2266,7 @@ class ModernPokemonGUI:
             bg=self.colors['bg_card'],
             fg=self.colors['text'],
             justify='left',
-            wraplength=700
+            wraplength=400
         ).pack(anchor='w', pady=(0, 10))
         
         # Stats
@@ -1919,9 +2290,9 @@ class ModernPokemonGUI:
             fg=stats_color
         ).pack(anchor='w')
         
-        # Configuration Card
-        config_card = tk.Frame(container, bg=self.colors['bg_card'])
-        config_card.pack(fill=tk.X, pady=(0, 20))
+        # Configuration Card (in left column, below info)
+        config_card = tk.Frame(left_column, bg=self.colors['bg_card'])
+        config_card.pack(fill=tk.BOTH, expand=True)
         
         card_title = tk.Label(config_card,
             text="⚙️ Generation Settings",
@@ -1932,7 +2303,7 @@ class ModernPokemonGUI:
         card_title.pack(anchor='w', padx=20, pady=(20, 15))
         
         config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
-        config_content.pack(fill=tk.X, padx=40, pady=(0, 20))
+        config_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
         
         # Number of images
         count_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
@@ -1999,19 +2370,20 @@ class ModernPokemonGUI:
                             width=3, font=('Segoe UI', 9, 'bold'))
         max_label.pack(side=tk.LEFT, padx=5)
         
-        # Preview/Tips section
-        tips_card = tk.Frame(container, bg=self.colors['bg_card'])
-        tips_card.pack(fill=tk.X, pady=(0, 20))
+        # Right column: Tips Card
+        tips_card = tk.Frame(main_frame, bg=self.colors['bg_card'])
+        tips_card.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(10, 0))
+        
+        tips_title = tk.Label(tips_card,
+            text="💡 Tips",
+            font=('Segoe UI', 14, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        )
+        tips_title.pack(anchor='w', padx=20, pady=(20, 15))
         
         tips_content = tk.Frame(tips_card, bg=self.colors['bg_card'])
-        tips_content.pack(fill=tk.X, padx=30, pady=20)
-        
-        tk.Label(tips_content,
-            text="💡 Tips",
-            font=('Segoe UI', 12, 'bold'),
-            bg=self.colors['bg_card'],
-            fg=self.colors['accent']
-        ).pack(anchor='w', pady=(0, 10))
+        tips_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
         
         tips = [
             "• Generate 100-500 images for small datasets, 500-1000 for larger ones",
@@ -2023,24 +2395,20 @@ class ModernPokemonGUI:
         for tip in tips:
             tk.Label(tips_content,
                 text=tip,
-                font=('Segoe UI', 9),
+                font=('Segoe UI', 10),
                 bg=self.colors['bg_card'],
                 fg=self.colors['text'],
                 justify='left'
-            ).pack(anchor='w', pady=2)
+            ).pack(anchor='w', pady=5)
         
-        # Buttons
+        # Button frame
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
-        btn_frame.pack(pady=30)
+        btn_frame.pack(pady=20)
         
-        ttk.Button(btn_frame, text="📋 GENERATE FAKE BACKGROUNDS",
+        ttk.Button(btn_frame, text="📋 START GENERATION",
                   style='Accent.TButton',
                   command=self.start_fake_generator_from_view,
-                  width=35).pack(pady=5)
-        
-        ttk.Button(btn_frame, text="🗂️ Open Output Folder",
-                  command=lambda: self.open_folder("fakeimg"),
-                  width=35).pack(pady=5)
+                  width=30).pack(pady=5)
     
     def create_mosaic_view(self):
         """Vue Mosaics détaillée"""
@@ -2956,6 +3324,131 @@ class ModernPokemonGUI:
                     self.log(f"❌ Erreur d'arrêt: {e}")
         
         self.end_operation()
+    
+    
+    def start_image_download(self):
+        """Démarrer le téléchargement d'images"""
+        if self.is_running:
+            messagebox.showwarning("Warning", "Une opération est déjà en cours!")
+            return
+        
+        # Récupérer les paramètres
+        try:
+            set_value = self.download_set_var.get().strip()
+            if not set_value:
+                messagebox.showerror("Error", "Veuillez sélectionner ou saisir un set Pokemon!")
+                return
+            
+            # Extract set ID if in format "Name (id)"
+            if '(' in set_value and ')' in set_value:
+                set_query = set_value.split('(')[-1].strip(')')
+            else:
+                set_query = set_value
+            
+            # Get language code
+            from core.image_downloader import LANGUAGES
+            lang_name = self.download_lang_var.get()
+            lang_code = LANGUAGES.get(lang_name, 'en')
+            
+            quality = self.download_quality_var.get()
+            ext = self.download_format_var.get()
+            output_dir = self.download_output_var.get().strip()
+            
+            if not output_dir:
+                output_dir = "images"
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            return
+        
+        # Confirmation
+        confirm_text = f"""Configuration du téléchargement :
+
+🎴 Set : {set_query}
+🌍 Langue : {lang_name} ({lang_code})
+🎨 Qualité : {quality}
+📁 Format : {ext}
+💾 Output : {output_dir}
+
+Lancer le téléchargement ?"""
+        
+        if not messagebox.askyesno("⬇️ Télécharger Images", confirm_text):
+            return
+        
+        self.start_operation("Image Download")
+        
+        def task():
+            try:
+                from core.image_downloader import ImageDownloader
+                
+                # Progress callback
+                def progress_callback(current, total, card_name=""):
+                    if card_name:
+                        self.log(f"📥 [{current}/{total}] {card_name}")
+                
+                # Create downloader
+                downloader = ImageDownloader(progress_callback=progress_callback)
+                
+                self.log(f"🔍 Recherche du set '{set_query}'...")
+                
+                # Resolve set
+                set_info = downloader.resolve_set(set_query, lang=lang_code)
+                if not set_info:
+                    self.log(f"❌ Set non trouvé: {set_query}")
+                    messagebox.showerror("Error", f"Set non trouvé: {set_query}\n\nVérifiez le nom ou l'ID du set.")
+                    return
+                
+                set_id = set_info.get('id', set_query)
+                # name can be a string or dict depending on API version
+                name_data = set_info.get('name', set_id)
+                set_name = name_data if isinstance(name_data, str) else name_data.get(lang_code, set_id)
+                # cardCount can be a dict or int
+                card_count_data = set_info.get('cardCount', '?')
+                card_count = card_count_data.get('total', '?') if isinstance(card_count_data, dict) else card_count_data
+                
+                self.log(f"✅ Set trouvé: {set_name} ({set_id}) - {card_count} cartes")
+                self.log(f"⬇️ Téléchargement en cours...")
+                
+                # Download
+                ok, fail, total = downloader.download_set(
+                    set_query=set_query,
+                    output_dir=output_dir,
+                    lang=lang_code,
+                    quality=quality,
+                    ext=ext,
+                    workers=8
+                )
+                
+                # Results
+                self.log(f"\n{'='*60}")
+                self.log(f"✅ TÉLÉCHARGEMENT TERMINÉ")
+                self.log(f"{'='*60}")
+                self.log(f"✅ Succès : {ok}/{total} cartes")
+                if fail > 0:
+                    self.log(f"❌ Échecs : {fail}/{total} cartes")
+                self.log(f"💾 Dossier : {output_dir}/{set_id}/")
+                self.log(f"📄 Manifest : {output_dir}/{set_id}/manifest.csv")
+                
+                if fail == 0:
+                    messagebox.showinfo("✅ Succès", 
+                        f"Téléchargement terminé !\n\n"
+                        f"✅ {ok} cartes téléchargées\n"
+                        f"💾 Dossier: {output_dir}/{set_id}/")
+                else:
+                    messagebox.showwarning("⚠️ Terminé avec erreurs",
+                        f"Téléchargement terminé avec des erreurs.\n\n"
+                        f"✅ Succès: {ok}/{total}\n"
+                        f"❌ Échecs: {fail}/{total}")
+                
+            except Exception as e:
+                self.log(f"❌ ERREUR: {e}")
+                import traceback
+                self.log(traceback.format_exc())
+                messagebox.showerror("Error", f"Erreur lors du téléchargement:\n{e}")
+            finally:
+                self.stop_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
     
     def start_workflow(self):
         """Démarrer le workflow automatique avec WorkflowManager"""

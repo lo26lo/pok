@@ -46,6 +46,112 @@ Pokemons/
 
 ---
 
+## ⬇️ 0. TÉLÉCHARGEMENT D'IMAGES (NOUVEAU)
+
+### 📦 Via GUI v3.0
+
+**Vue: ⬇️ Image Download**
+
+Téléchargez directement des sets de cartes Pokemon depuis l'API TCGdex (gratuite, sans authentification).
+
+**Paramètres:**
+- **Pokemon Set**: Sélectionnez un set populaire dans le menu déroulant ou saisissez manuellement un nom/ID de set
+  - Exemples: "Surging Sparks (sv08)", "Stellar Crown (sv07)", "base1", "swsh1"
+- **Language**: Langue des cartes (English, Français, Deutsch, Italiano, Español, Português, 日本語, 한국어, 中文, ไทย)
+- **Quality**: `high` (haute résolution) ou `low` (basse résolution)
+- **Format**: `png` (recommandé, sans perte), `jpg` ou `webp`
+- **Output Directory**: Dossier de destination (par défaut: `images`)
+
+**Fonctionnement:**
+1. Sélectionnez un set dans la liste déroulante
+2. OU saisissez manuellement un nom/ID de set
+3. Choisissez la langue, qualité, et format
+4. Cliquez sur "⬇️ START DOWNLOAD"
+5. Les images sont téléchargées dans `{output_dir}/{set_id}/`
+6. Un fichier `manifest.csv` est généré avec les détails
+
+**Sets Populaires Disponibles:**
+- Surging Sparks (sv08)
+- Stellar Crown (sv07)
+- Shrouded Fable (sv06.5)
+- Twilight Masquerade (sv06)
+- Temporal Forces (sv05)
+- Paldean Fates (sv04.5)
+- Paradox Rift (sv04)
+- Obsidian Flames (sv03)
+- Paldea Evolved (sv02)
+- Scarlet & Violet (sv01)
+- Et plus de 10 autres sets classiques...
+
+**Configuration Settings:**
+Dans **⚙️ Settings → Image Download**:
+- Default Output Directory
+- Default Language
+- Default Quality (high/low)
+- Default Format (png/jpg/webp)
+- Default Parallel Workers (1-16, recommandé: 4-8)
+
+### 🔧 Via CLI (ligne de commande)
+
+**Script:** `core/image_downloader.py`
+
+**Usage basique:**
+```powershell
+python core/image_downloader.py --set "Surging Sparks"
+```
+
+**Options complètes:**
+```powershell
+python core/image_downloader.py `
+  --set "sv08" `
+  --output "images" `
+  --lang "en" `
+  --quality "high" `
+  --ext "png" `
+  --workers 8
+```
+
+**Paramètres:**
+- `--set` : Nom ou ID du set (obligatoire)
+  - Exemples: "Surging Sparks", "sv08", "base1", "Stellar Crown"
+- `--output` : Dossier de sortie (défaut: `images`)
+- `--lang` : Code langue (défaut: `en`)
+  - Codes disponibles: `en`, `fr`, `de`, `it`, `es`, `pt`, `ja`, `ko`, `zh`, `th`
+- `--quality` : Qualité (`high` ou `low`, défaut: `high`)
+- `--ext` : Extension (`png`, `jpg` ou `webp`, défaut: `png`)
+- `--workers` : Nombre de téléchargements parallèles (défaut: 8)
+
+**Exemples:**
+
+```powershell
+# Télécharger Surging Sparks en français, PNG haute qualité
+python core/image_downloader.py --set "Surging Sparks" --lang "fr" --quality "high" --ext "png"
+
+# Télécharger Stellar Crown en anglais, JPG basse qualité (rapide)
+python core/image_downloader.py --set "sv07" --lang "en" --quality "low" --ext "jpg"
+
+# Télécharger Base Set 1 en allemand avec 12 workers
+python core/image_downloader.py --set "base1" --lang "de" --workers 12
+```
+
+**Output:**
+- Les images sont nommées avec leur numéro de set: `001.png`, `002.png`, etc.
+- Un fichier `manifest.csv` est créé avec:
+  - `filename`: Nom du fichier
+  - `card_id`: ID TCGdex
+  - `card_name`: Nom de la carte
+  - `set_number`: Numéro dans le set
+  - `url`: URL source TCGdex
+
+**Notes importantes:**
+- ✅ API gratuite, pas d'authentification requise
+- ✅ Respect automatique des rate limits
+- ✅ Retry automatique en cas d'erreur réseau
+- ✅ Téléchargement parallèle pour vitesse optimale
+- ⚠️ Utilise l'API TCGdex: https://api.tcgdex.net/v2
+
+---
+
 ## 🎨 1. AUGMENTATION D'IMAGES
 
 ### Script : `augmentation.py`
