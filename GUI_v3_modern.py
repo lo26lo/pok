@@ -59,6 +59,11 @@ class SettingsDialog:
         # Paramètres par défaut
         self.default_images_dir = tk.StringVar(value=config.get("default_images_dir", "images"))
         self.default_output_dir = tk.StringVar(value=config.get("default_output_dir", "output"))
+        self.default_augmented_dir = tk.StringVar(value=config.get("default_augmented_dir", "augmented"))
+        self.default_mosaic_dir = tk.StringVar(value=config.get("default_mosaic_dir", "output/yolov8"))
+        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", "fakeimg"))
+        self.default_holographic_dir = tk.StringVar(value=config.get("default_holographic_dir", "images_holographic"))
+        
         self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 15))
         self.default_augmentation_type = tk.StringVar(value=config.get("default_augmentation_type", "standard"))
         self.default_mosaic_mode = tk.StringVar(value=config.get("default_mosaic_mode", "standard"))
@@ -107,6 +112,16 @@ class SettingsDialog:
         aug_frame = tk.Frame(notebook, bg=colors['bg_dark'])
         notebook.add(aug_frame, text="  Augmentation  ")
         self.create_augmentation_tab(aug_frame)
+        
+        # Onglet Mosaic
+        mosaic_frame = tk.Frame(notebook, bg=colors['bg_dark'])
+        notebook.add(mosaic_frame, text="  Mosaic  ")
+        self.create_mosaic_tab(mosaic_frame)
+        
+        # Onglet Fake Backgrounds
+        fake_frame = tk.Frame(notebook, bg=colors['bg_dark'])
+        notebook.add(fake_frame, text="  Fake Backgrounds  ")
+        self.create_fakebackgrounds_tab(fake_frame)
         
         # Onglet Training
         train_frame = tk.Frame(notebook, bg=colors['bg_dark'])
@@ -231,6 +246,142 @@ class SettingsDialog:
             cursor='hand2'
         ).pack(side='right', padx=(5, 0))
         
+        # Augmented directory
+        tk.Label(
+            container,
+            text="🎨 Augmented Output Directory:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=4, column=0, sticky='w', pady=(0, 5))
+        
+        frame3 = tk.Frame(container, bg=colors['bg_dark'])
+        frame3.grid(row=5, column=0, sticky='ew', pady=(0, 15))
+        
+        tk.Entry(
+            frame3,
+            textvariable=self.default_augmented_dir,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2
+        ).pack(side='left', fill='x', expand=True, ipady=8)
+        
+        tk.Button(
+            frame3,
+            text="📂",
+            command=lambda: self.browse_dir(self.default_augmented_dir),
+            bg=colors['accent'],
+            fg='#000000',
+            font=('Segoe UI', 10),
+            relief='flat',
+            padx=15,
+            cursor='hand2'
+        ).pack(side='right', padx=(5, 0))
+        
+        # Mosaic directory
+        tk.Label(
+            container,
+            text="🧩 Mosaic Output Directory:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=6, column=0, sticky='w', pady=(0, 5))
+        
+        frame4 = tk.Frame(container, bg=colors['bg_dark'])
+        frame4.grid(row=7, column=0, sticky='ew', pady=(0, 15))
+        
+        tk.Entry(
+            frame4,
+            textvariable=self.default_mosaic_dir,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2
+        ).pack(side='left', fill='x', expand=True, ipady=8)
+        
+        tk.Button(
+            frame4,
+            text="📂",
+            command=lambda: self.browse_dir(self.default_mosaic_dir),
+            bg=colors['accent'],
+            fg='#000000',
+            font=('Segoe UI', 10),
+            relief='flat',
+            padx=15,
+            cursor='hand2'
+        ).pack(side='right', padx=(5, 0))
+        
+        # Fake backgrounds directory
+        tk.Label(
+            container,
+            text="📋 Fake Backgrounds Directory:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=8, column=0, sticky='w', pady=(0, 5))
+        
+        frame5 = tk.Frame(container, bg=colors['bg_dark'])
+        frame5.grid(row=9, column=0, sticky='ew', pady=(0, 15))
+        
+        tk.Entry(
+            frame5,
+            textvariable=self.default_fakeimg_dir,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2
+        ).pack(side='left', fill='x', expand=True, ipady=8)
+        
+        tk.Button(
+            frame5,
+            text="📂",
+            command=lambda: self.browse_dir(self.default_fakeimg_dir),
+            bg=colors['accent'],
+            fg='#000000',
+            font=('Segoe UI', 10),
+            relief='flat',
+            padx=15,
+            cursor='hand2'
+        ).pack(side='right', padx=(5, 0))
+        
+        # Holographic directory
+        tk.Label(
+            container,
+            text="✨ Holographic Output Directory:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=10, column=0, sticky='w', pady=(0, 5))
+        
+        frame6 = tk.Frame(container, bg=colors['bg_dark'])
+        frame6.grid(row=11, column=0, sticky='ew', pady=(0, 20))
+        
+        tk.Entry(
+            frame6,
+            textvariable=self.default_holographic_dir,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2
+        ).pack(side='left', fill='x', expand=True, ipady=8)
+        
+        tk.Button(
+            frame6,
+            text="📂",
+            command=lambda: self.browse_dir(self.default_holographic_dir),
+            bg=colors['accent'],
+            fg='#000000',
+            font=('Segoe UI', 10),
+            relief='flat',
+            padx=15,
+            cursor='hand2'
+        ).pack(side='right', padx=(5, 0))
+        
         # Auto-save logs
         tk.Checkbutton(
             container,
@@ -242,7 +393,7 @@ class SettingsDialog:
             selectcolor=colors['bg_card'],
             activebackground=colors['bg_dark'],
             activeforeground=colors['text']
-        ).grid(row=4, column=0, sticky='w', pady=10)
+        ).grid(row=12, column=0, sticky='w', pady=10)
         
         # Enable notifications
         tk.Checkbutton(
@@ -255,7 +406,7 @@ class SettingsDialog:
             selectcolor=colors['bg_card'],
             activebackground=colors['bg_dark'],
             activeforeground=colors['text']
-        ).grid(row=5, column=0, sticky='w', pady=10)
+        ).grid(row=13, column=0, sticky='w', pady=10)
         
         container.grid_columnconfigure(0, weight=1)
     
@@ -288,25 +439,6 @@ class SettingsDialog:
             width=10
         ).grid(row=1, column=0, sticky='w', pady=(0, 20))
         
-        # Default mosaic mode
-        tk.Label(
-            container,
-            text="🧩 Default Mosaic Mode:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=('Segoe UI', 10, 'bold')
-        ).grid(row=2, column=0, sticky='w', pady=(0, 5))
-        
-        mosaic_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_mosaic_mode,
-            values=["quick", "standard", "complete"],
-            state='readonly',
-            font=('Segoe UI', 10),
-            width=18
-        )
-        mosaic_combo.grid(row=3, column=0, sticky='w', pady=(0, 20))
-        
         # Default augmentation type
         tk.Label(
             container,
@@ -314,7 +446,7 @@ class SettingsDialog:
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=('Segoe UI', 10, 'bold')
-        ).grid(row=4, column=0, sticky='w', pady=(0, 5))
+        ).grid(row=2, column=0, sticky='w', pady=(0, 5))
         
         aug_type_combo = ttk.Combobox(
             container,
@@ -324,25 +456,89 @@ class SettingsDialog:
             font=('Segoe UI', 10),
             width=18
         )
-        aug_type_combo.grid(row=5, column=0, sticky='w', pady=(0, 20))
+        aug_type_combo.grid(row=3, column=0, sticky='w', pady=(0, 20))
         
-        # Fake image settings section
+        # Holographic settings section
         tk.Label(
             container,
-            text="📋 Fake Background Generation:",
+            text="✨ Holographic Effect Settings:",
             bg=colors['bg_dark'],
             fg=colors['accent'],
             font=('Segoe UI', 11, 'bold')
-        ).grid(row=6, column=0, sticky='w', pady=(10, 10))
+        ).grid(row=4, column=0, sticky='w', pady=(10, 10))
         
-        # Fake image count
         tk.Label(
             container,
-            text="Default number of fake images:",
+            text="These settings apply when 'Holographic' or 'Both' type is selected.",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=5, column=0, sticky='w', pady=(0, 15))
+        
+        # Holographic intensity (placeholder for future)
+        tk.Label(
+            container,
+            text="Effect intensity: Medium (default)",
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=('Segoe UI', 10)
-        ).grid(row=7, column=0, sticky='w', pady=(0, 5))
+        ).grid(row=6, column=0, sticky='w', pady=(0, 5))
+        
+        container.grid_columnconfigure(0, weight=1)
+    
+    def create_mosaic_tab(self, parent):
+        """Onglet paramètres de mosaïque"""
+        colors = self.app.colors
+        
+        container = tk.Frame(parent, bg=colors['bg_dark'])
+        container.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Default mosaic mode
+        tk.Label(
+            container,
+            text="🧩 Default Mosaic Mode:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
+        
+        mosaic_combo = ttk.Combobox(
+            container,
+            textvariable=self.default_mosaic_mode,
+            values=["quick", "standard", "complete"],
+            state='readonly',
+            font=('Segoe UI', 10),
+            width=18
+        )
+        mosaic_combo.grid(row=1, column=0, sticky='w', pady=(0, 20))
+        
+        # Info text
+        tk.Label(
+            container,
+            text="• Quick: 200 mosaics\n• Standard: 500 mosaics\n• Complete: All combinations",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9),
+            justify='left'
+        ).grid(row=2, column=0, sticky='w', pady=(0, 20))
+        
+        container.grid_columnconfigure(0, weight=1)
+    
+    def create_fakebackgrounds_tab(self, parent):
+        """Onglet paramètres fake backgrounds"""
+        colors = self.app.colors
+        
+        container = tk.Frame(parent, bg=colors['bg_dark'])
+        container.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Default count
+        tk.Label(
+            container,
+            text="📋 Default Number of Fake Images:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
         
         tk.Spinbox(
             container,
@@ -355,42 +551,33 @@ class SettingsDialog:
             relief='flat',
             bd=2,
             width=10
-        ).grid(row=8, column=0, sticky='w', pady=(0, 10))
+        ).grid(row=1, column=0, sticky='w', pady=(0, 20))
         
-        # Fake image output directory
+        # Noise range section
         tk.Label(
             container,
-            text="Fake images output directory:",
+            text="🎛️ Noise Intensity Range:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=('Segoe UI', 10)
-        ).grid(row=9, column=0, sticky='w', pady=(0, 5))
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=2, column=0, sticky='w', pady=(0, 10))
         
-        tk.Entry(
-            container,
-            textvariable=self.fakeimg_output_dir,
+        # Min noise
+        min_frame = tk.Frame(container, bg=colors['bg_dark'])
+        min_frame.grid(row=3, column=0, sticky='w', pady=(0, 10))
+        
+        tk.Label(
+            min_frame,
+            text="Minimum:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
             font=('Segoe UI', 10),
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=25
-        ).grid(row=10, column=0, sticky='w', pady=(0, 10))
-        
-        # Noise range
-        tk.Label(
-            container,
-            text="Noise intensity (min-max):",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=('Segoe UI', 10)
-        ).grid(row=11, column=0, sticky='w', pady=(0, 5))
-        
-        noise_frame = tk.Frame(container, bg=colors['bg_dark'])
-        noise_frame.grid(row=12, column=0, sticky='w', pady=(0, 10))
+            width=10,
+            anchor='w'
+        ).pack(side=tk.LEFT)
         
         tk.Spinbox(
-            noise_frame,
+            min_frame,
             from_=0,
             to=100,
             textvariable=self.fakeimg_min_noise,
@@ -400,18 +587,24 @@ class SettingsDialog:
             relief='flat',
             bd=2,
             width=8
-        ).pack(side=tk.LEFT)
-        
-        tk.Label(
-            noise_frame,
-            text=" - ",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=('Segoe UI', 10)
         ).pack(side=tk.LEFT, padx=5)
         
+        # Max noise
+        max_frame = tk.Frame(container, bg=colors['bg_dark'])
+        max_frame.grid(row=4, column=0, sticky='w', pady=(0, 20))
+        
+        tk.Label(
+            max_frame,
+            text="Maximum:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10),
+            width=10,
+            anchor='w'
+        ).pack(side=tk.LEFT)
+        
         tk.Spinbox(
-            noise_frame,
+            max_frame,
             from_=0,
             to=100,
             textvariable=self.fakeimg_max_noise,
@@ -421,7 +614,17 @@ class SettingsDialog:
             relief='flat',
             bd=2,
             width=8
-        ).pack(side=tk.LEFT)
+        ).pack(side=tk.LEFT, padx=5)
+        
+        # Info text
+        tk.Label(
+            container,
+            text="💡 Lower values (20-40) create subtle textures\n   Higher values (60-80) create more varied patterns",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9),
+            justify='left'
+        ).grid(row=5, column=0, sticky='w', pady=(0, 10))
         
         container.grid_columnconfigure(0, weight=1)
     
@@ -563,6 +766,10 @@ class SettingsDialog:
         config = {
             "default_images_dir": self.default_images_dir.get(),
             "default_output_dir": self.default_output_dir.get(),
+            "default_augmented_dir": self.default_augmented_dir.get(),
+            "default_mosaic_dir": self.default_mosaic_dir.get(),
+            "default_fakeimg_dir": self.default_fakeimg_dir.get(),
+            "default_holographic_dir": self.default_holographic_dir.get(),
             "default_augmentations": self.default_augmentations.get(),
             "default_augmentation_type": self.default_augmentation_type.get(),
             "default_mosaic_mode": self.default_mosaic_mode.get(),
