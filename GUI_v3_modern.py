@@ -911,6 +911,7 @@ class ModernPokemonGUI:
         # Groupe: Generation
         self.create_nav_section(sidebar, "GENERATION")
         self.create_nav_button(sidebar, "augmentation", "🎨 Augmentation", self.colors['text'])
+        self.create_nav_button(sidebar, "fakeimg", "📋 Fake Backgrounds", self.colors['text'])
         self.create_nav_button(sidebar, "mosaic", "🧩 Mosaics", self.colors['text'])
         
         # Séparateur
@@ -1098,6 +1099,8 @@ class ModernPokemonGUI:
             self.create_workflow_view()
         elif view_id == 'augmentation':
             self.create_augmentation_view()
+        elif view_id == 'fakeimg':
+            self.create_fakeimg_view()
         elif view_id == 'mosaic':
             self.create_mosaic_view()
         elif view_id == 'validation':
@@ -1477,6 +1480,196 @@ class ModernPokemonGUI:
                   style='Accent.TButton',
                   command=self.start_augmentation,
                   width=30).pack(pady=5)
+    
+    def create_fakeimg_view(self):
+        """Vue génération de fake backgrounds"""
+        container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
+        container.pack(fill=tk.BOTH, expand=True, padx=30, pady=20)
+        
+        # Header
+        title = tk.Label(container,
+            text="📋 Fake Background Generator",
+            font=('Segoe UI', 24, 'bold'),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['text']
+        )
+        title.pack(anchor='w', pady=(0, 10))
+        
+        subtitle = tk.Label(container,
+            text="Generate synthetic backgrounds for training data",
+            font=('Segoe UI', 11),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['text_dim']
+        )
+        subtitle.pack(anchor='w', pady=(0, 30))
+        
+        # Info Card
+        info_card = tk.Frame(container, bg=self.colors['bg_card'])
+        info_card.pack(fill=tk.X, pady=(0, 20))
+        
+        info_content = tk.Frame(info_card, bg=self.colors['bg_card'])
+        info_content.pack(fill=tk.X, padx=30, pady=20)
+        
+        tk.Label(info_content,
+            text="ℹ️ About Fake Backgrounds",
+            font=('Segoe UI', 12, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['accent']
+        ).pack(anchor='w', pady=(0, 10))
+        
+        tk.Label(info_content,
+            text="Fake backgrounds are synthetic images used to create realistic training mosaics.\n"
+                 "They simulate various surface textures and patterns to improve model generalization.",
+            font=('Segoe UI', 10),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text'],
+            justify='left',
+            wraplength=700
+        ).pack(anchor='w', pady=(0, 10))
+        
+        # Stats
+        try:
+            fakeimg_dir = "fakeimg"
+            if os.path.exists(fakeimg_dir):
+                count = len([f for f in os.listdir(fakeimg_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
+                stats_text = f"📊 Current: {count} fake backgrounds generated"
+                stats_color = self.colors['success'] if count > 0 else self.colors['warning']
+            else:
+                stats_text = "📊 No fake backgrounds generated yet"
+                stats_color = self.colors['warning']
+        except:
+            stats_text = "📊 Unable to read statistics"
+            stats_color = self.colors['text_dim']
+        
+        tk.Label(info_content,
+            text=stats_text,
+            font=('Segoe UI', 10, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=stats_color
+        ).pack(anchor='w')
+        
+        # Configuration Card
+        config_card = tk.Frame(container, bg=self.colors['bg_card'])
+        config_card.pack(fill=tk.X, pady=(0, 20))
+        
+        card_title = tk.Label(config_card,
+            text="⚙️ Generation Settings",
+            font=('Segoe UI', 14, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        )
+        card_title.pack(anchor='w', padx=20, pady=(20, 15))
+        
+        config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
+        config_content.pack(fill=tk.X, padx=40, pady=(0, 20))
+        
+        # Number of images
+        count_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        count_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(count_frame, text="Number of images:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        self.fakeimg_count_var = ttk.Spinbox(count_frame, from_=10, to=1000, width=10)
+        self.fakeimg_count_var.pack(side=tk.LEFT, padx=10)
+        self.fakeimg_count_var.set(100)
+        
+        # Output directory
+        output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        output_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(output_frame, text="Output directory:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        self.fakeimg_output_var = ttk.Entry(output_frame, width=25)
+        self.fakeimg_output_var.pack(side=tk.LEFT, padx=10)
+        self.fakeimg_output_var.insert(0, "fakeimg")
+        
+        # Noise intensity
+        noise_label_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        noise_label_frame.pack(fill=tk.X, pady=(15, 5))
+        
+        tk.Label(noise_label_frame, text="Noise Intensity Range:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        noise_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        noise_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(noise_frame, text="Min:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.fakeimg_min_noise_var = tk.IntVar(value=20)
+        min_scale = ttk.Scale(noise_frame, from_=0, to=100, 
+                             variable=self.fakeimg_min_noise_var, 
+                             orient='horizontal', length=200)
+        min_scale.pack(side=tk.LEFT, padx=5)
+        
+        min_label = tk.Label(noise_frame, textvariable=self.fakeimg_min_noise_var,
+                            bg=self.colors['bg_card'], fg='#FFFFFF',
+                            width=3, font=('Segoe UI', 9, 'bold'))
+        min_label.pack(side=tk.LEFT, padx=5)
+        
+        tk.Label(noise_frame, text="Max:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=(20, 5))
+        
+        self.fakeimg_max_noise_var = tk.IntVar(value=60)
+        max_scale = ttk.Scale(noise_frame, from_=0, to=100, 
+                             variable=self.fakeimg_max_noise_var, 
+                             orient='horizontal', length=200)
+        max_scale.pack(side=tk.LEFT, padx=5)
+        
+        max_label = tk.Label(noise_frame, textvariable=self.fakeimg_max_noise_var,
+                            bg=self.colors['bg_card'], fg='#FFFFFF',
+                            width=3, font=('Segoe UI', 9, 'bold'))
+        max_label.pack(side=tk.LEFT, padx=5)
+        
+        # Preview/Tips section
+        tips_card = tk.Frame(container, bg=self.colors['bg_card'])
+        tips_card.pack(fill=tk.X, pady=(0, 20))
+        
+        tips_content = tk.Frame(tips_card, bg=self.colors['bg_card'])
+        tips_content.pack(fill=tk.X, padx=30, pady=20)
+        
+        tk.Label(tips_content,
+            text="💡 Tips",
+            font=('Segoe UI', 12, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['accent']
+        ).pack(anchor='w', pady=(0, 10))
+        
+        tips = [
+            "• Generate 100-500 images for small datasets, 500-1000 for larger ones",
+            "• Lower noise values (20-40) create subtle textures",
+            "• Higher noise values (60-80) create more varied patterns",
+            "• Fake backgrounds are automatically used when generating mosaics"
+        ]
+        
+        for tip in tips:
+            tk.Label(tips_content,
+                text=tip,
+                font=('Segoe UI', 9),
+                bg=self.colors['bg_card'],
+                fg=self.colors['text'],
+                justify='left'
+            ).pack(anchor='w', pady=2)
+        
+        # Buttons
+        btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
+        btn_frame.pack(pady=30)
+        
+        ttk.Button(btn_frame, text="📋 GENERATE FAKE BACKGROUNDS",
+                  style='Accent.TButton',
+                  command=self.start_fake_generator_from_view,
+                  width=35).pack(pady=5)
+        
+        ttk.Button(btn_frame, text="🗂️ Open Output Folder",
+                  command=lambda: self.open_folder("fakeimg"),
+                  width=35).pack(pady=5)
     
     def create_mosaic_view(self):
         """Vue Mosaics détaillée"""
@@ -3164,6 +3357,67 @@ Continuer ?"""
             cursor='hand2'
         ).pack(side='left', padx=5)
     
+    def start_fake_generator_from_view(self):
+        """Générer fake backgrounds depuis la vue dédiée"""
+        try:
+            count = int(self.fakeimg_count_var.get())
+            output_dir = self.fakeimg_output_var.get()
+            min_noise = self.fakeimg_min_noise_var.get()
+            max_noise = self.fakeimg_max_noise_var.get()
+        except Exception as e:
+            messagebox.showerror("Error", f"Invalid configuration:\n{e}")
+            return
+        
+        if min_noise >= max_noise:
+            messagebox.showerror("Error", "Min noise must be less than max noise!")
+            return
+        
+        self.log(f"📋 Generating {count} fake backgrounds...")
+        self.start_operation("Fake Background Generation")
+        
+        def task():
+            try:
+                cmd = [sys.executable, "-u", "tools/generate_fake_backgrounds.py",
+                       "--count", str(count),
+                       "--output", output_dir,
+                       "--min-noise", str(min_noise),
+                       "--max-noise", str(max_noise)]
+                
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True
+                )
+                
+                for line in process.stdout:
+                    line = line.strip()
+                    if line:
+                        self.log(line)
+                
+                process.wait()
+                
+                if process.returncode == 0:
+                    self.log(f"✅ {count} fake backgrounds generated in {output_dir}/")
+                    messagebox.showinfo("Success", f"Generated {count} fake backgrounds!")
+                    self.update_stats()
+                    # Refresh view if still on fakeimg
+                    if self.current_view == 'fakeimg':
+                        self.show_view('fakeimg')
+                else:
+                    self.log(f"❌ Fake generation failed (exit code: {process.returncode})")
+                    messagebox.showerror("Error", "Fake generation failed!")
+            
+            except Exception as e:
+                self.log(f"❌ Error: {e}")
+                messagebox.showerror("Error", f"Error:\n{e}")
+            finally:
+                self.end_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
+    
     def start_fake_generator(self):
         """Générer des fausses images de background"""
         dialog = tk.Toplevel(self.root)
@@ -4439,6 +4693,15 @@ Total: {images_count + aug_count + yolo_count} images"""
             subprocess.run(["explorer", str(output_path)])
         else:
             messagebox.showwarning("Attention", "Dossier output/ non trouvé!")
+    
+    def open_folder(self, folder_name):
+        """Ouvrir un dossier spécifique"""
+        folder_path = Path(folder_name).absolute()
+        if folder_path.exists():
+            import subprocess
+            subprocess.run(["explorer", str(folder_path)])
+        else:
+            messagebox.showwarning("Warning", f"Folder {folder_name}/ not found!")
 
 def main():
     root = tk.Tk()
