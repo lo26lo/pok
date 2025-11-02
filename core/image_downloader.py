@@ -277,8 +277,8 @@ class ImageDownloader:
             name = card.get("name", "Unknown")
             
             url = self._build_image_url(base, quality, ext)
-            safe_name = sanitize_filename(name)
-            filename = f"{local_id.zfill(3)} - {safe_name} ({card_id}).{ext}"
+            # New format: {set_id}_{local_id}_{lang}.{ext}
+            filename = f"{set_id}_{local_id}_{lang}.{ext}"
             out_path = out_dir / filename
             
             jobs.append((url, out_path, card_id, local_id, name))

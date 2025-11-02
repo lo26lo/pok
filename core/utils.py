@@ -82,13 +82,37 @@ def extract_card_number(filename: str) -> Optional[str]:
     """
     Extrait le numéro de carte depuis le nom de fichier
     
+    Supporte plusieurs formats:
+    - sv08_001_en.png → "001"
+    - xyp_XY05_en.png → "XY05"
+    - SSP_001_R_EN_SM.png → "001"
+    - pokemon_en_001_xyz.jpg → "001"
+    
     Args:
-        filename: Nom du fichier (ex: "pokemon_en_001_xyz.jpg")
+        filename: Nom du fichier
         
     Returns:
-        Numéro de carte (ex: "001") ou None si non trouvé
+        Numéro de carte ou None si non trouvé
     """
-    match = re.search(r'_en_(\d{3})_', filename)
+    # Format nouveau: {set}_{number}_{lang}.ext
+    match = re.search(r'_([A-Za-z0-9]+)_[a-z]{2}\.', filename)
+    if match:
+        num = match.group(1)
+        # Padder si numérique pur
+        return num.zfill(3) if num.isdigit() else num
+    
+    # Format ancien: _en_XXX_ ou _XXX_
+    match = re.search(r'_(?:en_)?(\d{3})_', filename, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    
+    # Fallback: XXX_XXX_XXX
+    match = re.search(r'_(\w+)_', filename)
+    if match and re.match(r'\d{3}', match.group(1)):
+        return match.group(1)
+    
+    # Dernier recours
+    match = re.search(r'(\d{3})', filename)
     return match.group(1) if match else None
 
 def resize_cards(image_paths: List[str], target_size: Tuple[int, int] = None) -> List[Tuple[np.ndarray, str]]:

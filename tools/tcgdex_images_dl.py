@@ -171,8 +171,8 @@ def run(set_query: str, lang: str="en", out_dir="images", ext="png", quality="hi
         if not base:
             continue
         url = build_card_url(base, quality, ext)
-        safe_name = sanitize_filename(name)
-        fname = f"{localId.zfill(3)} - {safe_name} ({cid}).{ext}"
+        # New format: {set_id}_{local_id}_{lang}.{ext}
+        fname = f"{sid}_{localId}_{lang}.{ext}"
         out_path = out_dir / fname
         jobs.append((url, out_path, cid, localId, name))
 
