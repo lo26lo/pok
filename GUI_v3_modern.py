@@ -29,16 +29,16 @@ class SettingsDialog:
         self.app = app
         self.dialog = tk.Toplevel(parent)
         self.dialog.title("⚙️ Settings")
-        self.dialog.geometry("700x600")
+        self.dialog.geometry("800x700")
         self.dialog.configure(bg='#1e1e2e')
         self.dialog.transient(parent)
         self.dialog.grab_set()
         
         # Centrer la fenêtre
         self.dialog.update_idletasks()
-        x = (self.dialog.winfo_screenwidth() // 2) - (700 // 2)
-        y = (self.dialog.winfo_screenheight() // 2) - (600 // 2)
-        self.dialog.geometry(f"700x600+{x}+{y}")
+        x = (self.dialog.winfo_screenwidth() // 2) - (800 // 2)
+        y = (self.dialog.winfo_screenheight() // 2) - (700 // 2)
+        self.dialog.geometry(f"800x700+{x}+{y}")
         
         # Variables de configuration
         self.load_settings()
@@ -66,6 +66,8 @@ class SettingsDialog:
         
         self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 15))
         self.default_augmentation_type = tk.StringVar(value=config.get("default_augmentation_type", "standard"))
+        self.holographic_intensity = tk.DoubleVar(value=config.get("holographic_intensity", 0.7))
+        self.holographic_variations = tk.IntVar(value=config.get("holographic_variations", 3))
         self.default_mosaic_mode = tk.StringVar(value=config.get("default_mosaic_mode", "standard"))
         self.default_mosaic_layout = tk.IntVar(value=config.get("default_mosaic_layout", 1))
         self.default_mosaic_background = tk.IntVar(value=config.get("default_mosaic_background", 1))
@@ -478,14 +480,65 @@ class SettingsDialog:
             font=('Segoe UI', 9, 'italic')
         ).grid(row=5, column=0, sticky='w', pady=(0, 15))
         
-        # Holographic intensity (placeholder for future)
+        # Holographic intensity
+        intensity_frame = tk.Frame(container, bg=colors['bg_dark'])
+        intensity_frame.grid(row=6, column=0, sticky='w', pady=(0, 10))
+        
         tk.Label(
-            container,
-            text="Effect intensity: Medium (default)",
+            intensity_frame,
+            text="Effect intensity:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=('Segoe UI', 10)
-        ).grid(row=6, column=0, sticky='w', pady=(0, 5))
+            font=('Segoe UI', 10),
+            width=15,
+            anchor='w'
+        ).pack(side=tk.LEFT)
+        
+        intensity_scale = ttk.Scale(
+            intensity_frame,
+            from_=0.1,
+            to=1.0,
+            variable=self.holographic_intensity,
+            orient='horizontal',
+            length=200
+        )
+        intensity_scale.pack(side=tk.LEFT, padx=10)
+        
+        tk.Label(
+            intensity_frame,
+            textvariable=self.holographic_intensity,
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 9, 'bold'),
+            width=5
+        ).pack(side=tk.LEFT)
+        
+        # Holographic variations
+        variations_frame = tk.Frame(container, bg=colors['bg_dark'])
+        variations_frame.grid(row=7, column=0, sticky='w', pady=(0, 10))
+        
+        tk.Label(
+            variations_frame,
+            text="Number of variations:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10),
+            width=15,
+            anchor='w'
+        ).pack(side=tk.LEFT)
+        
+        tk.Spinbox(
+            variations_frame,
+            from_=1,
+            to=10,
+            textvariable=self.holographic_variations,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=8
+        ).pack(side=tk.LEFT, padx=10)
         
         container.grid_columnconfigure(0, weight=1)
     
@@ -859,6 +912,8 @@ class SettingsDialog:
             "default_holographic_dir": self.default_holographic_dir.get(),
             "default_augmentations": self.default_augmentations.get(),
             "default_augmentation_type": self.default_augmentation_type.get(),
+            "holographic_intensity": self.holographic_intensity.get(),
+            "holographic_variations": self.holographic_variations.get(),
             "default_mosaic_mode": self.default_mosaic_mode.get(),
             "default_mosaic_layout": self.default_mosaic_layout.get(),
             "default_mosaic_background": self.default_mosaic_background.get(),
@@ -3297,11 +3352,15 @@ Continuer ?"""
                     self.log("✨ Running holographic augmentation...")
                     output_dir = target + "_holographic" if aug_type == "Both" else target
                     
+                    # Get holographic parameters from settings
+                    intensity = self.holographic_intensity.get()
+                    variations = self.holographic_variations.get()
+                    
                     cmd = [sys.executable, "-u", "core/holographic_augmenter.py",
                            "--input", "images",
                            "--output", output_dir,
-                           "--intensity", "0.7",
-                           "--variations", str(num_aug)]
+                           "--intensity", str(intensity),
+                           "--variations", str(variations)]
                     
                     self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                               stderr=subprocess.STDOUT, text=True,
