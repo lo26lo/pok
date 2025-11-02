@@ -618,13 +618,13 @@ class SettingsDialog:
         bg_combo = ttk.Combobox(
             container,
             textvariable=self.default_mosaic_background,
-            values=["0 - Solid Color", "1 - Fake Backgrounds", "2 - Mixed"],
+            values=["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)", "2 - Web Image (Lorem Picsum)"],
             state='readonly',
             font=('Segoe UI', 10),
-            width=30
+            width=40
         )
         bg_combo.grid(row=7, column=0, sticky='w', pady=(0, 5))
-        bg_combo.current(1)
+        bg_combo.current(0)
         
         tk.Label(
             container,
@@ -646,10 +646,10 @@ class SettingsDialog:
         transform_combo = ttk.Combobox(
             container,
             textvariable=self.default_mosaic_transform,
-            values=["0 - Normal Rotation", "1 - Enhanced Rotation"],
+            values=["0 - 2D Rotation", "1 - 3D Perspective Projection"],
             state='readonly',
             font=('Segoe UI', 10),
-            width=30
+            width=40
         )
         transform_combo.grid(row=10, column=0, sticky='w', pady=(0, 5))
         transform_combo.current(0)
@@ -2097,10 +2097,10 @@ class ModernPokemonGUI:
                 font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
         
         self.mosaic_background_var = ttk.Combobox(bg_frame,
-            values=["0 - Solid Color", "1 - Fake Backgrounds", "2 - Mixed"],
-            state='readonly', width=30)
+            values=["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)", "2 - Web Image (Lorem Picsum)"],
+            state='readonly', width=40)
         self.mosaic_background_var.pack(side=tk.LEFT, padx=10)
-        self.mosaic_background_var.current(1)
+        self.mosaic_background_var.current(0)
         
         # Transform mode
         transform_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
@@ -2111,8 +2111,8 @@ class ModernPokemonGUI:
                 font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
         
         self.mosaic_transform_var = ttk.Combobox(transform_frame,
-            values=["0 - Normal Rotation", "1 - Enhanced Rotation"],
-            state='readonly', width=30)
+            values=["0 - 2D Rotation", "1 - 3D Perspective Projection"],
+            state='readonly', width=40)
         self.mosaic_transform_var.pack(side=tk.LEFT, padx=10)
         self.mosaic_transform_var.current(0)
         
