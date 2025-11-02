@@ -81,64 +81,93 @@ Complete dataset with bounding boxes
 - Dataset size calculation
 - Environment verification
 - Quick action buttons
+- Visual charts (if matplotlib available)
 
-### 🔄 Automatic Workflow
-- 5-step pipeline
-- Augmentation → Mosaic → Validation → Balance → Training
-- Configurable steps
-- Progress tracking
-- Real-time logs
+### 🔄 Workflow Manager
+- **Quick Pipeline**: Fake → Augment → Mosaic → Train
+- **Full Pipeline**: Complete automated process
+- **Custom Workflows**: Save/load configurations
+- Step-by-step progress tracking
+- Real-time logs with colors
+- **Stop button** for cancellation
 
 ### 🎨 Augmentation
-- Configure transformation count
+- 1-100 transformations per image
+- **Type selection**: Standard / Holographic / Both
 - Custom output directory
-- Multiple augmentation types
+- **Holographic effects**: Intensity (0.1-1.0), Variations (1-10)
+- 22 transformation types
 - YOLO annotation generation
-- 🌈 Holographic effects (shiny cards)
+- 🌈 **NEW**: Shiny/holographic card simulation
+
+### 📋 Fake Backgrounds
+- **NEW**: Dedicated generation view
+- Perlin noise-based backgrounds
+- Configurable count (10-1000, default: 100)
+- Noise intensity (min/max: 0-100)
+- Real-time statistics display
+- Settings integration
 
 ### 🧩 Mosaic Generator
-- 3 layout modes (Grid/Rotation/Random)
-- Background selection
-- Batch generation
-- Annotated output
-- 📋 Fake background generation
+- **3 generation modes**: Quick (200), Standard (500), Complete (900)
+- **3 layout modes**: Grid, 3D Rotation, Random
+- **3 background modes**: Fake Cards Mosaic, Local Image, Web Image
+- **2 transform modes**: 2D Rotation, 3D Perspective
+- Batch generation with max_groups parameter
+- Annotated YOLO output
+- 📋 Integrated fake background generator
 
 ### ✅ Dataset Validation
 - YOLO format verification
 - Detect corrupted images
 - Class distribution analysis
 - HTML report generation
+- Label consistency checks
 
 </td>
 <td width="50%" valign="top">
 
 ### 🎓 YOLOv8 Training
 - Model size selection (n/s/m/l/x)
-- Custom epochs
-- Image size configuration
-- Real-time training logs
+- Custom epochs, batch size, image size
+- Device selection (CPU/GPU)
+- Real-time training logs with colors
 - Automatic metric export
+- Results visualization
+- **Stop button** for interruption
 
 ### 📹 Live Detection
-- Webcam real-time detection
+- **3 modes**: Webcam, Video, Image
+- Real-time webcam detection
 - Model selection
-- Confidence threshold
+- Confidence threshold adjustment
 - Bounding box visualization
 - Detection recording
+- Batch image processing
 
-### 📦 Export Tools
-- COCO JSON format
-- Pascal VOC XML
-- TFRecord (TensorFlow)
-- Roboflow ZIP
-- Multi-format batch export
+### 🌐 API Server
+- **TCGdex integration** (free, no auth)
+- Flask REST API server
+- Card search and prices
+- Excel generation/export
+- Server status monitoring
 
-### 🛠️ Utilities
-- 📋 Excel & Prices (TCGdex API)
+### 🛠️ Menu Tools
+**7 Clean Actions**:
+1. Clean Outputs
+2. Clean Fake Images
+3. Clean Holographic
+4. Clean Web Backgrounds
+5. Clean Training Results
+6. Clean All Generated
+7. Clean Everything
+
+**Export & Utilities**:
+- 📦 Multi-format export (COCO, VOC, TFRecord, Roboflow)
 - ⚖️ Auto-balancing
--  TCG Browser
+- 📋 Excel & Prices (TCGdex API)
 - 🧹 Clean & Reset tools
-- ⚙️ Settings dialog
+- ⚙️ Settings dialog (6 tabs)
 
 </td>
 </tr>
@@ -179,37 +208,49 @@ run_gui_v3.bat
 - ✅ **PNG alpha channel** support
 - ✅ **Automatic YOLO** annotations
 - ✅ **Unique random seeds**
+- 🆕 **Holographic effects** (intensity, variations)
+- 🆕 **Standard/Holographic/Both** modes
 
-**Effects:** Blur, Contrast, Saturation, Fog, Posterize, Sharpen, Emboss, Noise, JPEG Compression, Color Temperature, and more!
+**Effects:** Blur, Contrast, Saturation, Fog, Posterize, Sharpen, Emboss, Noise, JPEG Compression, Color Temperature, Rainbow gradients, Shimmer patterns, and more!
 
 </td>
 <td width="33%" valign="top">
 
 ### 🧩 Smart Mosaics
-- ✅ **3 layout modes**: Grid, Rotation, Random
-- ✅ **3 background modes**: Mosaic, Local, Web
+- ✅ **3 layout modes**: Grid, 3D Rotation, Random
+- ✅ **3 background modes**: Fake Cards, Local Image, Web
 - ✅ **2 transform modes**: 2D, 3D Perspective
+- 🆕 **3 generation modes**: Quick (200), Standard (500), Complete (900)
+- ✅ **max_groups parameter** for CLI control
 - ✅ **252 unique card IDs**
 - ✅ **4-point polygon** annotations
 - ✅ **YOLOv8 compatible** format
 
-**Output:** 65 layouts by default, fully configurable
+**Output:** Fully configurable (200-900 mosaics)
 
 </td>
 <td width="33%" valign="top">
 
 ### 🎓 YOLOv8 Integration
 - ✅ **Complete pipeline** in GUI
-- ✅ **Real-time logs** during training
+- ✅ **Real-time logs** with colors during training
 - ✅ **Automatic validation** splits
 - ✅ **Metric export** (mAP, precision)
-- ✅ **Live detection** from webcam
+- ✅ **Live detection** from webcam/video/image
 - ✅ **Model management**
+- 🆕 **Stop button** for interrupting training
+- 🆕 **3 detection modes** integrated
 
 **Supported:** YOLOv8n, YOLOv8s, YOLOv8m, YOLOv8l, YOLOv8x
 
 </td>
 </tr>
+<tr>
+<td colspan="3" align="center">
+
+### 🆕 GUI v3.0 Exclusive Features
+
+**📋 Fake Background Generator** (Perlin noise) • **🌈 Holographic Augmentation** (shiny cards) • **🔄 Workflow Manager** (automated pipelines) • **⚙️ Settings Dialog** (6 tabs) • **🛠️ Clean Tools Menu** (7 actions) • **📊 Dashboard** (stats & charts) • **🎨 Catppuccin Mocha** (modern design) • **Stop Button** (cancel operations)
 <tr>
 <td colspan="3" align="center">
 
@@ -334,16 +375,100 @@ graph LR
 
 ### 🌈 Holographic Augmentation
 
-Simulate shiny/holographic effects on Pokemon cards:
+**🆕 NEW in v3.0**: Simulate shiny/holographic effects on Pokemon cards with full parameter control.
 
+#### GUI Usage
+- **View**: Augmentation → Type: "Holographic" or "Both"
+- **Settings**: Augmentation tab
+  - **Intensity**: 0.1-1.0 (default: 0.7) - Controls effect strength
+  - **Variations**: 1-10 (default: 3) - Number of variations per card
+
+#### CLI Usage
+```bash
+# Standard holographic effect
+python core/holographic_augmenter.py --input images/ --output images_holographic/
+
+# Custom parameters
+python core/holographic_augmenter.py --intensity 0.9 --variations 5
+```
+
+#### Python API
 ```python
 from core.holographic_augmenter import HolographicAugmenter
 
 augmenter = HolographicAugmenter()
-augmenter.augment_directory("images/", "images_holographic/", variations=5)
+augmenter.augment_directory(
+    "images/", 
+    "images_holographic/", 
+    intensity=0.7,
+    variations=3
+)
 ```
 
-**Effects:** Rainbow gradients, light glare, metallic texture, shimmer patterns
+**Effects:** Rainbow gradients, light glare, metallic texture, shimmer patterns, iridescent overlays
+
+**Parameters:**
+- `intensity`: 0.1 (subtle) to 1.0 (intense)
+- `variations`: Number of different holographic angles
+
+---
+
+### 📋 Fake Background Generation
+
+**🆕 NEW in v3.0**: Advanced Perlin noise-based background generator for realistic training data.
+
+#### GUI Usage
+- **Dedicated View**: "Fake Background Generator"
+- **Settings**: Fake Backgrounds tab
+  - **Count**: 10-1000 (default: 100)
+  - **Noise Min**: 0-100 (default: 10)
+  - **Noise Max**: 0-100 (default: 50)
+
+#### CLI Usage
+```bash
+# Generate 100 backgrounds
+python tools/generate_fake_backgrounds.py --count 100
+
+# Custom noise range
+python tools/generate_fake_backgrounds.py --count 50 --noise_min 20 --noise_max 70
+```
+
+**Output:** Realistic synthetic backgrounds in `fakeimg/` for mosaic generation.
+
+---
+
+### 🧩 Mosaic Generation Modes
+
+**🆕 NEW in v3.0**: Three predefined generation modes for different use cases.
+
+#### GUI Usage
+Select mode in "Mosaic Generation" view:
+- **Quick (200)**: 25 groups × 8 cards ≈ 200 mosaics - Fast testing
+- **Standard (500)**: 62 groups × 8 cards ≈ 500 mosaics - Recommended
+- **Complete (All)**: 900 mosaics - All combinations (3 layouts × 3 backgrounds × 2 transforms × 50 variations)
+
+#### CLI Usage
+```bash
+# Standard generation with specific parameters
+python core/mosaic.py 1 0 0
+
+# Quick mode (limit to 25 groups)
+python core/mosaic.py 1 0 0 25
+
+# Standard mode (limit to 62 groups)
+python core/mosaic.py 2 0 1 62
+
+# Complete mode (all combinations)
+python core/mosaic.py ALL
+```
+
+**Parameters:**
+- `layout_mode`: 1 (Grid), 2 (3D Rotation), 3 (Random)
+- `background_mode`: 0 (Fake Cards), 1 (Local Image), 2 (Web)
+- `transform_mode`: 0 (2D Rotation), 1 (3D Perspective)
+- `max_groups` (optional): Limit number of groups generated
+
+---
 
 ### ⚖️ Auto-Balancing
 
@@ -358,27 +483,54 @@ balancer.balance()
 
 **Strategies:** `augment` (increase), `reduce` (decrease), `both` (equalize)
 
+---
+
 ### 🧹 Clean & Reset Tools
 
-Clean generated files and folders with safety confirmations:
+**🆕 Enhanced in v3.0**: Menu-based clean tools with safety confirmations.
 
-**Individual Clean Actions:**
-- 🗑️ **Clean Output**: Delete entire `output/` folder
-- 🎨 **Clean Augmented**: Delete `output/augmented/`
-- 🧩 **Clean Mosaics**: Delete `output/yolov8/`
-- 🎓 **Clean Training**: Delete `runs/` (trained models)
-- 🌈 **Clean Holographic**: Delete `images_holographic/`
-- 📋 **Clean Fakeimg**: Delete fake background folders
+#### 7 Clean Actions Available (via Menu Tools):
 
-**Clean All:**
-- 🚨 Deletes all generated folders (output, runs, holographic, fakeimg)
-- Optional: Include `images/` folder (unchecked by default)
-- Double confirmation for safety
-- Detailed logs of deleted folders
+1. **🗑️ Clean Outputs**
+   - Deletes `output/augmented/` and `output/yolov8/`
+   - Preserves source images
 
-**Access:** GUI → Tools → Clean & Reset section
+2. **📋 Clean Fake Images**
+   - Removes `fakeimg/` and `fakeimg_augmented/`
+   - Fresh start for background generation
 
-### 📦 Multi-Format Export
+3. **🌈 Clean Holographic**
+   - Deletes `images_holographic/`
+   - Clear holographic augmentations
+
+4. **🌐 Clean Web Backgrounds**
+   - Removes `web/` folder
+   - Downloaded web images cleanup
+
+5. **🎓 Clean Training Results**
+   - Deletes `runs/train/`
+   - Remove trained models and logs
+
+6. **🧹 Clean All Generated**
+   - Removes all generated folders
+   - **Preserves source `images/` folder**
+   - Safe reset to start fresh
+
+7. **🚨 Clean Everything**
+   - Nuclear option: Deletes ALL data
+   - Optional: Include `images/` folder (checkbox)
+   - **Double confirmation required**
+   - Detailed logs of deleted folders
+
+**Safety Features:**
+- ✅ Confirmation dialogs for all actions
+- ✅ Double confirmation for destructive operations
+- ✅ Detailed logs of deleted folders
+- ✅ Error handling and reporting
+
+**Access:** GUI v3.0 → Menu bar → **Tools** → Select clean action
+
+---### 📦 Multi-Format Export
 
 Export to multiple formats:
 
@@ -456,14 +608,42 @@ print(f"Price: {price} EUR (max: {price_max})")
 
 ## ⚙️ Settings & Configuration
 
-### GUI Settings (⚙️ button)
+### 🆕 GUI Settings Dialog (⚙️ button)
 
-- **General**: Paths, auto-save, notifications
-- **Augmentation**: Transform count, intensity
-- **Training**: Default epochs, image size, model
-- **Advanced**: Batch size, confidence threshold
+**6 Configuration Tabs:**
 
-Settings are saved to `gui_config.json` and persist between sessions.
+#### 1️⃣ General
+- **Paths**: Images, output, augmented, mosaic, fakeimg, holographic
+- **Options**: Auto-save logs, show notifications
+
+#### 2️⃣ Augmentation
+- **Count**: Default augmentations (1-100)
+- **Type**: Standard / Holographic / Both
+- **Holographic Intensity**: 0.1-1.0 (via slider)
+- **Holographic Variations**: 1-10 (via spinbox)
+
+#### 3️⃣ Mosaic
+- **Generation Mode**: Quick / Standard / Complete
+- **Card Layout**: Grid, 3D Rotation, Random (1-3)
+- **Background**: Fake Cards, Local Image, Web (0-2)
+- **Transform**: 2D Rotation, 3D Perspective (0-1)
+
+#### 4️⃣ Fake Backgrounds
+- **Default Count**: 10-1000 (default: 100)
+- **Noise Min**: 0-100 (default: 10)
+- **Noise Max**: 0-100 (default: 50)
+
+#### 5️⃣ Training
+- **Model**: YOLOv8 size (n/s/m/l/x)
+- **Epochs**: Training iterations
+- **Batch Size**: Images per batch
+- **Device**: CPU / GPU selection
+
+#### 6️⃣ Advanced
+- **TCGdex API Key**: Optional API configuration
+- **Other advanced parameters**
+
+**Settings saved to** `gui_config.json` and persist between sessions.
 
 ### API Configuration
 

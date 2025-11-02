@@ -95,14 +95,33 @@ class SettingsDialog:
         header.pack(fill='x', side='top')
         header.pack_propagate(False)
         
+        # Container pour titre + bouton save
+        header_content = tk.Frame(header, bg=colors['bg_sidebar'])
+        header_content.pack(fill='both', expand=True, padx=20)
+        
         title = tk.Label(
-            header,
+            header_content,
             text="⚙️ Configuration",
             font=('Segoe UI', 18, 'bold'),
             bg=colors['bg_sidebar'],
             fg=colors['text']
         )
-        title.pack(pady=15)
+        title.pack(side='left', pady=15)
+        
+        # Bouton Save dans le header (à droite)
+        save_header_btn = tk.Button(
+            header_content,
+            text="💾 Save",
+            command=self.save_settings,
+            bg=colors['success'],
+            fg='#000000',
+            font=('Segoe UI', 10, 'bold'),
+            relief='flat',
+            padx=20,
+            pady=8,
+            cursor='hand2'
+        )
+        save_header_btn.pack(side='right', pady=15)
         
         # Notebook avec catégories
         notebook = ttk.Notebook(self.dialog)
