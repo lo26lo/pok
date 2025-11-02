@@ -3405,11 +3405,21 @@ Continuer ?"""
             transform_val = int(self.mosaic_transform_var.get().split(' - ')[0])
         except:
             layout_val = 1
-            background_val = 1
+            background_val = 0  # Fixed: Default to mode 0 (Fake Cards Mosaic)
             transform_val = 0
+        
+        # Determine max groups based on mode
+        max_groups = None
+        if "Quick" in mode:
+            max_groups = 25  # 25 groups × 8 cards = 200 mosaics
+        elif "Standard" in mode:
+            max_groups = 62  # 62 groups × 8 cards ≈ 500 mosaics
+        # If "Complete" or "All", max_groups stays None (unlimited)
         
         self.log(f"🧩 Génération mosaïques: {mode}")
         self.log(f"   Layout: {layout_val}, Background: {background_val}, Transform: {transform_val}")
+        if max_groups:
+            self.log(f"   Max groups: {max_groups}")
         self.start_operation("Mosaic Generation")
         
         def task():
@@ -3417,9 +3427,11 @@ Continuer ?"""
                 if "All" in mode:
                     cmd = [sys.executable, "-u", "core/mosaic.py", "all"]
                 else:
-                    # Pass layout, background, transform parameters
+                    # Pass layout, background, transform parameters, and optionally max_groups
                     cmd = [sys.executable, "-u", "core/mosaic.py", 
                            str(layout_val), str(background_val), str(transform_val)]
+                    if max_groups:
+                        cmd.append(str(max_groups))
                 
                 self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                           stderr=subprocess.STDOUT, text=True,

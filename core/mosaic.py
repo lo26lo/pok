@@ -425,11 +425,22 @@ def main():
         layout_mode = int(sys.argv[1]) if len(sys.argv) > 1 else 1
         background_mode = int(sys.argv[2]) if len(sys.argv) > 2 else 0
         transform_mode = int(sys.argv[3]) if len(sys.argv) > 3 else 0
+        max_groups = int(sys.argv[4]) if len(sys.argv) > 4 else None  # Limite optionnelle
+        
         safe_print("Layout mode choisi :", layout_mode)
         safe_print("Background mode choisi :", background_mode)
         safe_print("Transform mode choisi :", transform_mode)
+        if max_groups:
+            safe_print(f"Limite de groupes : {max_groups}")
+        
         random.shuffle(resized_images)
         groups = [resized_images[i:i+8] for i in range(0, len(resized_images), 8)]
+        
+        # Limiter le nombre de groupes si spécifié
+        if max_groups and len(groups) > max_groups:
+            groups = groups[:max_groups]
+            safe_print(f"⚠️ Limitation à {max_groups} groupes (sur {len(resized_images)//8} disponibles)")
+        
         for group in groups:
             create_layout_group(group, group_index, card_dict, class_map, class_map, fake_images,
                                 layout_mode=layout_mode, background_mode=background_mode, transform_mode=transform_mode)
