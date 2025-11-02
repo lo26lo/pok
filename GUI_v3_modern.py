@@ -67,6 +67,9 @@ class SettingsDialog:
         self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 15))
         self.default_augmentation_type = tk.StringVar(value=config.get("default_augmentation_type", "standard"))
         self.default_mosaic_mode = tk.StringVar(value=config.get("default_mosaic_mode", "standard"))
+        self.default_mosaic_layout = tk.IntVar(value=config.get("default_mosaic_layout", 1))
+        self.default_mosaic_background = tk.IntVar(value=config.get("default_mosaic_background", 1))
+        self.default_mosaic_transform = tk.IntVar(value=config.get("default_mosaic_transform", 0))
         self.default_model = tk.StringVar(value=config.get("default_model", "yolov8n.pt"))
         self.default_epochs = tk.IntVar(value=config.get("default_epochs", 50))
         self.default_batch = tk.IntVar(value=config.get("default_batch", 16))
@@ -496,7 +499,7 @@ class SettingsDialog:
         # Default mosaic mode
         tk.Label(
             container,
-            text="🧩 Default Mosaic Mode:",
+            text="🧩 Default Mosaic Generation Mode:",
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=('Segoe UI', 10, 'bold')
@@ -510,17 +513,101 @@ class SettingsDialog:
             font=('Segoe UI', 10),
             width=18
         )
-        mosaic_combo.grid(row=1, column=0, sticky='w', pady=(0, 20))
+        mosaic_combo.grid(row=1, column=0, sticky='w', pady=(0, 5))
         
         # Info text
         tk.Label(
             container,
-            text="• Quick: 200 mosaics\n• Standard: 500 mosaics\n• Complete: All combinations",
+            text="• Quick: 200 mosaics  • Standard: 500 mosaics  • Complete: All combinations",
             bg=colors['bg_dark'],
             fg=colors['text_dim'],
             font=('Segoe UI', 9),
             justify='left'
         ).grid(row=2, column=0, sticky='w', pady=(0, 20))
+        
+        # Layout mode
+        tk.Label(
+            container,
+            text="📐 Card Layout Mode:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=3, column=0, sticky='w', pady=(0, 5))
+        
+        layout_combo = ttk.Combobox(
+            container,
+            textvariable=self.default_mosaic_layout,
+            values=["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement"],
+            state='readonly',
+            font=('Segoe UI', 10),
+            width=30
+        )
+        layout_combo.grid(row=4, column=0, sticky='w', pady=(0, 5))
+        layout_combo.current(0)
+        
+        tk.Label(
+            container,
+            text="Controls how cards are arranged on the mosaic",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=5, column=0, sticky='w', pady=(0, 20))
+        
+        # Background mode
+        tk.Label(
+            container,
+            text="🎨 Background Mode:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=6, column=0, sticky='w', pady=(0, 5))
+        
+        bg_combo = ttk.Combobox(
+            container,
+            textvariable=self.default_mosaic_background,
+            values=["0 - Solid Color", "1 - Fake Backgrounds", "2 - Mixed"],
+            state='readonly',
+            font=('Segoe UI', 10),
+            width=30
+        )
+        bg_combo.grid(row=7, column=0, sticky='w', pady=(0, 5))
+        bg_combo.current(1)
+        
+        tk.Label(
+            container,
+            text="Type of background to use for mosaics",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=8, column=0, sticky='w', pady=(0, 20))
+        
+        # Transform mode
+        tk.Label(
+            container,
+            text="🔄 Transform Mode:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=9, column=0, sticky='w', pady=(0, 5))
+        
+        transform_combo = ttk.Combobox(
+            container,
+            textvariable=self.default_mosaic_transform,
+            values=["0 - Normal Rotation", "1 - Enhanced Rotation"],
+            state='readonly',
+            font=('Segoe UI', 10),
+            width=30
+        )
+        transform_combo.grid(row=10, column=0, sticky='w', pady=(0, 5))
+        transform_combo.current(0)
+        
+        tk.Label(
+            container,
+            text="Controls rotation intensity for cards",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=11, column=0, sticky='w', pady=(0, 10))
         
         container.grid_columnconfigure(0, weight=1)
     
@@ -773,6 +860,9 @@ class SettingsDialog:
             "default_augmentations": self.default_augmentations.get(),
             "default_augmentation_type": self.default_augmentation_type.get(),
             "default_mosaic_mode": self.default_mosaic_mode.get(),
+            "default_mosaic_layout": self.default_mosaic_layout.get(),
+            "default_mosaic_background": self.default_mosaic_background.get(),
+            "default_mosaic_transform": self.default_mosaic_transform.get(),
             "default_model": self.default_model.get(),
             "default_epochs": self.default_epochs.get(),
             "default_batch": self.default_batch.get(),
@@ -1928,6 +2018,48 @@ class ModernPokemonGUI:
             state='readonly', width=30)
         self.mosaic_mode_var.pack(side=tk.LEFT, padx=10)
         self.mosaic_mode_var.current(1)
+        
+        # Layout mode
+        layout_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        layout_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(layout_frame, text="Card layout:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        self.mosaic_layout_var = ttk.Combobox(layout_frame,
+            values=["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement"],
+            state='readonly', width=30)
+        self.mosaic_layout_var.pack(side=tk.LEFT, padx=10)
+        self.mosaic_layout_var.current(0)
+        
+        # Background mode
+        bg_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        bg_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(bg_frame, text="Background:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        self.mosaic_background_var = ttk.Combobox(bg_frame,
+            values=["0 - Solid Color", "1 - Fake Backgrounds", "2 - Mixed"],
+            state='readonly', width=30)
+        self.mosaic_background_var.pack(side=tk.LEFT, padx=10)
+        self.mosaic_background_var.current(1)
+        
+        # Transform mode
+        transform_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        transform_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(transform_frame, text="Rotation mode:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+        
+        self.mosaic_transform_var = ttk.Combobox(transform_frame,
+            values=["0 - Normal Rotation", "1 - Enhanced Rotation"],
+            state='readonly', width=30)
+        self.mosaic_transform_var.pack(side=tk.LEFT, padx=10)
+        self.mosaic_transform_var.current(0)
         
         # Buttons
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
@@ -3207,7 +3339,18 @@ Continuer ?"""
         """Lancer génération de mosaïques"""
         mode = self.mosaic_mode_var.get()
         
+        # Extract layout, background, transform values from combobox
+        try:
+            layout_val = int(self.mosaic_layout_var.get().split(' - ')[0])
+            background_val = int(self.mosaic_background_var.get().split(' - ')[0])
+            transform_val = int(self.mosaic_transform_var.get().split(' - ')[0])
+        except:
+            layout_val = 1
+            background_val = 1
+            transform_val = 0
+        
         self.log(f"🧩 Génération mosaïques: {mode}")
+        self.log(f"   Layout: {layout_val}, Background: {background_val}, Transform: {transform_val}")
         self.start_operation("Mosaic Generation")
         
         def task():
@@ -3215,7 +3358,9 @@ Continuer ?"""
                 if "All" in mode:
                     cmd = [sys.executable, "-u", "core/mosaic.py", "all"]
                 else:
-                    cmd = [sys.executable, "-u", "core/mosaic.py", "all"]
+                    # Pass layout, background, transform parameters
+                    cmd = [sys.executable, "-u", "core/mosaic.py", 
+                           str(layout_val), str(background_val), str(transform_val)]
                 
                 self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                           stderr=subprocess.STDOUT, text=True,
@@ -3231,6 +3376,7 @@ Continuer ?"""
                     if self.current_process.returncode == 0:
                         self.log("✅ Mosaïques générées!")
                         messagebox.showinfo("Succès", "Mosaïques générées avec succès!")
+                        self.update_stats()
                     elif self.current_process.returncode is not None:
                         self.log("❌ Génération échouée")
                         messagebox.showerror("Erreur", "Génération échouée!")
