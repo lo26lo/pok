@@ -15,6 +15,12 @@ from typing import Dict, List, Tuple, Optional
 # Correction pour NumPy 2.0 - centralisée ici
 np.float_ = np.float64
 
+# Compiled regex patterns for card number extraction (performance optimization)
+_PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}\.')
+_PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
+_PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
+_PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
+
 
 def safe_print(message=""):
     """
@@ -95,24 +101,24 @@ def extract_card_number(filename: str) -> Optional[str]:
         Numéro de carte ou None si non trouvé
     """
     # Format nouveau: {set}_{number}_{lang}.ext
-    match = re.search(r'_([A-Za-z0-9]+)_[a-z]{2}\.', filename)
+    match = _PATTERN_NEW_FORMAT.search(filename)
     if match:
         num = match.group(1)
         # Padder si numérique pur
         return num.zfill(3) if num.isdigit() else num
     
     # Format ancien: _en_XXX_ ou _XXX_
-    match = re.search(r'_(?:en_)?(\d{3})_', filename, re.IGNORECASE)
+    match = _PATTERN_OLD_FORMAT.search(filename)
     if match:
         return match.group(1)
     
     # Fallback: XXX_XXX_XXX
-    match = re.search(r'_(\w+)_', filename)
+    match = _PATTERN_FALLBACK_1.search(filename)
     if match and re.match(r'\d{3}', match.group(1)):
         return match.group(1)
     
     # Dernier recours
-    match = re.search(r'(\d{3})', filename)
+    match = _PATTERN_FALLBACK_2.search(filename)
     return match.group(1) if match else None
 
 def resize_cards(image_paths: List[str], target_size: Tuple[int, int] = None) -> List[Tuple[np.ndarray, str]]:
