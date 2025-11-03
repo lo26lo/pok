@@ -2816,7 +2816,7 @@ class ModernPokemonGUI:
     def create_training_view(self):
         """Vue Training avec TrainingManager"""
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
-        container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
+        container.pack(fill=tk.X, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
         # Header
         title = tk.Label(container,
@@ -2835,9 +2835,10 @@ class ModernPokemonGUI:
         )
         subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
         
-        # Configuration Card
-        config_card = tk.Frame(container, bg=self.colors['bg_card'])
-        config_card.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
+        # Configuration Card (hauteur limitée pour garder le footer visible: 380px + footer 160px + marges = ~560px)
+        config_card = tk.Frame(container, bg=self.colors['bg_card'], height=360)
+        config_card.pack(fill=tk.X, pady=(0, 10))
+        config_card.pack_propagate(False)  # Forcer la hauteur
         
         card_title = tk.Label(config_card,
             text="⚙️ Training Configuration",
@@ -2847,8 +2848,23 @@ class ModernPokemonGUI:
         )
         card_title.pack(anchor='w', padx=20, pady=(20, 15))
         
-        config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
-        config_content.pack(fill=tk.X, padx=40, pady=(0, 20))
+        # Scrollable content
+        canvas = tk.Canvas(config_card, bg=self.colors['bg_card'], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(config_card, orient='vertical', command=canvas.yview)
+        config_content = tk.Frame(canvas, bg=self.colors['bg_card'])
+        
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(20, 0), pady=(0, 20))
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=(0, 20), padx=(0, 5))
+        
+        canvas_frame = canvas.create_window((0, 0), window=config_content, anchor='nw')
+        
+        def configure_scroll(event):
+            canvas.configure(scrollregion=canvas.bbox('all'))
+            canvas.itemconfig(canvas_frame, width=event.width)
+        
+        config_content.bind('<Configure>', configure_scroll)
+        canvas.bind('<Configure>', configure_scroll)
         
         # System Configuration Selector
         system_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
@@ -3065,8 +3081,35 @@ class ModernPokemonGUI:
                   width=30).pack(pady=5)
     
     def update_training_presets(self, event=None):
-        """Mettre à jour la description des presets selon la config système"""
+        """Mettre à jour les paramètres par défaut selon la config système"""
         system = self.train_system_var.get()
+        
+        # Appliquer des valeurs par défaut selon le système
+        if system == "🖥️ Desktop (5800X3D + 5070Ti 16GB)":
+            # Defaults pour Desktop: plus de batch possible
+            self.train_model_var.current(0)  # yolov8n.pt
+            self.train_epochs_var.delete(0, tk.END)
+            self.train_epochs_var.insert(0, "50")
+            self.train_batch_var.delete(0, tk.END)
+            self.train_batch_var.insert(0, "32")  # Batch plus grand avec 16GB
+            self.train_imgsz_var.set("640")
+            self.train_workers_var.delete(0, tk.END)
+            self.train_workers_var.insert(0, "4")
+            self.train_cache_var.set("ram")
+            self.log("🖥️ Profil Desktop appliqué - Batch=32, Cache=RAM")
+            
+        elif system == "💻 Laptop (Ryzen AI 7 350 + 5070 8GB)":
+            # Defaults pour Laptop: batch réduit, imgsz réduit
+            self.train_model_var.current(0)  # yolov8n.pt
+            self.train_epochs_var.delete(0, tk.END)
+            self.train_epochs_var.insert(0, "50")
+            self.train_batch_var.delete(0, tk.END)
+            self.train_batch_var.insert(0, "16")  # Batch réduit avec 8GB
+            self.train_imgsz_var.set("512")  # Imgsz réduit pour économiser VRAM
+            self.train_workers_var.delete(0, tk.END)
+            self.train_workers_var.insert(0, "4")
+            self.train_cache_var.set("disk")  # Cache disk pour économiser RAM
+            self.log("💻 Profil Laptop appliqué - Batch=16, ImgSz=512, Cache=Disk")
         
         # Réinitialiser le preset à Custom
         self.train_preset_var.set("Custom")
