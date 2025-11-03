@@ -392,7 +392,7 @@ def create_layout_group(images, group_index, card_dict, class_map, merged_mappin
 # ----- Fonction principale -----
 def main():
     # Chargement des données des cartes depuis Excel
-    card_dict, class_map = load_card_data("cards_info.xlsx")
+    card_dict, class_map = load_card_data("excel/cards_info.xlsx")
     
     # Utilisation directe de class_map sans fusion des noms
     # Chaque numéro de carte a son propre ID unique (252 IDs au total)

@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_excel('cards_info.xlsx', usecols=['Set #', 'Name'])
+df = pd.read_excel('excel/cards_info.xlsx', usecols=['Set #', 'Name'])
 print('Total cartes:', len(df))
 print('\nPremières 10 cartes:')
 for i in range(10):

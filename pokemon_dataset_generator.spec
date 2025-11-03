@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('cards_info.xlsx', '.'), ('gui_config.json', '.')]
+datas = [('excel/cards_info.xlsx', 'excel'), ('gui_config.json', '.')]
 binaries = []
 hiddenimports = ['cv2', 'pandas', 'numpy', 'imgaug', 'PIL', 'openpyxl', 'tkinter']
 tmp_ret = collect_all('imgaug')

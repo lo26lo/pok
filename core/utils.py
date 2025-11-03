@@ -44,7 +44,7 @@ def safe_print(*args, **kwargs):
 # Configuration globale
 CONFIG = {
     'target_size': (280, 380),
-    'excel_file': 'cards_info.xlsx',
+    'excel_file': 'excel/cards_info.xlsx',
     'base_images_dir': 'images',
     'augmented_dir': 'images_aug',
     'output_dir': 'output',

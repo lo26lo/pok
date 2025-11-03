@@ -161,7 +161,7 @@ seq = iaa.SomeOf((2, 5), [
 ], random_order=True)
 
 def main():
-    card_dict, class_map = load_card_data("cards_info.xlsx")
+    card_dict, class_map = load_card_data("excel/cards_info.xlsx")
     # Collecte des images de base depuis le répertoire "images"
     image_paths = []
     image_paths += glob(os.path.join(BASE_IMAGES_DIR, "*.jpg"))

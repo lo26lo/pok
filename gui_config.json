@@ -4,7 +4,7 @@
         "fakeimg": "fakeimg",
         "output_augmented": "output\\augmented",
         "output_mosaic": "output\\yolov8",
-        "excel_file": "cards_info.xlsx"
+        "excel_file": "excel/cards_info.xlsx"
     },
     "defaults": {
         "images_dir": "images",

@@ -76,7 +76,7 @@ def create_exe():
         "--onefile",                    # Un seul fichier exe
         "--windowed",                   # Pas de console (mode GUI)
         "--icon=NONE",                  # Pas d'icône (ou spécifiez un .ico)
-        "--add-data=cards_info.xlsx;.", # Inclure le fichier Excel
+        "--add-data=excel/cards_info.xlsx;excel", # Inclure le fichier Excel
         "--add-data=gui_config.json;.", # Inclure la config (si existe)
         "--hidden-import=cv2",
         "--hidden-import=pandas",
@@ -132,7 +132,7 @@ def create_portable_package():
     
     # Copier les fichiers essentiels
     files_to_copy = [
-        "cards_info.xlsx",
+        "excel/cards_info.xlsx",
         "README.md",
         "requirements.txt"
     ]
