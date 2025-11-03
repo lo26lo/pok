@@ -1326,6 +1326,9 @@ class ModernPokemonGUI:
         self.FONT_CARD_TITLE = ('Segoe UI', 14, 'bold') # Titres de cartes
         self.FONT_TEXT = ('Segoe UI', 9)                # Texte normal
         self.FONT_BUTTON = ('Segoe UI', 10, 'bold')     # Boutons
+        self.SPINBOX_WIDTH = 6           # Largeur des Spinbox (très réduite)
+        self.COMBOBOX_WIDTH = 15         # Largeur des Combobox (très réduite)
+        self.ENTRY_WIDTH = 25            # Largeur des Entry (très réduite)
         
         # Configuration du style
         self.setup_modern_style()
@@ -1670,12 +1673,12 @@ class ModernPokemonGUI:
     
     def create_footer(self, parent):
         """Créer le footer avec progress bar et logs - COMPACTÉ V3.1"""
-        footer = tk.Frame(parent, bg=self.colors['bg_sidebar'], height=140)
-        footer.pack(fill=tk.X, side=tk.BOTTOM)
-        footer.pack_propagate(False)
+        self.footer = tk.Frame(parent, bg=self.colors['bg_sidebar'], height=160)
+        self.footer.pack(fill=tk.X, side=tk.BOTTOM)
+        self.footer.pack_propagate(False)
         
         # Progress section
-        progress_frame = tk.Frame(footer, bg=self.colors['bg_sidebar'])
+        progress_frame = tk.Frame(self.footer, bg=self.colors['bg_sidebar'])
         progress_frame.pack(fill=tk.X, padx=20, pady=10)
         
         # Frame pour label et bouton stop sur la même ligne
@@ -1710,7 +1713,7 @@ class ModernPokemonGUI:
         self.progress_bar.pack(fill=tk.X, pady=(5, 0))
         
         # Logs section
-        logs_label = tk.Label(footer,
+        logs_label = tk.Label(self.footer,
             text="📜 Logs",
             font=self.FONT_BUTTON,
             bg=self.colors['bg_sidebar'],
@@ -1719,9 +1722,9 @@ class ModernPokemonGUI:
         )
         logs_label.pack(fill=tk.X, padx=20)
         
-        # ScrolledText pour logs - RÉDUIT 6→3 lignes V3.1
-        self.log_text = scrolledtext.ScrolledText(footer,
-            height=3,
+        # ScrolledText pour logs - 4 lignes V3.1 (augmenté pour meilleure lisibilité)
+        self.log_text = scrolledtext.ScrolledText(self.footer,
+            height=4,
             bg=self.colors['bg_card'],
             fg=self.colors['text'],
             insertbackground=self.colors['text'],
@@ -1734,6 +1737,13 @@ class ModernPokemonGUI:
         """Afficher une vue spécifique"""
         # Mettre à jour current_view
         self.current_view = view_id
+        
+        # Masquer/afficher le footer selon la vue
+        # Dashboard n'a pas besoin du footer (pas d'opérations)
+        if view_id == 'home':
+            self.footer.pack_forget()
+        else:
+            self.footer.pack(fill=tk.X, side=tk.BOTTOM)
         
         # Tools section toujours visible - FIXÉ V3.1
         # (Avant: masqué sur certaines vues, causait confusion utilisateur)
@@ -1999,7 +2009,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',  # BLANC
                 font=self.FONT_BUTTON).pack(side=tk.LEFT)
         
-        self.workflow_aug_var = ttk.Spinbox(aug_frame, from_=5, to=100, width=10)
+        self.workflow_aug_var = ttk.Spinbox(aug_frame, from_=5, to=100, width=self.SPINBOX_WIDTH)
         self.workflow_aug_var.pack(side=tk.LEFT, padx=10)
         self.workflow_aug_var.set(15)
         
@@ -2017,7 +2027,7 @@ class ModernPokemonGUI:
         
         self.workflow_mosaic_var = ttk.Combobox(mosaic_frame, 
                                     values=["quick", "standard", "complete"],
-                                    state='readonly', width=20)
+                                    state='readonly', width=self.COMBOBOX_WIDTH)
         self.workflow_mosaic_var.pack(side=tk.LEFT, padx=10)
         self.workflow_mosaic_var.current(1)
         
@@ -2119,7 +2129,7 @@ class ModernPokemonGUI:
         self.download_set_var = ttk.Combobox(set_frame,
             values=set_choices,
             state='normal',  # Allow manual entry
-            width=40)
+            width=self.ENTRY_WIDTH)
         self.download_set_var.pack(side=tk.LEFT, padx=10)
         if set_choices:
             self.download_set_var.set(set_choices[0])
@@ -2141,7 +2151,7 @@ class ModernPokemonGUI:
         self.download_lang_var = ttk.Combobox(lang_frame,
             values=lang_choices,
             state='readonly',
-            width=20)
+            width=self.COMBOBOX_WIDTH)
         self.download_lang_var.pack(side=tk.LEFT, padx=10)
         
         # Set default from settings
@@ -2185,7 +2195,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=self.FONT_BUTTON).pack(side=tk.LEFT)
         
-        self.download_output_var = ttk.Entry(output_frame, width=30)
+        self.download_output_var = ttk.Entry(output_frame, width=self.COMBOBOX_WIDTH)
         self.download_output_var.pack(side=tk.LEFT, padx=10)
         self.download_output_var.insert(0, self.config.get("default_download_dir", "images"))
         
@@ -2226,12 +2236,30 @@ class ModernPokemonGUI:
                   width=30).pack(pady=5)
     
     def create_augmentation_view(self):
-        """Vue Augmentation détaillée - ENRICHIE V3.1"""
-        container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
-        container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
+        """Vue Augmentation détaillée - ENRICHIE V3.1 avec scroll"""
+        # Canvas avec scrollbar pour contenu défilant
+        canvas = tk.Canvas(self.content_area, bg=self.colors['bg_dark'], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.content_area, orient="vertical", command=canvas.yview)
+        
+        container = tk.Frame(canvas, bg=self.colors['bg_dark'])
+        
+        container.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=container, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side="left", fill=tk.BOTH, expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Contenu avec padding
+        content_frame = tk.Frame(container, bg=self.colors['bg_dark'])
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
         # Header
-        title = tk.Label(container,
+        title = tk.Label(content_frame,
             text="🎨 Image Augmentation",
             font=self.FONT_TITLE,
             bg=self.colors['bg_dark'],
@@ -2239,7 +2267,7 @@ class ModernPokemonGUI:
         )
         title.pack(anchor='w', pady=(0, 10))
         
-        subtitle = tk.Label(container,
+        subtitle = tk.Label(content_frame,
             text="Generate augmented variations of your card images",
             font=self.FONT_TEXT,
             bg=self.colors['bg_dark'],
@@ -2248,7 +2276,7 @@ class ModernPokemonGUI:
         subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
         
         # Info Card - NOUVEAU
-        info_card = tk.Frame(container, bg=self.colors['bg_card'])
+        info_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
         info_card.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
         
         info_content = tk.Frame(info_card, bg=self.colors['bg_card'])
@@ -2303,7 +2331,7 @@ class ModernPokemonGUI:
         ).pack(anchor='w')
         
         # Configuration Card
-        config_card = tk.Frame(container, bg=self.colors['bg_card'])
+        config_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
         config_card.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
         
         card_title = tk.Label(config_card,
@@ -2325,7 +2353,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=self.FONT_BUTTON).pack(side=tk.LEFT)
         
-        self.aug_num_var = ttk.Spinbox(aug_frame, from_=1, to=100, width=10)
+        self.aug_num_var = ttk.Spinbox(aug_frame, from_=1, to=100, width=self.SPINBOX_WIDTH)
         self.aug_num_var.pack(side=tk.LEFT, padx=10)
         self.aug_num_var.set(15)
         
@@ -2343,7 +2371,7 @@ class ModernPokemonGUI:
         
         self.aug_type_var = ttk.Combobox(type_frame,
             values=["Standard", "Holographic", "Both"],
-            state='readonly', width=25)
+            state='readonly', width=self.COMBOBOX_WIDTH)
         self.aug_type_var.pack(side=tk.LEFT, padx=10)
         self.aug_type_var.current(0)
         
@@ -2361,7 +2389,7 @@ class ModernPokemonGUI:
         
         self.aug_output_var = ttk.Combobox(output_frame,
             values=["augmented", "images_aug", "output/augmented"],
-            state='readonly', width=25)
+            state='readonly', width=self.COMBOBOX_WIDTH)
         self.aug_output_var.pack(side=tk.LEFT, padx=10)
         self.aug_output_var.current(0)
         
@@ -2370,7 +2398,7 @@ class ModernPokemonGUI:
                 font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
         
         # Buttons
-        btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
+        btn_frame = tk.Frame(content_frame, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=30)
         
         ttk.Button(btn_frame, text="🎨 START AUGMENTATION",
@@ -2487,7 +2515,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=self.FONT_BUTTON, width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_input_var = ttk.Entry(input_frame, width=40)
+        self.fakeimg_input_var = ttk.Entry(input_frame, width=self.ENTRY_WIDTH)
         self.fakeimg_input_var.pack(side=tk.LEFT, padx=10)
         self.fakeimg_input_var.insert(0, "images")
         
@@ -2499,7 +2527,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=self.FONT_BUTTON, width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_output_var = ttk.Entry(output_frame, width=40)
+        self.fakeimg_output_var = ttk.Entry(output_frame, width=self.ENTRY_WIDTH)
         self.fakeimg_output_var.pack(side=tk.LEFT, padx=10)
         self.fakeimg_output_var.insert(0, "fakeimg_augmented")
         
@@ -2521,7 +2549,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_p_var = ttk.Spinbox(p_frame, from_=0.0, to=1.0, increment=0.1, width=10)
+        self.fakeimg_p_var = ttk.Spinbox(p_frame, from_=0.0, to=1.0, increment=0.1, width=self.SPINBOX_WIDTH)
         self.fakeimg_p_var.pack(side=tk.LEFT, padx=5)
         self.fakeimg_p_var.set(0.5)
         
@@ -2537,7 +2565,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_sl_var = ttk.Spinbox(sl_frame, from_=0.01, to=1.0, increment=0.01, width=10)
+        self.fakeimg_sl_var = ttk.Spinbox(sl_frame, from_=0.01, to=1.0, increment=0.01, width=self.SPINBOX_WIDTH)
         self.fakeimg_sl_var.pack(side=tk.LEFT, padx=5)
         self.fakeimg_sl_var.set(0.02)
         
@@ -2553,7 +2581,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_sh_var = ttk.Spinbox(sh_frame, from_=0.01, to=1.0, increment=0.01, width=10)
+        self.fakeimg_sh_var = ttk.Spinbox(sh_frame, from_=0.01, to=1.0, increment=0.01, width=self.SPINBOX_WIDTH)
         self.fakeimg_sh_var.pack(side=tk.LEFT, padx=5)
         self.fakeimg_sh_var.set(0.4)
         
@@ -2569,7 +2597,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_r1_var = ttk.Spinbox(r1_frame, from_=0.1, to=5.0, increment=0.1, width=10)
+        self.fakeimg_r1_var = ttk.Spinbox(r1_frame, from_=0.1, to=5.0, increment=0.1, width=self.SPINBOX_WIDTH)
         self.fakeimg_r1_var.pack(side=tk.LEFT, padx=5)
         self.fakeimg_r1_var.set(0.3)
         
@@ -2585,7 +2613,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_r2_var = ttk.Spinbox(r2_frame, from_=0.1, to=10.0, increment=0.1, width=10)
+        self.fakeimg_r2_var = ttk.Spinbox(r2_frame, from_=0.1, to=10.0, increment=0.1, width=self.SPINBOX_WIDTH)
         self.fakeimg_r2_var.pack(side=tk.LEFT, padx=5)
         self.fakeimg_r2_var.set(3.3)
         
@@ -2649,7 +2677,7 @@ class ModernPokemonGUI:
         
         self.mosaic_mode_var = ttk.Combobox(mode_frame,
             values=["Quick (200)", "Standard (500)", "Complete (All combinations)"],
-            state='readonly', width=30)
+            state='readonly', width=self.COMBOBOX_WIDTH)
         self.mosaic_mode_var.pack(side=tk.LEFT, padx=10)
         self.mosaic_mode_var.current(1)
         
@@ -2663,7 +2691,7 @@ class ModernPokemonGUI:
         
         self.mosaic_layout_var = ttk.Combobox(layout_frame,
             values=["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement"],
-            state='readonly', width=30)
+            state='readonly', width=self.COMBOBOX_WIDTH)
         self.mosaic_layout_var.pack(side=tk.LEFT, padx=10)
         self.mosaic_layout_var.current(0)
         
@@ -2677,7 +2705,7 @@ class ModernPokemonGUI:
         
         self.mosaic_background_var = ttk.Combobox(bg_frame,
             values=["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)", "2 - Web Image (Lorem Picsum)"],
-            state='readonly', width=40)
+            state='readonly', width=self.ENTRY_WIDTH)
         self.mosaic_background_var.pack(side=tk.LEFT, padx=10)
         self.mosaic_background_var.current(0)
         
@@ -2691,7 +2719,7 @@ class ModernPokemonGUI:
         
         self.mosaic_transform_var = ttk.Combobox(transform_frame,
             values=["0 - 2D Rotation", "1 - 3D Perspective Projection"],
-            state='readonly', width=40)
+            state='readonly', width=self.ENTRY_WIDTH)
         self.mosaic_transform_var.pack(side=tk.LEFT, padx=10)
         self.mosaic_transform_var.current(0)
         
@@ -2826,7 +2854,7 @@ class ModernPokemonGUI:
         
         self.train_model_var = ttk.Combobox(model_frame,
             values=["yolov8n.pt", "yolov8s.pt", "yolov8m.pt", "yolov8l.pt"],
-            state='readonly', width=20)
+            state='readonly', width=self.COMBOBOX_WIDTH)
         self.train_model_var.pack(side=tk.LEFT, padx=10)
         self.train_model_var.current(0)
         
@@ -2838,7 +2866,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=self.FONT_BUTTON).pack(side=tk.LEFT)
         
-        self.train_epochs_var = ttk.Spinbox(epochs_frame, from_=10, to=500, width=10)
+        self.train_epochs_var = ttk.Spinbox(epochs_frame, from_=10, to=500, width=self.SPINBOX_WIDTH)
         self.train_epochs_var.pack(side=tk.LEFT, padx=10)
         self.train_epochs_var.set(50)
         
@@ -2850,7 +2878,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=self.FONT_BUTTON).pack(side=tk.LEFT)
         
-        self.train_batch_var = ttk.Spinbox(batch_frame, from_=4, to=64, width=10)
+        self.train_batch_var = ttk.Spinbox(batch_frame, from_=4, to=64, width=self.SPINBOX_WIDTH)
         self.train_batch_var.pack(side=tk.LEFT, padx=10)
         self.train_batch_var.set(16)
         
@@ -2864,7 +2892,7 @@ class ModernPokemonGUI:
         
         self.train_device_var = ttk.Combobox(device_frame,
             values=["0", "cpu", "0,1", "0,1,2,3"],
-            state='readonly', width=20)
+            state='readonly', width=self.COMBOBOX_WIDTH)
         self.train_device_var.pack(side=tk.LEFT, padx=10)
         self.train_device_var.current(0)
         
@@ -2956,7 +2984,7 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#FFFFFF',
                 font=self.FONT_BUTTON).pack(side=tk.LEFT)
         
-        self.detect_camera_var = ttk.Spinbox(camera_frame, from_=0, to=10, width=10)
+        self.detect_camera_var = ttk.Spinbox(camera_frame, from_=0, to=10, width=self.SPINBOX_WIDTH)
         self.detect_camera_var.pack(side=tk.LEFT, padx=10)
         self.detect_camera_var.set(0)
         

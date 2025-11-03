@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Script pour harmoniser toutes les vues de GUI_v3.1_modern.py
-Applique les constantes de padding et fonts de manière cohérente
+Applique les constantes de padding, fonts ET widgets de manière cohérente
 """
 import re
 
@@ -61,11 +61,41 @@ def harmonize_gui():
         
         (r'\.pack\(fill=tk\.BOTH, expand=True, padx=20, pady=20\)',
          '.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_CARD, pady=self.PADDING_CARD)'),
+        
+        # Spinbox widths - réduire toutes les largeurs
+        (r'ttk\.Spinbox\([^)]+, width=10\)',
+         lambda m: m.group(0).replace('width=10', 'width=self.SPINBOX_WIDTH')),
+        
+        (r'ttk\.Spinbox\([^)]+, width=12\)',
+         lambda m: m.group(0).replace('width=12', 'width=self.SPINBOX_WIDTH')),
+        
+        (r'ttk\.Spinbox\([^)]+, width=15\)',
+         lambda m: m.group(0).replace('width=15', 'width=self.SPINBOX_WIDTH')),
+        
+        # Combobox widths - réduire toutes les largeurs
+        (r'ttk\.Combobox\([^)]+, width=25\)',
+         lambda m: m.group(0).replace('width=25', 'width=self.COMBOBOX_WIDTH')),
+        
+        (r'ttk\.Combobox\([^)]+, width=30\)',
+         lambda m: m.group(0).replace('width=30', 'width=self.COMBOBOX_WIDTH')),
+        
+        (r'ttk\.Combobox\([^)]+, width=20\)',
+         lambda m: m.group(0).replace('width=20', 'width=self.COMBOBOX_WIDTH')),
+        
+        # Entry widths - réduire
+        (r'ttk\.Entry\([^)]+, width=40\)',
+         lambda m: m.group(0).replace('width=40', 'width=self.ENTRY_WIDTH')),
+        
+        (r'ttk\.Entry\([^)]+, width=35\)',
+         lambda m: m.group(0).replace('width=35', 'width=self.ENTRY_WIDTH')),
     ]
     
     # Appliquer les remplacements
     for pattern, replacement in replacements:
-        content = re.sub(pattern, replacement, content)
+        if callable(replacement):
+            content = re.sub(pattern, replacement, content)
+        else:
+            content = re.sub(pattern, replacement, content)
     
     # Sauvegarder
     with open(file_path, 'w', encoding='utf-8') as f:
@@ -80,6 +110,9 @@ def harmonize_gui():
     print("   - Titres cartes: self.FONT_CARD_TITLE (14pt)")
     print("   - Texte: self.FONT_TEXT (9pt)")
     print("   - Boutons: self.FONT_BUTTON (10pt)")
+    print("   - Spinbox: self.SPINBOX_WIDTH (8)")
+    print("   - Combobox: self.COMBOBOX_WIDTH (18)")
+    print("   - Entry: self.ENTRY_WIDTH (30)")
 
 if __name__ == "__main__":
     harmonize_gui()
