@@ -61,7 +61,7 @@ class SettingsDialog:
         self.default_output_dir = tk.StringVar(value=config.get("default_output_dir", "output"))
         self.default_augmented_dir = tk.StringVar(value=config.get("default_augmented_dir", "augmented"))
         self.default_mosaic_dir = tk.StringVar(value=config.get("default_mosaic_dir", "output/yolov8"))
-        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", "fakeimg"))
+        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", "fakeimg_augmented"))
         self.default_holographic_dir = tk.StringVar(value=config.get("default_holographic_dir", "images_holographic"))
         
         self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 15))
@@ -353,10 +353,10 @@ class SettingsDialog:
             cursor='hand2'
         ).pack(side='right', padx=(5, 0))
         
-        # Fake backgrounds directory
+        # Fake images output directory
         tk.Label(
             container,
-            text="📋 Fake Backgrounds Directory:",
+            text="🎲 Fake Images Output Directory:",
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=('Segoe UI', 10, 'bold')
