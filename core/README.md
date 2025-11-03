@@ -28,8 +28,7 @@ core/
 │   └── tcgdex_api.py            # API Pokemon TCG
 │
 └── 🛠️ UTILITAIRES
-    ├── utils.py                 # Fonctions communes
-    └── numpy_patch.py           # Fix NumPy 2.0
+    └── utils.py                 # Fonctions communes
 ```
 
 ## 🚀 Utilisation

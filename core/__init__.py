@@ -28,7 +28,6 @@ Modules disponibles:
 
 **Utilitaires:**
 - utils: Fonctions utilitaires communes
-- numpy_patch: Correctif compatibilité NumPy 2.0
 
 Usage:
 ------
@@ -61,7 +60,6 @@ from . import holographic_augmenter
 from . import tcgdex_api
 from . import random_erasing
 from . import utils
-# from . import numpy_patch  # Patch désactivé : NumPy 1.26.4 dans venv, pas besoin
 from . import workflow_manager
 from . import training_manager
 from . import detection_manager
@@ -79,7 +77,6 @@ __all__ = [
     'tcgdex_api',
     'random_erasing',
     'utils',
-    # 'numpy_patch',  # Disponible mais non appliqué automatiquement
     'workflow_manager',
     'training_manager',
     'detection_manager',
