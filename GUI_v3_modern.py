@@ -1695,14 +1695,17 @@ class ModernPokemonGUI:
         # Calculer les statistiques réelles
         stats = self.get_real_stats()
         
+        # Initialiser le dictionnaire pour stocker les labels de stats
+        self.stat_cards = {}
+        
         # Stats Cards (grid 2x2)
         stats_grid = tk.Frame(container, bg=self.colors['bg_dark'])
         stats_grid.pack(fill=tk.X, pady=(0, 20))
         
-        self.create_stat_card(stats_grid, "Source Images", str(stats['source']), "📸", 0, 0)
-        self.create_stat_card(stats_grid, "Augmented", str(stats['augmented']), "🎨", 0, 1)
-        self.create_stat_card(stats_grid, "Mosaics", str(stats['mosaics']), "🧩", 1, 0)
-        self.create_stat_card(stats_grid, "Dataset Size", stats['size'], "💾", 1, 1)
+        self.create_stat_card(stats_grid, "Source Images", str(stats['source']), "📸", 0, 0, 'source')
+        self.create_stat_card(stats_grid, "Augmented", str(stats['augmented']), "🎨", 0, 1, 'augmented')
+        self.create_stat_card(stats_grid, "Mosaics", str(stats['mosaics']), "🧩", 1, 0, 'mosaic')
+        self.create_stat_card(stats_grid, "Dataset Size", stats['size'], "💾", 1, 1, 'size')
         
         # Avertissement si environnement virtuel absent
         if not self.check_venv():
@@ -1821,7 +1824,7 @@ class ModernPokemonGUI:
         )
         activity_text.pack(anchor='w', padx=20, pady=(0, 20))
     
-    def create_stat_card(self, parent, label, value, icon, row, col):
+    def create_stat_card(self, parent, label, value, icon, row, col, key=None):
         """Créer une carte de statistique"""
         card = tk.Frame(parent, bg=self.colors['bg_card'], 
                        highlightbackground=self.colors['border'],
@@ -1848,6 +1851,10 @@ class ModernPokemonGUI:
             fg=self.colors['accent']
         )
         value_label.pack()
+        
+        # Stocker la référence si une clé est fournie
+        if key:
+            self.stat_cards[key] = value_label
         
         # Label
         label_label = tk.Label(card,
@@ -3306,6 +3313,40 @@ class ModernPokemonGUI:
         self.progress_label.config(text="Ready")
         self.progress_bar.stop()
         self.stop_button.config(state='disabled')
+    
+    def update_stats(self):
+        """Mettre à jour les statistiques du dashboard"""
+        try:
+            # Recalculer les stats
+            stats = self.get_real_stats()
+            
+            # Mettre à jour les cartes de stats si on est sur la vue home
+            if hasattr(self, 'stat_cards') and self.current_view == 'home':
+                # Mettre à jour les valeurs dans les cartes
+                if 'source' in self.stat_cards:
+                    self.stat_cards['source'].config(text=f"{stats['source']:,}")
+                if 'augmented' in self.stat_cards:
+                    self.stat_cards['augmented'].config(text=f"{stats['augmented']:,}")
+                if 'mosaic' in self.stat_cards:
+                    self.stat_cards['mosaic'].config(text=f"{stats['mosaic']:,}")
+                if 'size' in self.stat_cards:
+                    self.stat_cards['size'].config(text=stats['size'])
+            
+            # Mettre à jour le footer
+            self.update_footer_stats()
+            
+        except Exception as e:
+            self.log(f"⚠️ Erreur mise à jour stats: {e}")
+    
+    def update_footer_stats(self):
+        """Mettre à jour les stats du footer"""
+        try:
+            stats = self.get_real_stats()
+            footer_text = f"📊 Source: {stats['source']:,} | Augmented: {stats['augmented']:,} | Mosaic: {stats['mosaic']:,} | Size: {stats['size']}"
+            if hasattr(self, 'footer_stats_label'):
+                self.footer_stats_label.config(text=footer_text)
+        except Exception:
+            pass
     
     def stop_operation(self):
         """Arrêter l'opération en cours"""
