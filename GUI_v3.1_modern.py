@@ -43,7 +43,13 @@ class SettingsDialog:
         # Variables de configuration
         self.load_settings()
         
-        self.create_ui()
+        try:
+            self.create_ui()
+            print("✅ Settings dialog created successfully")
+        except Exception as e:
+            print(f"❌ Error creating Settings dialog: {e}")
+            import traceback
+            traceback.print_exc()
     
     def load_settings(self):
         """Charger les paramètres depuis gui_config.json"""
@@ -125,7 +131,7 @@ class SettingsDialog:
             command=self.save_settings,
             bg=colors['success'],
             fg='#000000',
-            font=self.FONT_BUTTON,
+            font=('Segoe UI', 10, 'bold'),
             relief='flat',
             padx=20,
             pady=8,
@@ -202,7 +208,7 @@ class SettingsDialog:
             command=self.dialog.destroy,
             bg=colors['bg_card'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             relief='flat',
             padx=30,
             pady=10,
@@ -223,7 +229,7 @@ class SettingsDialog:
             text="📁 Default Images Directory:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=0, column=0, sticky='w', pady=(0, 5))
         
         frame1 = tk.Frame(container, bg=colors['bg_dark'])
@@ -232,7 +238,7 @@ class SettingsDialog:
         tk.Entry(
             frame1,
             textvariable=self.default_images_dir,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -245,7 +251,7 @@ class SettingsDialog:
             command=lambda: self.browse_dir(self.default_images_dir),
             bg=colors['accent'],
             fg='#000000',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             relief='flat',
             padx=15,
             cursor='hand2'
@@ -257,7 +263,7 @@ class SettingsDialog:
             text="📤 Default Output Directory:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=2, column=0, sticky='w', pady=(0, 5))
         
         frame2 = tk.Frame(container, bg=colors['bg_dark'])
@@ -266,7 +272,7 @@ class SettingsDialog:
         tk.Entry(
             frame2,
             textvariable=self.default_output_dir,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -279,7 +285,7 @@ class SettingsDialog:
             command=lambda: self.browse_dir(self.default_output_dir),
             bg=colors['accent'],
             fg='#000000',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             relief='flat',
             padx=15,
             cursor='hand2'
@@ -291,7 +297,7 @@ class SettingsDialog:
             text="🎨 Augmented Output Directory:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=4, column=0, sticky='w', pady=(0, 5))
         
         frame3 = tk.Frame(container, bg=colors['bg_dark'])
@@ -300,7 +306,7 @@ class SettingsDialog:
         tk.Entry(
             frame3,
             textvariable=self.default_augmented_dir,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -313,7 +319,7 @@ class SettingsDialog:
             command=lambda: self.browse_dir(self.default_augmented_dir),
             bg=colors['accent'],
             fg='#000000',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             relief='flat',
             padx=15,
             cursor='hand2'
@@ -325,7 +331,7 @@ class SettingsDialog:
             text="🧩 Mosaic Output Directory:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=6, column=0, sticky='w', pady=(0, 5))
         
         frame4 = tk.Frame(container, bg=colors['bg_dark'])
@@ -334,7 +340,7 @@ class SettingsDialog:
         tk.Entry(
             frame4,
             textvariable=self.default_mosaic_dir,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -347,7 +353,7 @@ class SettingsDialog:
             command=lambda: self.browse_dir(self.default_mosaic_dir),
             bg=colors['accent'],
             fg='#000000',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             relief='flat',
             padx=15,
             cursor='hand2'
@@ -359,7 +365,7 @@ class SettingsDialog:
             text="🎲 Fake Images Output Directory:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=8, column=0, sticky='w', pady=(0, 5))
         
         frame5 = tk.Frame(container, bg=colors['bg_dark'])
@@ -368,7 +374,7 @@ class SettingsDialog:
         tk.Entry(
             frame5,
             textvariable=self.default_fakeimg_dir,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -381,7 +387,7 @@ class SettingsDialog:
             command=lambda: self.browse_dir(self.default_fakeimg_dir),
             bg=colors['accent'],
             fg='#000000',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             relief='flat',
             padx=15,
             cursor='hand2'
@@ -393,7 +399,7 @@ class SettingsDialog:
             text="✨ Holographic Output Directory:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=10, column=0, sticky='w', pady=(0, 5))
         
         frame6 = tk.Frame(container, bg=colors['bg_dark'])
@@ -402,7 +408,7 @@ class SettingsDialog:
         tk.Entry(
             frame6,
             textvariable=self.default_holographic_dir,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -415,7 +421,7 @@ class SettingsDialog:
             command=lambda: self.browse_dir(self.default_holographic_dir),
             bg=colors['accent'],
             fg='#000000',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             relief='flat',
             padx=15,
             cursor='hand2'
@@ -428,7 +434,7 @@ class SettingsDialog:
             variable=self.auto_save_logs,
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             selectcolor=colors['bg_card'],
             activebackground=colors['bg_dark'],
             activeforeground=colors['text']
@@ -441,7 +447,7 @@ class SettingsDialog:
             variable=self.enable_notifications,
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             selectcolor=colors['bg_card'],
             activebackground=colors['bg_dark'],
             activeforeground=colors['text']
@@ -462,7 +468,7 @@ class SettingsDialog:
             text="🎨 Default Number of Augmentations:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=0, column=0, sticky='w', pady=(0, 5))
         
         tk.Spinbox(
@@ -470,7 +476,7 @@ class SettingsDialog:
             from_=1,
             to=100,
             textvariable=self.default_augmentations,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -484,7 +490,7 @@ class SettingsDialog:
             text="✨ Default Augmentation Type:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=2, column=0, sticky='w', pady=(0, 5))
         
         aug_type_combo = ttk.Combobox(
@@ -492,7 +498,7 @@ class SettingsDialog:
             textvariable=self.default_augmentation_type,
             values=["standard", "holographic", "both"],
             state='readonly',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=18
         )
         aug_type_combo.grid(row=3, column=0, sticky='w', pady=(0, 20))
@@ -523,7 +529,7 @@ class SettingsDialog:
             text="Effect intensity:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=15,
             anchor='w'
         ).pack(side=tk.LEFT)
@@ -556,7 +562,7 @@ class SettingsDialog:
             text="Number of variations:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=15,
             anchor='w'
         ).pack(side=tk.LEFT)
@@ -566,7 +572,7 @@ class SettingsDialog:
             from_=1,
             to=10,
             textvariable=self.holographic_variations,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -589,7 +595,7 @@ class SettingsDialog:
             text="🧩 Default Mosaic Generation Mode:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=0, column=0, sticky='w', pady=(0, 5))
         
         mosaic_combo = ttk.Combobox(
@@ -597,7 +603,7 @@ class SettingsDialog:
             textvariable=self.default_mosaic_mode,
             values=["quick", "standard", "complete"],
             state='readonly',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=18
         )
         mosaic_combo.grid(row=1, column=0, sticky='w', pady=(0, 5))
@@ -618,7 +624,7 @@ class SettingsDialog:
             text="📐 Card Layout Mode:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=3, column=0, sticky='w', pady=(0, 5))
         
         layout_combo = ttk.Combobox(
@@ -626,7 +632,7 @@ class SettingsDialog:
             textvariable=self.default_mosaic_layout,
             values=["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement"],
             state='readonly',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=30
         )
         layout_combo.grid(row=4, column=0, sticky='w', pady=(0, 5))
@@ -646,7 +652,7 @@ class SettingsDialog:
             text="🎨 Background Mode:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=6, column=0, sticky='w', pady=(0, 5))
         
         bg_combo = ttk.Combobox(
@@ -654,7 +660,7 @@ class SettingsDialog:
             textvariable=self.default_mosaic_background,
             values=["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)", "2 - Web Image (Lorem Picsum)"],
             state='readonly',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=40
         )
         bg_combo.grid(row=7, column=0, sticky='w', pady=(0, 5))
@@ -674,7 +680,7 @@ class SettingsDialog:
             text="🔄 Transform Mode:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=9, column=0, sticky='w', pady=(0, 5))
         
         transform_combo = ttk.Combobox(
@@ -682,7 +688,7 @@ class SettingsDialog:
             textvariable=self.default_mosaic_transform,
             values=["0 - 2D Rotation", "1 - 3D Perspective Projection"],
             state='readonly',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=40
         )
         transform_combo.grid(row=10, column=0, sticky='w', pady=(0, 5))
@@ -711,13 +717,13 @@ class SettingsDialog:
             text="� Input Directory (source backgrounds):",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=0, column=0, sticky='w', pady=(0, 5))
         
         tk.Entry(
             container,
             textvariable=self.fakeimg_input_dir,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -730,13 +736,13 @@ class SettingsDialog:
             text="📁 Output Directory (augmented images):",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=2, column=0, sticky='w', pady=(0, 5))
         
         tk.Entry(
             container,
             textvariable=self.fakeimg_output_dir,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -750,7 +756,7 @@ class SettingsDialog:
             text="🎛️ Random Erasing Parameters:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=4, column=0, sticky='w', pady=(0, 10))
         
         # Probability (p)
@@ -762,7 +768,7 @@ class SettingsDialog:
             text="Probability (p):",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=15,
             anchor='w'
         ).pack(side=tk.LEFT)
@@ -773,7 +779,7 @@ class SettingsDialog:
             to=1.0,
             increment=0.1,
             textvariable=self.fakeimg_p,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -790,7 +796,7 @@ class SettingsDialog:
             text="Min Area (sl):",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=15,
             anchor='w'
         ).pack(side=tk.LEFT)
@@ -801,7 +807,7 @@ class SettingsDialog:
             to=1.0,
             increment=0.01,
             textvariable=self.fakeimg_sl,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -817,7 +823,7 @@ class SettingsDialog:
             text="Max Area (sh):",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=15,
             anchor='w'
         ).pack(side=tk.LEFT)
@@ -828,7 +834,7 @@ class SettingsDialog:
             to=1.0,
             increment=0.01,
             textvariable=self.fakeimg_sh,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -845,7 +851,7 @@ class SettingsDialog:
             text="Min Aspect (r1):",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=15,
             anchor='w'
         ).pack(side=tk.LEFT)
@@ -856,7 +862,7 @@ class SettingsDialog:
             to=5.0,
             increment=0.1,
             textvariable=self.fakeimg_r1,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -872,7 +878,7 @@ class SettingsDialog:
             text="Max Aspect (r2):",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=15,
             anchor='w'
         ).pack(side=tk.LEFT)
@@ -883,7 +889,7 @@ class SettingsDialog:
             to=10.0,
             increment=0.1,
             textvariable=self.fakeimg_r2,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -916,7 +922,7 @@ class SettingsDialog:
             text="🤖 Default YOLO Model:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=0, column=0, sticky='w', pady=(0, 5))
         
         model_combo = ttk.Combobox(
@@ -924,7 +930,7 @@ class SettingsDialog:
             textvariable=self.default_model,
             values=["yolov8n.pt", "yolov8s.pt", "yolov8m.pt", "yolov8l.pt", "yolov8x.pt"],
             state='readonly',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=18
         )
         model_combo.grid(row=1, column=0, sticky='w', pady=(0, 20))
@@ -935,7 +941,7 @@ class SettingsDialog:
             text="📊 Default Epochs:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=2, column=0, sticky='w', pady=(0, 5))
         
         tk.Spinbox(
@@ -943,7 +949,7 @@ class SettingsDialog:
             from_=1,
             to=1000,
             textvariable=self.default_epochs,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -957,7 +963,7 @@ class SettingsDialog:
             text="📦 Default Batch Size:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=4, column=0, sticky='w', pady=(0, 5))
         
         tk.Spinbox(
@@ -965,7 +971,7 @@ class SettingsDialog:
             from_=1,
             to=128,
             textvariable=self.default_batch,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -979,14 +985,14 @@ class SettingsDialog:
             text="💻 Default Device:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=6, column=0, sticky='w', pady=(0, 5))
         
         device_combo = ttk.Combobox(
             container,
             textvariable=self.default_device,
             values=["0", "cpu", "0,1", "0,1,2,3"],
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=18
         )
         device_combo.grid(row=7, column=0, sticky='w', pady=(0, 20))
@@ -1006,13 +1012,13 @@ class SettingsDialog:
             text="🔑 TCGdex API Key (optional):",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=0, column=0, sticky='w', pady=(0, 5))
         
         tk.Entry(
             container,
             textvariable=self.tcgdex_api_key,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -1043,7 +1049,7 @@ class SettingsDialog:
             text="💾 Default Output Directory:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=0, column=0, sticky='w', pady=(0, 5))
         
         dir_frame = tk.Frame(container, bg=colors['bg_dark'])
@@ -1052,7 +1058,7 @@ class SettingsDialog:
         download_dir_entry = tk.Entry(
             dir_frame,
             textvariable=self.default_download_dir,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
@@ -1066,7 +1072,7 @@ class SettingsDialog:
             command=lambda: self.browse_dir(self.default_download_dir),
             bg=colors['accent'],
             fg='#000000',
-            font=self.FONT_BUTTON,
+            font=self.app.FONT_BUTTON,
             relief='flat',
             padx=10,
             cursor='hand2'
@@ -1078,7 +1084,7 @@ class SettingsDialog:
             text="🌍 Default Language:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=2, column=0, sticky='w', pady=(0, 5))
         
         try:
@@ -1092,7 +1098,7 @@ class SettingsDialog:
             textvariable=self.default_download_lang,
             values=lang_choices,
             state='readonly',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=20
         )
         lang_combo.grid(row=3, column=0, sticky='w', pady=(0, 20))
@@ -1103,7 +1109,7 @@ class SettingsDialog:
             text="🎨 Default Quality:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=4, column=0, sticky='w', pady=(0, 5))
         
         quality_combo = ttk.Combobox(
@@ -1111,7 +1117,7 @@ class SettingsDialog:
             textvariable=self.default_download_quality,
             values=["high", "low"],
             state='readonly',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=15
         )
         quality_combo.grid(row=5, column=0, sticky='w', pady=(0, 5))
@@ -1130,7 +1136,7 @@ class SettingsDialog:
             text="📁 Default Format:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=7, column=0, sticky='w', pady=(0, 5))
         
         format_combo = ttk.Combobox(
@@ -1138,7 +1144,7 @@ class SettingsDialog:
             textvariable=self.default_download_format,
             values=["png", "jpg", "jpeg", "webp"],
             state='readonly',
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             width=18
         )
         format_combo.grid(row=8, column=0, sticky='w', pady=(0, 5))
@@ -1157,7 +1163,7 @@ class SettingsDialog:
             text="⚡ Default Parallel Workers:",
             bg=colors['bg_dark'],
             fg=colors['text'],
-            font=self.FONT_BUTTON
+            font=self.app.FONT_BUTTON
         ).grid(row=10, column=0, sticky='w', pady=(0, 5))
         
         workers_spinbox = tk.Spinbox(
@@ -1165,7 +1171,7 @@ class SettingsDialog:
             from_=1,
             to=16,
             textvariable=self.default_download_workers,
-            font=self.FONT_TEXT,
+            font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
