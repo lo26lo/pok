@@ -19,9 +19,9 @@ if not hasattr(np, 'bool'):
 if not hasattr(np, 'int'):
     np.int = np.int_
 if not hasattr(np, 'float'):
-    np.float = np.float_
+    np.float = np.float64
 if not hasattr(np, 'complex'):
-    np.complex = np.complex_
+    np.complex = np.complex128
 if not hasattr(np, 'object'):
     np.object = np.object_
 if not hasattr(np, 'str'):

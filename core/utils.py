@@ -22,17 +22,23 @@ _PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
 _PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
 
 
-def safe_print(message=""):
+def safe_print(*args, **kwargs):
     """
     Print avec gestion d'encodage pour Windows
     Évite les erreurs UnicodeEncodeError avec les emojis sur console Windows
+    Accepte les mêmes arguments que print()
     """
     try:
-        print(message)
+        print(*args, **kwargs)
     except UnicodeEncodeError:
         # Fallback: retirer les emojis et caractères non-ASCII
-        safe_message = message.encode('ascii', 'ignore').decode('ascii')
-        print(safe_message)
+        safe_args = []
+        for arg in args:
+            if isinstance(arg, str):
+                safe_args.append(arg.encode('ascii', 'ignore').decode('ascii'))
+            else:
+                safe_args.append(arg)
+        print(*safe_args, **kwargs)
 
 
 # Configuration globale
