@@ -80,11 +80,14 @@ class SettingsDialog:
         self.auto_save_logs = tk.BooleanVar(value=config.get("auto_save_logs", True))
         self.enable_notifications = tk.BooleanVar(value=config.get("enable_notifications", True))
         
-        # Fake image generation settings
-        self.fakeimg_count = tk.IntVar(value=config.get("fakeimg_count", 100))
-        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "fakeimg"))
-        self.fakeimg_min_noise = tk.IntVar(value=config.get("fakeimg_min_noise", 20))
-        self.fakeimg_max_noise = tk.IntVar(value=config.get("fakeimg_max_noise", 60))
+        # Fake image generation settings (random erasing)
+        self.fakeimg_input_dir = tk.StringVar(value=config.get("fakeimg_input_dir", "fakeimg"))
+        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "fakeimg_augmented"))
+        self.fakeimg_p = tk.DoubleVar(value=config.get("fakeimg_p", 0.5))
+        self.fakeimg_sl = tk.DoubleVar(value=config.get("fakeimg_sl", 0.02))
+        self.fakeimg_sh = tk.DoubleVar(value=config.get("fakeimg_sh", 0.4))
+        self.fakeimg_r1 = tk.DoubleVar(value=config.get("fakeimg_r1", 0.3))
+        self.fakeimg_r2 = tk.DoubleVar(value=config.get("fakeimg_r2", 3.3))
         
         # Image download settings
         self.default_download_dir = tk.StringVar(value=config.get("default_download_dir", "images"))
@@ -149,9 +152,9 @@ class SettingsDialog:
         notebook.add(mosaic_frame, text="  Mosaic  ")
         self.create_mosaic_tab(mosaic_frame)
         
-        # Onglet Fake Backgrounds
+        # Onglet Fake Images
         fake_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(fake_frame, text="  Fake Backgrounds  ")
+        notebook.add(fake_frame, text="  Fake Images  ")
         self.create_fakebackgrounds_tab(fake_frame)
         
         # Onglet Image Download
@@ -696,62 +699,80 @@ class SettingsDialog:
         container.grid_columnconfigure(0, weight=1)
     
     def create_fakebackgrounds_tab(self, parent):
-        """Onglet paramètres fake backgrounds"""
+        """Onglet paramètres fake images (random erasing)"""
         colors = self.app.colors
         
         container = tk.Frame(parent, bg=colors['bg_dark'])
         container.pack(fill='both', expand=True, padx=20, pady=20)
         
-        # Default count
+        # Input/Output directories
         tk.Label(
             container,
-            text="📋 Default Number of Fake Images:",
+            text="� Input Directory (source backgrounds):",
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=('Segoe UI', 10, 'bold')
         ).grid(row=0, column=0, sticky='w', pady=(0, 5))
         
-        tk.Spinbox(
+        tk.Entry(
             container,
-            from_=10,
-            to=1000,
-            textvariable=self.fakeimg_count,
+            textvariable=self.fakeimg_input_dir,
             font=('Segoe UI', 10),
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
             bd=2,
-            width=10
-        ).grid(row=1, column=0, sticky='w', pady=(0, 20))
+            width=30
+        ).grid(row=1, column=0, sticky='w', pady=(0, 15))
         
-        # Noise range section
         tk.Label(
             container,
-            text="🎛️ Noise Intensity Range:",
+            text="📁 Output Directory (augmented images):",
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=('Segoe UI', 10, 'bold')
-        ).grid(row=2, column=0, sticky='w', pady=(0, 10))
+        ).grid(row=2, column=0, sticky='w', pady=(0, 5))
         
-        # Min noise
-        min_frame = tk.Frame(container, bg=colors['bg_dark'])
-        min_frame.grid(row=3, column=0, sticky='w', pady=(0, 10))
+        tk.Entry(
+            container,
+            textvariable=self.fakeimg_output_dir,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=30
+        ).grid(row=3, column=0, sticky='w', pady=(0, 20))
+        
+        # Random Erasing Parameters
+        tk.Label(
+            container,
+            text="🎛️ Random Erasing Parameters:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=4, column=0, sticky='w', pady=(0, 10))
+        
+        # Probability (p)
+        p_frame = tk.Frame(container, bg=colors['bg_dark'])
+        p_frame.grid(row=5, column=0, sticky='w', pady=(0, 10))
         
         tk.Label(
-            min_frame,
-            text="Minimum:",
+            p_frame,
+            text="Probability (p):",
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=('Segoe UI', 10),
-            width=10,
+            width=15,
             anchor='w'
         ).pack(side=tk.LEFT)
         
         tk.Spinbox(
-            min_frame,
-            from_=0,
-            to=100,
-            textvariable=self.fakeimg_min_noise,
+            p_frame,
+            from_=0.0,
+            to=1.0,
+            increment=0.1,
+            textvariable=self.fakeimg_p,
             font=('Segoe UI', 10),
             bg='#FFFFFF',
             fg='#1a1a1a',
@@ -760,25 +781,108 @@ class SettingsDialog:
             width=8
         ).pack(side=tk.LEFT, padx=5)
         
-        # Max noise
-        max_frame = tk.Frame(container, bg=colors['bg_dark'])
-        max_frame.grid(row=4, column=0, sticky='w', pady=(0, 20))
+        # Area range (sl, sh)
+        sl_frame = tk.Frame(container, bg=colors['bg_dark'])
+        sl_frame.grid(row=6, column=0, sticky='w', pady=(0, 10))
         
         tk.Label(
-            max_frame,
-            text="Maximum:",
+            sl_frame,
+            text="Min Area (sl):",
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=('Segoe UI', 10),
-            width=10,
+            width=15,
             anchor='w'
         ).pack(side=tk.LEFT)
         
         tk.Spinbox(
-            max_frame,
-            from_=0,
-            to=100,
-            textvariable=self.fakeimg_max_noise,
+            sl_frame,
+            from_=0.01,
+            to=1.0,
+            increment=0.01,
+            textvariable=self.fakeimg_sl,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=8
+        ).pack(side=tk.LEFT, padx=5)
+        
+        sh_frame = tk.Frame(container, bg=colors['bg_dark'])
+        sh_frame.grid(row=7, column=0, sticky='w', pady=(0, 10))
+        
+        tk.Label(
+            sh_frame,
+            text="Max Area (sh):",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10),
+            width=15,
+            anchor='w'
+        ).pack(side=tk.LEFT)
+        
+        tk.Spinbox(
+            sh_frame,
+            from_=0.01,
+            to=1.0,
+            increment=0.01,
+            textvariable=self.fakeimg_sh,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=8
+        ).pack(side=tk.LEFT, padx=5)
+        
+        # Aspect ratio range (r1, r2)
+        r1_frame = tk.Frame(container, bg=colors['bg_dark'])
+        r1_frame.grid(row=8, column=0, sticky='w', pady=(0, 10))
+        
+        tk.Label(
+            r1_frame,
+            text="Min Aspect (r1):",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10),
+            width=15,
+            anchor='w'
+        ).pack(side=tk.LEFT)
+        
+        tk.Spinbox(
+            r1_frame,
+            from_=0.1,
+            to=5.0,
+            increment=0.1,
+            textvariable=self.fakeimg_r1,
+            font=('Segoe UI', 10),
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=8
+        ).pack(side=tk.LEFT, padx=5)
+        
+        r2_frame = tk.Frame(container, bg=colors['bg_dark'])
+        r2_frame.grid(row=9, column=0, sticky='w', pady=(0, 20))
+        
+        tk.Label(
+            r2_frame,
+            text="Max Aspect (r2):",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=('Segoe UI', 10),
+            width=15,
+            anchor='w'
+        ).pack(side=tk.LEFT)
+        
+        tk.Spinbox(
+            r2_frame,
+            from_=0.1,
+            to=10.0,
+            increment=0.1,
+            textvariable=self.fakeimg_r2,
             font=('Segoe UI', 10),
             bg='#FFFFFF',
             fg='#1a1a1a',
@@ -1110,10 +1214,13 @@ class SettingsDialog:
             "tcgdex_api_key": self.tcgdex_api_key.get(),
             "auto_save_logs": self.auto_save_logs.get(),
             "enable_notifications": self.enable_notifications.get(),
-            "fakeimg_count": self.fakeimg_count.get(),
+            "fakeimg_input_dir": self.fakeimg_input_dir.get(),
             "fakeimg_output_dir": self.fakeimg_output_dir.get(),
-            "fakeimg_min_noise": self.fakeimg_min_noise.get(),
-            "fakeimg_max_noise": self.fakeimg_max_noise.get(),
+            "fakeimg_p": self.fakeimg_p.get(),
+            "fakeimg_sl": self.fakeimg_sl.get(),
+            "fakeimg_sh": self.fakeimg_sh.get(),
+            "fakeimg_r1": self.fakeimg_r1.get(),
+            "fakeimg_r2": self.fakeimg_r2.get(),
             "default_download_dir": self.default_download_dir.get(),
             "default_download_lang": self.default_download_lang.get(),
             "default_download_quality": self.default_download_quality.get(),
@@ -1454,7 +1561,7 @@ class ModernPokemonGUI:
         self.create_nav_section(sidebar, "GENERATION")
         self.create_nav_button(sidebar, "download", "⬇️ Image Download", self.colors['text'])
         self.create_nav_button(sidebar, "augmentation", "🎨 Augmentation", self.colors['text'])
-        self.create_nav_button(sidebar, "fakeimg", "📋 Fake Backgrounds", self.colors['text'])
+        self.create_nav_button(sidebar, "fakeimg", "🎲 Fake Images", self.colors['text'])
         self.create_nav_button(sidebar, "mosaic", "🧩 Mosaics", self.colors['text'])
         
         # Séparateur
@@ -2223,13 +2330,13 @@ class ModernPokemonGUI:
                   width=30).pack(pady=5)
     
     def create_fakeimg_view(self):
-        """Vue génération de fake backgrounds"""
+        """Vue génération de fake images (random erasing)"""
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=30, pady=20)
         
         # Header
         title = tk.Label(container,
-            text="📋 Fake Background Generator",
+            text="🎲 Fake Image Generator",
             font=('Segoe UI', 24, 'bold'),
             bg=self.colors['bg_dark'],
             fg=self.colors['text']
@@ -2237,7 +2344,7 @@ class ModernPokemonGUI:
         title.pack(anchor='w', pady=(0, 10))
         
         subtitle = tk.Label(container,
-            text="Generate synthetic backgrounds for training data",
+            text="Apply random erasing to create synthetic fake images for mosaics",
             font=('Segoe UI', 11),
             bg=self.colors['bg_dark'],
             fg=self.colors['text_dim']
@@ -2260,15 +2367,15 @@ class ModernPokemonGUI:
         info_content.pack(fill=tk.X, padx=20, pady=20)
         
         tk.Label(info_content,
-            text="ℹ️ About Fake Backgrounds",
+            text="ℹ️ About Fake Images",
             font=('Segoe UI', 12, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['accent']
         ).pack(anchor='w', pady=(0, 10))
         
         tk.Label(info_content,
-            text="Fake backgrounds are synthetic images used to create realistic training mosaics.\n"
-                 "They simulate various surface textures and patterns to improve model generalization.",
+            text="Random erasing creates synthetic card-like images from backgrounds.\n"
+                 "These fake images are used as backgrounds in mosaic generation.",
             font=('Segoe UI', 10),
             bg=self.colors['bg_card'],
             fg=self.colors['text'],
@@ -2278,13 +2385,13 @@ class ModernPokemonGUI:
         
         # Stats
         try:
-            fakeimg_dir = "fakeimg"
-            if os.path.exists(fakeimg_dir):
-                count = len([f for f in os.listdir(fakeimg_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
-                stats_text = f"📊 Current: {count} fake backgrounds generated"
+            fakeimg_aug_dir = "fakeimg_augmented"
+            if os.path.exists(fakeimg_aug_dir):
+                count = len([f for f in os.listdir(fakeimg_aug_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
+                stats_text = f"📊 Current: {count} fake images generated"
                 stats_color = self.colors['success'] if count > 0 else self.colors['warning']
             else:
-                stats_text = "📊 No fake backgrounds generated yet"
+                stats_text = "📊 No fake images generated yet"
                 stats_color = self.colors['warning']
         except:
             stats_text = "📊 Unable to read statistics"
@@ -2302,7 +2409,7 @@ class ModernPokemonGUI:
         config_card.pack(fill=tk.BOTH, expand=True)
         
         card_title = tk.Label(config_card,
-            text="⚙️ Generation Settings",
+            text="⚙️ Random Erasing Settings",
             font=('Segoe UI', 14, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['text']
@@ -2312,70 +2419,93 @@ class ModernPokemonGUI:
         config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
         config_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
         
-        # Number of images
-        count_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        count_frame.pack(fill=tk.X, pady=10)
+        # Input directory
+        input_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        input_frame.pack(fill=tk.X, pady=5)
         
-        tk.Label(count_frame, text="Number of images:",
+        tk.Label(input_frame, text="Input directory:",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+                font=('Segoe UI', 10, 'bold'), width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_count_var = ttk.Spinbox(count_frame, from_=10, to=1000, width=10)
-        self.fakeimg_count_var.pack(side=tk.LEFT, padx=10)
-        self.fakeimg_count_var.set(100)
+        self.fakeimg_input_var = ttk.Entry(input_frame, width=25)
+        self.fakeimg_input_var.pack(side=tk.LEFT, padx=10)
+        self.fakeimg_input_var.insert(0, "fakeimg")
         
         # Output directory
         output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        output_frame.pack(fill=tk.X, pady=10)
+        output_frame.pack(fill=tk.X, pady=5)
         
         tk.Label(output_frame, text="Output directory:",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+                font=('Segoe UI', 10, 'bold'), width=15, anchor='w').pack(side=tk.LEFT)
         
         self.fakeimg_output_var = ttk.Entry(output_frame, width=25)
         self.fakeimg_output_var.pack(side=tk.LEFT, padx=10)
-        self.fakeimg_output_var.insert(0, "fakeimg")
+        self.fakeimg_output_var.insert(0, "fakeimg_augmented")
         
-        # Noise intensity
-        noise_label_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        noise_label_frame.pack(fill=tk.X, pady=(15, 5))
+        # Random Erasing Parameters
+        tk.Label(config_content,
+            text="Random Erasing Parameters:",
+            bg=self.colors['bg_card'], fg='#FFFFFF',
+            font=('Segoe UI', 10, 'bold')).pack(anchor='w', pady=(15, 10))
         
-        tk.Label(noise_label_frame, text="Noise Intensity Range:",
+        # Probability (p)
+        p_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        p_frame.pack(fill=tk.X, pady=3)
+        
+        tk.Label(p_frame, text="Probability (p):",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
+                font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
         
-        noise_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        noise_frame.pack(fill=tk.X, pady=5)
+        self.fakeimg_p_var = ttk.Spinbox(p_frame, from_=0.0, to=1.0, increment=0.1, width=8)
+        self.fakeimg_p_var.pack(side=tk.LEFT, padx=5)
+        self.fakeimg_p_var.set(0.5)
         
-        tk.Label(noise_frame, text="Min:",
+        # Area range (sl, sh)
+        sl_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        sl_frame.pack(fill=tk.X, pady=3)
+        
+        tk.Label(sl_frame, text="Min Area (sl):",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=(0, 5))
+                font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_min_noise_var = tk.IntVar(value=20)
-        min_scale = ttk.Scale(noise_frame, from_=0, to=100, 
-                             variable=self.fakeimg_min_noise_var, 
-                             orient='horizontal', length=200)
-        min_scale.pack(side=tk.LEFT, padx=5)
+        self.fakeimg_sl_var = ttk.Spinbox(sl_frame, from_=0.01, to=1.0, increment=0.01, width=8)
+        self.fakeimg_sl_var.pack(side=tk.LEFT, padx=5)
+        self.fakeimg_sl_var.set(0.02)
         
-        min_label = tk.Label(noise_frame, textvariable=self.fakeimg_min_noise_var,
-                            bg=self.colors['bg_card'], fg='#FFFFFF',
-                            width=3, font=('Segoe UI', 9, 'bold'))
-        min_label.pack(side=tk.LEFT, padx=5)
+        sh_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        sh_frame.pack(fill=tk.X, pady=3)
         
-        tk.Label(noise_frame, text="Max:",
+        tk.Label(sh_frame, text="Max Area (sh):",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=(20, 5))
+                font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
         
-        self.fakeimg_max_noise_var = tk.IntVar(value=60)
-        max_scale = ttk.Scale(noise_frame, from_=0, to=100, 
-                             variable=self.fakeimg_max_noise_var, 
-                             orient='horizontal', length=200)
-        max_scale.pack(side=tk.LEFT, padx=5)
+        self.fakeimg_sh_var = ttk.Spinbox(sh_frame, from_=0.01, to=1.0, increment=0.01, width=8)
+        self.fakeimg_sh_var.pack(side=tk.LEFT, padx=5)
+        self.fakeimg_sh_var.set(0.4)
         
-        max_label = tk.Label(noise_frame, textvariable=self.fakeimg_max_noise_var,
-                            bg=self.colors['bg_card'], fg='#FFFFFF',
-                            width=3, font=('Segoe UI', 9, 'bold'))
-        max_label.pack(side=tk.LEFT, padx=5)
+        # Aspect ratio range (r1, r2)
+        r1_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        r1_frame.pack(fill=tk.X, pady=3)
+        
+        tk.Label(r1_frame, text="Min Aspect (r1):",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
+        
+        self.fakeimg_r1_var = ttk.Spinbox(r1_frame, from_=0.1, to=5.0, increment=0.1, width=8)
+        self.fakeimg_r1_var.pack(side=tk.LEFT, padx=5)
+        self.fakeimg_r1_var.set(0.3)
+        
+        r2_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        r2_frame.pack(fill=tk.X, pady=3)
+        
+        tk.Label(r2_frame, text="Max Aspect (r2):",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=('Segoe UI', 9), width=15, anchor='w').pack(side=tk.LEFT)
+        
+        self.fakeimg_r2_var = ttk.Spinbox(r2_frame, from_=0.1, to=10.0, increment=0.1, width=8)
+        self.fakeimg_r2_var.pack(side=tk.LEFT, padx=5)
+        self.fakeimg_r2_var.set(3.3)
         
         # Right column: Tips Card
         tips_card = tk.Frame(main_frame, bg=self.colors['bg_card'])
@@ -2393,10 +2523,11 @@ class ModernPokemonGUI:
         tips_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
         
         tips = [
-            "• Generate 100-500 images for small datasets, 500-1000 for larger ones",
-            "• Lower noise values (20-40) create subtle textures",
-            "• Higher noise values (60-80) create more varied patterns",
-            "• Fake backgrounds are automatically used when generating mosaics"
+            "• Probability (p=0.5): 50% chance of applying erasing",
+            "• sl/sh: Min/max fraction of area to erase (0.02-0.4)",
+            "• r1/r2: Aspect ratio range for erased rectangle (0.3-3.3)",
+            "• Fake images are used as backgrounds in mosaic generation",
+            "• Generate backgrounds first with tools/generate_fake_backgrounds.py"
         ]
         
         for tip in tips:
@@ -2405,14 +2536,15 @@ class ModernPokemonGUI:
                 font=('Segoe UI', 10),
                 bg=self.colors['bg_card'],
                 fg=self.colors['text'],
-                justify='left'
+                justify='left',
+                wraplength=400
             ).pack(anchor='w', pady=5)
         
         # Button frame
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=20)
         
-        ttk.Button(btn_frame, text="📋 START GENERATION",
+        ttk.Button(btn_frame, text="🎲 GENERATE FAKE IMAGES",
                   style='Accent.TButton',
                   command=self.start_fake_generator_from_view,
                   width=30).pack(pady=5)
@@ -3007,7 +3139,7 @@ class ModernPokemonGUI:
                  cursor='hand2').pack(pady=5, fill=tk.X)
         
         tk.Button(right_col,
-                 text="📋 Clean Fake Backgrounds",
+                 text="🎲 Clean Fake Images",
                  command=self.clean_fakeimg,
                  bg=self.colors['bg_hover'],
                  fg=self.colors['text'],
@@ -4335,30 +4467,44 @@ Continuer ?"""
         ).pack(side='left', padx=5)
     
     def start_fake_generator_from_view(self):
-        """Générer fake backgrounds depuis la vue dédiée"""
+        """Générer fake images (random erasing) depuis la vue dédiée"""
         try:
-            count = int(self.fakeimg_count_var.get())
+            input_dir = self.fakeimg_input_var.get()
             output_dir = self.fakeimg_output_var.get()
-            min_noise = self.fakeimg_min_noise_var.get()
-            max_noise = self.fakeimg_max_noise_var.get()
+            p = float(self.fakeimg_p_var.get())
+            sl = float(self.fakeimg_sl_var.get())
+            sh = float(self.fakeimg_sh_var.get())
+            r1 = float(self.fakeimg_r1_var.get())
+            r2 = float(self.fakeimg_r2_var.get())
         except Exception as e:
             messagebox.showerror("Error", f"Invalid configuration:\n{e}")
             return
         
-        if min_noise >= max_noise:
-            messagebox.showerror("Error", "Min noise must be less than max noise!")
+        if not os.path.exists(input_dir):
+            messagebox.showerror("Error", f"Input directory '{input_dir}' does not exist!\nGenerate backgrounds first with tools/generate_fake_backgrounds.py")
             return
         
-        self.log(f"📋 Generating {count} fake backgrounds...")
-        self.start_operation("Fake Background Generation")
+        if sl >= sh:
+            messagebox.showerror("Error", "Min area (sl) must be less than max area (sh)!")
+            return
+        
+        if r1 >= r2:
+            messagebox.showerror("Error", "Min aspect (r1) must be less than max aspect (r2)!")
+            return
+        
+        self.log(f"🎲 Applying random erasing: {input_dir} → {output_dir}")
+        self.start_operation("Fake Image Generation")
         
         def task():
             try:
-                cmd = [sys.executable, "-u", "tools/generate_fake_backgrounds.py",
-                       "--count", str(count),
-                       "--output", output_dir,
-                       "--min-noise", str(min_noise),
-                       "--max-noise", str(max_noise)]
+                cmd = [sys.executable, "-u", "core/random_erasing.py",
+                       "--input_dir", input_dir,
+                       "--output_dir", output_dir,
+                       "--p", str(p),
+                       "--sl", str(sl),
+                       "--sh", str(sh),
+                       "--r1", str(r1),
+                       "--r2", str(r2)]
                 
                 process = subprocess.Popen(
                     cmd,
@@ -4377,8 +4523,15 @@ Continuer ?"""
                 process.wait()
                 
                 if process.returncode == 0:
-                    self.log(f"✅ {count} fake backgrounds generated in {output_dir}/")
-                    messagebox.showinfo("Success", f"Generated {count} fake backgrounds!")
+                    # Count generated files
+                    if os.path.exists(output_dir):
+                        count = len([f for f in os.listdir(output_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
+                        self.log(f"✅ {count} fake images generated in {output_dir}/")
+                        messagebox.showinfo("Success", f"Generated {count} fake images!")
+                    else:
+                        self.log(f"✅ Fake images generated in {output_dir}/")
+                        messagebox.showinfo("Success", "Fake images generated successfully!")
+                    
                     self.update_stats()
                     # Refresh view if still on fakeimg
                     if self.current_view == 'fakeimg':
@@ -5551,10 +5704,10 @@ Total: {images_count + aug_count + yolo_count} images"""
         """Nettoyer fakeimg/ et fakeimg_augmented/"""
         result = messagebox.askyesno(
             "Confirm Clean",
-            "⚠️ This will DELETE fake background folders!\n\n"
+            "⚠️ This will DELETE fake image folders!\n\n"
             "This includes:\n"
-            "• fakeimg/\n"
-            "• fakeimg_augmented/\n\n"
+            "• fakeimg/ (source backgrounds)\n"
+            "• fakeimg_augmented/ (generated fake images)\n\n"
             "Are you sure?",
             icon='warning'
         )
@@ -5580,7 +5733,7 @@ Total: {images_count + aug_count + yolo_count} images"""
                 self.log(f"✅ Deleted: {', '.join(deleted)}")
                 messagebox.showinfo("Success", f"Cleaned: {', '.join(deleted)}")
             else:
-                self.log("⚠️ Fake background folders not found")
+                self.log("⚠️ Fake image folders not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
             messagebox.showerror("Error", f"Failed to clean:\n{e}")
