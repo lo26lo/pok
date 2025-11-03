@@ -1298,6 +1298,9 @@ class ModernPokemonGUI:
         # Variables pour clean tools
         self.clean_include_images_var = tk.BooleanVar(value=False)
         
+        # Recent activities list (max 10 items)
+        self.recent_activities = []
+        
         # Chargement config
         self.load_config()
         
@@ -1911,7 +1914,7 @@ class ModernPokemonGUI:
         ttk.Button(buttons_frame, text="🎓 Train Model",
                   command=lambda: self.show_view('training')).pack(side=tk.LEFT, padx=5)
         
-        # Recent Activity (placeholder)
+        # Recent Activity
         activity_frame = tk.Frame(container, bg=self.colors['bg_card'])
         activity_frame.pack(fill=tk.BOTH, expand=True, pady=20)
         
@@ -1923,13 +1926,21 @@ class ModernPokemonGUI:
         )
         activity_title.pack(anchor='w', padx=20, pady=(20, 10))
         
-        activity_text = tk.Label(activity_frame,
+        # Container for activities
+        self.activity_container = tk.Frame(activity_frame, bg=self.colors['bg_card'])
+        self.activity_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
+        
+        # Initial placeholder
+        self.activity_placeholder = tk.Label(self.activity_container,
             text="No recent activity",
             font=('Segoe UI', 10),
             bg=self.colors['bg_card'],
             fg=self.colors['text_dim']
         )
-        activity_text.pack(anchor='w', padx=20, pady=(0, 20))
+        self.activity_placeholder.pack(anchor='w')
+        
+        # Update activities display
+        self.update_recent_activities()
     
     def create_stat_card(self, parent, label, value, icon, row, col, key=None):
         """Créer une carte de statistique"""
@@ -3429,6 +3440,54 @@ class ModernPokemonGUI:
             # Fallback pour console Windows avec encodage limité
             safe_log = log_message.encode('ascii', 'ignore').decode('ascii')
             print(safe_log.strip())
+        
+        # Enregistrer certaines activités importantes
+        if any(keyword in message for keyword in ['✅', '📥', '🎨', '🧩', '✓', '🎓', '📊']):
+            self.add_recent_activity(message)
+    
+    def add_recent_activity(self, message):
+        """Ajouter une activité à la liste des activités récentes"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        activity = f"[{timestamp}] {message}"
+        
+        # Ajouter au début de la liste
+        self.recent_activities.insert(0, activity)
+        
+        # Garder seulement les 10 dernières
+        self.recent_activities = self.recent_activities[:10]
+        
+        # Mettre à jour l'affichage
+        self.update_recent_activities()
+    
+    def update_recent_activities(self):
+        """Mettre à jour l'affichage des activités récentes dans le dashboard"""
+        if not hasattr(self, 'activity_container'):
+            return
+        
+        # Effacer le contenu actuel
+        for widget in self.activity_container.winfo_children():
+            widget.destroy()
+        
+        if not self.recent_activities:
+            # Afficher le placeholder
+            placeholder = tk.Label(self.activity_container,
+                text="No recent activity",
+                font=('Segoe UI', 10),
+                bg=self.colors['bg_card'],
+                fg=self.colors['text_dim']
+            )
+            placeholder.pack(anchor='w')
+        else:
+            # Afficher les activités
+            for activity in self.recent_activities[:5]:  # Afficher max 5 dans le dashboard
+                activity_label = tk.Label(self.activity_container,
+                    text=f"• {activity}",
+                    font=('Segoe UI', 9),
+                    bg=self.colors['bg_card'],
+                    fg=self.colors['text'],
+                    anchor='w'
+                )
+                activity_label.pack(anchor='w', pady=2)
     
     def start_operation(self, operation_name):
         """Démarrer une opération"""
