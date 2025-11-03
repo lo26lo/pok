@@ -81,7 +81,7 @@ class SettingsDialog:
         self.enable_notifications = tk.BooleanVar(value=config.get("enable_notifications", True))
         
         # Fake image generation settings (random erasing)
-        self.fakeimg_input_dir = tk.StringVar(value=config.get("fakeimg_input_dir", "fakeimg"))
+        self.fakeimg_input_dir = tk.StringVar(value=config.get("fakeimg_input_dir", "images"))
         self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "fakeimg_augmented"))
         self.fakeimg_p = tk.DoubleVar(value=config.get("fakeimg_p", 0.5))
         self.fakeimg_sl = tk.DoubleVar(value=config.get("fakeimg_sl", 0.02))
@@ -2374,8 +2374,8 @@ class ModernPokemonGUI:
         ).pack(anchor='w', pady=(0, 10))
         
         tk.Label(info_content,
-            text="Random erasing creates synthetic card-like images from backgrounds.\n"
-                 "These fake images are used as backgrounds in mosaic generation.",
+            text="Random erasing applies random rectangles to downloaded card images.\n"
+                 "These modified images are used as fake backgrounds in mosaic generation.",
             font=('Segoe UI', 10),
             bg=self.colors['bg_card'],
             fg=self.colors['text'],
@@ -2429,7 +2429,7 @@ class ModernPokemonGUI:
         
         self.fakeimg_input_var = ttk.Entry(input_frame, width=25)
         self.fakeimg_input_var.pack(side=tk.LEFT, padx=10)
-        self.fakeimg_input_var.insert(0, "fakeimg")
+        self.fakeimg_input_var.insert(0, "images")
         
         # Output directory
         output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
@@ -2523,11 +2523,11 @@ class ModernPokemonGUI:
         tips_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
         
         tips = [
-            "• Probability (p=0.5): 50% chance of applying erasing",
+            "• Uses downloaded card images as source (images/ folder)",
+            "• Probability (p=0.5): 50% chance of applying erasing per image",
             "• sl/sh: Min/max fraction of area to erase (0.02-0.4)",
             "• r1/r2: Aspect ratio range for erased rectangle (0.3-3.3)",
-            "• Fake images are used as backgrounds in mosaic generation",
-            "• Generate backgrounds first with tools/generate_fake_backgrounds.py"
+            "• Fake images are used as backgrounds in mosaic generation"
         ]
         
         for tip in tips:
@@ -4481,7 +4481,7 @@ Continuer ?"""
             return
         
         if not os.path.exists(input_dir):
-            messagebox.showerror("Error", f"Input directory '{input_dir}' does not exist!\nGenerate backgrounds first with tools/generate_fake_backgrounds.py")
+            messagebox.showerror("Error", f"Input directory '{input_dir}' does not exist!\nDownload card images first from the Image Download view.")
             return
         
         if sl >= sh:
@@ -5701,13 +5701,13 @@ Total: {images_count + aug_count + yolo_count} images"""
             messagebox.showerror("Error", f"Failed to clean:\n{e}")
     
     def clean_fakeimg(self):
-        """Nettoyer fakeimg/ et fakeimg_augmented/"""
+        """Nettoyer fakeimg_augmented/"""
         result = messagebox.askyesno(
             "Confirm Clean",
-            "⚠️ This will DELETE fake image folders!\n\n"
+            "⚠️ This will DELETE fake images folder!\n\n"
             "This includes:\n"
-            "• fakeimg/ (source backgrounds)\n"
             "• fakeimg_augmented/ (generated fake images)\n\n"
+            "Note: Source images in images/ folder will NOT be deleted.\n\n"
             "Are you sure?",
             icon='warning'
         )
@@ -5719,11 +5719,6 @@ Total: {images_count + aug_count + yolo_count} images"""
             import shutil
             deleted = []
             
-            fake_path = Path("fakeimg")
-            if fake_path.exists():
-                shutil.rmtree(fake_path)
-                deleted.append("fakeimg/")
-            
             fake_aug_path = Path("fakeimg_augmented")
             if fake_aug_path.exists():
                 shutil.rmtree(fake_aug_path)
@@ -5733,7 +5728,7 @@ Total: {images_count + aug_count + yolo_count} images"""
                 self.log(f"✅ Deleted: {', '.join(deleted)}")
                 messagebox.showinfo("Success", f"Cleaned: {', '.join(deleted)}")
             else:
-                self.log("⚠️ Fake image folders not found")
+                self.log("⚠️ Fake image folder not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
             messagebox.showerror("Error", f"Failed to clean:\n{e}")
@@ -5746,7 +5741,6 @@ Total: {images_count + aug_count + yolo_count} images"""
             "output/",
             "runs/",
             "images_holographic/",
-            "fakeimg/",
             "fakeimg_augmented/"
         ]
         
