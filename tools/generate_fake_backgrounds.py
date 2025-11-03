@@ -1,71 +1,91 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Script pour générer des images de fond (fake backgrounds) pour mosaic.py
+Compatible Windows avec encodage UTF-8
 """
 import cv2
 import numpy as np
 import os
+import sys
+import argparse
 
-FAKE_DIR = "fakeimg"
+# Forcer l'encodage UTF-8 pour Windows
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+# Parser les arguments
+parser = argparse.ArgumentParser(description='Generate fake background images')
+parser.add_argument('--count', type=int, default=100, help='Number of images to generate')
+parser.add_argument('--output', type=str, default='fakeimg', help='Output directory')
+parser.add_argument('--min-noise', type=int, default=20, help='Minimum noise intensity (0-100)')
+parser.add_argument('--max-noise', type=int, default=60, help='Maximum noise intensity (0-100)')
+args = parser.parse_args()
+
+FAKE_DIR = args.output
 os.makedirs(FAKE_DIR, exist_ok=True)
 
 # Taille des images de fond
 WIDTH, HEIGHT = 1920, 1080
 
-# 1. Fond blanc
-white = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8) * 255
-cv2.imwrite(os.path.join(FAKE_DIR, "white_bg.png"), white)
+print(f"[OK] Generating {args.count} fake backgrounds...")
+print(f"[OK] Output directory: {FAKE_DIR}")
+print(f"[OK] Noise range: {args.min_noise}-{args.max_noise}")
 
-# 2. Fond noir
-black = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
-cv2.imwrite(os.path.join(FAKE_DIR, "black_bg.png"), black)
+# Générer les images de base variées
+base_images = []
 
-# 3. Fond gris
-gray = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8) * 128
-cv2.imwrite(os.path.join(FAKE_DIR, "gray_bg.png"), gray)
+# 1-10. Fonds unis avec variations
+colors = [
+    (255, 255, 255),  # Blanc
+    (0, 0, 0),        # Noir
+    (128, 128, 128),  # Gris
+    (230, 200, 150),  # Bleu clair (BGR)
+    (180, 220, 180),  # Vert clair
+    (150, 150, 230),  # Rouge clair
+    (200, 230, 230),  # Jaune clair
+    (220, 180, 150),  # Cyan clair
+    (180, 150, 220),  # Magenta clair
+    (200, 200, 200),  # Gris clair
+]
 
-# 4. Fond bleu clair
-blue_light = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8)
-blue_light[:, :] = [230, 200, 150]  # BGR
-cv2.imwrite(os.path.join(FAKE_DIR, "blue_light_bg.png"), blue_light)
+for i, color in enumerate(colors):
+    img = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8)
+    img[:, :] = color
+    base_images.append(img)
 
-# 5. Fond vert clair
-green_light = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8)
-green_light[:, :] = [180, 220, 180]  # BGR
-cv2.imwrite(os.path.join(FAKE_DIR, "green_light_bg.png"), green_light)
+# 11-20. Gradients
+for i in range(10):
+    gradient = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
+    if i < 5:
+        # Gradients horizontaux
+        for x in range(WIDTH):
+            gradient[:, x] = int(255 * x / WIDTH)
+    else:
+        # Gradients verticaux
+        for y in range(HEIGHT):
+            gradient[y, :] = int(255 * y / HEIGHT)
+    base_images.append(gradient)
 
-# 6. Texture bruit aléatoire
-noise = np.random.randint(100, 200, (HEIGHT, WIDTH, 3), dtype=np.uint8)
-cv2.imwrite(os.path.join(FAKE_DIR, "noise_bg.png"), noise)
+# Générer le nombre demandé d'images avec variations
+for idx in range(args.count):
+    # Choisir une image de base
+    base_img = base_images[idx % len(base_images)].copy()
+    
+    # Ajouter du bruit aléatoire
+    noise_intensity = np.random.randint(args.min_noise, args.max_noise)
+    noise = np.random.randint(-noise_intensity, noise_intensity, base_img.shape, dtype=np.int16)
+    img_with_noise = np.clip(base_img.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+    
+    # Sauvegarder
+    filename = os.path.join(FAKE_DIR, f"fake_bg_{idx:04d}.png")
+    cv2.imwrite(filename, img_with_noise)
+    
+    # Afficher la progression tous les 10%
+    if (idx + 1) % max(1, args.count // 10) == 0:
+        progress = int((idx + 1) / args.count * 100)
+        print(f"[{progress:3d}%] Generated {idx + 1}/{args.count} images")
 
-# 7. Dégradé horizontal
-gradient_h = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
-for i in range(WIDTH):
-    gradient_h[:, i] = int(255 * i / WIDTH)
-cv2.imwrite(os.path.join(FAKE_DIR, "gradient_h_bg.png"), gradient_h)
-
-# 8. Dégradé vertical
-gradient_v = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
-for i in range(HEIGHT):
-    gradient_v[i, :] = int(255 * i / HEIGHT)
-cv2.imwrite(os.path.join(FAKE_DIR, "gradient_v_bg.png"), gradient_v)
-
-# 9. Texture damier
-checker = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
-square_size = 100
-for i in range(0, HEIGHT, square_size):
-    for j in range(0, WIDTH, square_size):
-        if ((i // square_size) + (j // square_size)) % 2 == 0:
-            checker[i:i+square_size, j:j+square_size] = 255
-        else:
-            checker[i:i+square_size, j:j+square_size] = 200
-cv2.imwrite(os.path.join(FAKE_DIR, "checker_bg.png"), checker)
-
-# 10. Fond avec motif circulaire
-circles = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8) * 220
-center_x, center_y = WIDTH // 2, HEIGHT // 2
-for radius in range(50, min(WIDTH, HEIGHT) // 2, 100):
-    cv2.circle(circles, (center_x, center_y), radius, (180, 180, 180), 2)
-cv2.imwrite(os.path.join(FAKE_DIR, "circles_bg.png"), circles)
-
-print(f"✓ 10 images de fond générées dans '{FAKE_DIR}/'")
+print(f"[OK] {args.count} fake backgrounds generated in '{FAKE_DIR}/'")
