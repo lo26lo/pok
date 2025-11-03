@@ -6,11 +6,11 @@ echo.
 echo Parametres: layout_mode=1, background_mode=0, transform_mode=0
 echo.
 
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 call .venv\Scripts\activate.bat
 
 echo Lancement de mosaic.py...
-python mosaic.py 1 0 0
+python core\mosaic.py 1 0 0
 
 echo.
 echo ========================================

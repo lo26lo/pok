@@ -277,5 +277,5 @@ Cependant, le **GUI v3.0** a introduit de **nombreuses améliorations** non docu
 
 **Vérifié par:** GitHub Copilot  
 **Version GUI:** v3.0 (commit 9251bf4)  
-**Dernière MAJ guide:** 29 octobre 2025  
+**Dernière MAJ guide:** 2 novembre 2025  
 **Dernière MAJ GUI:** 2 novembre 2025

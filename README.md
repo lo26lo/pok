@@ -93,7 +93,7 @@ Complete dataset with bounding boxes
 
 ### ⬇️ Image Download (NEW)
 - **TCGdex API Integration**: Download card images directly
-- **20 Popular Sets**: Quick selection dropdown
+- **200+ Pokemon Sets**: Dynamic loading from TCGdex API
 - **Manual Entry**: Support for any set name/ID
 - **Multi-language**: 10 languages (EN, FR, DE, IT, ES, PT, JA, KO, ZH, TH)
 - **Quality Options**: High/Low resolution

@@ -15,8 +15,8 @@ from pathlib import Path
 
 def check_working_directory():
     """Vérifie qu'on est dans le bon répertoire"""
-    if not os.path.exists("GUI_v2.py"):
-        print("❌ Erreur : GUI_v2.py non trouvé")
+    if not os.path.exists("GUI_v3_modern.py"):
+        print("❌ Erreur : GUI_v3_modern.py non trouvé")
         print("\n⚠️  Ce script doit être exécuté depuis la RACINE du projet :")
         print("   cd C:\\Users\\...\\Pokemons")
         print("   python tools\\create_exe.py")
@@ -94,7 +94,7 @@ def create_exe():
         cmd.append("--icon=pikachu.ico")
         print("   🎨 Icône Pikachu détectée et ajoutée !")
     
-    cmd.append("GUI_v2.py")
+    cmd.append("GUI_v3_modern.py")
     
     try:
         subprocess.check_call(cmd)
@@ -192,8 +192,8 @@ def main():
     print()
     
     # Vérifier qu'on est dans le bon dossier
-    if not os.path.exists("GUI_v2.py"):
-        print("❌ Erreur : GUI_v2.py non trouvé")
+    if not os.path.exists("GUI_v3_modern.py"):
+        print("❌ Erreur : GUI_v3_modern.py non trouvé")
         print("   Lancez ce script depuis le dossier Pokemons/")
         input("\nAppuyez sur Entrée pour quitter...")
         return

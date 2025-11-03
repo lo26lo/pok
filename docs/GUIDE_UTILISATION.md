@@ -410,31 +410,38 @@ Dans le **Settings Dialog** → Onglet **"Fake Backgrounds"** :
 
 ---
 
-### 📦 Méthode alternative : Random Erasing (ancienne méthode)
+### 🎲 Fake Backgrounds (Nouvelle Interface)
 
-**Note** : Méthode toujours disponible mais moins flexible que le nouveau générateur.
+**Via GUI v3.0:**
+1. Cliquer sur "🎲 Fake Backgrounds" dans la sidebar
+2. Configurer:
+   - **Nombre d'images** (défaut: 100)
+   - **Output directory** (défaut: `fakeimg`)
+   - **Min noise** (défaut: 20) - Valeurs basses = textures subtiles
+   - **Max noise** (défaut: 60) - Valeurs hautes = motifs variés
+3. Cliquer "🎲 GENERATE FAKE BACKGROUNDS"
+4. Vérifier les logs et le dossier de sortie
 
-### Script : `randomerasing.py` + `generate_fakeimages.bat`
-
-Crée des fausses cartes Pokémon en copiant 20 cartes aléatoires depuis `images/` vers `fakeimg/`, puis applique Random Erasing pour les modifier.
-
-### Utilisation via batch
-```batch
-.\generate_fakeimages.bat
+**Via CLI:**
+```bash
+python tools/generate_fake_backgrounds.py --count 100 --output fakeimg --min-noise 20 --max-noise 60
 ```
 
-**Processus automatique** :
-1. Nettoie le répertoire `fakeimg/`
-2. Copie 20 cartes aléatoires depuis `images/`
-3. Applique Random Erasing (probabilité 80%, effacement jusqu'à 50%)
-4. Sauvegarde les versions modifiées dans `fakeimg_augmented/`
+**Paramètres disponibles:**
+- `--count` : Nombre d'images à générer (défaut: 100)
+- `--output` : Répertoire de sortie (défaut: `fakeimg`)
+- `--min-noise` : Intensité minimale du bruit (0-100, défaut: 20)
+- `--max-noise` : Intensité maximale du bruit (0-100, défaut: 60)
 
-**Important** : `mosaic.py` utilise les images de `fakeimg/` (pas `fakeimg_augmented/`)
+**💡 Tips:**
+- Générer 100-500 images pour petits datasets, 500-1000 pour plus grands
+- Valeurs basses (20-40) : textures subtiles
+- Valeurs hautes (60-80) : motifs plus variés
+- Les fake backgrounds sont automatiquement utilisés lors de la génération de mosaïques
 
-### Utilisation directe de randomerasing.py
-```batch
-.\run_with_env.bat randomerasing.py --input_dir fakeimg --output_dir fakeimg_augmented --p 0.8
-```
+**⚠️ Ancienne méthode (obsolète):**
+- ~~`randomerasing.py`~~ : Remplacé par `generate_fake_backgrounds.py`
+- ~~`generate_fakeimages.bat`~~ : Remplacé par la vue GUI dédiée
 
 ---
 
@@ -442,9 +449,9 @@ Crée des fausses cartes Pokémon en copiant 20 cartes aléatoires depuis `image
 
 ### Test d'augmentation
 ```batch
-.\test_augmentation.bat
+.\tools\test_augmentation.bat
 ```
-Génère 2 augmentations pour vérifier que tout fonctionne.
+Génère 5 augmentations pour vérifier que tout fonctionne.
 
 ### Test de mosaïque
 ```batch
@@ -566,13 +573,10 @@ Lance un script Python avec l'environnement activé.
 .\run_with_env.bat <script.py> [arguments]
 ```
 
-### `generate_fakeimages.bat`
-Génère automatiquement 10 images de fond dans `fakeimg/`.
+### `tools/test_augmentation.bat`
+Test rapide de l'augmentation (5 augmentations par carte).
 
-### `test_augmentation.bat`
-Test rapide de l'augmentation (2 augmentations).
-
-### `test_mosaic.bat`
+### `tools/test_mosaic.bat`
 Test rapide des mosaïques.
 
 ### `fix_install.bat`

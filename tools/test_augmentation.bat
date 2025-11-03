@@ -4,7 +4,7 @@ echo   Test Augmentation Rapide (5 images)
 echo ========================================
 echo.
 
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 
 if not exist ".venv\Scripts\activate.bat" (
     echo [ERREUR] Environnement virtuel non trouve!
@@ -19,7 +19,7 @@ call .venv\Scripts\activate
 echo [OK] Lancement augmentation (5 images par carte)...
 echo.
 
-python augmentation.py --num_aug 5 --target augmented
+python core\augmentation.py --num_aug 5 --target augmented
 
 echo.
 if %ERRORLEVEL% EQU 0 (

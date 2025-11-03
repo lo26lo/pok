@@ -6,6 +6,36 @@
         "output_mosaic": "output\\yolov8",
         "excel_file": "cards_info.xlsx"
     },
+    "defaults": {
+        "images_dir": "images",
+        "output_dir": "output",
+        "augmented_dir": "augmented",
+        "mosaic_dir": "output/yolov8",
+        "fakeimg_dir": "fakeimg",
+        "holographic_dir": "images_holographic",
+        "augmentations": 15,
+        "augmentation_type": "standard",
+        "mosaic_mode": "standard",
+        "mosaic_layout": 1,
+        "mosaic_background": 1,
+        "mosaic_transform": 0,
+        "model": "yolov8n.pt",
+        "epochs": 50,
+        "batch": 16,
+        "device": "0",
+        "download_dir": "images",
+        "download_lang": "English",
+        "download_quality": "high",
+        "download_format": "png",
+        "download_workers": 8,
+        "fake_count": 100,
+        "fake_noise_min": 20,
+        "fake_noise_max": 60
+    },
+    "holographic": {
+        "intensity": 0.7,
+        "variations": 3
+    },
     "last_used": {
         "num_aug": 5,
         "target": "augmented",
@@ -14,5 +44,12 @@
         "transform_mode": 0,
         "random_erasing_p": 0.2
     },
-    "theme": "light"
+    "settings": {
+        "auto_save_logs": true,
+        "enable_notifications": true
+    },
+    "theme": "light",
+    "api_keys": {
+        "tcgdex": ""
+    }
 }
