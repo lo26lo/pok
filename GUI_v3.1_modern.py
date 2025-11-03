@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 GUI Ultra-Moderne pour Pokemon Dataset Generator
 Version 3.0 - Interface Professionnelle avec Sidebar + Dashboard
@@ -1886,7 +1886,7 @@ class ModernPokemonGUI:
             ).pack(anchor='w')
             
             tk.Label(warning_content2,
-                text="File 'cards_info.xlsx' not found. This file is needed for some features.\nClick below to generate a card list from the TCGdex API.",
+                text="File 'excel/cards_info.xlsx' not found. This file is needed for some features.\nClick below to generate a card list from the TCGdex API.",
                 font=('Segoe UI', 9),
                 bg=self.colors['warning'],
                 fg='#000000'
@@ -3618,7 +3618,7 @@ class ModernPokemonGUI:
     
     def check_excel_file(self):
         """Vérifier si le fichier Excel des cartes existe"""
-        excel_path = Path("cards_info.xlsx")
+        excel_path = Path("excel/cards_info.xlsx")
         return excel_path.exists()
     
     def create_sample_excel(self):
@@ -3634,7 +3634,7 @@ class ModernPokemonGUI:
             }
             
             df = pd.DataFrame(sample_data)
-            df.to_excel("cards_info.xlsx", index=False)
+            df.to_excel("excel/cards_info.xlsx", index=False)
             
             self.log("✅ Fichier cards_info.xlsx créé avec succès!")
             messagebox.showinfo(
@@ -5382,7 +5382,7 @@ Total: {images_count + aug_count + yolo_count} images"""
             fg=self.colors['text']
         ).pack(anchor='w', padx=15, pady=(5, 2))
         
-        extension_output_var = tk.StringVar(value="cards_list.xlsx")
+        extension_output_var = tk.StringVar(value="excel/cards_list.xlsx")
         tk.Entry(
             section1,
             textvariable=extension_output_var,
@@ -5437,7 +5437,7 @@ Total: {images_count + aug_count + yolo_count} images"""
         price_input_frame = tk.Frame(section2, bg=self.colors['bg_card'])
         price_input_frame.pack(fill='x', padx=15, pady=(0, 10))
         
-        price_input_var = tk.StringVar(value="cards_info.xlsx")
+        price_input_var = tk.StringVar(value="excel/cards_info.xlsx")
         tk.Entry(
             price_input_frame,
             textvariable=price_input_var,
@@ -5476,7 +5476,7 @@ Total: {images_count + aug_count + yolo_count} images"""
             fg=self.colors['text']
         ).pack(anchor='w', padx=15, pady=(5, 2))
         
-        price_output_var = tk.StringVar(value="cards_with_prices.xlsx")
+        price_output_var = tk.StringVar(value="excel/cards_with_prices.xlsx")
         tk.Entry(
             section2,
             textvariable=price_output_var,
