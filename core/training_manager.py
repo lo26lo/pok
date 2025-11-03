@@ -42,6 +42,8 @@ class TrainingConfig:
     batch_size: int = 16
     image_size: int = 640
     device: str = "0"  # "0", "cpu", "0,1,2,3"
+    workers: int = 4  # Nombre de workers pour le dataloader
+    cache: str = "False"  # False, ram, disk
     
     # Chemins
     data_yaml: Path = Path("output/yolov8/data.yaml")
@@ -55,6 +57,8 @@ class TrainingConfig:
     pretrained: bool = True
     optimizer: str = "SGD"  # SGD, Adam, AdamW
     lr0: float = 0.01  # Learning rate initial
+    lrf: float = 0.01  # Learning rate final (fraction de lr0)
+    cos_lr: bool = False  # Utiliser cosine LR scheduler
     
     # Augmentation
     augment: bool = True
@@ -138,6 +142,10 @@ class TrainingManager:
             self._log(f"   Batch: {self.config.batch_size}")
             self._log(f"   Image Size: {self.config.image_size}")
             self._log(f"   Device: {self.config.device}")
+            self._log(f"   Workers: {self.config.workers}")
+            self._log(f"   Cache: {self.config.cache}")
+            if self.config.cos_lr:
+                self._log(f"   LR: {self.config.lr0} → {self.config.lrf} (Cosine)")
             self._log(f"   Data: {self.config.data_yaml}")
             
             # Charger le modèle pré-entraîné
@@ -150,6 +158,8 @@ class TrainingManager:
                 imgsz=self.config.image_size,
                 batch=self.config.batch_size,
                 device=self.config.device,
+                workers=self.config.workers,
+                cache=self.config.cache if self.config.cache != "False" else False,
                 patience=self.config.patience,
                 save=True,
                 save_period=self.config.save_period,
@@ -159,6 +169,8 @@ class TrainingManager:
                 pretrained=self.config.pretrained,
                 optimizer=self.config.optimizer,
                 lr0=self.config.lr0,
+                lrf=self.config.lrf,
+                cos_lr=self.config.cos_lr,
                 # Augmentations
                 augment=self.config.augment,
                 hsv_h=self.config.hsv_h,

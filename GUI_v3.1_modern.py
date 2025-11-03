@@ -2850,13 +2850,67 @@ class ModernPokemonGUI:
         config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
         config_content.pack(fill=tk.X, padx=40, pady=(0, 20))
         
+        # System Configuration Selector
+        system_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        system_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(system_frame, text="💻 System Config:", 
+                bg=self.colors['bg_card'], fg='#89B4FA',
+                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+        
+        self.train_system_var = ttk.Combobox(system_frame,
+            values=[
+                "🖥️ Desktop: 5800X3D + 5070 Ti 16GB",
+                "💼 Laptop: Ryzen AI 7 350 + 5070 8GB"
+            ],
+            state='readonly', width=35)
+        self.train_system_var.pack(side=tk.LEFT, padx=10)
+        self.train_system_var.current(0)
+        self.train_system_var.bind('<<ComboboxSelected>>', self.update_training_presets)
+        
+        # Preset Configuration
+        preset_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        preset_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(preset_frame, text="💡 Training Preset:", 
+                bg=self.colors['bg_card'], fg='#89B4FA',
+                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+        
+        self.train_preset_var = ttk.Combobox(preset_frame,
+            values=[
+                "Custom",
+                "⚡ Fast & Efficient",
+                "⚖️ Balanced", 
+                "🎯 High Quality"
+            ],
+            state='readonly', width=30)
+        self.train_preset_var.pack(side=tk.LEFT, padx=10)
+        self.train_preset_var.current(0)
+        self.train_preset_var.bind('<<ComboboxSelected>>', self.apply_training_preset)
+        
+        # Separator
+        separator = tk.Frame(config_content, bg=self.colors['text_dim'], height=1)
+        separator.pack(fill=tk.X, pady=15)
+        
+        # Two columns layout: Basic (left) and Advanced (right)
+        columns_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        columns_frame.pack(fill=tk.X)
+        
+        # Left column - Basic parameters
+        left_column = tk.Frame(columns_frame, bg=self.colors['bg_card'])
+        left_column.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 20))
+        
+        tk.Label(left_column, text="📊 Basic Parameters",
+                bg=self.colors['bg_card'], fg='#89B4FA',
+                font=self.FONT_BUTTON).pack(anchor='w', pady=(0, 10))
+        
         # Model
-        model_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        model_frame.pack(fill=tk.X, pady=10)
+        model_frame = tk.Frame(left_column, bg=self.colors['bg_card'])
+        model_frame.pack(fill=tk.X, pady=5)
         
         tk.Label(model_frame, text="Model:", 
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+                font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
         
         self.train_model_var = ttk.Combobox(model_frame,
             values=["yolov8n.pt", "yolov8s.pt", "yolov8m.pt", "yolov8l.pt"],
@@ -2865,42 +2919,137 @@ class ModernPokemonGUI:
         self.train_model_var.current(0)
         
         # Epochs
-        epochs_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        epochs_frame.pack(fill=tk.X, pady=10)
+        epochs_frame = tk.Frame(left_column, bg=self.colors['bg_card'])
+        epochs_frame.pack(fill=tk.X, pady=5)
         
         tk.Label(epochs_frame, text="Epochs:",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+                font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
         
         self.train_epochs_var = ttk.Spinbox(epochs_frame, from_=10, to=500, width=self.SPINBOX_WIDTH)
         self.train_epochs_var.pack(side=tk.LEFT, padx=10)
         self.train_epochs_var.set(50)
         
         # Batch size
-        batch_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        batch_frame.pack(fill=tk.X, pady=10)
+        batch_frame = tk.Frame(left_column, bg=self.colors['bg_card'])
+        batch_frame.pack(fill=tk.X, pady=5)
         
         tk.Label(batch_frame, text="Batch Size:",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+                font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
         
         self.train_batch_var = ttk.Spinbox(batch_frame, from_=4, to=64, width=self.SPINBOX_WIDTH)
         self.train_batch_var.pack(side=tk.LEFT, padx=10)
         self.train_batch_var.set(16)
         
         # Device
-        device_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        device_frame.pack(fill=tk.X, pady=10)
+        device_frame = tk.Frame(left_column, bg=self.colors['bg_card'])
+        device_frame.pack(fill=tk.X, pady=5)
         
         tk.Label(device_frame, text="Device:",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+                font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
         
         self.train_device_var = ttk.Combobox(device_frame,
             values=["0", "cpu", "0,1", "0,1,2,3"],
             state='readonly', width=self.COMBOBOX_WIDTH)
         self.train_device_var.pack(side=tk.LEFT, padx=10)
         self.train_device_var.current(0)
+        
+        # Image size
+        imgsz_frame = tk.Frame(left_column, bg=self.colors['bg_card'])
+        imgsz_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(imgsz_frame, text="Image Size:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
+        
+        self.train_imgsz_var = ttk.Combobox(imgsz_frame,
+            values=["320", "416", "512", "640", "800", "1024"],
+            state='readonly', width=self.COMBOBOX_WIDTH)
+        self.train_imgsz_var.pack(side=tk.LEFT, padx=10)
+        self.train_imgsz_var.current(3)  # 640 default
+        
+        # Workers
+        workers_frame = tk.Frame(left_column, bg=self.colors['bg_card'])
+        workers_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(workers_frame, text="Workers:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
+        
+        self.train_workers_var = ttk.Spinbox(workers_frame, from_=1, to=16, width=self.SPINBOX_WIDTH)
+        self.train_workers_var.pack(side=tk.LEFT, padx=10)
+        self.train_workers_var.set(4)
+        
+        # Cache
+        cache_frame = tk.Frame(left_column, bg=self.colors['bg_card'])
+        cache_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(cache_frame, text="Cache:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
+        
+        self.train_cache_var = ttk.Combobox(cache_frame,
+            values=["False", "ram", "disk"],
+            state='readonly', width=self.COMBOBOX_WIDTH)
+        self.train_cache_var.pack(side=tk.LEFT, padx=10)
+        self.train_cache_var.current(0)
+        
+        # Right column - Advanced parameters
+        right_column = tk.Frame(columns_frame, bg=self.colors['bg_card'])
+        right_column.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        tk.Label(right_column, text="🔧 Advanced Options",
+                bg=self.colors['bg_card'], fg='#F9E2AF',
+                font=self.FONT_BUTTON).pack(anchor='w', pady=(0, 10))
+        
+        # LR0
+        lr0_frame = tk.Frame(right_column, bg=self.colors['bg_card'])
+        lr0_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(lr0_frame, text="Learning Rate (lr0):",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON, width=18, anchor='w').pack(side=tk.LEFT)
+        
+        self.train_lr0_var = ttk.Entry(lr0_frame, width=8)
+        self.train_lr0_var.pack(side=tk.LEFT, padx=10)
+        self.train_lr0_var.insert(0, "0.01")
+        
+        # LRF
+        lrf_frame = tk.Frame(right_column, bg=self.colors['bg_card'])
+        lrf_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(lrf_frame, text="Final LR (lrf):",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON, width=18, anchor='w').pack(side=tk.LEFT)
+        
+        self.train_lrf_var = ttk.Entry(lrf_frame, width=8)
+        self.train_lrf_var.pack(side=tk.LEFT, padx=10)
+        self.train_lrf_var.insert(0, "0.01")
+        
+        # Patience
+        patience_frame = tk.Frame(right_column, bg=self.colors['bg_card'])
+        patience_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(patience_frame, text="Early Stop Patience:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON, width=18, anchor='w').pack(side=tk.LEFT)
+        
+        self.train_patience_var = ttk.Spinbox(patience_frame, from_=0, to=100, width=self.SPINBOX_WIDTH)
+        self.train_patience_var.pack(side=tk.LEFT, padx=10)
+        self.train_patience_var.set(20)
+        
+        # Cosine LR
+        self.train_cosine_var = tk.BooleanVar(value=False)
+        cosine_check = tk.Checkbutton(right_column,
+            text="✓ Use Cosine LR Scheduler",
+            variable=self.train_cosine_var,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text'],
+            selectcolor=self.colors['bg_dark'],
+            font=self.FONT_BUTTON)
+        cosine_check.pack(anchor='w', pady=(10, 5))
         
         # Buttons
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
@@ -2914,6 +3063,121 @@ class ModernPokemonGUI:
         ttk.Button(btn_frame, text="📊 View Results",
                   command=self.show_training_plots,
                   width=30).pack(pady=5)
+    
+    def update_training_presets(self, event=None):
+        """Mettre à jour la description des presets selon la config système"""
+        system = self.train_system_var.get()
+        
+        # Réinitialiser le preset à Custom
+        self.train_preset_var.set("Custom")
+    
+    def apply_training_preset(self, event=None):
+        """Appliquer les configurations preset optimisées selon le système"""
+        preset = self.train_preset_var.get()
+        system = self.train_system_var.get()
+        
+        if preset == "Custom":
+            return
+        
+        # Desktop: 5800X3D + 5070 Ti 16GB (16GB VRAM)
+        if "Desktop" in system:
+            if preset == "⚡ Fast & Efficient":
+                # yolov8n.pt, 512px, batch 32, 50 epochs, cache=ram
+                self.train_model_var.current(0)  # yolov8n.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "50")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "32")
+                self.train_imgsz_var.set("512")
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "4")
+                self.train_cache_var.set("ram")
+                self.train_cosine_var.set(False)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "50")
+                self.log("✅ Desktop Fast: n/512/32 - Cache RAM activé")
+                
+            elif preset == "⚖️ Balanced":
+                # yolov8s.pt, 640px, batch 16, 50 epochs, cache=ram
+                self.train_model_var.current(1)  # yolov8s.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "50")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "16")
+                self.train_imgsz_var.set("640")
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "4")
+                self.train_cache_var.set("ram")
+                self.train_cosine_var.set(False)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "50")
+                self.log("✅ Desktop Balanced: s/640/16 - Équilibre précision/vitesse")
+                
+            elif preset == "🎯 High Quality":
+                # yolov8s.pt, 640px, batch 16, 100 epochs, cosine LR, patience 20
+                self.train_model_var.current(1)  # yolov8s.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "100")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "16")
+                self.train_imgsz_var.set("640")
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "4")
+                self.train_cache_var.set("ram")
+                self.train_cosine_var.set(True)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "20")
+                self.log("✅ Desktop High Quality: s/640/cosine - Early Stop activé")
+        
+        # Laptop: Ryzen AI 7 350 + 5070 8GB (8GB VRAM - batch réduit)
+        else:
+            if preset == "⚡ Fast & Efficient":
+                # yolov8n.pt, 416px, batch 16, 50 epochs, cache=ram
+                self.train_model_var.current(0)  # yolov8n.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "50")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "16")  # Réduit pour 8GB
+                self.train_imgsz_var.set("416")  # Réduit pour économiser VRAM
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "4")
+                self.train_cache_var.set("ram")
+                self.train_cosine_var.set(False)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "50")
+                self.log("✅ Laptop Fast: n/416/16 - Optimisé 8GB VRAM")
+                
+            elif preset == "⚖️ Balanced":
+                # yolov8n.pt (pas s pour 8GB!), 512px, batch 12, 50 epochs
+                self.train_model_var.current(0)  # yolov8n.pt (pas s!)
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "50")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "12")  # Réduit pour 8GB
+                self.train_imgsz_var.set("512")
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "4")
+                self.train_cache_var.set("ram")
+                self.train_cosine_var.set(False)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "50")
+                self.log("✅ Laptop Balanced: n/512/12 - Sûr pour 8GB VRAM")
+                
+            elif preset == "🎯 High Quality":
+                # yolov8s.pt (risqué!), 512px, batch 8, 100 epochs, cosine
+                self.train_model_var.current(1)  # yolov8s.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "100")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "8")  # Minimum safe pour s + 8GB
+                self.train_imgsz_var.set("512")  # Réduit à 512
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "4")
+                self.train_cache_var.set("ram")
+                self.train_cosine_var.set(True)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "20")
+                self.log("✅ Laptop High Quality: s/512/8 - Limite 8GB (risque OOM)")
     
     def create_detection_view(self):
         """Vue Detection avec DetectionManager"""
@@ -3839,6 +4103,22 @@ Continuer ?"""
             epochs = int(self.train_epochs_var.get())
             batch = int(self.train_batch_var.get())
             device = self.train_device_var.get()
+            imgsz = int(self.train_imgsz_var.get())
+            workers = int(self.train_workers_var.get())
+            cache = self.train_cache_var.get()
+            
+            # Options avancées si activées
+            if self.show_advanced_train.get():
+                lr0 = float(self.train_lr0_var.get())
+                lrf = float(self.train_lrf_var.get())
+                cos_lr = self.train_cosine_var.get()
+                patience = int(self.train_patience_var.get())
+            else:
+                lr0 = 0.01
+                lrf = 0.01
+                cos_lr = False
+                patience = 50
+                
         except Exception as e:
             messagebox.showerror("Error", f"Configuration invalide:\n{e}")
             return
@@ -3861,6 +4141,13 @@ Continuer ?"""
                     epochs=epochs,
                     batch_size=batch,
                     device=device,
+                    image_size=imgsz,
+                    workers=workers,
+                    cache=cache,
+                    lr0=lr0,
+                    lrf=lrf,
+                    cos_lr=cos_lr,
+                    patience=patience,
                     data_yaml=data_yaml
                 )
                 
@@ -3870,7 +4157,10 @@ Continuer ?"""
                 
                 # Entraîner
                 self.log(f"🎓 Démarrage entraînement: {model_name}")
-                self.log(f"   Epochs: {epochs}, Batch: {batch}, Device: {device}")
+                self.log(f"   Epochs: {epochs}, Batch: {batch}, Image Size: {imgsz}")
+                self.log(f"   Device: {device}, Workers: {workers}, Cache: {cache}")
+                if cos_lr:
+                    self.log(f"   LR: {lr0} → {lrf} (Cosine), Patience: {patience}")
                 
                 if manager.train():
                     metrics = manager.get_metrics()
