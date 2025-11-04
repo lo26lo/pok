@@ -2101,6 +2101,74 @@ class ModernPokemonGUI:
         
         return section_frame, toggle_accordion
     
+    def create_segmented_control(self, parent, options, default_index=0, command=None):
+        """V3.1: Créer un contrôle segmenté (boutons inline) au lieu de Combobox
+        
+        Args:
+            parent: Frame parent
+            options: Liste des options (strings)
+            default_index: Index de l'option sélectionnée par défaut
+            command: Callback appelé quand sélection change
+        
+        Returns:
+            (frame, get_func, set_func): Frame + fonctions pour get/set la valeur
+        """
+        frame = tk.Frame(parent, bg=self.colors['bg_card'])
+        
+        selected_var = tk.StringVar(value=options[default_index])
+        buttons = []
+        
+        def on_select(value):
+            selected_var.set(value)
+            # Mettre à jour les styles
+            for btn, opt in buttons:
+                if opt == value:
+                    btn.config(
+                        bg=self.colors['accent'],
+                        fg='#FFFFFF',
+                        relief='sunken'
+                    )
+                else:
+                    btn.config(
+                        bg=self.colors['bg_hover'],
+                        fg=self.colors['text'],
+                        relief='raised'
+                    )
+            if command:
+                command(value)
+        
+        # Créer les boutons
+        for i, option in enumerate(options):
+            is_selected = (i == default_index)
+            btn = tk.Button(frame,
+                text=option,
+                font=('Segoe UI', 9),
+                bg=self.colors['accent'] if is_selected else self.colors['bg_hover'],
+                fg='#FFFFFF' if is_selected else self.colors['text'],
+                relief='sunken' if is_selected else 'raised',
+                borderwidth=1,
+                padx=12,
+                pady=4,
+                cursor='hand2',
+                command=lambda opt=option: on_select(opt)
+            )
+            btn.pack(side=tk.LEFT, padx=1)
+            buttons.append((btn, option))
+        
+        def get_value():
+            return selected_var.get()
+        
+        def set_value(value):
+            if value in options:
+                on_select(value)
+        
+        # Ajouter méthodes compatibles avec Combobox
+        frame.get = get_value
+        frame.set = set_value
+        frame.current = lambda idx: set_value(options[idx]) if idx < len(options) else None
+        
+        return frame
+    
     def create_home_view(self):
         """Vue Home / Dashboard - HARMONISÉ V3.1"""
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
@@ -2618,14 +2686,15 @@ class ModernPokemonGUI:
         config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
         config_content.pack(fill=tk.X, padx=40, pady=(0, 20))
         
-        # V3.1: 2-Column Layout - Row 1: Augmentations + Type
+        # V3.1: 2-Column Layout - Row 1: Augmentations + Type (segmented control)
         self.aug_num_var = ttk.Spinbox(config_content, from_=1, to=100, width=10)
         self.aug_num_var.set(15)
         
-        self.aug_type_var = ttk.Combobox(config_content,
-            values=["Standard", "Holographic", "Both"],
-            state='readonly', width=18)
-        self.aug_type_var.current(0)
+        # V3.1: Segmented control pour Type au lieu de Combobox
+        self.aug_type_var = self.create_segmented_control(config_content,
+            options=["Standard", "Holographic", "Both"],
+            default_index=0
+        )
         
         self.create_form_row_2col(config_content,
             "Augmentations per image:", self.aug_num_var,
