@@ -2206,6 +2206,27 @@ class ModernPokemonGUI:
         self.create_stat_card(stats_grid, "Mosaics", str(stats['mosaics']), "🧩", 1, 0, 'mosaic')
         self.create_stat_card(stats_grid, "Dataset Size", stats['size'], "💾", 1, 1, 'size')
         
+        # V3.1: GPU Info - Compact 1-line card
+        gpu_frame = tk.Frame(container, bg=self.colors['bg_card'])
+        gpu_frame.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
+        
+        gpu_content = tk.Frame(gpu_frame, bg=self.colors['bg_card'])
+        gpu_content.pack(fill=tk.X, padx=20, pady=12)
+        
+        # Détecter GPU
+        gpu_available, gpu_info = self.detect_gpu_info()
+        
+        gpu_text = f"🎮 GPU: {gpu_info} | Status: {'✅ Available' if gpu_available else '❌ Not Available'}"
+        gpu_color = self.colors['success'] if gpu_available else self.colors['warning']
+        
+        tk.Label(gpu_content,
+            text=gpu_text,
+            font=self.FONT_BUTTON,
+            bg=self.colors['bg_card'],
+            fg=gpu_color,
+            anchor='w'
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
         # Avertissement si environnement virtuel absent
         if not self.check_venv():
             warning_frame = tk.Frame(container, bg=self.colors['error'], 
@@ -3923,6 +3944,25 @@ class ModernPokemonGUI:
             self.log(f"❌ Erreur création Excel: {e}")
             messagebox.showerror("Erreur", f"Impossible de créer le fichier:\n{e}")
             return False
+    
+    def detect_gpu_info(self):
+        """V3.1: Détecter le GPU disponible de manière compacte
+        
+        Returns:
+            (bool, str): (gpu_available, gpu_name_with_vram)
+        """
+        try:
+            import torch
+            if torch.cuda.is_available():
+                gpu_name = torch.cuda.get_device_name(0)
+                gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)  # GB
+                return True, f"{gpu_name} ({gpu_memory:.0f}GB)"
+            else:
+                return False, "No CUDA GPU detected"
+        except ImportError:
+            return False, "PyTorch not installed"
+        except Exception as e:
+            return False, f"Detection error: {str(e)[:30]}"
     
     def ensure_venv(self):
         """S'assurer que l'environnement virtuel existe et est prêt"""
