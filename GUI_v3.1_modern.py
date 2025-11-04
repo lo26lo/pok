@@ -2655,15 +2655,16 @@ class ModernPokemonGUI:
         config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
         config_content.pack(fill=tk.X, padx=40, pady=(0, 20))
         
-        # V3.1: 2-Column Layout - Row 1: Augmentations + Type (segmented control)
+        # V3.1: 2-Column Layout - Row 1: Augmentations + Type
         self.aug_num_var = ttk.Spinbox(config_content, from_=1, to=100, width=10)
         self.aug_num_var.set(15)
         
-        # V3.1: Segmented control pour Type au lieu de Combobox
-        self.aug_type_var = self.create_segmented_control(config_content,
-            options=["Standard", "Holographic", "Both"],
-            default_index=0
-        )
+        # Type Combobox (harmonisé avec les autres vues)
+        self.aug_type_var = ttk.Combobox(config_content,
+            values=["Standard", "Holographic", "Both"],
+            state='readonly',
+            width=15)
+        self.aug_type_var.current(0)
         
         self.create_form_row_2col(config_content,
             "Augmentations per image:", self.aug_num_var,
