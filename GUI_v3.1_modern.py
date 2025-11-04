@@ -1985,6 +1985,54 @@ class ModernPokemonGUI:
         
         return info_frame
     
+    def create_form_row_2col(self, parent, label1, widget1, label2, widget2, 
+                            hint1=None, hint2=None):
+        """V3.1: Créer une rangée avec 2 champs (label + widget) côte à côte
+        
+        Args:
+            parent: Frame parent
+            label1, label2: Labels des champs
+            widget1, widget2: Widgets (Entry, Combobox, Spinbox, etc.)
+            hint1, hint2: Textes d'aide optionnels
+        
+        Returns:
+            row_frame: Frame contenant la rangée 2-colonnes
+        """
+        row_frame = tk.Frame(parent, bg=self.colors['bg_card'])
+        row_frame.pack(fill=tk.X, pady=8)
+        
+        # Colonne 1 (50% width)
+        col1_frame = tk.Frame(row_frame, bg=self.colors['bg_card'])
+        col1_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+        
+        tk.Label(col1_frame, text=label1,
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+        
+        widget1.pack(side=tk.LEFT, padx=10)
+        
+        if hint1:
+            tk.Label(col1_frame, text=hint1,
+                    bg=self.colors['bg_card'], fg=self.colors['text_dim'],
+                    font=('Segoe UI', 8)).pack(side=tk.LEFT, padx=5)
+        
+        # Colonne 2 (50% width)
+        col2_frame = tk.Frame(row_frame, bg=self.colors['bg_card'])
+        col2_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(10, 0))
+        
+        tk.Label(col2_frame, text=label2,
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+        
+        widget2.pack(side=tk.LEFT, padx=10)
+        
+        if hint2:
+            tk.Label(col2_frame, text=hint2,
+                    bg=self.colors['bg_card'], fg=self.colors['text_dim'],
+                    font=('Segoe UI', 8)).pack(side=tk.LEFT, padx=5)
+        
+        return row_frame
+    
     def create_home_view(self):
         """Vue Home / Dashboard - HARMONISÉ V3.1"""
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
@@ -2502,43 +2550,25 @@ class ModernPokemonGUI:
         config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
         config_content.pack(fill=tk.X, padx=40, pady=(0, 20))
         
-        # Number of augmentations
-        aug_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        aug_frame.pack(fill=tk.X, pady=10)
-        
-        tk.Label(aug_frame, text="Augmentations per image:",
-                bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON).pack(side=tk.LEFT)
-        
-        self.aug_num_var = ttk.Spinbox(aug_frame, from_=1, to=100, width=self.SPINBOX_WIDTH)
-        self.aug_num_var.pack(side=tk.LEFT, padx=10)
+        # V3.1: 2-Column Layout - Row 1: Augmentations + Type
+        self.aug_num_var = ttk.Spinbox(config_content, from_=1, to=100, width=10)
         self.aug_num_var.set(15)
         
-        tk.Label(aug_frame, text="(number of variations per source image)",
-                bg=self.colors['bg_card'], fg=self.colors['text_dim'],
-                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
-        
-        # Augmentation type
-        type_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        type_frame.pack(fill=tk.X, pady=10)
-        
-        tk.Label(type_frame, text="Augmentation type:",
-                bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON).pack(side=tk.LEFT)
-        
-        self.aug_type_var = ttk.Combobox(type_frame,
+        self.aug_type_var = ttk.Combobox(config_content,
             values=["Standard", "Holographic", "Both"],
-            state='readonly', width=self.COMBOBOX_WIDTH)
-        self.aug_type_var.pack(side=tk.LEFT, padx=10)
+            state='readonly', width=18)
         self.aug_type_var.current(0)
         
-        tk.Label(type_frame, text="(Standard: classic | Holographic: special effects)",
-                bg=self.colors['bg_card'], fg=self.colors['text_dim'],
-                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
+        self.create_form_row_2col(config_content,
+            "Augmentations per image:", self.aug_num_var,
+            "Type:", self.aug_type_var,
+            hint1="variations/image",
+            hint2="Standard/Holographic"
+        )
         
-        # Output directory
+        # Row 2: Output directory (seul, pleine largeur)
         output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        output_frame.pack(fill=tk.X, pady=10)
+        output_frame.pack(fill=tk.X, pady=8)
         
         tk.Label(output_frame, text="Output directory:",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
