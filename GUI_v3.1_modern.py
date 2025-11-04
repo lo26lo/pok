@@ -2178,22 +2178,9 @@ class ModernPokemonGUI:
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(container,
-            text="Dashboard",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 5))
-        
-        subtitle = tk.Label(container,
-            text="Overview of your Pokemon dataset project",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(container, "🏠", "Dashboard",
+                                "Overview of your Pokemon dataset project")
         
         # Calculer les statistiques réelles
         stats = self.get_real_stats()
@@ -2374,21 +2361,9 @@ class ModernPokemonGUI:
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        title = tk.Label(container,
-            text="🚀 Automatic Workflow",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 5))
-        
-        subtitle = tk.Label(container,
-            text="Generate complete dataset with one click",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(container, "🚀", "Automatic Workflow",
+                                "Generate complete dataset with one click")
         
         # Configuration Card
         config_card = tk.Frame(container, bg=self.colors['bg_card'])
@@ -2467,22 +2442,9 @@ class ModernPokemonGUI:
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(container,
-            text="⬇️ Image Download",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 10))
-        
-        subtitle = tk.Label(container,
-            text="Download Pokemon card images from TCGdex API",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(container, "⬇️", "Image Download",
+                                "Download Pokemon card images from TCGdex API")
         
         # Main content frame (2 colonnes)
         main_frame = tk.Frame(container, bg=self.colors['bg_dark'])
@@ -2944,22 +2906,9 @@ class ModernPokemonGUI:
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(container,
-            text="🧩 YOLO Mosaics",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 10))
-        
-        subtitle = tk.Label(container,
-            text="Generate YOLO training mosaics from augmented images",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(container, "🧩", "YOLO Mosaics",
+                                "Generate YOLO training mosaics from augmented images")
         
         # Configuration Card
         config_card = tk.Frame(container, bg=self.colors['bg_card'])
@@ -3050,22 +2999,9 @@ class ModernPokemonGUI:
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(container,
-            text="✅ Dataset Validation",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 10))
-        
-        subtitle = tk.Label(container,
-            text="Validate YOLO annotations and dataset quality",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(container, "✅", "Dataset Validation",
+                                "Validate YOLO annotations and dataset quality")
         
         # Configuration Card
         config_card = tk.Frame(container, bg=self.colors['bg_card'])
@@ -3522,22 +3458,9 @@ class ModernPokemonGUI:
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(container,
-            text="📹 Live Detection",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 10))
-        
-        subtitle = tk.Label(container,
-            text="Real-time detection with webcam or batch processing",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(container, "📹", "Live Detection",
+                                "Real-time detection with webcam or batch processing")
         
         # Configuration Card
         config_card = tk.Frame(container, bg=self.colors['bg_card'])
@@ -3618,22 +3541,9 @@ class ModernPokemonGUI:
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(container,
-            text="📦 Dataset Export",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 10))
-        
-        subtitle = tk.Label(container,
-            text="Export dataset to multiple formats (COCO, VOC, TFRecord, Roboflow)",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(container, "📦", "Dataset Export",
+                                "Export dataset to multiple formats (COCO, VOC, TFRecord, Roboflow)")
         
         # Configuration Card
         config_card = tk.Frame(container, bg=self.colors['bg_card'])
@@ -3683,22 +3593,9 @@ class ModernPokemonGUI:
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(container,
-            text="🛠️ Utilities & Tools",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 10))
-        
-        subtitle = tk.Label(container,
-            text="Additional tools and utilities",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(container, "🛠️", "Utilities & Tools",
+                                "Additional tools and utilities")
         
         # Tools Card
         tools_card = tk.Frame(container, bg=self.colors['bg_card'])
