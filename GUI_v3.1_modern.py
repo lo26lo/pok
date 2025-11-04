@@ -2603,30 +2603,12 @@ class ModernPokemonGUI:
                   width=30).pack(pady=5)
     
     def create_augmentation_view(self):
-        """Vue Augmentation détaillée - ENRICHIE V3.1 avec scroll"""
-        # Canvas avec scrollbar pour contenu défilant
-        canvas = tk.Canvas(self.content_area, bg=self.colors['bg_dark'], highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self.content_area, orient="vertical", command=canvas.yview)
-        
-        container = tk.Frame(canvas, bg=self.colors['bg_dark'])
-        
-        container.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        
-        canvas.create_window((0, 0), window=container, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side="left", fill=tk.BOTH, expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # Contenu avec padding
-        content_frame = tk.Frame(container, bg=self.colors['bg_dark'])
-        content_frame.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
+        """Vue Augmentation détaillée - HARMONISÉE V3.1 sans scroll"""
+        container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
+        container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
         # V3.1: Dense Header
-        self.create_dense_header(content_frame, "🎨", "Image Augmentation",
+        self.create_dense_header(container, "🎨", "Image Augmentation",
                                 "Generate augmented variations of your card images")
         
         # V3.1: Compact Info Tooltip (remplace Info Card)
@@ -2649,7 +2631,7 @@ class ModernPokemonGUI:
         except:
             stats_text = "📊 Unable to read statistics"
         
-        self.create_info_tooltip(content_frame,
+        self.create_info_tooltip(container,
             "ℹ️ About Augmentation",
             stats_text,
             "Image augmentation creates variations of your original images using transformations like rotation, "
@@ -2659,7 +2641,7 @@ class ModernPokemonGUI:
         )
         
         # Configuration Card
-        config_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
+        config_card = tk.Frame(container, bg=self.colors['bg_card'])
         config_card.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
         
         card_title = tk.Label(config_card,
@@ -2709,7 +2691,7 @@ class ModernPokemonGUI:
                 font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
         
         # Buttons
-        btn_frame = tk.Frame(content_frame, bg=self.colors['bg_dark'])
+        btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=30)
         
         ttk.Button(btn_frame, text="🎨 START AUGMENTATION",
@@ -2718,30 +2700,12 @@ class ModernPokemonGUI:
                   width=30).pack(pady=5)
     
     def create_fakeimg_view(self):
-        """Vue génération de fake images (random erasing) - HARMONISÉE V3.1 avec scroll"""
-        # Canvas avec scrollbar pour contenu défilant
-        canvas = tk.Canvas(self.content_area, bg=self.colors['bg_dark'], highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self.content_area, orient="vertical", command=canvas.yview)
-        
-        container = tk.Frame(canvas, bg=self.colors['bg_dark'])
-        
-        container.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        
-        canvas.create_window((0, 0), window=container, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side="left", fill=tk.BOTH, expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # Contenu avec padding
-        content_frame = tk.Frame(container, bg=self.colors['bg_dark'])
-        content_frame.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
+        """Vue génération de fake images (random erasing) - HARMONISÉE V3.1 sans scroll"""
+        container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
+        container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
         # V3.1: Dense Header
-        self.create_dense_header(content_frame, "🎲", "Fake Image Generator",
+        self.create_dense_header(container, "🎲", "Fake Image Generator",
                                 "Apply random erasing to create synthetic fake images for mosaics")
         
         # V3.1: Compact Info Tooltip (remplace Info Card)
@@ -2755,7 +2719,7 @@ class ModernPokemonGUI:
         except:
             stats_text = "📊 Unable to read statistics"
         
-        self.create_info_tooltip(content_frame,
+        self.create_info_tooltip(container,
             "ℹ️ About Fake Images",
             stats_text,
             "Random erasing applies random rectangles to downloaded card images. "
@@ -2764,7 +2728,7 @@ class ModernPokemonGUI:
         )
         
         # Configuration Card - EN DESSOUS, PLEINE LARGEUR
-        config_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
+        config_card = tk.Frame(container, bg=self.colors['bg_card'])
         config_card.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
         
         card_title = tk.Label(config_card,
@@ -2893,7 +2857,7 @@ class ModernPokemonGUI:
                 font=('Segoe UI', 8)).pack(side=tk.LEFT, padx=5)
         
         # Button frame
-        btn_frame = tk.Frame(content_frame, bg=self.colors['bg_dark'])
+        btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=30)
         
         ttk.Button(btn_frame, text="🎲 GENERATE FAKE IMAGES",
