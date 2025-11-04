@@ -1266,6 +1266,11 @@ class ModernPokemonGUI:
         self.operation_stopped = False  # Flag pour arrêt volontaire
         self.current_view = "home"
         
+        # État du footer (collapsed/expanded)
+        self.footer_expanded = False
+        self.footer_height_collapsed = 40
+        self.footer_height_expanded = 160
+        
         # Variables pour workflow
         self.workflow_aug_var = None
         self.workflow_mosaic_var = None
@@ -1678,58 +1683,68 @@ class ModernPokemonGUI:
         self.content_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     
     def create_footer(self, parent):
-        """Créer le footer avec progress bar et logs - COMPACTÉ V3.1"""
-        self.footer = tk.Frame(parent, bg=self.colors['bg_sidebar'], height=160)
+        """Créer le footer avec progress bar et logs - COLLAPSIBLE V3.1+"""
+        self.footer = tk.Frame(parent, bg=self.colors['bg_sidebar'], height=self.footer_height_collapsed)
         self.footer.pack(fill=tk.X, side=tk.BOTTOM)
         self.footer.pack_propagate(False)
         
-        # Progress section
-        progress_frame = tk.Frame(self.footer, bg=self.colors['bg_sidebar'])
-        progress_frame.pack(fill=tk.X, padx=20, pady=10)
+        # Header du footer (toujours visible) - barre compacte
+        self.footer_header = tk.Frame(self.footer, bg=self.colors['bg_sidebar'], height=40)
+        self.footer_header.pack(fill=tk.X)
+        self.footer_header.pack_propagate(False)
         
-        # Frame pour label et bouton stop sur la même ligne
-        progress_header = tk.Frame(progress_frame, bg=self.colors['bg_sidebar'])
-        progress_header.pack(fill=tk.X)
+        footer_header_content = tk.Frame(self.footer_header, bg=self.colors['bg_sidebar'])
+        footer_header_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=8)
         
-        self.progress_label = tk.Label(progress_header,
+        # Label logs avec compteur + chevron
+        self.footer_toggle_label = tk.Label(footer_header_content,
+            text="📜 Logs (0) ▼",
+            font=self.FONT_BUTTON,
+            bg=self.colors['bg_sidebar'],
+            fg=self.colors['text'],
+            anchor='w',
+            cursor='hand2'
+        )
+        self.footer_toggle_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.footer_toggle_label.bind('<Button-1>', lambda e: self.toggle_footer())
+        
+        # Progress label (compact)
+        self.progress_label = tk.Label(footer_header_content,
             text="Ready",
             font=('Segoe UI', 9),
             bg=self.colors['bg_sidebar'],
             fg=self.colors['text_dim'],
-            anchor='w'
+            anchor='center'
         )
-        self.progress_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.progress_label.pack(side=tk.LEFT, padx=(10, 10))
         
-        # Bouton Stop
-        self.stop_button = tk.Button(progress_header,
-            text="⏹ Stop",
+        # Bouton Stop (compact)
+        self.stop_button = tk.Button(footer_header_content,
+            text="⏹",
             command=self.stop_operation,
             bg=self.colors['error'],
             fg='#FFFFFF',
             font=('Segoe UI', 9, 'bold'),
             relief='flat',
-            padx=15,
-            pady=3,
+            width=3,
             cursor='hand2',
             state='disabled'
         )
         self.stop_button.pack(side=tk.RIGHT)
         
+        # Contenu expandable (progress bar + logs)
+        self.footer_content = tk.Frame(self.footer, bg=self.colors['bg_sidebar'])
+        # Ne pas pack par défaut (collapsed)
+        
+        # Progress bar
+        progress_frame = tk.Frame(self.footer_content, bg=self.colors['bg_sidebar'])
+        progress_frame.pack(fill=tk.X, padx=20, pady=(0, 10))
+        
         self.progress_bar = ttk.Progressbar(progress_frame, mode='indeterminate')
-        self.progress_bar.pack(fill=tk.X, pady=(5, 0))
+        self.progress_bar.pack(fill=tk.X)
         
-        # Logs section
-        logs_label = tk.Label(self.footer,
-            text="📜 Logs",
-            font=self.FONT_BUTTON,
-            bg=self.colors['bg_sidebar'],
-            fg=self.colors['text'],
-            anchor='w'
-        )
-        logs_label.pack(fill=tk.X, padx=20)
-        
-        # ScrolledText pour logs - 4 lignes V3.1 (augmenté pour meilleure lisibilité)
-        self.log_text = scrolledtext.ScrolledText(self.footer,
+        # ScrolledText pour logs
+        self.log_text = scrolledtext.ScrolledText(self.footer_content,
             height=4,
             bg=self.colors['bg_card'],
             fg=self.colors['text'],
@@ -1737,7 +1752,34 @@ class ModernPokemonGUI:
             relief='flat',
             font=('Consolas', 9)
         )
-        self.log_text.pack(fill=tk.BOTH, expand=True, padx=20, pady=(5, 10))
+        self.log_text.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 10))
+    
+    def toggle_footer(self):
+        """Toggle l'expansion/réduction du footer"""
+        if self.footer_expanded:
+            # Réduire
+            self.footer_content.pack_forget()
+            self.footer.config(height=self.footer_height_collapsed)
+            self.footer_toggle_label.config(text=f"📜 Logs ({self.get_log_count()}) ▼")
+            self.footer_expanded = False
+        else:
+            # Étendre
+            self.footer_content.pack(fill=tk.BOTH, expand=True)
+            self.footer.config(height=self.footer_height_expanded)
+            self.footer_toggle_label.config(text=f"📜 Logs ({self.get_log_count()}) ▲")
+            self.footer_expanded = True
+    
+    def expand_footer_auto(self):
+        """Étendre automatiquement le footer (lors d'une opération)"""
+        if not self.footer_expanded:
+            self.toggle_footer()
+    
+    def get_log_count(self):
+        """Obtenir le nombre de lignes de logs"""
+        try:
+            return int(self.log_text.index('end-1c').split('.')[0]) - 1
+        except:
+            return 0
     
     def show_view(self, view_id):
         """Afficher une vue spécifique"""
@@ -1794,6 +1836,52 @@ class ModernPokemonGUI:
             self.create_export_view()
         elif view_id == 'tools':
             self.create_tools_view()
+    
+    def create_dense_header(self, parent, icon, title, subtitle=None):
+        """V3.1: Créer un header dense (title + subtitle sur 1 ligne si compact mode)
+        
+        Args:
+            parent: Frame parent
+            icon: Emoji icon
+            title: Title text
+            subtitle: Optional subtitle text
+        
+        Returns:
+            header_frame: Frame containing the header
+        """
+        header_frame = tk.Frame(parent, bg=self.colors['bg_dark'])
+        header_frame.pack(anchor='w', pady=(0, 10))
+        
+        if subtitle and self.is_compact_mode:
+            # Mode compact: title + subtitle sur 1 ligne séparés par • 
+            combined_text = f"{icon} {title} • {subtitle}"
+            label = tk.Label(header_frame,
+                text=combined_text,
+                font=('Segoe UI', 12, 'bold'),  # Plus petit que FONT_TITLE
+                bg=self.colors['bg_dark'],
+                fg=self.colors['text']
+            )
+            label.pack(anchor='w')
+        else:
+            # Mode standard: 2 lignes mais avec moins de padding
+            title_label = tk.Label(header_frame,
+                text=f"{icon} {title}",
+                font=self.FONT_TITLE,
+                bg=self.colors['bg_dark'],
+                fg=self.colors['text']
+            )
+            title_label.pack(anchor='w')
+            
+            if subtitle:
+                subtitle_label = tk.Label(header_frame,
+                    text=subtitle,
+                    font=('Segoe UI', 10),  # Plus petit que FONT_TEXT
+                    bg=self.colors['bg_dark'],
+                    fg=self.colors['text_dim']
+                )
+                subtitle_label.pack(anchor='w', pady=(2, 0))  # Seulement 2px de padding
+        
+        return header_frame
     
     def create_home_view(self):
         """Vue Home / Dashboard - HARMONISÉ V3.1"""
@@ -2264,22 +2352,9 @@ class ModernPokemonGUI:
         content_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         content_frame.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(content_frame,
-            text="🎨 Image Augmentation",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 10))
-        
-        subtitle = tk.Label(content_frame,
-            text="Generate augmented variations of your card images",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(content_frame, "🎨", "Image Augmentation",
+                                "Generate augmented variations of your card images")
         
         # Info Card - NOUVEAU
         info_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
@@ -2435,22 +2510,9 @@ class ModernPokemonGUI:
         content_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         content_frame.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(content_frame,
-            text="🎲 Fake Image Generator",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 10))
-        
-        subtitle = tk.Label(content_frame,
-            text="Apply random erasing to create synthetic fake images for mosaics",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(content_frame, "🎲", "Fake Image Generator",
+                                "Apply random erasing to create synthetic fake images for mosaics")
         
         # Info Card - EN HAUT, PLEINE LARGEUR
         info_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
@@ -2818,22 +2880,9 @@ class ModernPokemonGUI:
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.X, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
-        # Header
-        title = tk.Label(container,
-            text="🎓 YOLO Training",
-            font=self.FONT_TITLE,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text']
-        )
-        title.pack(anchor='w', pady=(0, 10))
-        
-        subtitle = tk.Label(container,
-            text="Train YOLOv8 model on your dataset",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_dark'],
-            fg=self.colors['text_dim']
-        )
-        subtitle.pack(anchor='w', pady=(0, self.CARD_SPACING))
+        # V3.1: Dense Header
+        self.create_dense_header(container, "🎓", "YOLO Training",
+                                "Train YOLOv8 model on your dataset")
         
         # Configuration Card (hauteur limitée pour garder le footer visible: 380px + footer 160px + marges = ~560px)
         config_card = tk.Frame(container, bg=self.colors['bg_card'], height=360)
@@ -3831,6 +3880,8 @@ class ModernPokemonGUI:
         self.progress_label.config(text=f"Running: {operation_name}")
         self.progress_bar.start(10)
         self.stop_button.config(state='normal')
+        # V3.1: Auto-expand footer pendant opération
+        self.expand_footer_auto()
     
     def end_operation(self):
         """Terminer une opération"""
@@ -3839,6 +3890,7 @@ class ModernPokemonGUI:
         self.progress_label.config(text="Ready")
         self.progress_bar.stop()
         self.stop_button.config(state='disabled')
+        # V3.1: Footer reste ouvert après opération (l'utilisateur peut le fermer manuellement)
     
     def update_stats(self):
         """Mettre à jour les statistiques du dashboard"""
