@@ -1266,6 +1266,10 @@ class ModernPokemonGUI:
         self.operation_stopped = False  # Flag pour arrêt volontaire
         self.current_view = "home"
         
+        # V3.1: État responsive
+        self.is_compact_mode = False
+        self.sidebar_visible = True
+        
         # État du footer (collapsed/expanded)
         self.footer_expanded = False
         self.footer_height_collapsed = 40
