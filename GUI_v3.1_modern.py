@@ -2655,27 +2655,44 @@ class ModernPokemonGUI:
         config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
         config_content.pack(fill=tk.X, padx=40, pady=(0, 20))
         
-        # V3.1: 2-Column Layout - Row 1: Augmentations + Type
-        self.aug_num_var = ttk.Spinbox(config_content, from_=1, to=100, width=10)
+        # Augmentations per image
+        aug_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        aug_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(aug_frame, text="Augmentations per image:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+        
+        self.aug_num_var = ttk.Spinbox(aug_frame, from_=1, to=100, width=10)
+        self.aug_num_var.pack(side=tk.LEFT, padx=10)
         self.aug_num_var.set(15)
         
-        # Type Combobox (harmonisé avec les autres vues)
-        self.aug_type_var = ttk.Combobox(config_content,
+        tk.Label(aug_frame, text="(variations/image)",
+                bg=self.colors['bg_card'], fg=self.colors['text_dim'],
+                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
+        
+        # Type
+        type_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        type_frame.pack(fill=tk.X, pady=10)
+        
+        tk.Label(type_frame, text="Type:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+        
+        self.aug_type_var = ttk.Combobox(type_frame,
             values=["Standard", "Holographic", "Both"],
             state='readonly',
-            width=15)
+            width=self.COMBOBOX_WIDTH)
+        self.aug_type_var.pack(side=tk.LEFT, padx=10)
         self.aug_type_var.current(0)
         
-        self.create_form_row_2col(config_content,
-            "Augmentations per image:", self.aug_num_var,
-            "Type:", self.aug_type_var,
-            hint1="variations/image",
-            hint2="Standard/Holographic"
-        )
+        tk.Label(type_frame, text="(augmentation mode)",
+                bg=self.colors['bg_card'], fg=self.colors['text_dim'],
+                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
         
-        # Row 2: Output directory (seul, pleine largeur)
+        # Output directory
         output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        output_frame.pack(fill=tk.X, pady=8)
+        output_frame.pack(fill=tk.X, pady=10)
         
         tk.Label(output_frame, text="Output directory:",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
