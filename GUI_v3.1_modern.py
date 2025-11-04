@@ -2033,6 +2033,74 @@ class ModernPokemonGUI:
         
         return row_frame
     
+    def create_accordion_section(self, parent, title, content_callback, default_expanded=False):
+        """V3.1: Créer une section accordéon collapsible avec chevron
+        
+        Args:
+            parent: Frame parent
+            title: Titre de la section (avec emoji)
+            content_callback: Function qui crée le contenu quand appelée avec un parent frame
+            default_expanded: État initial (True = ouvert, False = fermé)
+        
+        Returns:
+            (section_frame, toggle_func): Frame de la section et fonction pour toggle
+        """
+        section_frame = tk.Frame(parent, bg=self.colors['bg_card'])
+        section_frame.pack(fill=tk.X, pady=5)
+        
+        # État de l'accordéon
+        is_expanded = tk.BooleanVar(value=default_expanded)
+        
+        # Header cliquable
+        header_frame = tk.Frame(section_frame, bg=self.colors['bg_card'], cursor='hand2')
+        header_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        chevron_label = tk.Label(header_frame,
+            text="▼" if default_expanded else "▶",
+            font=('Segoe UI', 10),
+            bg=self.colors['bg_card'],
+            fg=self.colors['accent'],
+            width=2
+        )
+        chevron_label.pack(side=tk.LEFT)
+        
+        title_label = tk.Label(header_frame,
+            text=title,
+            font=self.FONT_BUTTON,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text'],
+            anchor='w'
+        )
+        title_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        # Content frame (initialement visible ou caché selon default_expanded)
+        content_frame = tk.Frame(section_frame, bg=self.colors['bg_card'])
+        if default_expanded:
+            content_frame.pack(fill=tk.X, padx=20, pady=(0, 10))
+        
+        # Appeler le callback pour créer le contenu
+        content_callback(content_frame)
+        
+        # Fonction toggle
+        def toggle_accordion():
+            if is_expanded.get():
+                # Collapse
+                content_frame.pack_forget()
+                chevron_label.config(text="▶")
+                is_expanded.set(False)
+            else:
+                # Expand
+                content_frame.pack(fill=tk.X, padx=20, pady=(0, 10))
+                chevron_label.config(text="▼")
+                is_expanded.set(True)
+        
+        # Bind click sur header
+        header_frame.bind('<Button-1>', lambda e: toggle_accordion())
+        chevron_label.bind('<Button-1>', lambda e: toggle_accordion())
+        title_label.bind('<Button-1>', lambda e: toggle_accordion())
+        
+        return section_frame, toggle_accordion
+    
     def create_home_view(self):
         """Vue Home / Dashboard - HARMONISÉ V3.1"""
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
@@ -3114,31 +3182,36 @@ class ModernPokemonGUI:
         self.train_imgsz_var.pack(side=tk.LEFT, padx=10)
         self.train_imgsz_var.current(3)  # 640 default
         
-        # Workers
-        workers_frame = tk.Frame(left_column, bg=self.colors['bg_card'])
-        workers_frame.pack(fill=tk.X, pady=5)
+        # V3.1: Accordion pour paramètres avancés (Workers, Cache, Patience)
+        def create_advanced_basic_content(parent):
+            # Workers
+            workers_frame = tk.Frame(parent, bg=self.colors['bg_card'])
+            workers_frame.pack(fill=tk.X, pady=5)
+            
+            tk.Label(workers_frame, text="Workers:",
+                    bg=self.colors['bg_card'], fg='#FFFFFF',
+                    font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
+            
+            self.train_workers_var = ttk.Spinbox(workers_frame, from_=1, to=16, width=self.SPINBOX_WIDTH)
+            self.train_workers_var.pack(side=tk.LEFT, padx=10)
+            self.train_workers_var.set(4)
+            
+            # Cache
+            cache_frame = tk.Frame(parent, bg=self.colors['bg_card'])
+            cache_frame.pack(fill=tk.X, pady=5)
+            
+            tk.Label(cache_frame, text="Cache:",
+                    bg=self.colors['bg_card'], fg='#FFFFFF',
+                    font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
+            
+            self.train_cache_var = ttk.Combobox(cache_frame,
+                values=["False", "ram", "disk"],
+                state='readonly', width=self.COMBOBOX_WIDTH)
+            self.train_cache_var.pack(side=tk.LEFT, padx=10)
+            self.train_cache_var.current(0)
         
-        tk.Label(workers_frame, text="Workers:",
-                bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
-        
-        self.train_workers_var = ttk.Spinbox(workers_frame, from_=1, to=16, width=self.SPINBOX_WIDTH)
-        self.train_workers_var.pack(side=tk.LEFT, padx=10)
-        self.train_workers_var.set(4)
-        
-        # Cache
-        cache_frame = tk.Frame(left_column, bg=self.colors['bg_card'])
-        cache_frame.pack(fill=tk.X, pady=5)
-        
-        tk.Label(cache_frame, text="Cache:",
-                bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
-        
-        self.train_cache_var = ttk.Combobox(cache_frame,
-            values=["False", "ram", "disk"],
-            state='readonly', width=self.COMBOBOX_WIDTH)
-        self.train_cache_var.pack(side=tk.LEFT, padx=10)
-        self.train_cache_var.current(0)
+        self.create_accordion_section(left_column, "🔧 Advanced Settings", 
+                                      create_advanced_basic_content, default_expanded=False)
         
         # Right column - Advanced parameters
         right_column = tk.Frame(columns_frame, bg=self.colors['bg_card'])
