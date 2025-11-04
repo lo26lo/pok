@@ -1883,6 +1883,108 @@ class ModernPokemonGUI:
         
         return header_frame
     
+    def create_info_tooltip(self, parent, icon_text, short_description, full_description):
+        """V3.1: Créer un info compact avec icône + tooltip au hover
+        
+        Args:
+            parent: Frame parent
+            icon_text: Text with emoji (e.g., "ℹ️ About Augmentation")
+            short_description: 1-line summary shown inline
+            full_description: Full text shown in tooltip/dialog
+        
+        Returns:
+            info_frame: Compact info frame with icon + text
+        """
+        info_frame = tk.Frame(parent, bg=self.colors['bg_dark'])
+        info_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Icon label (clickable pour dialog)
+        icon_label = tk.Label(info_frame,
+            text=icon_text.split()[0],  # Prendre juste l'emoji
+            font=('Segoe UI', 14),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['accent'],
+            cursor='hand2'
+        )
+        icon_label.pack(side=tk.LEFT, padx=(0, 8))
+        
+        # Short description inline
+        short_label = tk.Label(info_frame,
+            text=short_description,
+            font=('Segoe UI', 9),
+            bg=self.colors['bg_dark'],
+            fg=self.colors['text_dim'],
+            anchor='w'
+        )
+        short_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        # Tooltip on hover
+        def show_tooltip(event):
+            tooltip = tk.Toplevel()
+            tooltip.wm_overrideredirect(True)
+            tooltip.wm_geometry(f"+{event.x_root+10}+{event.y_root+10}")
+            
+            tooltip_frame = tk.Frame(tooltip, bg=self.colors['bg_card'], relief='solid', borderwidth=1)
+            tooltip_frame.pack(fill=tk.BOTH, expand=True)
+            
+            tk.Label(tooltip_frame,
+                text=full_description,
+                font=('Segoe UI', 9),
+                bg=self.colors['bg_card'],
+                fg=self.colors['text'],
+                justify='left',
+                wraplength=400,
+                padx=10,
+                pady=8
+            ).pack()
+            
+            # Auto-destroy après 5 secondes ou si souris quitte
+            def destroy_tooltip(e=None):
+                tooltip.destroy()
+            
+            tooltip.after(5000, destroy_tooltip)
+            icon_label.bind('<Leave>', destroy_tooltip, add='+')
+            tooltip.bind('<Leave>', destroy_tooltip)
+        
+        icon_label.bind('<Enter>', show_tooltip)
+        
+        # Click pour dialog détaillé
+        def show_dialog():
+            dialog = tk.Toplevel(self.root)
+            dialog.title("Information")
+            dialog.geometry("500x300")
+            dialog.configure(bg=self.colors['bg_card'])
+            
+            title_label = tk.Label(dialog,
+                text=icon_text,
+                font=self.FONT_CARD_TITLE,
+                bg=self.colors['bg_card'],
+                fg=self.colors['accent']
+            )
+            title_label.pack(anchor='w', padx=20, pady=(20, 10))
+            
+            text_widget = tk.Text(dialog,
+                font=self.FONT_TEXT,
+                bg=self.colors['bg_card'],
+                fg=self.colors['text'],
+                wrap='word',
+                relief='flat'
+            )
+            text_widget.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 10))
+            text_widget.insert('1.0', full_description)
+            text_widget.config(state='disabled')
+            
+            close_btn = ttk.Button(dialog,
+                text="Close",
+                command=dialog.destroy,
+                style='Accent.TButton'
+            )
+            close_btn.pack(pady=(0, 20))
+        
+        icon_label.bind('<Button-1>', lambda e: show_dialog())
+        
+        return info_frame
+    
     def create_home_view(self):
         """Vue Home / Dashboard - HARMONISÉ V3.1"""
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
@@ -2356,33 +2458,7 @@ class ModernPokemonGUI:
         self.create_dense_header(content_frame, "🎨", "Image Augmentation",
                                 "Generate augmented variations of your card images")
         
-        # Info Card - NOUVEAU
-        info_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
-        info_card.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
-        
-        info_content = tk.Frame(info_card, bg=self.colors['bg_card'])
-        info_content.pack(fill=tk.X, padx=20, pady=20)
-        
-        tk.Label(info_content,
-            text="ℹ️ About Augmentation",
-            font=self.FONT_CARD_TITLE,
-            bg=self.colors['bg_card'],
-            fg=self.colors['accent']
-        ).pack(anchor='w', pady=(0, 10))
-        
-        tk.Label(info_content,
-            text="Image augmentation creates variations of your original images using transformations like rotation, "
-                 "brightness adjustment, noise, blur, and color shifts. This increases dataset diversity and helps "
-                 "improve model training. Standard mode uses traditional augmentations, while Holographic mode adds "
-                 "special effects to simulate holographic Pokemon cards.",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_card'],
-            fg=self.colors['text'],
-            justify='left',
-            wraplength=1300
-        ).pack(anchor='w', pady=(0, 10))
-        
-        # Stats
+        # V3.1: Compact Info Tooltip (remplace Info Card)
         try:
             source_dir = "images"
             augmented_dir = "augmented"
@@ -2399,17 +2475,17 @@ class ModernPokemonGUI:
             if augmented_count > 0:
                 ratio = augmented_count / source_count if source_count > 0 else 0
                 stats_text += f" | Ratio: {ratio:.1f}x"
-            stats_color = self.colors['success'] if augmented_count > 0 else self.colors['warning']
         except:
             stats_text = "📊 Unable to read statistics"
-            stats_color = self.colors['text_dim']
         
-        tk.Label(info_content,
-            text=stats_text,
-            font=self.FONT_BUTTON,
-            bg=self.colors['bg_card'],
-            fg=stats_color
-        ).pack(anchor='w')
+        self.create_info_tooltip(content_frame,
+            "ℹ️ About Augmentation",
+            stats_text,
+            "Image augmentation creates variations of your original images using transformations like rotation, "
+            "brightness adjustment, noise, blur, and color shifts. This increases dataset diversity and helps "
+            "improve model training. Standard mode uses traditional augmentations, while Holographic mode adds "
+            "special effects to simulate holographic Pokemon cards."
+        )
         
         # Configuration Card
         config_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
@@ -2514,51 +2590,24 @@ class ModernPokemonGUI:
         self.create_dense_header(content_frame, "🎲", "Fake Image Generator",
                                 "Apply random erasing to create synthetic fake images for mosaics")
         
-        # Info Card - EN HAUT, PLEINE LARGEUR
-        info_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
-        info_card.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
-        
-        info_content = tk.Frame(info_card, bg=self.colors['bg_card'])
-        info_content.pack(fill=tk.X, padx=20, pady=20)
-        
-        tk.Label(info_content,
-            text="ℹ️ About Fake Images",
-            font=self.FONT_CARD_TITLE,
-            bg=self.colors['bg_card'],
-            fg=self.colors['accent']
-        ).pack(anchor='w', pady=(0, 10))
-        
-        tk.Label(info_content,
-            text="Random erasing applies random rectangles to downloaded card images. "
-                 "These modified images are used as fake backgrounds in mosaic generation. "
-                 "Uses images from 'images/' folder. Probability (p) controls the chance of applying erasing per image.",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_card'],
-            fg=self.colors['text'],
-            justify='left',
-            wraplength=1300
-        ).pack(anchor='w', pady=(0, 10))
-        
-        # Stats
+        # V3.1: Compact Info Tooltip (remplace Info Card)
         try:
             fakeimg_aug_dir = "fakeimg_augmented"
             if os.path.exists(fakeimg_aug_dir):
                 count = len([f for f in os.listdir(fakeimg_aug_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
                 stats_text = f"📊 Current: {count} fake images generated"
-                stats_color = self.colors['success'] if count > 0 else self.colors['warning']
             else:
                 stats_text = "📊 No fake images generated yet"
-                stats_color = self.colors['warning']
         except:
             stats_text = "📊 Unable to read statistics"
-            stats_color = self.colors['text_dim']
         
-        tk.Label(info_content,
-            text=stats_text,
-            font=self.FONT_BUTTON,
-            bg=self.colors['bg_card'],
-            fg=stats_color
-        ).pack(anchor='w')
+        self.create_info_tooltip(content_frame,
+            "ℹ️ About Fake Images",
+            stats_text,
+            "Random erasing applies random rectangles to downloaded card images. "
+            "These modified images are used as fake backgrounds in mosaic generation. "
+            "Uses images from 'images/' folder. Probability (p) controls the chance of applying erasing per image."
+        )
         
         # Configuration Card - EN DESSOUS, PLEINE LARGEUR
         config_card = tk.Frame(content_frame, bg=self.colors['bg_card'])
