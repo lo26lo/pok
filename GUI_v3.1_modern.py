@@ -4666,13 +4666,13 @@ Continuer ?"""
                     output_dir = target + "_holographic" if aug_type == "Both" else target
                     
                     # Get holographic parameters from settings
-                    intensity = self.holographic_intensity.get()
+                    # Note: intensity is not used by holographic_augmenter.py CLI (uses random)
                     variations = self.holographic_variations.get()
                     
+                    # Use positional args: input_dir, output_dir, --variations N
                     cmd = [sys.executable, "-u", "core/holographic_augmenter.py",
-                           "--input", "images",
-                           "--output", output_dir,
-                           "--intensity", str(intensity),
+                           "images",  # positional: input directory
+                           output_dir,  # positional: output directory
                            "--variations", str(variations)]
                     
                     self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
