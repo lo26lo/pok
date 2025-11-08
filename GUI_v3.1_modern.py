@@ -1286,6 +1286,19 @@ class ModernPokemonGUI:
         self.train_model_var = None
         self.train_epochs_var = None
         self.train_batch_var = None
+        # Holographic augmentation settings (loaded from gui_config.json if present)
+        try:
+            # load config file if available
+            if Path(self.config_file).exists():
+                with open(self.config_file, 'r', encoding='utf-8') as cf:
+                    _cfg = json.load(cf)
+            else:
+                _cfg = {}
+        except Exception:
+            _cfg = {}
+
+        self.holographic_intensity = tk.DoubleVar(value=_cfg.get("holographic_intensity", 0.7))
+        self.holographic_variations = tk.IntVar(value=_cfg.get("holographic_variations", 3))
         self.train_device_var = None
         
         # Variables pour detection
