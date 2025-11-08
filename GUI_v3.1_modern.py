@@ -4346,17 +4346,11 @@ Continuer ?"""
             workers = int(self.train_workers_var.get())
             cache = self.train_cache_var.get()
             
-            # Options avancées si activées
-            if self.show_advanced_train.get():
-                lr0 = float(self.train_lr0_var.get())
-                lrf = float(self.train_lrf_var.get())
-                cos_lr = self.train_cosine_var.get()
-                patience = int(self.train_patience_var.get())
-            else:
-                lr0 = 0.01
-                lrf = 0.01
-                cos_lr = False
-                patience = 50
+            # Paramètres avancés (toujours disponibles)
+            lr0 = float(self.train_lr0_var.get())
+            lrf = float(self.train_lrf_var.get())
+            cos_lr = self.train_cosine_var.get()
+            patience = int(self.train_patience_var.get())
                 
         except Exception as e:
             messagebox.showerror("Error", f"Configuration invalide:\n{e}")
@@ -4415,7 +4409,12 @@ Continuer ?"""
                 self.log("❌ Package ultralytics non installé!")
                 messagebox.showerror("Erreur",
                     "Package ultralytics non installé!\n\n"
-                    "Installation:\npip install ultralytics")
+                    "Ce package est requis pour l'entraînement YOLO.\n"
+                    "Il nécessite PyTorch et un GPU compatible (recommandé).\n\n"
+                    "Installation:\n"
+                    "pip install -r requirements_training.txt\n\n"
+                    "Ou manuellement:\n"
+                    "pip install ultralytics torch torchvision")
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
                 import traceback
@@ -5578,7 +5577,7 @@ Total: {images_count + aug_count + yolo_count} images"""
             fg=self.colors['text']
         ).pack(anchor='w', padx=15, pady=(5, 2))
         
-        extension_output_var = tk.StringVar(value="excel/cards_list.xlsx")
+        extension_output_var = tk.StringVar(value="excel/cards_info.xlsx")
         tk.Entry(
             section1,
             textvariable=extension_output_var,

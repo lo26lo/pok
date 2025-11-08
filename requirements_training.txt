@@ -1,0 +1,17 @@
+# Optional requirements for YOLO training and detection
+# Only install if you have a compatible GPU and want to train models
+
+# IMPORTANT: Install PyTorch FIRST with the correct CUDA version for your GPU
+# Check your CUDA version with: nvidia-smi
+#
+# For RTX 40xx/50xx series (CUDA 12.1+):
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+#
+# For RTX 30xx series (CUDA 11.8):
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+#
+# For CPU only:
+#   pip install torch torchvision torchaudio
+
+# YOLO training and inference (install AFTER PyTorch)
+ultralytics>=8.0.0

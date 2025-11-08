@@ -15,8 +15,18 @@ if not exist ".venv\Scripts\python.exe" (
 echo [INFO] Activating virtual environment...
 call .venv\Scripts\activate.bat
 
+REM Optional: enable Python faulthandler for better tracebacks
+set PYTHONFAULTHANDLER=1
+set PYTHONIOENCODING=utf-8
+
 echo [INFO] Starting GUI v3.1...
 echo.
+
+echo [INFO] Verifying installed packages (pip check)...
+pip check
+if %ERRORLEVEL% NEQ 0 (
+    echo [WARN] Detected package compatibility issues above. The GUI may fail to start.
+)
 
 REM Check if GUI file exists
 if not exist "GUI_v3.1_modern.py" (

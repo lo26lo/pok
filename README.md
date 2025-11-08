@@ -195,14 +195,33 @@ Complete dataset with bounding boxes
 git clone https://github.com/lo26lo/pok.git
 cd pok
 
-# 2️⃣ Install environment
+# 2️⃣ Install core environment (dataset generation)
 install_env.bat
 
-# 3️⃣ Launch GUI v3.0
-run_gui_v3.bat
+# 3️⃣ Launch GUI v3.1
+run_gui_v3.1.bat
 ```
 
 **✨ That's it! The modern interface is ready to use!**
+
+### 🎓 Optional: Install Training Dependencies
+
+If you have a **GPU** and want to train YOLO models:
+
+```batch
+# Install PyTorch + Ultralytics for training
+pip install -r requirements_training.txt
+
+# Or manually:
+pip install ultralytics torch torchvision torchaudio
+```
+
+**Note:** Training features require:
+- NVIDIA GPU with CUDA support (recommended)
+- ~8GB+ VRAM for small models
+- PyTorch will auto-detect CUDA version
+
+**Without GPU:** You can still use all dataset generation features (download, augmentation, mosaics, validation, export).
 
 ### 🎯 Optional: Download Pokemon Card Images
 
