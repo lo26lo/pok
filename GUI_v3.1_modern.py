@@ -4662,15 +4662,14 @@ Continuer ?"""
                 
                 # Holographic augmentation
                 if aug_type in ["Holographic", "Both"]:
-                    self.log("✨ Running holographic augmentation...")
+                    self.log("✨ Running holographic augmentation (OPTIMIZED - GPU/CPU hybrid)...")
                     output_dir = target + "_holographic" if aug_type == "Both" else target
                     
                     # Get holographic parameters from settings
-                    # Note: intensity is not used by holographic_augmenter.py CLI (uses random)
                     variations = self.holographic_variations.get()
                     
-                    # Use positional args: input_dir, output_dir, --variations N
-                    cmd = [sys.executable, "-u", "core/holographic_augmenter.py",
+                    # Use optimized version with GPU support and multi-threading
+                    cmd = [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
                            "images",  # positional: input directory
                            output_dir,  # positional: output directory
                            "--variations", str(variations)]
