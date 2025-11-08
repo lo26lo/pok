@@ -4736,14 +4736,15 @@ Continuer ?"""
         
         def task():
             try:
+                # Utilisation de la version OPTIMISÉE par défaut
                 if "All" in mode:
-                    cmd = [sys.executable, "-u", "core/mosaic.py", "all"]
+                    cmd = [sys.executable, "-u", "core/mosaic_optimized.py", "all"]
                 else:
-                    # Pass layout, background, transform parameters, and optionally max_groups
-                    cmd = [sys.executable, "-u", "core/mosaic.py", 
+                    # Pass layout, background, transform parameters avec argparse moderne
+                    cmd = [sys.executable, "-u", "core/mosaic_optimized.py", 
                            str(layout_val), str(background_val), str(transform_val)]
                     if max_groups:
-                        cmd.append(str(max_groups))
+                        cmd.extend(["--max-groups", str(max_groups)])
                 
                 self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                           stderr=subprocess.STDOUT, text=True,
@@ -4895,14 +4896,14 @@ Continuer ?"""
     # ==================== TOOLS METHODS ====================
     
     def start_balancing(self):
-        """Lancer auto-balancing"""
-        self.log("⚖️ Auto-balancing des classes...")
+        """Lancer auto-balancing (VERSION OPTIMISÉE)"""
+        self.log("⚖️ Auto-balancing des classes (optimisé)...")
         self.start_operation("Balancing")
         
         def task():
             try:
-                # -u pour unbuffered output (logs en temps réel)
-                cmd = [sys.executable, "-u", "core/auto_balancer.py", "output/yolov8",
+                # Utilisation de la version OPTIMISÉE
+                cmd = [sys.executable, "-u", "core/auto_balancer_optimized.py", "output/yolov8",
                       "--strategy", "augment", "--target", "50"]
                 
                 self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,

@@ -124,10 +124,10 @@ class DatasetBalancer:
         # Importer ici pour éviter les dépendances
         import imgaug.augmenters as iaa
         
-        # Définir les augmentations
+        # Définir les augmentations (SANS rotation pour éviter les bordures noires)
         aug = iaa.Sequential([
             iaa.Sometimes(0.5, iaa.Fliplr(1.0)),
-            iaa.Sometimes(0.3, iaa.Affine(rotate=(-15, 15))),
+            # PAS de rotation pour éviter les coins noirs dans les mosaïques!
             iaa.Sometimes(0.3, iaa.Multiply((0.8, 1.2))),
             iaa.Sometimes(0.3, iaa.GaussianBlur(sigma=(0, 1.0))),
             iaa.Sometimes(0.2, iaa.AdditiveGaussianNoise(scale=(0, 0.05*255)))
