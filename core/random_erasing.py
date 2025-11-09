@@ -92,9 +92,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Applique le random erasing sur un répertoire d'images avec augmentation de p pour les PNG non modifiés."
     )
-    parser.add_argument("--input_dir", type=str, default="fakeimg",
+    parser.add_argument("--input_dir", type=str, default=os.path.join("backgrounds", "original"),
                         help="Répertoire contenant les images d'entrée")
-    parser.add_argument("--output_dir", type=str, default="fakeimg_augmented",
+    parser.add_argument("--output_dir", type=str, default=os.path.join("backgrounds", "augmented"),
                         help="Répertoire où enregistrer les images transformées")
     parser.add_argument("--p", type=float, default=0.5,
                         help="Probabilité initiale d'appliquer le random erasing (entre 0.0 et 1.0)")

@@ -46,7 +46,7 @@ class TrainingConfig:
     cache: str = "False"  # False, ram, disk
     
     # Chemins
-    data_yaml: Path = Path("output/yolov8/data.yaml")
+    data_yaml: Path = Path("output/dataset/data.yaml")
     project_dir: Path = Path("runs/train")
     name: str = "pokemon_detector"
     
@@ -377,7 +377,7 @@ def main():
                        help="Taille du batch")
     parser.add_argument("--device", default="0",
                        help="Device (0, cpu, 0,1,2,3)")
-    parser.add_argument("--data", default="output/yolov8/data.yaml",
+    parser.add_argument("--data", default="output/dataset/data.yaml",
                        help="Chemin vers data.yaml")
     
     args = parser.parse_args()

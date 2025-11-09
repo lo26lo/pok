@@ -56,9 +56,9 @@ def create_train_val_split(images_dir: Path, train_ratio: float = 0.8) -> Tuple[
     train_files = all_images[:split_idx]
     val_files = all_images[split_idx:]
     
-    # Convertir en chemins relatifs
-    train_paths = [f"images/{img.name}" for img in train_files]
-    val_paths = [f"images/{img.name}" for img in val_files]
+    # Convertir en chemins absolus (YOLO a besoin de chemins absolus ou relatifs au path de data.yaml)
+    train_paths = [str(img.absolute()) for img in train_files]
+    val_paths = [str(img.absolute()) for img in val_files]
     
     return train_paths, val_paths
 

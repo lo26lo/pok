@@ -37,15 +37,21 @@ _PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
 
 # Taille cible pour redimensionner les images (comme dans le script mosaic)
 TARGET_SIZE = (280, 380)
-# Répertoire contenant les cartes de base (non-augmentées)
-BASE_IMAGES_DIR = "images"
 
 # Parseur d'arguments
 parser = argparse.ArgumentParser(description="Data augmentation for Pokemon cards")
 parser.add_argument("--num_aug", type=int, default=30, help="Nombre d'augmentations par image de base")
+parser.add_argument("--source", type=str, default="images", choices=["images", "holographic"],
+                    help="Source des images : 'images' (originales) ou 'holographic' (augmentations holographiques)")
 parser.add_argument("--target", type=str, default="augmented", choices=["augmented", "images_aug"],
                     help="Destination des images augmentées")
 args = parser.parse_args()
+
+# Configuration du répertoire source selon le paramètre --source
+if args.source == "holographic":
+    BASE_IMAGES_DIR = os.path.join("output", "holographic")
+else:
+    BASE_IMAGES_DIR = "images"
 
 # Configuration des dossiers de sortie selon le paramètre --target
 if args.target == "augmented":

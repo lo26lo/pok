@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Optional, Callable, List, Dict, Any, Tuple
 from dataclasses import dataclass
 import logging
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,11 @@ class DetectionConfig:
     line_thickness: int = 2
     show_labels: bool = True
     show_confidence: bool = True
+    
+    # Affichage des prix
+    show_prices: bool = False
+    excel_path: str = "excel/cards_info.xlsx"
+    data_yaml_path: Optional[str] = None  # Auto-détecté si None
     
     def __post_init__(self):
         """Validation"""
@@ -89,6 +95,13 @@ class DetectionManager:
         self.config = config
         self._log_callback: Optional[Callable[[str], None]] = None
         self._model = None
+        self._prices: Dict[str, Dict[str, Any]] = {}
+        self._class_names: Dict[int, str] = {}
+        
+        # Charger les prix si demandé
+        if self.config.show_prices:
+            self._load_prices()
+            self._load_class_names()
         
     def set_log_callback(self, callback: Callable[[str], None]) -> None:
         """Définit le callback de log"""
@@ -99,6 +112,138 @@ class DetectionManager:
         logger.info(message)
         if self._log_callback:
             self._log_callback(message)
+    
+    def _load_prices(self) -> None:
+        """Charge les prix depuis le fichier Excel"""
+        try:
+            from .utils import load_prices_from_excel
+            from .card_mapping import get_card_id_from_class_name
+            
+            self._prices = load_prices_from_excel(self.config.excel_path)
+            self._get_card_id = get_card_id_from_class_name  # Stocker la fonction de mapping
+            
+            if self._prices:
+                self._log(f"💰 {len(self._prices)} prix chargés depuis {self.config.excel_path}")
+            else:
+                self._log(f"⚠️ Aucun prix trouvé dans {self.config.excel_path}")
+        except Exception as e:
+            self._log(f"⚠️ Impossible de charger les prix: {e}")
+            self._prices = {}
+    
+    def _load_class_names(self) -> None:
+        """Charge les noms de classes depuis data.yaml"""
+        try:
+            # Auto-détecter data.yaml si non spécifié
+            if self.config.data_yaml_path is None:
+                # Chercher dans output/dataset/data.yaml
+                data_yaml = Path("output/dataset/data.yaml")
+                if not data_yaml.exists():
+                    # Chercher dans le même dossier que le modèle
+                    model_dir = self.config.model_path.parent.parent.parent
+                    data_yaml = model_dir / "data.yaml"
+            else:
+                data_yaml = Path(self.config.data_yaml_path)
+            
+            if data_yaml.exists():
+                with open(data_yaml, 'r', encoding='utf-8') as f:
+                    data = yaml.safe_load(f)
+                    names = data.get('names', [])
+                    self._class_names = {i: name for i, name in enumerate(names)}
+                    self._log(f"📋 {len(self._class_names)} classes chargées depuis {data_yaml}")
+            else:
+                self._log(f"⚠️ data.yaml non trouvé: {data_yaml}")
+                
+        except Exception as e:
+            self._log(f"⚠️ Impossible de charger data.yaml: {e}")
+            self._class_names = {}
+    
+    def _get_card_info(self, class_id: int) -> Tuple[str, Optional[float], Optional[float]]:
+        """
+        Récupère les infos d'une carte (nom, prix, prix_max)
+        
+        Args:
+            class_id: ID de la classe
+            
+        Returns:
+            Tuple (card_name, price, price_max)
+        """
+        # Récupérer le nom de la carte
+        card_name = self._class_names.get(class_id, f"class_{class_id}")
+        
+        # Convertir le nom de classe en card_id via le mapping
+        card_id = self._get_card_id(card_name) if hasattr(self, '_get_card_id') else None
+        
+        # Récupérer le prix si disponible (avec le card_id)
+        if card_id:
+            card_info = self._prices.get(card_id, {})
+        else:
+            card_info = {}
+            
+        price = card_info.get('price')
+        price_max = card_info.get('price_max')
+        
+        return card_name, price, price_max
+    
+    def _draw_detection_with_price(self, frame, box, class_id: int, confidence: float):
+        """
+        Dessine une détection avec le prix sur l'image
+        
+        Args:
+            frame: Image (numpy array)
+            box: Boîte [x1, y1, x2, y2]
+            class_id: ID de la classe
+            confidence: Confiance de détection
+            
+        Returns:
+            Image annotée
+        """
+        import cv2
+        
+        x1, y1, x2, y2 = map(int, box)
+        
+        # Récupérer infos carte
+        card_name, price, price_max = self._get_card_info(class_id)
+        
+        # Couleur selon confiance
+        if confidence >= 0.8:
+            color = (0, 255, 0)  # Vert
+        elif confidence >= 0.6:
+            color = (0, 165, 255)  # Orange
+        else:
+            color = (0, 0, 255)  # Rouge
+        
+        # Dessiner rectangle
+        cv2.rectangle(frame, (x1, y1), (x2, y2), color, self.config.line_thickness)
+        
+        # Créer label
+        if self.config.show_prices and price is not None:
+            if price_max and price_max != price:
+                price_text = f": {price:.2f}€-{price_max:.2f}€"
+            else:
+                price_text = f": {price:.2f}€"
+        else:
+            price_text = ""
+        
+        conf_text = f" ({confidence:.2f})" if self.config.show_confidence else ""
+        label = f"{card_name}{price_text}{conf_text}"
+        
+        # Calculer taille du texte
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.6
+        thickness = 2
+        (text_width, text_height), baseline = cv2.getTextSize(label, font, font_scale, thickness)
+        
+        # Fond pour le texte
+        cv2.rectangle(frame, 
+                     (x1, y1 - text_height - baseline - 5), 
+                     (x1 + text_width, y1),
+                     color, -1)
+        
+        # Texte
+        cv2.putText(frame, label, (x1, y1 - baseline - 5),
+                   font, font_scale, (255, 255, 255), thickness)
+        
+        return frame
     
     def _load_model(self):
         """Charge le modèle YOLO (lazy loading)"""
@@ -150,11 +295,24 @@ class DetectionManager:
             
             # Sauvegarder si demandé
             if save_path:
-                annotated = results[0].plot(
-                    line_width=self.config.line_thickness,
-                    labels=self.config.show_labels,
-                    conf=self.config.show_confidence
-                )
+                if self.config.show_prices:
+                    # Dessiner avec prix personnalisés
+                    import cv2
+                    annotated = cv2.imread(str(image_path))
+                    boxes = results[0].boxes
+                    for box in boxes:
+                        cls_id = int(box.cls[0])
+                        conf = float(box.conf[0])
+                        bbox = box.xyxy[0].tolist()
+                        annotated = self._draw_detection_with_price(annotated, bbox, cls_id, conf)
+                else:
+                    # Utiliser l'annotation YOLO standard
+                    annotated = results[0].plot(
+                        line_width=self.config.line_thickness,
+                        labels=self.config.show_labels,
+                        conf=self.config.show_confidence
+                    )
+                
                 import cv2
                 cv2.imwrite(str(save_path), annotated)
                 self._log(f"💾 Image annotée sauvegardée: {save_path}")
@@ -278,11 +436,22 @@ class DetectionManager:
                 )
                 
                 # Annoter
-                annotated = results[0].plot(
-                    line_width=self.config.line_thickness,
-                    labels=self.config.show_labels,
-                    conf=self.config.show_confidence
-                )
+                if self.config.show_prices:
+                    # Dessiner avec prix personnalisés
+                    annotated = frame.copy()
+                    boxes = results[0].boxes
+                    for box in boxes:
+                        cls_id = int(box.cls[0])
+                        conf = float(box.conf[0])
+                        bbox = box.xyxy[0].tolist()
+                        annotated = self._draw_detection_with_price(annotated, bbox, cls_id, conf)
+                else:
+                    # Utiliser l'annotation YOLO standard
+                    annotated = results[0].plot(
+                        line_width=self.config.line_thickness,
+                        labels=self.config.show_labels,
+                        conf=self.config.show_confidence
+                    )
                 
                 # Afficher FPS
                 if self.config.display_fps:
@@ -378,7 +547,17 @@ class DetectionManager:
                 verbose=False
             )
             
-            annotated = results[0].plot()
+            # Annoter avec ou sans prix
+            if self.config.show_prices:
+                annotated = cv2.imread(str(image_path))
+                boxes = results[0].boxes
+                for box in boxes:
+                    cls_id = int(box.cls[0])
+                    conf = float(box.conf[0])
+                    bbox = box.xyxy[0].tolist()
+                    annotated = self._draw_detection_with_price(annotated, bbox, cls_id, conf)
+            else:
+                annotated = results[0].plot()
             
             cv2.imshow('Detection Result', annotated)
             cv2.waitKey(0)

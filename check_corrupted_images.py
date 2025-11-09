@@ -1,7 +1,7 @@
 import cv2
 from pathlib import Path
 
-img_dir = Path('output/yolov8/images')
+img_dir = Path('output/dataset/images')
 corrupted = []
 
 print("🔍 Vérification des images...")

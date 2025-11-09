@@ -1,23 +1,26 @@
 {
     "paths": {
         "images_source": "images",
-        "fakeimg": "fakeimg",
-        "output_augmented": "output\\augmented",
-        "output_mosaic": "output\\yolov8",
+        "backgrounds": "backgrounds",
+        "backgrounds_augmented": "backgrounds/augmented",
+        "output_holographic": "output/holographic",
+        "output_augmented": "output/augmented",
+        "output_mosaics": "output/mosaics",
+        "output_dataset": "output/dataset",
         "excel_file": "excel/cards_info.xlsx"
     },
     "defaults": {
         "images_dir": "images",
         "output_dir": "output",
-        "augmented_dir": "augmented",
-        "mosaic_dir": "output/yolov8",
+        "augmented_dir": "output/augmented",
+        "mosaic_dir": "output/mosaics",
         "fakeimg_dir": "fakeimg",
-        "holographic_dir": "images_holographic",
+        "holographic_dir": "output/holographic",
         "augmentations": 15,
         "augmentation_type": "standard",
         "mosaic_mode": "standard",
         "mosaic_layout": 1,
-        "mosaic_background": 1,
+        "mosaic_background": 0,
         "mosaic_transform": 0,
         "model": "yolov8n.pt",
         "epochs": 50,
@@ -30,7 +33,10 @@
         "download_workers": 8,
         "fake_count": 100,
         "fake_noise_min": 20,
-        "fake_noise_max": 60
+        "fake_noise_max": 60,
+        "dataset_dir": "output/dataset",
+        "backgrounds_dir": "backgrounds",
+        "backgrounds_augmented_dir": "backgrounds/augmented"
     },
     "holographic": {
         "intensity": 0.7,

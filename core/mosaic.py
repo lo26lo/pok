@@ -40,15 +40,15 @@ NUM_VARIATIONS_ALL = 50
 
 # Répertoires d'entrée et de sortie
 INPUT_DIRS = [os.path.join("output", "augmented", "images")]
-FAKE_DIR = "fakeimg_augmented"  # Utilise les fausses cartes augmentées
+FAKE_DIR = os.path.join("backgrounds", "augmented")  # Backgrounds augmentés
 MOSAIC_DIR = "mosaic"  # pour background_mode==1
 
-# ----- Nouveaux dossiers pour YOLOv8 -----
-YOLO_OUTPUT_DIR = os.path.join("output", "yolov8")
-YOLO_IMAGES_DIR = os.path.join(YOLO_OUTPUT_DIR, "images")
-YOLO_LABELS_DIR = os.path.join(YOLO_OUTPUT_DIR, "labels")
-os.makedirs(YOLO_IMAGES_DIR, exist_ok=True)
-os.makedirs(YOLO_LABELS_DIR, exist_ok=True)
+# ----- Nouveaux dossiers pour les mosaïques -----
+MOSAIC_OUTPUT_DIR = os.path.join("output", "mosaics")
+MOSAIC_IMAGES_DIR = os.path.join(MOSAIC_OUTPUT_DIR, "images")
+MOSAIC_LABELS_DIR = os.path.join(MOSAIC_OUTPUT_DIR, "labels")
+os.makedirs(MOSAIC_IMAGES_DIR, exist_ok=True)
+os.makedirs(MOSAIC_LABELS_DIR, exist_ok=True)
 
 # ----- Fonctions de chargement et de traitement des images -----
 def load_card_data(excel_path):
@@ -377,13 +377,13 @@ def create_layout_group(images, group_index, card_dict, class_map, merged_mappin
             annotation_line = f"{new_class_id} {bbox_cx:.6f} {bbox_cy:.6f} {bbox_w:.6f} {bbox_h:.6f}"
             annotations.append(annotation_line)
 
-    # Enregistrement du layout et des annotations dans les dossiers YOLOv8
+    # Enregistrement du layout et des annotations dans les dossiers mosaïques
     layout_filename = f"layout_{group_index:03d}.png"
-    layout_path = os.path.join(YOLO_IMAGES_DIR, layout_filename)
+    layout_path = os.path.join(MOSAIC_IMAGES_DIR, layout_filename)
     cv2.imwrite(layout_path, layout)
     
     label_filename = f"layout_{group_index:03d}.txt"
-    label_path = os.path.join(YOLO_LABELS_DIR, label_filename)
+    label_path = os.path.join(MOSAIC_LABELS_DIR, label_filename)
     with open(label_path, "w") as f:
         f.write("\n".join(annotations))
     
@@ -462,7 +462,7 @@ def main():
         safe_print("Génération terminée pour tous les groupes !")
     
     # Génération du fichier YAML pour YOLOv8 avec IDs = numéros de carte
-    yaml_path = os.path.join(YOLO_OUTPUT_DIR, "data.yaml")
+    yaml_path = os.path.join(MOSAIC_OUTPUT_DIR, "data.yaml")
     with open(yaml_path, "w") as f:
         f.write("train: images\n")
         f.write("val: images\n")

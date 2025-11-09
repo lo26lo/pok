@@ -58,11 +58,11 @@ NUM_VARIATIONS_ALL = 50
 
 # Répertoires
 INPUT_DIRS = [os.path.join("output", "augmented", "images")]
-FAKE_DIR = "fakeimg_augmented"
+FAKE_DIR = os.path.join("backgrounds", "augmented")  # Backgrounds augmentés avec random erasing
 MOSAIC_DIR = "mosaic"
-YOLO_OUTPUT_DIR = os.path.join("output", "yolov8")
-YOLO_IMAGES_DIR = os.path.join(YOLO_OUTPUT_DIR, "images")
-YOLO_LABELS_DIR = os.path.join(YOLO_OUTPUT_DIR, "labels")
+MOSAIC_OUTPUT_DIR = os.path.join("output", "mosaics")
+MOSAIC_IMAGES_DIR = os.path.join(MOSAIC_OUTPUT_DIR, "images")
+MOSAIC_LABELS_DIR = os.path.join(MOSAIC_OUTPUT_DIR, "labels")
 
 
 class MosaicGeneratorOptimized:
@@ -73,8 +73,8 @@ class MosaicGeneratorOptimized:
         self.use_gpu = use_gpu and CUDA_AVAILABLE
         
         # Créer répertoires
-        os.makedirs(YOLO_IMAGES_DIR, exist_ok=True)
-        os.makedirs(YOLO_LABELS_DIR, exist_ok=True)
+        os.makedirs(MOSAIC_IMAGES_DIR, exist_ok=True)
+        os.makedirs(MOSAIC_LABELS_DIR, exist_ok=True)
         
         safe_print(f"🚀 Générateur de mosaïques optimisé initialisé:")
         safe_print(f"   GPU: {'✅ Activé' if self.use_gpu else '❌ Désactivé'}")
@@ -90,7 +90,8 @@ class MosaicGeneratorOptimized:
             name = row["Name"].replace(" ", "_")
             if number not in card_dict:
                 card_dict[number] = name
-                class_map[number] = int(number)
+                # Le class_id dans data.yaml est 0-indexed (carte 019 -> index 18)
+                class_map[number] = int(number) - 1
         return card_dict, class_map
     
     def extract_card_number(self, filename: str) -> Optional[str]:
@@ -465,14 +466,14 @@ class MosaicGeneratorOptimized:
                     annotations.append(annotation_line)
             
             # Sauvegarder l'image PNG avec compression rapide (évite corruption)
-            output_file = os.path.join(YOLO_IMAGES_DIR, f"layout_{group_index:03d}.png")
+            output_file = os.path.join(MOSAIC_IMAGES_DIR, f"layout_{group_index:03d}.png")
             # Paramètres PNG: compression 1 (rapide) pour éviter les erreurs CRC
             success = cv2.imwrite(output_file, layout, [cv2.IMWRITE_PNG_COMPRESSION, 1])
             if not success:
                 raise Exception(f"Échec d'écriture de {output_file}")
             
             # Sauvegarder annotations YOLO
-            label_file = os.path.join(YOLO_LABELS_DIR, f"layout_{group_index:03d}.txt")
+            label_file = os.path.join(MOSAIC_LABELS_DIR, f"layout_{group_index:03d}.txt")
             with open(label_file, "w") as f:
                 f.write("\n".join(annotations))
             

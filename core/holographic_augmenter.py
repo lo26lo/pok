@@ -6,6 +6,7 @@ Simule les effets visuels des cartes holographiques (rainbow, glare, texture)
 import cv2
 import numpy as np
 import random
+import os
 
 # Import safe_print - gère import relatif ET absolu
 try:
@@ -283,7 +284,8 @@ def main():
     
     parser = argparse.ArgumentParser(description="Augmentation holographique")
     parser.add_argument("input", help="Dossier d'entrée ou fichier image")
-    parser.add_argument("output", help="Dossier de sortie")
+    parser.add_argument("--output", default=os.path.join("output", "holographic"), 
+                        help="Dossier de sortie (défaut: output/holographic)")
     parser.add_argument("--variations", type=int, default=3, 
                         help="Nombre de variations par image")
     args = parser.parse_args()

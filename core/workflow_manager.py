@@ -75,7 +75,8 @@ class WorkflowConfig:
     
     # Chemins
     output_dir: Path = Path("output")
-    yolo_dir: Path = Path("output/yolov8")
+    mosaic_dir: Path = Path("output/mosaics")
+    dataset_dir: Path = Path("output/dataset")
     
     def __post_init__(self):
         """Validation après initialisation"""
@@ -193,21 +194,28 @@ class WorkflowManager:
             if result.status == StepStatus.FAILED:
                 raise Exception(f"Échec mosaïques: {result.message}")
             
-            # Étape 3: Validation (optionnelle)
+            # Étape 3: Merge Dataset (toujours active)
+            current_step += 1
+            result = self._run_merge(current_step, total_steps)
+            self.results.append(result)
+            if result.status == StepStatus.FAILED:
+                raise Exception(f"Échec merge dataset: {result.message}")
+            
+            # Étape 4: Validation (optionnelle)
             if self.config.enable_validation:
                 current_step += 1
                 result = self._run_validation(current_step, total_steps)
                 self.results.append(result)
                 # Non bloquant si échec
             
-            # Étape 4: Balancing (optionnel)
+            # Étape 5: Balancing (optionnel)
             if self.config.enable_balancing:
                 current_step += 1
                 result = self._run_balancing(current_step, total_steps)
                 self.results.append(result)
                 # Non bloquant si échec
             
-            # Étape 5: Training (optionnel)
+            # Étape 6: Training (optionnel)
             if self.config.enable_training:
                 current_step += 1
                 result = self._run_training(current_step, total_steps)
@@ -226,7 +234,7 @@ class WorkflowManager:
     
     def _count_active_steps(self) -> int:
         """Compte le nombre d'étapes actives"""
-        count = 2  # Augmentation + Mosaïques (toujours)
+        count = 3  # Augmentation + Mosaïques + Merge (toujours)
         if self.config.enable_validation:
             count += 1
         if self.config.enable_balancing:
@@ -329,6 +337,54 @@ class WorkflowManager:
                 error=e
             )
     
+    def _run_merge(self, current: int, total: int) -> StepResult:
+        """Exécute l'étape de fusion du dataset"""
+        import time
+        start_time = time.time()
+        
+        self._log(f"\n📋 Étape {current}/{total}: Merge Dataset")
+        self._update_progress(current, total, "Fusion augmented + mosaics...")
+        
+        try:
+            # Importer et exécuter merge_dataset
+            import merge_dataset
+            
+            # Rediriger stdout pour capturer les prints
+            import io
+            from contextlib import redirect_stdout
+            
+            output = io.StringIO()
+            with redirect_stdout(output):
+                merge_dataset.merge_dataset()
+            
+            # Afficher la sortie dans le log
+            for line in output.getvalue().split('\n'):
+                if line.strip():
+                    self._log(line)
+            
+            duration = time.time() - start_time
+            self._log(f"✅ Dataset fusionné ({duration:.1f}s)")
+            
+            return StepResult(
+                step=WorkflowStep.MOSAIC,  # Pas de WorkflowStep.MERGE défini, on utilise MOSAIC
+                status=StepStatus.SUCCESS,
+                duration=duration,
+                message="Dataset fusionné avec succès"
+            )
+            
+        except Exception as e:
+            duration = time.time() - start_time
+            self._log(f"❌ Erreur merge: {e}")
+            import traceback
+            self._log(traceback.format_exc())
+            return StepResult(
+                step=WorkflowStep.MOSAIC,
+                status=StepStatus.FAILED,
+                duration=duration,
+                message=str(e),
+                error=e
+            )
+    
     def _run_validation(self, current: int, total: int) -> StepResult:
         """Exécute l'étape de validation"""
         import time
@@ -341,7 +397,7 @@ class WorkflowManager:
             cmd = [
                 sys.executable,
                 "core/dataset_validator.py",
-                str(self.config.yolo_dir),
+                str(self.config.dataset_dir),
                 "--html"
             ]
             
@@ -389,7 +445,7 @@ class WorkflowManager:
             cmd = [
                 sys.executable,
                 "core/auto_balancer.py",
-                str(self.config.yolo_dir),
+                str(self.config.dataset_dir),
                 "--strategy", self.config.balance_strategy,
                 "--target", str(self.config.balance_target)
             ]
@@ -441,7 +497,7 @@ class WorkflowManager:
             
             model = YOLO('yolov8n.pt')
             results = model.train(
-                data=str(self.config.yolo_dir / 'data.yaml'),
+                data=str(self.config.dataset_dir / 'data.yaml'),
                 epochs=self.config.training_epochs,
                 imgsz=self.config.training_imgsz,
                 batch=self.config.training_batch,

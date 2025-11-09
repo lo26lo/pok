@@ -65,13 +65,13 @@ class SettingsDialog:
         # Paramètres par défaut
         self.default_images_dir = tk.StringVar(value=config.get("default_images_dir", "images"))
         self.default_output_dir = tk.StringVar(value=config.get("default_output_dir", "output"))
-        self.default_augmented_dir = tk.StringVar(value=config.get("default_augmented_dir", "augmented"))
-        self.default_mosaic_dir = tk.StringVar(value=config.get("default_mosaic_dir", "output/yolov8"))
-        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", "fakeimg_augmented"))
-        self.default_holographic_dir = tk.StringVar(value=config.get("default_holographic_dir", "images_holographic"))
+        self.default_augmented_dir = tk.StringVar(value=config.get("default_augmented_dir", "output/augmented"))
+        self.default_mosaic_dir = tk.StringVar(value=config.get("default_mosaic_dir", "output/mosaics"))
+        self.default_dataset_dir = tk.StringVar(value=config.get("default_dataset_dir", "output/dataset"))
+        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", "backgrounds/augmented"))
+        self.default_holographic_dir = tk.StringVar(value=config.get("default_holographic_dir", "output/holographic"))
         
-        self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 15))
-        self.default_augmentation_type = tk.StringVar(value=config.get("default_augmentation_type", "standard"))
+        self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 50))
         self.holographic_intensity = tk.DoubleVar(value=config.get("holographic_intensity", 0.7))
         self.holographic_variations = tk.IntVar(value=config.get("holographic_variations", 3))
         self.default_mosaic_mode = tk.StringVar(value=config.get("default_mosaic_mode", "standard"))
@@ -87,8 +87,8 @@ class SettingsDialog:
         self.enable_notifications = tk.BooleanVar(value=config.get("enable_notifications", True))
         
         # Fake image generation settings (random erasing)
-        self.fakeimg_input_dir = tk.StringVar(value=config.get("fakeimg_input_dir", "images"))
-        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "fakeimg_augmented"))
+        self.fakeimg_input_dir = tk.StringVar(value=config.get("fakeimg_input_dir", "backgrounds/original"))
+        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "backgrounds/augmented"))
         self.fakeimg_p = tk.DoubleVar(value=config.get("fakeimg_p", 0.5))
         self.fakeimg_sl = tk.DoubleVar(value=config.get("fakeimg_sl", 0.02))
         self.fakeimg_sh = tk.DoubleVar(value=config.get("fakeimg_sh", 0.4))
@@ -462,67 +462,72 @@ class SettingsDialog:
         container = tk.Frame(parent, bg=colors['bg_dark'])
         container.pack(fill='both', expand=True, padx=20, pady=20)
         
-        # Default augmentations
+        # Info message
         tk.Label(
             container,
-            text="🎨 Default Number of Augmentations:",
+            text="ℹ️ Configuration du Pipeline Augmentation Unifié",
+            bg=colors['bg_dark'],
+            fg=colors['accent'],
+            font=('Segoe UI', 12, 'bold')
+        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="Ces paramètres définissent les valeurs par défaut du pipeline 'Holographic → Augmentation'.",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=1, column=0, sticky='w', pady=(0, 20))
+        
+        # Séparateur
+        tk.Frame(container, bg=colors['border'], height=1).grid(row=2, column=0, sticky='ew', pady=(0, 20))
+        
+        # Section 1: Holographic
+        tk.Label(
+            container,
+            text="🌟 Holographic Generation Defaults:",
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=self.app.FONT_BUTTON
-        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
+        ).grid(row=3, column=0, sticky='w', pady=(0, 10))
+        
+        holo_frame = tk.Frame(container, bg=colors['bg_dark'])
+        holo_frame.grid(row=4, column=0, sticky='w', pady=(0, 10))
+        
+        tk.Label(
+            holo_frame,
+            text="Number of variations:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=self.app.FONT_TEXT,
+            width=20,
+            anchor='w'
+        ).pack(side=tk.LEFT)
         
         tk.Spinbox(
-            container,
-            from_=1,
-            to=100,
-            textvariable=self.default_augmentations,
+            holo_frame,
+            from_=0,
+            to=10,
+            textvariable=self.holographic_variations,
             font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
             bd=2,
             width=10
-        ).grid(row=1, column=0, sticky='w', pady=(0, 20))
-        
-        # Default augmentation type
-        tk.Label(
-            container,
-            text="✨ Default Augmentation Type:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=2, column=0, sticky='w', pady=(0, 5))
-        
-        aug_type_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_augmentation_type,
-            values=["standard", "holographic", "both"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=18
-        )
-        aug_type_combo.grid(row=3, column=0, sticky='w', pady=(0, 20))
-        
-        # Holographic settings section
-        tk.Label(
-            container,
-            text="✨ Holographic Effect Settings:",
-            bg=colors['bg_dark'],
-            fg=colors['accent'],
-            font=('Segoe UI', 11, 'bold')
-        ).grid(row=4, column=0, sticky='w', pady=(10, 10))
+        ).pack(side=tk.LEFT, padx=10)
         
         tk.Label(
-            container,
-            text="These settings apply when 'Holographic' or 'Both' type is selected.",
+            holo_frame,
+            text="(0 = skip holographic)",
             bg=colors['bg_dark'],
             fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=5, column=0, sticky='w', pady=(0, 15))
+            font=('Segoe UI', 9)
+        ).pack(side=tk.LEFT, padx=5)
         
-        # Holographic intensity
+        # Intensity
         intensity_frame = tk.Frame(container, bg=colors['bg_dark'])
-        intensity_frame.grid(row=6, column=0, sticky='w', pady=(0, 10))
+        intensity_frame.grid(row=5, column=0, sticky='w', pady=(0, 20))
         
         tk.Label(
             intensity_frame,
@@ -530,7 +535,7 @@ class SettingsDialog:
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=self.app.FONT_TEXT,
-            width=15,
+            width=20,
             anchor='w'
         ).pack(side=tk.LEFT)
         
@@ -553,32 +558,79 @@ class SettingsDialog:
             width=5
         ).pack(side=tk.LEFT)
         
-        # Holographic variations
-        variations_frame = tk.Frame(container, bg=colors['bg_dark'])
-        variations_frame.grid(row=7, column=0, sticky='w', pady=(0, 10))
+        # Séparateur
+        tk.Frame(container, bg=colors['border'], height=1).grid(row=6, column=0, sticky='ew', pady=(0, 20))
+        
+        # Section 2: Augmentation
+        tk.Label(
+            container,
+            text="🎨 Augmentation Defaults:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=self.app.FONT_BUTTON
+        ).grid(row=7, column=0, sticky='w', pady=(0, 10))
+        
+        aug_frame = tk.Frame(container, bg=colors['bg_dark'])
+        aug_frame.grid(row=8, column=0, sticky='w', pady=(0, 10))
         
         tk.Label(
-            variations_frame,
-            text="Number of variations:",
+            aug_frame,
+            text="Augmentations per image:",
             bg=colors['bg_dark'],
             fg=colors['text'],
             font=self.app.FONT_TEXT,
-            width=15,
+            width=20,
             anchor='w'
         ).pack(side=tk.LEFT)
         
         tk.Spinbox(
-            variations_frame,
-            from_=1,
-            to=10,
-            textvariable=self.holographic_variations,
+            aug_frame,
+            from_=0,
+            to=100,
+            textvariable=self.default_augmentations,
             font=self.app.FONT_TEXT,
             bg='#FFFFFF',
             fg='#1a1a1a',
             relief='flat',
             bd=2,
-            width=8
+            width=10
         ).pack(side=tk.LEFT, padx=10)
+        
+        tk.Label(
+            aug_frame,
+            text="(0 = skip augmentation)",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9)
+        ).pack(side=tk.LEFT, padx=5)
+        
+        # Info résultat attendu
+        tk.Label(
+            container,
+            text="💡 Résultat attendu avec 8 cartes sources:",
+            bg=colors['bg_dark'],
+            fg=colors['accent'],
+            font=('Segoe UI', 10, 'bold')
+        ).grid(row=9, column=0, sticky='w', pady=(20, 5))
+        
+        result_text = tk.Text(
+            container,
+            height=4,
+            bg=colors['bg_card'],
+            fg=colors['text'],
+            font=('Consolas', 9),
+            relief='flat',
+            bd=0,
+            wrap='word'
+        )
+        result_text.grid(row=10, column=0, sticky='ew', pady=(0, 10))
+        
+        result_info = f"""• Holographic: 8 cartes × {self.holographic_variations.get()} = {8 * self.holographic_variations.get()} images
+• Augmentation: {8 * self.holographic_variations.get()} × {self.default_augmentations.get()} = {8 * self.holographic_variations.get() * self.default_augmentations.get()} images
+• Mosaics possibles: {8 * self.holographic_variations.get() * self.default_augmentations.get()} ÷ 8 = {(8 * self.holographic_variations.get() * self.default_augmentations.get()) // 8} groupes"""
+        
+        result_text.insert('1.0', result_info)
+        result_text.config(state='disabled')
         
         container.grid_columnconfigure(0, weight=1)
     
@@ -1206,7 +1258,6 @@ class SettingsDialog:
             "default_fakeimg_dir": self.default_fakeimg_dir.get(),
             "default_holographic_dir": self.default_holographic_dir.get(),
             "default_augmentations": self.default_augmentations.get(),
-            "default_augmentation_type": self.default_augmentation_type.get(),
             "holographic_intensity": self.holographic_intensity.get(),
             "holographic_variations": self.holographic_variations.get(),
             "default_mosaic_mode": self.default_mosaic_mode.get(),
@@ -1308,6 +1359,7 @@ class ModernPokemonGUI:
         
         # Variables pour augmentation
         self.aug_num_var = None
+        self.aug_holo_var = None
         self.aug_output_var = None
         
         # Variables pour mosaic
@@ -2668,56 +2720,72 @@ class ModernPokemonGUI:
         config_content = tk.Frame(config_card, bg=self.colors['bg_card'])
         config_content.pack(fill=tk.X, padx=40, pady=(0, 20))
         
-        # Augmentations per image
+        # SECTION 1: Holographic Generation
+        tk.Label(config_content, text="🌟 Holographic Generation",
+                bg=self.colors['bg_card'], fg=self.colors['accent'],
+                font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=(5, 10))
+        
+        holo_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        holo_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(holo_frame, text="Number of variations:",
+                bg=self.colors['bg_card'], fg='#FFFFFF',
+                font=self.FONT_BUTTON, width=20, anchor='w').pack(side=tk.LEFT)
+        
+        self.aug_holo_var = ttk.Spinbox(holo_frame, from_=0, to=10, width=10)
+        self.aug_holo_var.pack(side=tk.LEFT, padx=10)
+        self.aug_holo_var.set(3)
+        
+        tk.Label(holo_frame, text="(0 = skip holographic)",
+                bg=self.colors['bg_card'], fg=self.colors['text_dim'],
+                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
+        
+        # Separator
+        tk.Frame(config_content, bg=self.colors['border'], height=1).pack(fill=tk.X, pady=15)
+        
+        # SECTION 2: Augmentation
+        tk.Label(config_content, text="🎨 Augmentation",
+                bg=self.colors['bg_card'], fg=self.colors['accent'],
+                font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=(5, 10))
+        
         aug_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        aug_frame.pack(fill=tk.X, pady=10)
+        aug_frame.pack(fill=tk.X, pady=5)
         
         tk.Label(aug_frame, text="Augmentations per image:",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+                font=self.FONT_BUTTON, width=20, anchor='w').pack(side=tk.LEFT)
         
-        self.aug_num_var = ttk.Spinbox(aug_frame, from_=1, to=100, width=10)
+        self.aug_num_var = ttk.Spinbox(aug_frame, from_=0, to=100, width=10)
         self.aug_num_var.pack(side=tk.LEFT, padx=10)
-        self.aug_num_var.set(15)
+        self.aug_num_var.set(50)
         
-        tk.Label(aug_frame, text="(variations/image)",
+        tk.Label(aug_frame, text="(0 = skip augmentation)",
                 bg=self.colors['bg_card'], fg=self.colors['text_dim'],
                 font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
         
-        # Type
-        type_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        type_frame.pack(fill=tk.X, pady=10)
+        # Separator
+        tk.Frame(config_content, bg=self.colors['border'], height=1).pack(fill=tk.X, pady=15)
         
-        tk.Label(type_frame, text="Type:",
-                bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+        # Output directory (fixe)
+        tk.Label(config_content, text="📂 Output",
+                bg=self.colors['bg_card'], fg=self.colors['accent'],
+                font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=(5, 10))
         
-        self.aug_type_var = ttk.Combobox(type_frame,
-            values=["Standard", "Holographic", "Both"],
-            state='readonly',
-            width=self.COMBOBOX_WIDTH)
-        self.aug_type_var.pack(side=tk.LEFT, padx=10)
-        self.aug_type_var.current(0)
-        
-        tk.Label(type_frame, text="(augmentation mode)",
-                bg=self.colors['bg_card'], fg=self.colors['text_dim'],
-                font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
-        
-        # Output directory
         output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
-        output_frame.pack(fill=tk.X, pady=10)
+        output_frame.pack(fill=tk.X, pady=5)
         
-        tk.Label(output_frame, text="Output directory:",
+        tk.Label(output_frame, text="Directory:",
                 bg=self.colors['bg_card'], fg='#FFFFFF',
-                font=self.FONT_BUTTON).pack(side=tk.LEFT)
+                font=self.FONT_BUTTON, width=20, anchor='w').pack(side=tk.LEFT)
         
-        self.aug_output_var = ttk.Combobox(output_frame,
-            values=["augmented", "images_aug", "output/augmented"],
-            state='readonly', width=self.COMBOBOX_WIDTH)
-        self.aug_output_var.pack(side=tk.LEFT, padx=10)
-        self.aug_output_var.current(0)
+        # Valeur fixe pour éviter la confusion
+        self.aug_output_var = tk.StringVar(value="augmented")
         
-        tk.Label(output_frame, text="(where augmented images will be saved)",
+        tk.Label(output_frame, text="output/augmented/",
+                bg=self.colors['bg_card'], fg=self.colors['accent'],
+                font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT, padx=10)
+        
+        tk.Label(output_frame, text="(standard output path)",
                 bg=self.colors['bg_card'], fg=self.colors['text_dim'],
                 font=('Segoe UI', 9)).pack(side=tk.LEFT, padx=10)
         
@@ -2725,9 +2793,9 @@ class ModernPokemonGUI:
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=30)
         
-        ttk.Button(btn_frame, text="🎨 START AUGMENTATION",
+        ttk.Button(btn_frame, text="🚀 GENERATE ALL",
                   style='Accent.TButton',
-                  command=self.start_augmentation,
+                  command=self.start_augmentation_pipeline,
                   width=30).pack(pady=5)
     
     def create_fakeimg_view(self):
@@ -2783,7 +2851,7 @@ class ModernPokemonGUI:
         
         self.fakeimg_input_var = ttk.Entry(input_frame, width=self.ENTRY_WIDTH)
         self.fakeimg_input_var.pack(side=tk.LEFT, padx=10)
-        self.fakeimg_input_var.insert(0, "images")
+        self.fakeimg_input_var.insert(0, "backgrounds/original")
         
         # Output directory
         output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
@@ -2795,7 +2863,7 @@ class ModernPokemonGUI:
         
         self.fakeimg_output_var = ttk.Entry(output_frame, width=self.ENTRY_WIDTH)
         self.fakeimg_output_var.pack(side=tk.LEFT, padx=10)
-        self.fakeimg_output_var.insert(0, "fakeimg_augmented")
+        self.fakeimg_output_var.insert(0, "backgrounds/augmented")
         
         # Random Erasing Parameters
         tk.Label(config_content,
@@ -3024,7 +3092,7 @@ class ModernPokemonGUI:
         self.valid_path_var = tk.Entry(path_frame, width=40,
                                        bg='#FFFFFF', fg='#1a1a1a')
         self.valid_path_var.pack(side=tk.LEFT, padx=10)
-        self.valid_path_var.insert(0, "output/yolov8")
+        self.valid_path_var.insert(0, "output/dataset")
         
         ttk.Button(path_frame, text="📁", width=3,
                   command=self.browse_dataset).pack(side=tk.LEFT)
@@ -3037,6 +3105,11 @@ class ModernPokemonGUI:
         # Buttons
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=30)
+        
+        ttk.Button(btn_frame, text="🔀 MERGE DATASET",
+                  style='Accent.TButton',
+                  command=self.start_merge_dataset,
+                  width=30).pack(pady=5)
         
         ttk.Button(btn_frame, text="✅ VALIDATE DATASET",
                   style='Accent.TButton',
@@ -3514,6 +3587,18 @@ class ModernPokemonGUI:
         self.detect_camera_var.pack(side=tk.LEFT, padx=10)
         self.detect_camera_var.set(0)
         
+        # Show Prices checkbox
+        prices_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        prices_frame.pack(fill=tk.X, pady=10)
+        
+        self.detect_show_prices_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(prices_frame, text="💰 Show Prices (from excel/cards_info.xlsx)",
+                       variable=self.detect_show_prices_var).pack(anchor='w')
+        
+        tk.Label(prices_frame, text="Display card prices alongside names in detection overlay",
+                bg=self.colors['bg_card'], fg='#888888',
+                font=('Segoe UI', 9)).pack(anchor='w', padx=20)
+        
         # Buttons
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=30)
@@ -3977,7 +4062,7 @@ class ModernPokemonGUI:
                                     len(list(aug_path.glob("*.jpg")))
             
             # Compter mosaïques
-            mosaic_path = Path("output/yolov8/images")
+            mosaic_path = Path("output/mosaics/images")
             if mosaic_path.exists():
                 stats['mosaics'] = len(list(mosaic_path.glob("*.png"))) + \
                                   len(list(mosaic_path.glob("*.jpg")))
@@ -4370,11 +4455,11 @@ Continuer ?"""
             return
         
         # Vérifier data.yaml
-        data_yaml = Path("output/yolov8/data.yaml")
+        data_yaml = Path("output/dataset/data.yaml")
         if not data_yaml.exists():
             messagebox.showerror("Error",
                 f"Fichier data.yaml non trouvé!\n{data_yaml}\n\n"
-                "Générez d'abord les mosaïques.")
+                "Générez d'abord le dataset (Augmentation + Mosaics + Merge).")
             return
         
         self.start_operation("Training")
@@ -4497,7 +4582,8 @@ Continuer ?"""
                 config = DetectionConfig(
                     model_path=model_path,
                     confidence=conf,
-                    camera_id=camera_id
+                    camera_id=camera_id,
+                    show_prices=self.detect_show_prices_var.get()
                 )
                 
                 manager = DetectionManager(config)
@@ -4547,7 +4633,8 @@ Continuer ?"""
             try:
                 config = DetectionConfig(
                     model_path=model_path,
-                    confidence=conf
+                    confidence=conf,
+                    show_prices=self.detect_show_prices_var.get()
                 )
                 
                 manager = DetectionManager(config)
@@ -4588,7 +4675,8 @@ Continuer ?"""
             try:
                 config = DetectionConfig(
                     model_path=model_path,
-                    confidence=conf
+                    confidence=conf,
+                    show_prices=self.detect_show_prices_var.get()
                 )
                 
                 manager = DetectionManager(config)
@@ -4615,6 +4703,123 @@ Continuer ?"""
         threading.Thread(target=task, daemon=True).start()
     
     # ==================== AUGMENTATION METHODS ====================
+    
+    def start_augmentation_pipeline(self):
+        """Lancer le pipeline complet: Holographic → Augmentation"""
+        # Vérifier l'environnement virtuel
+        if not self.ensure_venv():
+            return
+        
+        try:
+            num_holo = int(self.aug_holo_var.get())
+            num_aug = int(self.aug_num_var.get())
+        except Exception as e:
+            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            return
+        
+        # Vérifier qu'au moins une opération est demandée
+        if num_holo == 0 and num_aug == 0:
+            messagebox.showwarning("Warning", "Au moins une opération doit être > 0 !\n\nHolographic = 0 ET Augmentation = 0")
+            return
+        
+        # Message de confirmation
+        steps = []
+        if num_holo > 0:
+            steps.append(f"🌟 Holographic: {num_holo} variations")
+        if num_aug > 0:
+            steps.append(f"🎨 Augmentation: {num_aug} variations")
+        
+        confirm_msg = "Pipeline de génération:\n\n" + "\n".join(steps) + "\n\nContinuer ?"
+        
+        if not messagebox.askyesno("Confirmation", confirm_msg):
+            return
+        
+        self.log("🚀 Démarrage du pipeline de génération...")
+        self.start_operation("Generation Pipeline")
+        
+        def task():
+            try:
+                source_dir = "images"
+                
+                # ÉTAPE 1: Holographic (optionnel)
+                if num_holo > 0:
+                    self.log(f"\n🌟 ÉTAPE 1/2: Génération holographique ({num_holo} variations)...")
+                    
+                    cmd = [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
+                           source_dir,
+                           "output/holographic",
+                           "--variations", str(num_holo)]
+                    
+                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                              stderr=subprocess.STDOUT, text=True,
+                                              encoding='utf-8', errors='replace', bufsize=1)
+                    
+                    for line in iter(self.current_process.stdout.readline, ''):
+                        if line and self.current_process:
+                            self.log(line.strip())
+                    
+                    if self.current_process:
+                        self.current_process.wait()
+                        if self.current_process.returncode != 0:
+                            self.log("❌ Holographic génération échouée!")
+                            messagebox.showerror("Error", "Holographic génération échouée!")
+                            return
+                        else:
+                            self.log("✅ Holographic terminé!")
+                            # Changer la source pour l'augmentation
+                            source_dir = "holographic"
+                
+                # ÉTAPE 2: Augmentation (optionnel)
+                if num_aug > 0:
+                    step_num = "2/2" if num_holo > 0 else "1/1"
+                    self.log(f"\n🎨 ÉTAPE {step_num}: Augmentation ({num_aug} variations par image)...")
+                    
+                    cmd = [sys.executable, "-u", "core/augmentation.py",
+                          "--num_aug", str(num_aug),
+                          "--source", source_dir,
+                          "--target", "augmented"]
+                    
+                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                              stderr=subprocess.STDOUT, text=True,
+                                              encoding='utf-8', errors='replace', bufsize=1)
+                    
+                    for line in iter(self.current_process.stdout.readline, ''):
+                        if line and self.current_process:
+                            self.log(line.strip())
+                    
+                    if self.current_process:
+                        self.current_process.wait()
+                        if self.current_process.returncode != 0:
+                            self.log("❌ Augmentation échouée!")
+                            messagebox.showerror("Error", "Augmentation échouée!")
+                            return
+                        else:
+                            self.log("✅ Augmentation terminée!")
+                
+                # Succès final
+                self.log("\n" + "="*50)
+                self.log("🎉 PIPELINE TERMINÉ AVEC SUCCÈS!")
+                self.log("="*50)
+                
+                summary = "Pipeline terminé!\n\n"
+                if num_holo > 0:
+                    summary += f"✅ Holographic: {num_holo} variations générées\n"
+                if num_aug > 0:
+                    summary += f"✅ Augmentation: {num_aug} variations par image\n"
+                summary += f"\n📂 Output: output/augmented/"
+                
+                messagebox.showinfo("Succès", summary)
+                self.update_stats()
+                
+            except Exception as e:
+                self.log(f"❌ Erreur pipeline: {e}")
+                import traceback
+                self.log(traceback.format_exc())
+                messagebox.showerror("Error", f"Erreur pipeline:\n{e}")
+            finally:
+                self.end_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
     
     def start_augmentation(self):
         """Lancer l'augmentation d'images"""
@@ -4785,6 +4990,47 @@ Continuer ?"""
             self.valid_path_var.delete(0, tk.END)
             self.valid_path_var.insert(0, folder)
     
+    def start_merge_dataset(self):
+        """Fusionner augmented + mosaics dans dataset final"""
+        self.log("🔀 Fusion du dataset (augmented + mosaics)...")
+        self.start_operation("Merge Dataset")
+        
+        def task():
+            try:
+                # Importer et exécuter merge_dataset
+                import merge_dataset
+                
+                # Rediriger stdout pour capturer les prints
+                import io
+                from contextlib import redirect_stdout
+                
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    merge_dataset.merge_dataset()
+                
+                # Afficher la sortie dans le log
+                for line in output.getvalue().split('\n'):
+                    if line.strip():
+                        self.log(line)
+                
+                self.log("✅ Dataset fusionné avec succès!")
+                messagebox.showinfo("Succès", 
+                    "Dataset fusionné!\n\n"
+                    "📂 Emplacement: output/dataset/\n"
+                    "✓ train.txt et val.txt créés\n"
+                    "✓ data.yaml copié\n\n"
+                    "Prêt pour l'entraînement!")
+                
+            except Exception as e:
+                self.log(f"❌ Erreur lors du merge: {e}")
+                import traceback
+                self.log(traceback.format_exc())
+                messagebox.showerror("Erreur", f"Erreur lors du merge:\n{e}")
+            finally:
+                self.end_operation()
+        
+        threading.Thread(target=task, daemon=True).start()
+    
     def start_validation(self):
         """Lancer validation du dataset"""
         dataset_path = self.valid_path_var.get()
@@ -4866,7 +5112,7 @@ Continuer ?"""
                 for fmt in formats:
                     self.log(f"\n📦 Export format: {fmt}")
                     cmd = [sys.executable, "-u", "core/dataset_exporter.py",
-                          "output/yolov8", "--format", fmt]
+                          "output/dataset", "--format", fmt]
                     
                     self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                               stderr=subprocess.STDOUT, text=True,
@@ -4903,7 +5149,7 @@ Continuer ?"""
         def task():
             try:
                 # Utilisation de la version OPTIMISÉE
-                cmd = [sys.executable, "-u", "core/auto_balancer_optimized.py", "output/yolov8",
+                cmd = [sys.executable, "-u", "core/auto_balancer_optimized.py", "output/dataset",
                       "--strategy", "augment", "--target", "50"]
                 
                 self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -5497,15 +5743,17 @@ Continuer ?"""
         try:
             images_count = len(list(Path("images").glob("*.png")))
             aug_count = len(list(Path("output/augmented/images").glob("*.png"))) if Path("output/augmented/images").exists() else 0
-            yolo_count = len(list(Path("output/yolov8/images").glob("*.png"))) if Path("output/yolov8/images").exists() else 0
+            mosaic_count = len(list(Path("output/mosaics/images").glob("*.png"))) if Path("output/mosaics/images").exists() else 0
+            dataset_count = len(list(Path("output/dataset/images").glob("*.png"))) if Path("output/dataset/images").exists() else 0
             
             msg = f"""📊 Dataset Statistics
 
 📁 Original images: {images_count}
 🎨 Augmented images: {aug_count}
-🧩 YOLO mosaics: {yolo_count}
+🧩 Mosaics: {mosaic_count}
+📦 Final dataset: {dataset_count}
 
-Total: {images_count + aug_count + yolo_count} images"""
+Total: {images_count + aug_count + mosaic_count} images"""
             
             messagebox.showinfo("Statistics", msg)
         except Exception as e:
@@ -6248,11 +6496,11 @@ Total: {images_count + aug_count + yolo_count} images"""
             messagebox.showerror("Error", f"Failed to clean:\n{e}")
     
     def clean_mosaics(self):
-        """Nettoyer output/yolov8/"""
+        """Nettoyer output/mosaics/ et output/dataset/"""
         result = messagebox.askyesno(
             "Confirm Clean",
-            "⚠️ This will DELETE output/yolov8/ folder!\n\n"
-            "This includes all mosaics and YOLO datasets.\n\n"
+            "⚠️ This will DELETE output/mosaics/ and output/dataset/ folders!\n\n"
+            "This includes all mosaics and merged datasets.\n\n"
             "Are you sure?",
             icon='warning'
         )
@@ -6262,13 +6510,20 @@ Total: {images_count + aug_count + yolo_count} images"""
         
         try:
             import shutil
-            mosaic_path = Path("output/yolov8")
+            
+            # Nettoyer mosaics
+            mosaic_path = Path("output/mosaics")
             if mosaic_path.exists():
                 shutil.rmtree(mosaic_path)
                 self.log("✅ Mosaics folder deleted")
-                messagebox.showinfo("Success", "Mosaics folder cleaned!")
-            else:
-                self.log("⚠️ Mosaics folder not found")
+            
+            # Nettoyer dataset
+            dataset_path = Path("output/dataset")
+            if dataset_path.exists():
+                shutil.rmtree(dataset_path)
+                self.log("✅ Dataset folder deleted")
+            
+            messagebox.showinfo("Success", "Mosaics and Dataset folders cleaned!")
         except Exception as e:
             self.log(f"❌ Error: {e}")
             messagebox.showerror("Error", f"Failed to clean:\n{e}")
