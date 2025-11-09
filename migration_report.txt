@@ -1,0 +1,13 @@
+============================================================
+RAPPORT DE MIGRATION
+============================================================
+
+images                                       9 fichiers
+backgrounds/original                         1 fichiers
+backgrounds/augmented                      252 fichiers
+output/holographic/images                   24 fichiers
+output/augmented/images                   1200 fichiers
+output/mosaics/images                      150 fichiers
+output/dataset/images                        0 fichiers
+
+============================================================
