@@ -2,20 +2,20 @@
 
 <img src="examples/banner.png" alt="Pokemon Dataset Generator Banner" width="100%"/>
 
-# 🎮 Pokémon Dataset Generator v3.0
+# 🎮 Pokémon Dataset Generator v3.1
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.9-green.svg)](https://opencv.org/)
 [![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-purple.svg)](https://ultralytics.com/)
 
-**Complete YOLO pipeline with modern GUI: Dataset generation → Training → Live detection → REST API**
+**Complete YOLO pipeline with modern GUI: Dataset generation → Training → Live detection with prices → REST API**
 
-*Advanced augmentation • Annotated mosaics • YOLOv8 training • Webcam detection • Multi-format export • TCGdex API*
+*Advanced augmentation • Card mapping • Price detection • Annotated mosaics • YOLOv8 training • Webcam detection • Multi-format export • TCGdex API*
 
 ---
 
-[📖 Help Documentation](HELP.md) • [✨ Changelog](NOUVELLES_FONCTIONNALITES.md)
+[📖 Help Documentation](HELP.md) • [📜 Changelog](CHANGELOG.md) • [🚀 Features](docs/FEATURES.md)
 
 </div>
 
@@ -243,7 +243,23 @@ python core/image_downloader.py --set "Surging Sparks" --lang "en" --quality "hi
 <tr>
 <td width="33%" valign="top">
 
-### ⬇️ Image Download (NEW)
+### 💰 Price Detection (NEW v3.1)
+- ✅ **Real-time price display** during detection
+- ✅ **Card mapping system** (class → TCGdex ID)
+- ✅ **Excel integration** with prices
+- ✅ **Cardmarket + TCGPlayer** support
+- ✅ **Visual price overlays** on detections
+- ✅ **Automatic price loading**
+
+**Initialize prices:**
+```bash
+python scripts/init_prices.py
+```
+
+</td>
+<td width="33%" valign="top">
+
+### ⬇️ Image Download
 - ✅ **TCGdex API** integration (free, no auth)
 - ✅ **20 popular sets** quick selection
 - ✅ **10 languages** support
@@ -345,6 +361,8 @@ pok/
 │   ├── auto_balancer.py        # Class balancing
 │   ├── holographic_augmenter.py # Holographic effects
 │   ├── tcgdex_api.py           # TCGdex API client
+│   ├── card_mapping.py         # 🆕 Card ID mapping system
+│   ├── detection_with_prices.py # 🆕 Price detection
 │   ├── random_erasing.py       # Random erasing augmentation
 │   ├── workflow_manager.py     # Pipeline orchestration
 │   ├── training_manager.py     # YOLOv8 training
@@ -355,14 +373,24 @@ pok/
 │   ├── augmented/              # Augmented images + labels
 │   └── yolov8/                 # Final YOLO dataset
 │
+├── 🧪 tests/                    # 🆕 Test & validation suite
+│   ├── test_*.py               # Unit tests
+│   ├── verify_*.py             # Dataset verification
+│   └── visualize_*.py          # Visualization tools
+│
+├── 🔧 scripts/                  # 🆕 Utility scripts
+│   ├── init_prices*.py         # Price initialization
+│   ├── create_*.py             # Card mapping creation
+│   ├── workflow_optimized.py   # Optimized workflow
+│   └── ...
+│
 ├── 📚 docs/                     # Documentation
 │   ├── GUI_V3_GUIDE.md         # GUI v3.0 complete guide
 │   ├── INTEGRATION_TCGDEX.md   # TCGdex API setup
-│   └── ...
+│   ├── FEATURES.md             # 🆕 Detailed features
+│   └── migration/              # 🆕 Migration guides
 │
-└── 🛠️ tools/                    # Utility scripts
-    ├── test_augmentation.py    # Test augmentation
-    └── ...
+└── 🛠️ tools/                    # Deprecated (moved to scripts/)
 ```
 
 ---
@@ -375,12 +403,16 @@ pok/
 
 ### 📖 User Guides
 - [📘 HELP.md](HELP.md) - Complete user manual
-- [🎨 GUI v3.0 Guide](docs/GUI_V3_GUIDE.md) - Interface guide
+- [📜 CHANGELOG.md](CHANGELOG.md) - � Version history
+- [🚀 FEATURES.md](docs/FEATURES.md) - 🆕 Detailed features
+- [�🎨 GUI v3.0 Guide](docs/GUI_V3_GUIDE.md) - Interface guide
 - [🔄 Workflow Guide](docs/GUIDE_UTILISATION.md) - Step-by-step
 - [🌐 TCGdex Integration](docs/INTEGRATION_TCGDEX.md) - API setup
 
 ### 🛠️ Developer Docs
 - [🏗️ Core Architecture](core/README.md) - Module documentation
+- [💰 Price Detection](core/detection_with_prices.py) - 🆕 Price system
+- [🗺️ Card Mapping](core/card_mapping.py) - 🆕 ID mapping
 - [🎓 Training Manager](core/training_manager.py) - Annotated code
 - [📹 Detection Manager](core/detection_manager.py) - Type hints
 - [🔄 Workflow Manager](core/workflow_manager.py) - Pipeline docs
