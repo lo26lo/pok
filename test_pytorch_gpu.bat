@@ -13,7 +13,7 @@ if not exist ".venv\Scripts\python.exe" (
 call .venv\Scripts\activate.bat
 
 echo [INFO] Testing PyTorch installation...
-python test_cuda.py
+python tests/test_cuda.py
 
 echo.
 echo ==========================================

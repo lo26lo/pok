@@ -75,7 +75,7 @@ python -c "import torch; print('PyTorch:', torch.__version__); print('CUDA Avail
 
 echo.
 echo [INFO] Testing GPU compute capability...
-python test_cuda.py
+python tests/test_cuda.py
 
 echo.
 echo [SUCCESS] PyTorch Nightly installed!
