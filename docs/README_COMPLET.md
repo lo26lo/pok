@@ -1,6 +1,6 @@
-﻿<div align="center">
+<div align="center">
 
-<img src="examples/banner.png" alt="Pokemon Dataset Generator Banner" width="100%"/>
+<img src="../examples/banner.png" alt="Pokemon Dataset Generator Banner" width="100%"/>
 
 # 🎮 Pokémon Dataset Generator v3.1
 
@@ -9,26 +9,58 @@
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.9-green.svg)](https://opencv.org/)
 [![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-purple.svg)](https://ultralytics.com/)
 
-**Complete YOLO pipeline with modern GUI: Dataset generation → Training → Live detection with prices → REST API**
+**Complete YOLO pipeline with modern GUI: Dataset generation → Training → Live detection with prices**
 
-*Advanced augmentation • Card mapping • Price detection • Annotated mosaics • YOLOv8 training • Webcam detection • Multi-format export • TCGdex API*
+*Centralized script system • Tests in venv • Advanced augmentation • Card mapping • Price detection • Annotated mosaics • YOLOv8 training • Multi-format export • TCGdex API*
 
 ---
 
-[📖 Help Documentation](HELP.md) • [📜 Changelog](CHANGELOG.md) • [🚀 Features](docs/FEATURES.md)
+[📖 Documentation](README.md) • [📜 Changelog](CHANGELOG.md) • [🚀 Features](FEATURES.md) • [🛠️ Maintenance](MAINTENANCE_SCRIPTS_REFERENCE.md)
 
 </div>
 
 ---
 
-##  Screenshots & Examples
+## 📋 Table of Contents
+
+1. [🖼️ Screenshots & Examples](#️-screenshots--examples)
+2. [🚀 Quick Start](#-quick-start)
+3. [📁 Project Structure](#-project-structure)
+4. [✨ Main Features](#-main-features)
+5. [🎨 GUI v3.1 Interface](#-gui-v31-interface)
+6. [🔄 Complete Workflow](#-complete-workflow)
+7. [🧪 Centralized Script System](#-centralized-script-system)
+8. [📦 Configuration & Dependencies](#-configuration--dependencies)
+9. [🎓 YOLO Training](#-yolo-training)
+10. [💰 Price System & Detection](#-price-system--detection)
+11. [📚 Complete Documentation](#-complete-documentation)
+12. [🐛 Troubleshooting](#-troubleshooting)
+13. [🤝 Contributing](#-contributing)
+
+---
+
+## 🖼️ Screenshots & Examples
 
 <div align="center">
 
-### Modern GUI Interface
+### Modern GUI Interface v3.1
 
-![GUI Dashboard](examples/gui_dashboard.png)
-*Real-time dashboard with statistics, environment checks, and quick actions*
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="../examples/gui_dashboard.png" alt="GUI Dashboard" width="100%"/>
+
+**Dashboard (Home)**  
+Real-time statistics, environment checks, quick actions
+</td>
+<td align="center" width="50%">
+<img src="../examples/gui_settings.png" alt="Settings" width="100%"/>
+
+**Settings Dialog**  
+6 configuration tabs with live preview
+</td>
+</tr>
+</table>
 
 ---
 
@@ -36,832 +68,1148 @@
 
 <table>
 <tr>
-<td align="center" width="50%">
+<td align="center" width="33%">
+<img src="../examples/example_original.png" alt="Original Card" width="100%"/>
 
-<img src="examples/example_augmented.png" width="240"/>
+**Original Card**  
+Source image from TCGdex API
+</td>
+<td align="center" width="33%">
+<img src="../examples/example_augmented.png" alt="Augmented" width="100%"/>
 
 **Augmented Cards**  
 22 transformation types
-
 </td>
-<td align="center" width="50%">
+<td align="center" width="33%">
+<img src="../examples/example_holographic.png" alt="Holographic" width="100%"/>
 
-<img src="examples/example_fakeimg.png" width="240"/>
-
-**Generated Backgrounds**  
-Realistic training data
-
-</td>
-</tr>
-<tr>
-<td align="center" colspan="2">
-
-![Annotated Mosaic](examples/example_layout_annotated.png)
-
-**Annotated Mosaic - YOLO Format Ready**  
-Complete dataset with bounding boxes
-
+**Holographic Effect**  
+5 shiny styles (rainbow, metallic, glitter)
 </td>
 </tr>
 </table>
+
+---
+
+### Mosaic Generation & Annotations
+
+<img src="../examples/example_layout_annotated.png" alt="Annotated Mosaic" width="100%"/>
+
+**Annotated Mosaic - YOLO Format Ready**  
+Complete dataset with bounding boxes and 4-point polygons
+
+---
+
+### Training & Detection
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="../examples/training_metrics.png" alt="Training Metrics" width="100%"/>
+
+**Training Dashboard**  
+Real-time metrics: mAP, precision, recall, loss curves
+</td>
+<td align="center" width="50%">
+<img src="../examples/detection_with_prices.png" alt="Detection with Prices" width="100%"/>
+
+**Live Detection with Prices**  
+Real-time card detection with Cardmarket pricing
+</td>
+</tr>
+</table>
+
+---
+
+### Price System Integration
+
+<img src="../examples/excel_prices.png" alt="Excel Prices" width="80%"/>
+
+**Excel Price Database**  
+Auto-generated from TCGdex API with Cardmarket + TCGPlayer prices
 
 </div>
 
 ---
 
-## 🖥️ GUI v3.0 Features
+## 🚀 Quick Start
+
+### Installation (First Time)
+
+**Prerequisites**:
+- Windows 10/11
+- Python 3.12 (recommended) or 3.10/3.11
+- 4GB+ RAM
+- NVIDIA GPU (optional, for training)
+
+**Installation in 2 steps**:
+
+```batch
+# 1️⃣ Install virtual environment and dependencies
+INSTALL.bat
+
+# 2️⃣ Launch the application
+START.bat
+```
+
+**That's it!** The modern GUI opens automatically.
+
+### What does INSTALL.bat do?
+
+1. ✅ Detects Python 3.12/3.11/3.10 (avoids 3.13+ for NumPy compatibility)
+2. ✅ Creates virtual environment `.venv`
+3. ✅ Installs all dependencies from `config/requirements.txt`
+4. ✅ Configures NumPy < 2.0 for imgaug compatibility
+5. ✅ Verifies package versions
+
+### What does START.bat do?
+
+1. ✅ Checks that `.venv` exists
+2. ✅ Activates virtual environment
+3. ✅ Runs `pip check` to verify compatibility
+4. ✅ Launches `GUI_v3.1_modern.py`
+5. ✅ Handles errors and displays error codes
+
+### Daily Usage
+
+```batch
+# Launch the application
+START.bat
+
+# That's all! No need to reinstall
+```
+
+---
+
+## 📁 Project Structure
+
+### 🏗️ Modern & Clean Organization
+
+```
+pok/
+├── 📱 START.bat                    # Main application launcher
+├── 📦 INSTALL.bat                  # Environment installer
+├── 📖 README.md                    # Quick start guide
+├── 🎨 GUI_v3.1_modern.py          # Main GUI application
+├── 🔒 .gitignore                   # Files ignored by Git
+│
+├── 🧪 .venv/                       # Python virtual environment (created by INSTALL.bat)
+│
+├── ⚙️ config/                      # 📂 Configuration & requirements
+│   ├── requirements.txt            # Main dependencies
+│   ├── requirements_training.txt   # Training dependencies (optional)
+│   ├── requirements_extra.txt      # Extra dependencies
+│   ├── api_config.json.example     # TCGdex API config template
+│   ├── gui_config.json             # GUI configuration (auto-generated)
+│   └── pokemon_dataset_generator.spec  # PyInstaller spec
+│
+├── 🤖 models/                      # 📂 YOLO models & mappings
+│   ├── yolo11n.pt                  # YOLO11 nano model
+│   ├── yolov8n.pt                  # YOLOv8 nano model
+│   └── card_name_to_id.json        # Class name → TCGdex ID mapping
+│
+├── 📚 docs/                        # 📂 Complete documentation
+│   ├── README.md                   # Documentation index
+│   ├── README_COMPLET.md          # Detailed documentation (French)
+│   ├── README_COMPLET_V2.md       # This file - Complete guide (English)
+│   ├── CHANGELOG.md               # Version history
+│   ├── HELP.md                    # Complete user guide
+│   ├── FEATURES.md                # Feature list
+│   ├── README_SCRIPTS_SYSTEM.md   # Centralized script system
+│   ├── DEPENDENCIES_MAP.md        # Dependency mapping
+│   ├── DEPENDENCY_GRAPH.md        # Interactive diagrams (Mermaid)
+│   ├── MAINTENANCE_SCRIPTS_REFERENCE.md  # Maintenance guide
+│   ├── MEMO_VENV_USAGE.md         # Venv usage memo
+│   ├── CHECKLIST_MODIFICATIONS.md # Modification checklist
+│   └── ... (other docs)
+│
+├── 🔧 scripts/                     # 📂 Utility scripts & tests
+│   ├── SCRIPTS_REFERENCE.py       # 🔥 CENTRALIZED CATALOG (system key)
+│   ├── install_env.bat            # Installation script (called by INSTALL.bat)
+│   ├── run_all_tests.bat          # Run all tests
+│   ├── run_test.bat              # Run specific test
+│   ├── run_script.bat            # Run specific script
+│   ├── init_prices.py            # Initialize prices from data.yaml
+│   ├── create_card_mapping.py    # Create card mapping
+│   ├── workflow_optimized.py     # Optimized CLI workflow
+│   └── ... (14 cataloged scripts)
+│
+├── 🧪 tests/                       # 📂 Automated tests (16 tests)
+│   ├── test_project_integrity.py  # Project integrity test
+│   ├── test_cuda.py               # CUDA/GPU test
+│   ├── test_detection_prices.py   # Detection with prices test
+│   ├── test_workflow_simulation.py # Complete workflow simulation
+│   └── ... (other tests)
+│
+├── 💻 core/                        # 📂 Main Python modules
+│   ├── __init__.py
+│   ├── augmentation.py            # Augmentation engine
+│   ├── mosaic.py                  # Mosaic generator
+│   ├── detection_with_prices.py   # Detection with prices
+│   ├── card_mapping.py            # Mapping system
+│   ├── tcgdex_api.py              # TCGdex API client
+│   ├── image_downloader.py        # Image downloader
+│   ├── training_manager.py        # Training manager
+│   ├── detection_manager.py       # Detection manager
+│   ├── workflow_manager.py        # Workflow orchestrator
+│   ├── holographic_augmenter.py   # Holographic effects
+│   ├── auto_balancer.py           # Auto-balancing
+│   ├── dataset_validator.py       # Dataset validator
+│   ├── dataset_exporter.py        # Multi-format exporter
+│   ├── random_erasing.py          # Random erasing
+│   └── utils.py                   # Common utilities
+│
+├── 🖼️ images/                      # Downloaded source images
+├── 🎨 augmented/                   # Generated augmented images
+├── 📊 output/                      # Generated YOLO datasets
+│   ├── augmented/                 # Augmentations + labels
+│   ├── yolov8/                    # Final YOLO dataset
+│   ├── holographic/               # Holographic effects
+│   └── mosaics/                   # Annotated mosaics
+├── 🏃 runs/                        # YOLO training results
+│   └── train/                     # Training folders
+│       └── pokemon_detector/
+│           └── weights/
+│               ├── best.pt        # Best model
+│               └── last.pt        # Last checkpoint
+├── 📈 excel/                       # Excel price files
+│   └── cards_with_prices.xlsx    # Card prices (auto-generated)
+│
+├── 🌄 backgrounds/                 # Backgrounds for mosaics
+│   ├── original/
+│   └── augmented/
+├── 📦 bbox_visualization/          # Bounding box visualizations
+├── 🗂️ dataset_voc/                 # Pascal VOC format dataset
+├── 🌐 examples/                    # Example images for README
+├── 🗑️ obsolete/                    # Obsolete files (do not use)
+└── 🛠️ tools/                       # Misc tools (deprecated)
+```
+
+### 🔑 Key Files to Know
+
+| File | Role | Modification |
+|------|------|--------------|
+| **START.bat** | Launch application | ❌ Do not modify |
+| **INSTALL.bat** | Install environment | ❌ Do not modify |
+| **config/requirements.txt** | Python dependencies | ⚠️ Add packages here |
+| **models/card_name_to_id.json** | Card mapping | ✅ Generated by `scripts/create_card_mapping.py` |
+| **scripts/SCRIPTS_REFERENCE.py** | Scripts/tests catalog | ⚠️ Update if adding script/test |
+| **.github/copilot-instructions.md** | AI instructions | ⚠️ Project structure rules |
+
+---
+
+## ✨ Main Features
+
+### 🎨 Modern GUI v3.1 Interface
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-### 📊 Dashboard (Home)
+#### 📊 Dashboard (Home)
 - Real-time statistics
-- Source/Augmented/Mosaic counts
+- Counters: source images, augmented, mosaics
 - Dataset size calculation
 - Environment verification
 - Quick action buttons
 - Visual charts (if matplotlib available)
 
-### 🔄 Workflow Manager
-- **Quick Pipeline**: Fake → Augment → Mosaic → Train
-- **Full Pipeline**: Complete automated process
-- **Custom Workflows**: Save/load configurations
-- Step-by-step progress tracking
-- Real-time logs with colors
-- **Stop button** for cancellation
+#### 📥 Image Download
+- **Free TCGdex API** (no auth)
+- **200+ Pokemon sets** available
+- **10 languages**: EN, FR, ES, DE, IT, PT, JA, KO, ZH, TH
+- **HD/Low quality** and PNG/JPG/WebP formats
+- **Parallel download** (1-16 workers)
+- **CSV manifest** auto-generated
 
-### ⬇️ Image Download (NEW)
-- **TCGdex API Integration**: Download card images directly
-- **200+ Pokemon Sets**: Dynamic loading from TCGdex API
-- **Manual Entry**: Support for any set name/ID
-- **Multi-language**: 10 languages (EN, FR, DE, IT, ES, PT, JA, KO, ZH, TH)
-- **Quality Options**: High/Low resolution
-- **Format Support**: PNG/JPG/WebP
-- **Parallel Downloads**: 1-16 workers for speed
-- **Auto Manifest**: CSV generation with metadata
-- **Free API**: No authentication required
-
-### 🎨 Augmentation
-- 1-100 transformations per image
-- **Type selection**: Standard / Holographic / Both
-- Custom output directory
-- **Holographic effects**: Intensity (0.1-1.0), Variations (1-10)
-- 22 transformation types
-- YOLO annotation generation
-- 🌈 **NEW**: Shiny/holographic card simulation
-
-### 📋 Fake Backgrounds
-- **NEW**: Dedicated generation view
-- Perlin noise-based backgrounds
-- Configurable count (10-1000, default: 100)
-- Noise intensity (min/max: 0-100)
-- Real-time statistics display
-- Settings integration
-
-### 🧩 Mosaic Generator
-- **3 generation modes**: Quick (200), Standard (500), Complete (900)
-- **3 layout modes**: Grid, 3D Rotation, Random
-- **3 background modes**: Fake Cards Mosaic, Local Image, Web Image
-- **2 transform modes**: 2D Rotation, 3D Perspective
-- Batch generation with max_groups parameter
-- Annotated YOLO output
-- 📋 Integrated fake background generator
-
-### ✅ Dataset Validation
-- YOLO format verification
-- Detect corrupted images
-- Class distribution analysis
-- HTML report generation
-- Label consistency checks
+#### 🎨 Advanced Augmentation
+- **22 transformation types**:
+  - Visual: Blur, Contrast, Saturation, Fog, Posterize, Sharpen, Emboss
+  - Noise: Gaussian, Salt & Pepper, JPEG compression
+  - Geometry: Rotation, Scale, Translation, Perspective
+  - Color: HSV shift, Channel shuffle, Color temperature
+  - Advanced: Random erasing, Elastic deform, Grid distortion
+- **Holographic effects**: 5 styles (rainbow, linear, radial, metallic, glitter)
+- **Auto YOLO annotations**: Generates .txt for each image
+- **Unique counter**: 1-100 augmentations per image
 
 </td>
 <td width="50%" valign="top">
 
-### 🎓 YOLOv8 Training
-- Model size selection (n/s/m/l/x)
-- Custom epochs, batch size, image size
-- Device selection (CPU/GPU)
-- Real-time training logs with colors
-- Automatic metric export
-- Results visualization
+#### 🧩 Mosaic Generator
+- **3 generation modes**:
+  - Quick (200): Fast testing
+  - Standard (500): Recommended
+  - Complete (900): Full dataset
+- **3 layouts**: Grid, 3D Rotation, Random
+- **3 backgrounds**: Fake Cards, Local, Web
+- **2 transforms**: 2D Rotation, 3D Perspective
+- **Polygon annotations** (4 points)
+- **YOLOv8 compatible**
+
+#### 🎓 YOLO Training
+- **5 model sizes**: n, s, m, l, x
+- **YOLOv8 and YOLO11** supported
+- **Real-time logs** with colors
+- **Auto metrics**: mAP, precision, recall
 - **Stop button** for interruption
+- **GPU auto-detected**
 
-### 📹 Live Detection
+#### 📹 Live Detection
 - **3 modes**: Webcam, Video, Image
-- Real-time webcam detection
-- Model selection
-- Confidence threshold adjustment
-- Bounding box visualization
-- Detection recording
-- Batch image processing
+- **Price display** in real-time
+- **Bounding boxes** with confidence
+- **Recording** of detections
+- **Batch processing** of images
 
-### 🌐 API Server
-- **TCGdex integration** (free, no auth)
-- Flask REST API server
-- Card search and prices
-- Excel generation/export
-- Server status monitoring
-
-### 🛠️ Menu Tools
-**7 Clean Actions**:
-1. Clean Outputs
-2. Clean Fake Images
-3. Clean Holographic
-4. Clean Web Backgrounds
-5. Clean Training Results
-6. Clean All Generated
-7. Clean Everything
-
-**Export & Utilities**:
-- 📦 Multi-format export (COCO, VOC, TFRecord, Roboflow)
-- ⚖️ Auto-balancing
-- 📋 Excel & Prices (TCGdex API)
-- 🧹 Clean & Reset tools
-- ⚙️ Settings dialog (6 tabs)
+#### ⚖️ Auto-Balancer
+- **Automatic balancing** of classes
+- **3 strategies**: Augment, Reduce, Both
+- **Configurable target count**
+- **Auto backup** before modification
 
 </td>
 </tr>
 </table>
 
----
+### 💰 Price System & Detection
 
-## 📋 Quick Start
-
-### ⚡ Installation (3 steps)
-
-```batch
-# 1️⃣ Clone the repository
-git clone https://github.com/lo26lo/pok.git
-cd pok
-
-# 2️⃣ Install core environment (dataset generation)
-install_env.bat
-
-# 3️⃣ Launch GUI v3.1
-run_gui_v3.1.bat
-```
-
-**✨ That's it! The modern interface is ready to use!**
-
-### 🎓 Optional: Install Training Dependencies
-
-If you have a **GPU** and want to train YOLO models:
-
-```batch
-# Install PyTorch + Ultralytics for training
-pip install -r requirements_training.txt
-
-# Or manually:
-pip install ultralytics torch torchvision torchaudio
-```
-
-**Note:** Training features require:
-- NVIDIA GPU with CUDA support (recommended)
-- ~8GB+ VRAM for small models
-- PyTorch will auto-detect CUDA version
-
-**Without GPU:** You can still use all dataset generation features (download, augmentation, mosaics, validation, export).
-
-### 🎯 Optional: Download Pokemon Card Images
-
-Before augmentation, you can download card sets directly from TCGdex API:
-
-```powershell
-# Via CLI
-python core/image_downloader.py --set "Surging Sparks" --lang "en" --quality "high"
-
-# Or use GUI: ⬇️ Image Download view
-# Select a popular set or enter manually → Download to images/
-```
+- ✅ **Automatic mapping**: YOLO class ↔ TCGdex ID
+- ✅ **Real-time prices**: Cardmarket + TCGPlayer
+- ✅ **Integrated Excel**: Auto-generation and update
+- ✅ **Visual overlay**: Display on detections
+- ✅ **TCGdex API**: Free, multilingual, no auth
 
 ---
 
-## ✨ Core Features
+## 🎨 GUI v3.1 Interface
 
-<table>
-<tr>
-<td width="33%" valign="top">
+### 📱 Navigation & Layout
 
-### 💰 Price Detection (NEW v3.1)
-- ✅ **Real-time price display** during detection
-- ✅ **Card mapping system** (class → TCGdex ID)
-- ✅ **Excel integration** with prices
-- ✅ **Cardmarket + TCGPlayer** support
-- ✅ **Visual price overlays** on detections
-- ✅ **Automatic price loading**
+**9 main tabs organized by workflow**:
 
-**Initialize prices:**
-```bash
-python scripts/init_prices.py
+1. **🏠 Dashboard** - Statistics & quick actions
+2. **📥 Image Download** - TCGdex API integration
+3. **🎨 Augmentation** - 22 transformation types
+4. **🌈 Holographic** - 5 shiny effects
+5. **🧩 Mosaics** - Annotated layout generation
+6. **✅ Validation** - YOLO format verification
+7. **🎓 Training** - YOLOv8/YOLO11 training
+8. **📹 Detection** - Live detection with prices
+9. **🔄 Workflow** - Complete automated pipeline
+
+**Additional features**:
+- ⚙️ **Settings dialog** (6 configuration tabs)
+- 🛠️ **Tools menu** (clean, export, utilities)
+- 📊 **Real-time logs** with color coding
+- ✋ **Stop button** for all operations
+- 🌙 **Dark/Light mode** toggle
+
+### 🎯 Key GUI Features
+
+**Dashboard Statistics**:
+```
+Source Images:     252 PNG files
+Augmented:        1,260 images (x5)
+Mosaics:           500 layouts
+Dataset Size:      2.4 GB
+Environment:       ✅ .venv active
 ```
 
-</td>
-<td width="33%" valign="top">
+**Environment Checks**:
+- ✅ Virtual environment exists
+- ✅ Dependencies installed
+- ✅ Excel file present
+- ⚠️ Fix Now button if issues
 
-### ⬇️ Image Download
-- ✅ **TCGdex API** integration (free, no auth)
-- ✅ **20 popular sets** quick selection
-- ✅ **10 languages** support
-- ✅ **Multi-format**: PNG/JPG/WebP
-- ✅ **High/Low quality** options
-- ✅ **Parallel downloads** (1-16 workers)
-- ✅ **Auto manifest** CSV generation
-- ✅ **GUI + CLI** interfaces
-
-**Sets:** Surging Sparks, Stellar Crown, Base Set, and more!
-
-</td>
-<td width="33%" valign="top">
-
-### 🎨 Advanced Augmentation
-- ✅ **22 transformation types**
-- ✅ **2-5 simultaneous transforms**
-- ✅ **35,420+ combinations**
-- ✅ **PNG alpha channel** support
-- ✅ **Automatic YOLO** annotations
-- ✅ **Unique random seeds**
-- 🆕 **Holographic effects** (intensity, variations)
-- 🆕 **Standard/Holographic/Both** modes
-
-**Effects:** Blur, Contrast, Saturation, Fog, Posterize, Sharpen, Emboss, Noise, JPEG Compression, Color Temperature, Rainbow gradients, Shimmer patterns, and more!
-
-</td>
-<td width="33%" valign="top">
-
-### 🧩 Smart Mosaics
-- ✅ **3 layout modes**: Grid, 3D Rotation, Random
-- ✅ **3 background modes**: Fake Cards, Local Image, Web
-- ✅ **2 transform modes**: 2D, 3D Perspective
-- 🆕 **3 generation modes**: Quick (200), Standard (500), Complete (900)
-- ✅ **max_groups parameter** for CLI control
-- ✅ **252 unique card IDs**
-- ✅ **4-point polygon** annotations
-- ✅ **YOLOv8 compatible** format
-
-**Output:** Fully configurable (200-900 mosaics)
-
-</td>
-</tr>
-<tr>
-<td colspan="3" valign="top">
-
-### 🎓 YOLOv8 Integration
-- ✅ **Complete pipeline** in GUI
-- ✅ **Real-time logs** with colors during training
-- ✅ **Automatic validation** splits
-- ✅ **Metric export** (mAP, precision)
-- ✅ **Live detection** from webcam/video/image
-- ✅ **Model management**
-- 🆕 **Stop button** for interrupting training
-- 🆕 **3 detection modes** integrated
-
-**Supported:** YOLOv8n, YOLOv8s, YOLOv8m, YOLOv8l, YOLOv8x
-
-</td>
-</tr>
-<tr>
-<td colspan="3" align="center">
-
-### 🆕 GUI v3.0 Exclusive Features
-
-**📋 Fake Background Generator** (Perlin noise) • **🌈 Holographic Augmentation** (shiny cards) • **🔄 Workflow Manager** (automated pipelines) • **⚙️ Settings Dialog** (6 tabs) • **🛠️ Clean Tools Menu** (7 actions) • **📊 Dashboard** (stats & charts) • **🎨 Catppuccin Mocha** (modern design) • **Stop Button** (cancel operations)
-<tr>
-<td colspan="3" align="center">
-
-### 🌐 API & Integration
-
-**TCGdex API** (free, no auth) • **Cardmarket prices** • **TCGPlayer prices** • **Excel generation** • **Price updates** • **Card search** • **REST API server** • **Flask endpoint** • **Production ready**
-
-</td>
-</tr>
-</table>
-
----
-
----
-
-## � Project Structure
-
-```
-pok/
-├── 📱 GUI_v3_modern.py          # Main GUI v3.0 application
-├── 🔧 run_gui_v3.bat            # Launcher with venv
-├── ⚙️ install_env.bat            # Environment installer
-├── 📋 api_config.json           # API configuration
-├── 🎨 gui_config.json           # GUI settings
-│
-├── 📦 core/                     # Modular core package
-│   ├── __init__.py              # Package exports
-│   ├── utils.py                 # Common utilities + safe_print
-│   ├── augmentation.py          # Image augmentation engine
-│   ├── mosaic.py                # Mosaic generator
-│   ├── dataset_validator.py    # YOLO validation
-│   ├── dataset_exporter.py     # Multi-format export
-│   ├── auto_balancer.py        # Class balancing
-│   ├── holographic_augmenter.py # Holographic effects
-│   ├── tcgdex_api.py           # TCGdex API client
-│   ├── card_mapping.py         # 🆕 Card ID mapping system
-│   ├── detection_with_prices.py # 🆕 Price detection
-│   ├── random_erasing.py       # Random erasing augmentation
-│   ├── workflow_manager.py     # Pipeline orchestration
-│   ├── training_manager.py     # YOLOv8 training
-│   └── detection_manager.py    # Live detection
-│
-├── 🖼️ images/                   # Source card images
-├── 📊 output/                   # Generated datasets
-│   ├── augmented/              # Augmented images + labels
-│   └── yolov8/                 # Final YOLO dataset
-│
-├── 🧪 tests/                    # 🆕 Test & validation suite
-│   ├── test_*.py               # Unit tests
-│   ├── verify_*.py             # Dataset verification
-│   └── visualize_*.py          # Visualization tools
-│
-├── 🔧 scripts/                  # 🆕 Utility scripts
-│   ├── init_prices*.py         # Price initialization
-│   ├── create_*.py             # Card mapping creation
-│   ├── workflow_optimized.py   # Optimized workflow
-│   └── ...
-│
-├── 📚 docs/                     # Documentation
-│   ├── GUI_V3_GUIDE.md         # GUI v3.0 complete guide
-│   ├── INTEGRATION_TCGDEX.md   # TCGdex API setup
-│   ├── FEATURES.md             # 🆕 Detailed features
-│   └── migration/              # 🆕 Migration guides
-│
-└── 🛠️ tools/                    # Deprecated (moved to scripts/)
-```
-
----
-
-## 📚 Documentation
-
-<table>
-<tr>
-<td width="50%">
-
-### 📖 User Guides
-- [📘 HELP.md](HELP.md) - Complete user manual
-- [📜 CHANGELOG.md](CHANGELOG.md) - � Version history
-- [🚀 FEATURES.md](docs/FEATURES.md) - 🆕 Detailed features
-- [�🎨 GUI v3.0 Guide](docs/GUI_V3_GUIDE.md) - Interface guide
-- [🔄 Workflow Guide](docs/GUIDE_UTILISATION.md) - Step-by-step
-- [🌐 TCGdex Integration](docs/INTEGRATION_TCGDEX.md) - API setup
-
-### 🛠️ Developer Docs
-- [🏗️ Core Architecture](core/README.md) - Module documentation
-- [💰 Price Detection](core/detection_with_prices.py) - 🆕 Price system
-- [🗺️ Card Mapping](core/card_mapping.py) - 🆕 ID mapping
-- [🎓 Training Manager](core/training_manager.py) - Annotated code
-- [📹 Detection Manager](core/detection_manager.py) - Type hints
-- [🔄 Workflow Manager](core/workflow_manager.py) - Pipeline docs
-
-</td>
-<td width="50%">
-
-### 📋 Configuration
-- [⚙️ API Config](api_config.json.example) - API setup template
-- [🎨 GUI Config](gui_config.json) - Interface settings
-- [📦 Requirements](requirements.txt) - Dependencies
-
-### 🆕 What's New
-- [✨ v3.0 Features](NOUVELLES_FONCTIONNALITES.md) - Changelog
-- [🎨 Modern Design](docs/DESIGN_MODERNE_V3.md) - UI/UX
-- [🔧 Architecture](docs/README.md) - Technical overview
-
-</td>
-</tr>
-</table>
+**Progress Tracking**:
+- Blue animated progress bars
+- Step-by-step status updates
+- Elapsed time counter
+- Success/Error messages with emojis
 
 ---
 
 ## 🔄 Complete Workflow
 
+### 📊 Visual Workflow Diagram
+
 ```mermaid
-graph LR
-    A[⬇️ Download Sets] --> B[🎨 Augmentation]
-    B --> C[🧩 Mosaic Generation]
-    C --> D[✅ Validation]
-    D --> E[⚖️ Auto-Balance]
-    E --> F[🎓 YOLOv8 Training]
-    F --> G[📹 Live Detection]
-    F --> H[🌐 REST API]
+graph TB
+    A[📥 Download Cards<br/>TCGdex API] --> B[🗺️ Create Mapping<br/>card_name_to_id.json]
+    B --> C[💰 Initialize Prices<br/>Excel generation]
+    C --> D[🎨 Augmentation<br/>22 transformations]
+    D --> E{Holographic?}
+    E -->|Yes| F[🌈 Holographic Effects<br/>5 shiny styles]
+    E -->|No| G[🧩 Mosaic Generation<br/>500 layouts]
+    F --> G
+    G --> H[✅ Validation<br/>YOLO format check]
+    H --> I[⚖️ Auto-Balance<br/>Equalize classes]
+    I --> J[📝 Create Dataset<br/>data.yaml]
+    J --> K[🎓 YOLO Training<br/>YOLOv8/YOLO11]
+    K --> L[📈 Evaluate Model<br/>mAP, precision, recall]
+    L --> M[📹 Live Detection<br/>Webcam/Video/Image]
+    M --> N[💰 Display Prices<br/>Cardmarket + TCGPlayer]
+    
+    style A fill:#e1f5ff
+    style D fill:#fff4e1
+    style F fill:#ffe1ff
+    style K fill:#e1ffe1
+    style M fill:#ffe1e1
+    style N fill:#fff9e1
 ```
 
-### Step-by-Step
+### 🚀 Detailed Workflow Steps
 
-0. **⬇️ Download Sets** *(Optional)*: Download card images from TCGdex API
-1. **📸 Prepare Images**: Place PNG cards in `images/` folder
-2. **🎨 Augmentation**: Generate variations with transformations
-3. **🧩 Mosaics**: Create YOLO training layouts
-4. **✅ Validation**: Verify dataset integrity
-5. **⚖️ Balance**: Equalize class distribution
-6. **🎓 Training**: Train YOLOv8 model
-7. **📹 Detection**: Test with webcam or batch inference
-8. **🌐 Deploy**: Launch REST API server
+#### Step 1: Download Cards 📥
+
+**Via GUI**:
+1. Open **Image Download** tab
+2. Select set (e.g., "Surging Sparks" or "sv08")
+3. Choose language and quality
+4. Click **Download**
+
+**Via CLI**:
+```batch
+call .venv\Scripts\activate.bat
+python core/image_downloader.py --set "Surging Sparks" --lang en --quality high
+```
+
+**Output**: 
+- Images in `images/`
+- Manifest CSV with metadata
 
 ---
 
-## 🎯 Advanced Features
+#### Step 2: Create Card Mapping 🗺️
 
-### ⬇️ Image Download (TCGdex API)
+**Purpose**: Map YOLO class names ↔ TCGdex IDs
 
-**🆕 NEW in v3.0**: Download Pokemon card images directly from TCGdex API with full language and quality support.
-
-#### GUI Usage
-- **View**: ⬇️ Image Download (first in GENERATION section)
-- **Parameters**:
-  - **Set Selection**: Choose from 20 popular sets or enter custom name/ID
-  - **Language**: 10 languages (EN, FR, DE, IT, ES, PT, JA, KO, ZH, TH)
-  - **Quality**: High or Low resolution
-  - **Format**: PNG (recommended), JPG, or WebP
-  - **Workers**: 1-16 parallel downloads (default: 8)
-
-#### CLI Usage
-```powershell
-# Download Surging Sparks in English (PNG, high quality)
-python core/image_downloader.py --set "Surging Sparks" --lang "en" --quality "high" --ext "png"
-
-# Download Stellar Crown in French with 12 workers
-python core/image_downloader.py --set "sv07" --lang "fr" --workers 12
-
-# Download Base Set in German (JPG, low quality for testing)
-python core/image_downloader.py --set "base1" --lang "de" --quality "low" --ext "jpg"
+**Command**:
+```batch
+scripts\run_script.bat create_card_mapping
 ```
 
-#### Python API
-```python
-from core.image_downloader import ImageDownloader
+**Output**: `models/card_name_to_id.json`
 
-downloader = ImageDownloader()
-
-# Download set
-ok, fail, total = downloader.download_set(
-    set_query="Surging Sparks",
-    output_dir="images",
-    lang="en",
-    quality="high",
-    ext="png",
-    workers=8
-)
-
-print(f"Downloaded {ok}/{total} cards successfully")
-```
-
-**Features:**
-- ✅ **Free API** - No authentication required
-- ✅ **20 Popular Sets** - Quick selection (sv08, sv07, base1, etc.)
-- ✅ **10 Languages** - Multi-language support
-- ✅ **Retry Logic** - Automatic retry on network errors
-- ✅ **Manifest Generation** - CSV file with card metadata
-- ✅ **Progress Tracking** - Real-time progress updates
-
-**Output Structure:**
-```
-images/
-└── sv08/              # Set folder
-    ├── 001.png        # Card images (named by set number)
-    ├── 002.png
-    ├── ...
-    └── manifest.csv   # Metadata (filename, card_id, name, set_number, url)
-```
-
----
-
-### 🌈 Holographic Augmentation
-
-**🆕 NEW in v3.0**: Simulate shiny/holographic effects on Pokemon cards with full parameter control.
-
-#### GUI Usage
-- **View**: Augmentation → Type: "Holographic" or "Both"
-- **Settings**: Augmentation tab
-  - **Intensity**: 0.1-1.0 (default: 0.7) - Controls effect strength
-  - **Variations**: 1-10 (default: 3) - Number of variations per card
-
-#### CLI Usage
-```bash
-# Standard holographic effect
-python core/holographic_augmenter.py --input images/ --output images_holographic/
-
-# Custom parameters
-python core/holographic_augmenter.py --intensity 0.9 --variations 5
-```
-
-#### Python API
-```python
-from core.holographic_augmenter import HolographicAugmenter
-
-augmenter = HolographicAugmenter()
-augmenter.augment_directory(
-    "images/", 
-    "images_holographic/", 
-    intensity=0.7,
-    variations=3
-)
-```
-
-**Effects:** Rainbow gradients, light glare, metallic texture, shimmer patterns, iridescent overlays
-
-**Parameters:**
-- `intensity`: 0.1 (subtle) to 1.0 (intense)
-- `variations`: Number of different holographic angles
-
----
-
-### 📋 Fake Background Generation
-
-**🆕 NEW in v3.0**: Advanced Perlin noise-based background generator for realistic training data.
-
-#### GUI Usage
-- **Dedicated View**: "Fake Background Generator"
-- **Settings**: Fake Backgrounds tab
-  - **Count**: 10-1000 (default: 100)
-  - **Noise Min**: 0-100 (default: 10)
-  - **Noise Max**: 0-100 (default: 50)
-
-#### CLI Usage
-```bash
-# Generate 100 backgrounds
-python tools/generate_fake_backgrounds.py --count 100
-
-# Custom noise range
-python tools/generate_fake_backgrounds.py --count 50 --noise_min 20 --noise_max 70
-```
-
-**Output:** Realistic synthetic backgrounds in `fakeimg/` for mosaic generation.
-
----
-
-### 🧩 Mosaic Generation Modes
-
-**🆕 NEW in v3.0**: Three predefined generation modes for different use cases.
-
-#### GUI Usage
-Select mode in "Mosaic Generation" view:
-- **Quick (200)**: 25 groups × 8 cards ≈ 200 mosaics - Fast testing
-- **Standard (500)**: 62 groups × 8 cards ≈ 500 mosaics - Recommended
-- **Complete (All)**: 900 mosaics - All combinations (3 layouts × 3 backgrounds × 2 transforms × 50 variations)
-
-#### CLI Usage
-```bash
-# Standard generation with specific parameters
-python core/mosaic.py 1 0 0
-
-# Quick mode (limit to 25 groups)
-python core/mosaic.py 1 0 0 25
-
-# Standard mode (limit to 62 groups)
-python core/mosaic.py 2 0 1 62
-
-# Complete mode (all combinations)
-python core/mosaic.py ALL
-```
-
-**Parameters:**
-- `layout_mode`: 1 (Grid), 2 (3D Rotation), 3 (Random)
-- `background_mode`: 0 (Fake Cards), 1 (Local Image), 2 (Web)
-- `transform_mode`: 0 (2D Rotation), 1 (3D Perspective)
-- `max_groups` (optional): Limit number of groups generated
-
----
-
-### ⚖️ Auto-Balancing
-
-Automatically balance class distribution:
-
-```python
-from core.auto_balancer import DatasetBalancer
-
-balancer = DatasetBalancer("output/yolov8", target_count=50, strategy='augment')
-balancer.balance()
-```
-
-**Strategies:** `augment` (increase), `reduce` (decrease), `both` (equalize)
-
----
-
-### 🧹 Clean & Reset Tools
-
-**🆕 Enhanced in v3.0**: Menu-based clean tools with safety confirmations.
-
-#### 7 Clean Actions Available (via Menu Tools):
-
-1. **🗑️ Clean Outputs**
-   - Deletes `output/augmented/` and `output/yolov8/`
-   - Preserves source images
-
-2. **📋 Clean Fake Images**
-   - Removes `fakeimg/` and `fakeimg_augmented/`
-   - Fresh start for background generation
-
-3. **🌈 Clean Holographic**
-   - Deletes `images_holographic/`
-   - Clear holographic augmentations
-
-4. **🌐 Clean Web Backgrounds**
-   - Removes `web/` folder
-   - Downloaded web images cleanup
-
-5. **🎓 Clean Training Results**
-   - Deletes `runs/train/`
-   - Remove trained models and logs
-
-6. **🧹 Clean All Generated**
-   - Removes all generated folders
-   - **Preserves source `images/` folder**
-   - Safe reset to start fresh
-
-7. **🚨 Clean Everything**
-   - Nuclear option: Deletes ALL data
-   - Optional: Include `images/` folder (checkbox)
-   - **Double confirmation required**
-   - Detailed logs of deleted folders
-
-**Safety Features:**
-- ✅ Confirmation dialogs for all actions
-- ✅ Double confirmation for destructive operations
-- ✅ Detailed logs of deleted folders
-- ✅ Error handling and reporting
-
-**Access:** GUI v3.0 → Menu bar → **Tools** → Select clean action
-
----### 📦 Multi-Format Export
-
-Export to multiple formats:
-
-```python
-from core.dataset_exporter import DatasetExporter
-
-exporter = DatasetExporter("output/yolov8")
-exporter.export_coco("output/coco.json")
-exporter.export_voc("output/voc/")
-exporter.export_tfrecord("output/dataset.tfrecord")
-exporter.export_roboflow("output/roboflow.zip")
-```
-
-### 🌐 REST API Server
-
-Deploy detection as a REST API:
-
-```bash
-# Launch Flask server
-python api_server.py
-
-# Test endpoint
-curl -X POST -F "image=@card.jpg" http://localhost:5000/detect
-```
-
-**Response:**
+**Example**:
 ```json
 {
-  "detections": [
-    {"class": "Pikachu", "confidence": 0.95, "bbox": [x, y, w, h]},
-    {"class": "Charizard", "confidence": 0.89, "bbox": [x, y, w, h]}
-  ],
-  "count": 2
+  "Ho-Oh": "sv08_019",
+  "Quaxly": "sv08_051",
+  "Iron_Crown": "sv08_132"
 }
 ```
 
 ---
 
-## 🎴 TCGdex API Integration
+#### Step 3: Initialize Prices 💰
 
-### Generate Card Lists
+**3 methods**:
 
-```python
-from core.tcgdex_api import TCGdexAPI
-
-api = TCGdexAPI(language="en")
-cards = api.search_card("Pikachu")
-api.generate_extension_excel("Surging Sparks", "cards.xlsx")
+**A) From data.yaml** (after dataset creation):
+```batch
+scripts\run_script.bat init_prices
 ```
 
-### Update Prices
-
-```python
-# Add Cardmarket + TCGPlayer prices to Excel
-api.update_card_prices_excel("cards.xlsx", "cards_with_prices.xlsx")
+**B) Test set** (8 cards):
+```batch
+scripts\run_script.bat init_prices_simple
 ```
 
-### Search with Prices
-
-```python
-price, price_max, details = api.search_card_with_prices("Charizard", "Base Set")
-print(f"Price: {price} EUR (max: {price_max})")
+**C) Real set** (predefined):
+```batch
+scripts\run_script.bat init_prices_real
 ```
 
-**Features:**
-- ✅ Free API, no authentication
-- ✅ Multi-language support (10 languages)
-- ✅ Cardmarket + TCGPlayer prices
-- ✅ Excel generation
-- ✅ Batch price updates
+**Output**: `excel/cards_with_prices.xlsx`
 
-[📖 Read TCGdex documentation →](docs/INTEGRATION_TCGDEX.md)
+**Columns**:
+- Name, Set #, Type, Rarity
+- Prix (avg), Prix max
+- SourcePrix (Cardmarket/TCGPlayer)
 
 ---
 
-## ⚙️ Settings & Configuration
+#### Step 4: Augmentation 🎨
 
-### 🆕 GUI Settings Dialog (⚙️ button)
+**Via GUI**:
+1. **Augmentation** tab
+2. Set count (e.g., 50)
+3. Choose type: Standard / Holographic / Both
+4. Click **START AUGMENTATION**
 
-**6 Configuration Tabs:**
+**Via CLI**:
+```batch
+call .venv\Scripts\activate.bat
+python core/augmentation.py --input images/ --output augmented/ --count 50
+```
 
-#### 1️⃣ General
-- **Paths**: Images, output, augmented, mosaic, fakeimg, holographic
-- **Options**: Auto-save logs, show notifications
+**Output**:
+- Augmented images in `augmented/images/`
+- YOLO labels in `augmented/labels/`
 
-#### 2️⃣ Augmentation
-- **Count**: Default augmentations (1-100)
-- **Type**: Standard / Holographic / Both
-- **Holographic Intensity**: 0.1-1.0 (via slider)
-- **Holographic Variations**: 1-10 (via spinbox)
+**22 Transformation Types Applied**:
+- 2-5 simultaneous random transforms per image
+- 35,420+ unique combinations possible
+- PNG alpha channel preserved
 
-#### 3️⃣ Mosaic
-- **Generation Mode**: Quick / Standard / Complete
-- **Card Layout**: Grid, 3D Rotation, Random (1-3)
-- **Background**: Fake Cards, Local Image, Web (0-2)
-- **Transform**: 2D Rotation, 3D Perspective (0-1)
+---
 
-#### 4️⃣ Fake Backgrounds
-- **Default Count**: 10-1000 (default: 100)
-- **Noise Min**: 0-100 (default: 10)
-- **Noise Max**: 0-100 (default: 50)
+#### Step 5: Holographic Effects 🌈 (Optional)
 
-#### 5️⃣ Training
-- **Model**: YOLOv8 size (n/s/m/l/x)
-- **Epochs**: Training iterations
-- **Batch Size**: Images per batch
-- **Device**: CPU / GPU selection
+**5 Shiny Styles**:
+1. **Rainbow**: Multi-color gradient overlay
+2. **Linear**: Horizontal/vertical shimmer
+3. **Radial**: Circular light burst
+4. **Metallic**: Chrome-like reflection
+5. **Glitter**: Sparkle patterns
 
-#### 6️⃣ Advanced
-- **TCGdex API Key**: Optional API configuration
-- **Other advanced parameters**
+**Via GUI**:
+1. **Holographic** tab
+2. Set intensity (0.1-1.0)
+3. Set variations (1-10)
+4. Click **GENERATE**
 
-**Settings saved to** `gui_config.json` and persist between sessions.
+**Via CLI**:
+```batch
+python core/holographic_augmenter.py --intensity 0.7 --variations 3
+```
 
-### API Configuration
+---
 
-Edit `api_config.json` to configure TCGdex:
+#### Step 6: Mosaic Generation 🧩
 
+**3 Generation Modes**:
+- **Quick (200)**: 25 groups × 8 cards ≈ 200 mosaics
+- **Standard (500)**: 62 groups × 8 cards ≈ 500 mosaics (recommended)
+- **Complete (900)**: All combinations (3 layouts × 3 backgrounds × 2 transforms × 50 variations)
+
+**Via GUI**:
+1. **Mosaics** tab
+2. Select mode (Quick/Standard/Complete)
+3. Choose layout (Grid/3D Rotation/Random)
+4. Choose background (Fake Cards/Local/Web)
+5. Click **GENERATE MOSAICS**
+
+**Via CLI**:
+```batch
+python core/mosaic.py --mode standard
+```
+
+**Output**:
+- Mosaics in `output/yolov8/images/`
+- Annotations in `output/yolov8/labels/` (4-point polygons)
+- `data.yaml` configuration file
+
+---
+
+#### Step 7: Validation ✅
+
+**What it checks**:
+1. YOLO format correctness
+2. Image integrity (no corruption)
+3. Label matching (every image has label)
+4. Class distribution
+5. Bounding box validity (coordinates in [0, 1])
+
+**Via GUI**:
+1. **Validation** tab
+2. Click **VALIDATE DATASET**
+3. View HTML report
+
+**Via CLI**:
+```batch
+scripts\run_test.bat verify_data_yaml
+```
+
+**Output**: `validation_report.html` (auto-opens in browser)
+
+---
+
+#### Step 8: Auto-Balance ⚖️
+
+**Purpose**: Equalize class distribution
+
+**3 Strategies**:
+- **Augment**: Increase minority classes
+- **Reduce**: Decrease majority classes
+- **Both**: Equalize all classes to target count
+
+**Via GUI**:
+1. **Workflow** tab → **Auto-Balance** section
+2. Set target count (e.g., 50)
+3. Select strategy
+4. Click **BALANCE**
+
+**Via CLI**:
+```batch
+call .venv\Scripts\activate.bat
+python core/auto_balancer.py --target 50 --strategy augment
+```
+
+---
+
+#### Step 9: YOLO Training 🎓
+
+**5 Model Sizes**:
+
+| Model | Speed | Accuracy | VRAM | Use Case |
+|-------|-------|----------|------|----------|
+| **n** | ⚡⚡⚡ | ⭐⭐ | ~2GB | Mobile, real-time |
+| **s** | ⚡⚡ | ⭐⭐⭐ | ~4GB | Balanced (recommended) |
+| **m** | ⚡ | ⭐⭐⭐⭐ | ~6GB | High accuracy |
+| **l** | 🐌 | ⭐⭐⭐⭐⭐ | ~8GB | Maximum accuracy |
+| **x** | 🐢 | ⭐⭐⭐⭐⭐ | ~12GB | Research |
+
+**Via GUI**:
+1. **Training** tab
+2. Select model size (e.g., `n`)
+3. Set epochs (50-100)
+4. Set batch size (auto or manual)
+5. Set image size (640 standard)
+6. Click **START TRAINING**
+
+**Via CLI**:
+```batch
+call .venv\Scripts\activate.bat
+python core/training_manager.py --data output/yolov8/data.yaml --epochs 50 --model yolov8n
+```
+
+**Output**:
+- Best model: `runs/train/pokemon_detector/weights/best.pt`
+- Last checkpoint: `runs/train/pokemon_detector/weights/last.pt`
+- Metrics: `results.png`, `confusion_matrix.png`
+- Validation predictions: `val_batch0_pred.jpg`
+
+**Training Metrics Displayed**:
+- **mAP@50**: Mean Average Precision at 50% IoU
+- **mAP@50-95**: Mean Average Precision at 50-95% IoU
+- **Precision**: TP / (TP + FP)
+- **Recall**: TP / (TP + FN)
+- **Loss**: Box loss, Class loss, DFL loss
+
+---
+
+#### Step 10: Live Detection 📹
+
+**3 Detection Modes**:
+1. **Webcam**: Real-time camera detection
+2. **Video**: Process video file
+3. **Image**: Batch process images
+
+**Via GUI**:
+1. **Detection** tab
+2. Load trained model (`best.pt`)
+3. ✅ Check **Show Prices**
+4. Select source (Webcam 0 / Video file / Image folder)
+5. Set confidence threshold (0.5 default)
+6. Click **START DETECTION**
+
+**Via CLI**:
+```batch
+python core/detection_with_prices.py --source 0 --model runs/train/pokemon_detector/weights/best.pt
+```
+
+**Display**:
+- Green bounding boxes
+- Card name (class)
+- Confidence (e.g., 95%)
+- Price (e.g., "12.50 EUR") if **Show Prices** enabled
+
+---
+
+### ⚡ Quick Workflow (Automated)
+
+**All-in-one command** (GUI):
+1. **Workflow** tab
+2. Configure steps (checkboxes)
+3. Click **START WORKFLOW**
+
+**All-in-one command** (CLI):
+```batch
+scripts\run_script.bat workflow_optimized
+```
+
+**Automated Steps**:
+1. ✅ Augmentation (if enabled)
+2. ✅ Holographic (if enabled)
+3. ✅ Mosaic generation
+4. ✅ Validation
+5. ✅ Auto-balance
+6. ✅ Training (if enabled)
+
+**Duration**: ~1-2 hours for 252 cards (depends on GPU)
+
+---
+
+## 🧪 Centralized Script System
+
+### 🎯 Principle: One Unique Catalog
+
+All scripts and tests are cataloged in **`scripts/SCRIPTS_REFERENCE.py`**.
+
+**Advantages**:
+- ✅ Central catalog of 14 scripts + 16 tests
+- ✅ Guaranteed venv usage
+- ✅ Integrated documentation (dependencies, category)
+- ✅ Simplified execution via .bat files
+- ✅ Traceability with CHANGELOG
+
+### 📋 Available Scripts (14)
+
+**Configuration**:
+- `init_prices`: Initialize prices from data.yaml
+- `init_prices_real`: Initialize prices from TCGdex API
+- `init_prices_simple`: Simplified version (8 cards)
+
+**Data Processing**:
+- `create_card_mapping`: Create class ↔ TCGdex ID mapping
+- `create_real_mapping`: Real mapping
+- `merge_dataset`: Merge multiple datasets
+
+**Debug**:
+- `debug_excel_keys`: Debug Excel keys
+- `fix_class_mapping`: Fix mapping
+
+**Workflow**:
+- `workflow_optimized`: Complete optimized workflow
+
+### 🧪 Available Tests (16)
+
+**Hardware**:
+- `test_cuda`: Test CUDA/GPU
+
+**Integration**:
+- `test_project_integrity`: Complete integrity
+- `test_workflow_simulation`: Workflow simulation
+- `test_full_chain`: Complete chain
+
+**Performance**:
+- `test_mosaic_performance`: Mosaic benchmark
+- `test_holographic_performance`: Holographic benchmark
+- `test_autobalancer_performance`: Auto-balancer benchmark
+
+**Validation**:
+- `verify_data_yaml`: Verify data.yaml
+- `check_corrupted_images`: Check images
+- `verify_detailed`: Detailed verification
+
+### ⚠️ ABSOLUTE RULE: Tests in venv only
+
+**✅ CORRECT**:
+```batch
+# Method 1 (recommended): Use .bat files
+scripts\run_test.bat test_cuda
+scripts\run_script.bat init_prices
+
+# Method 2: Activate venv then execute
+call .venv\Scripts\activate.bat
+python tests\test_cuda.py
+```
+
+**❌ INCORRECT**:
+```batch
+# NEVER execute directly without venv
+python tests\test_cuda.py          # ❌ Wrong environment
+python scripts\init_prices.py      # ❌ Missing dependencies
+```
+
+**Why**:
+- Guarantees NumPy < 2.0 (required for imgaug)
+- Avoids package conflicts
+- Ensures reproducibility
+- Consistent versions
+
+### 🚀 Essential Commands
+
+```batch
+# List all scripts
+python scripts\SCRIPTS_REFERENCE.py --list
+
+# List all tests
+python scripts\SCRIPTS_REFERENCE.py --list-tests
+
+# Run a script
+scripts\run_script.bat init_prices
+
+# Run a test
+scripts\run_test.bat test_cuda
+
+# Run all tests
+scripts\run_all_tests.bat
+
+# Check venv
+python scripts\SCRIPTS_REFERENCE.py --check-venv
+```
+
+---
+
+## 📦 Configuration & Dependencies
+
+### 📂 Configuration Files
+
+**In `config/`**:
+
+| File | Description | Modification |
+|------|-------------|--------------|
+| **requirements.txt** | Main dependencies | ⚠️ Add packages here |
+| **requirements_training.txt** | PyTorch + Ultralytics (GPU) | ℹ️ Optional |
+| **requirements_extra.txt** | Flask API, SQLAlchemy | ℹ️ Optional |
+| **api_config.json.example** | API config template | ✅ Copy to api_config.json |
+| **gui_config.json** | GUI config (auto) | ❌ Auto-generated |
+
+### 🔧 Main Dependencies
+
+**Core (requirements.txt)**:
+```python
+numpy<2.0                # Pinned for imgaug
+opencv-python<4.10.0     # Compatible NumPy 1.x
+pandas                   # Excel manipulation
+openpyxl                 # Excel read/write
+imgaug>=0.4.0            # Advanced augmentation
+pillow                   # Images
+requests                 # API calls
+scipy<1.14               # Scientific computing
+scikit-image<0.23        # Image processing
+imagecorruptions         # Corruptions for augmentation
+```
+
+**Training (requirements_training.txt)**:
+```python
+# Install PyTorch with appropriate CUDA:
+# RTX 40xx/50xx: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+# RTX 30xx: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+
+ultralytics>=8.0.0       # YOLOv8/YOLO11
+```
+
+### 🎨 GUI Configuration
+
+The file `config/gui_config.json` is auto-generated and saves:
+- Default paths (images/, output/, etc.)
+- Augmentation parameters
+- Mosaic preferences
+- Last training parameters
+- Detection thresholds
+
+**Do not modify manually**, use GUI interface → ⚙️ Settings.
+
+---
+
+## 🎓 YOLO Training
+
+### 📊 Model Sizes
+
+| Model | Speed | Accuracy | VRAM | Use Case |
+|-------|-------|----------|------|----------|
+| **YOLOv8n** | ⚡⚡⚡ | ⭐⭐ | ~2GB | Mobile, real-time |
+| **YOLOv8s** | ⚡⚡ | ⭐⭐⭐ | ~4GB | Balanced (recommended) |
+| **YOLOv8m** | ⚡ | ⭐⭐⭐⭐ | ~6GB | High accuracy |
+| **YOLOv8l** | 🐌 | ⭐⭐⭐⭐⭐ | ~8GB | Maximum accuracy |
+| **YOLOv8x** | 🐢 | ⭐⭐⭐⭐⭐ | ~12GB | Research |
+
+### 🚀 Via GUI
+
+1. **Training** tab in GUI
+2. Select model (n/s/m/l/x)
+3. Configure epochs (50-100)
+4. Configure batch size (auto or manual)
+5. Choose image size (640 standard)
+6. Click **START TRAINING**
+
+**Output**: `runs/train/pokemon_detector/weights/best.pt`
+
+### 💻 Via CLI
+
+```batch
+# Complete workflow (download → augment → mosaic → train)
+scripts\run_script.bat workflow_optimized
+
+# Or use Python directly (in venv)
+call .venv\Scripts\activate.bat
+python core/training_manager.py --data output/yolov8/data.yaml --epochs 50 --model yolov8n
+```
+
+### 📈 Training Metrics
+
+**Generated files**:
+- `runs/train/pokemon_detector/weights/best.pt`: Best model
+- `runs/train/pokemon_detector/weights/last.pt`: Last checkpoint
+- `runs/train/pokemon_detector/results.png`: Metric curves
+- `runs/train/pokemon_detector/confusion_matrix.png`: Confusion matrix
+- `runs/train/pokemon_detector/val_batch0_pred.jpg`: Validation predictions
+
+**Displayed metrics**:
+- **mAP@50**: Mean Average Precision at 50% IoU
+- **mAP@50-95**: Mean Average Precision at 50-95% IoU
+- **Precision**: TP / (TP + FP)
+- **Recall**: TP / (TP + FN)
+- **Loss**: Box, Cls, DFL
+
+---
+
+## 💰 Price System & Detection
+
+### 🗺️ Card Mapping System
+
+**File**: `models/card_name_to_id.json`
+
+**Format**:
 ```json
 {
-  "api_source": "tcgdex",
-  "language": "en"
+  "Ho-Oh": "sv08_019",
+  "Castform_Sunny_Form": "sv08_020",
+  "Quaxly": "sv08_051"
 }
 ```
 
-Supported languages: `en`, `fr`, `es`, `it`, `pt`, `de`, `ja`, `zh`, `id`, `th`
+**Generation**:
+```batch
+scripts\run_script.bat create_card_mapping
+```
+
+### 💵 Price Initialization
+
+**Method 1: From data.yaml** (after dataset creation)
+```batch
+scripts\run_script.bat init_prices
+```
+
+**Method 2: Test set** (8 cards)
+```batch
+scripts\run_script.bat init_prices_simple
+```
+
+**Method 3: Real set** (predefined)
+```batch
+scripts\run_script.bat init_prices_real
+```
+
+**Output**: `excel/cards_with_prices.xlsx`
+
+**Columns**:
+- Name: Card name
+- Set #: Number in set
+- Type: Card type
+- Rarity: Rarity
+- Prix: Average price (Cardmarket)
+- Prix max: Maximum price
+- SourcePrix: Source (Cardmarket/TCGPlayer)
+
+### 📹 Detection with Prices
+
+**Via GUI**:
+1. **Detection** tab
+2. Load model (`best.pt`)
+3. ✅ Check **Show Prices**
+4. Select source (Webcam/Video/Image)
+5. Click **START DETECTION**
+
+**Via CLI**:
+```batch
+call .venv\Scripts\activate.bat
+python core/detection_with_prices.py --source 0 --model runs/train/pokemon_detector/weights/best.pt
+```
+
+**Display**:
+- Green bounding box
+- Card name
+- Confidence (e.g., 95%)
+- Price (e.g., "12.50 EUR")
+
+---
+
+## 📚 Complete Documentation
+
+### 📖 Documentation Index
+
+**In `docs/`**:
+
+| File | Description | Audience |
+|------|-------------|----------|
+| **README.md** | Documentation index | All |
+| **README_COMPLET.md** | Detailed documentation (French) | All |
+| **README_COMPLET_V2.md** | This file - Complete guide (English) | All |
+| **HELP.md** | Complete GUI user guide | Users |
+| **CHANGELOG.md** | Version history | All |
+| **FEATURES.md** | Detailed feature list | Users |
+| **README_SCRIPTS_SYSTEM.md** | Centralized script system | Developers |
+| **DEPENDENCIES_MAP.md** | Dependency mapping | Developers |
+| **DEPENDENCY_GRAPH.md** | Interactive Mermaid diagrams | Developers |
+| **MAINTENANCE_SCRIPTS_REFERENCE.md** | Maintenance guide | Maintainers |
+| **MEMO_VENV_USAGE.md** | Venv quick memo | Developers |
+| **CHECKLIST_MODIFICATIONS.md** | Modification checklist | Developers |
+
+### 🔗 Quick Links
+
+- **Installation problem?** → [HELP.md](HELP.md) Troubleshooting section
+- **Add a script?** → [CHECKLIST_MODIFICATIONS.md](CHECKLIST_MODIFICATIONS.md)
+- **Understand dependencies?** → [DEPENDENCIES_MAP.md](DEPENDENCIES_MAP.md)
+- **Use venv?** → [MEMO_VENV_USAGE.md](MEMO_VENV_USAGE.md)
+- **Complete workflow?** → [README_SCRIPTS_SYSTEM.md](README_SCRIPTS_SYSTEM.md)
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### ❌ "Virtual environment not found"
 
-**Q: GUI doesn't start**
-- Ensure virtual environment is active: `run_gui_v3.bat`
-- Check Python version: `python --version` (3.12+)
-- Reinstall: `install_env.bat`
+**Problem**: `.venv` does not exist
 
-**Q: NumPy errors**
-- Use NumPy < 2.0 (installed automatically)
-- Patch applied in `core/utils.py`
+**Solution**:
+```batch
+INSTALL.bat
+```
 
-**Q: No logs during operations**
-- Fixed in v3.0 with `-u` flag (unbuffered output)
-- Check `bufsize=1` in subprocess calls
+### ❌ "No module named 'numpy'" or "ImportError"
 
-**Q: Unicode errors on Windows**
-- Fixed with `safe_print()` function
-- Automatic fallback to ASCII
+**Problem**: Missing dependencies or venv not activated
 
-**Q: Environment check fails**
-- Run `install_env.bat` to create `.venv`
-- Verify: `.venv/Scripts/python.exe` exists
+**Solution**:
+```batch
+# Reinstall environment
+rmdir /s /q .venv
+INSTALL.bat
+```
+
+### ❌ "Unknown compiler(s)" during installation
+
+**Problem**: Python 3.13+ used (no NumPy 1.x wheels)
+
+**Solution**:
+1. Install Python 3.12: https://www.python.org/downloads/release/python-3120/
+2. Delete `.venv`
+3. Re-run `INSTALL.bat`
+
+### ❌ "pip check" shows conflicts
+
+**Problem**: Incompatible package versions
+
+**Solution**:
+```batch
+call .venv\Scripts\activate.bat
+pip install --upgrade pip
+pip install -r config/requirements.txt --force-reinstall
+```
+
+### ❌ GPU not detected
+
+**Problem**: CPU PyTorch installed or CUDA missing
+
+**Solution**:
+```batch
+call .venv\Scripts\activate.bat
+
+# RTX 40xx/50xx (CUDA 12.4)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+
+# RTX 30xx (CUDA 11.8)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+
+# Verify
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+### ❌ "Test failed" during run_all_tests.bat
+
+**Problem**: Tests executed outside venv
+
+**Solution**:
+```batch
+# Always use .bat files
+scripts\run_all_tests.bat
+
+# OR activate venv before
+call .venv\Scripts\activate.bat
+python tests\test_name.py
+```
+
+### ❌ Unicode/Encoding errors on Windows
+
+**Problem**: Special characters in logs
+
+**Solution**: Already fixed in v3.1 with:
+- `safe_print()` in `core/utils.py`
+- `PYTHONIOENCODING=utf-8` in START.bat
+- Automatic ASCII fallback
+
+### 📞 Need Help?
+
+1. Check [HELP.md](HELP.md)
+2. Review [CHANGELOG.md](CHANGELOG.md) for known bugs
+3. Run diagnostic:
+   ```batch
+   scripts\run_test.bat test_project_integrity
+   ```
+4. Open issue: https://github.com/lo26lo/pok/issues
 
 ---
 
-## � Credits & Acknowledgments
+## 🤝 Contributing
+
+### 🔧 Development Workflow
+
+**IMPORTANT**: Read `.github/copilot-instructions.md` before any modification!
+
+#### Add a Script
+
+1. Create `scripts/my_script.py`
+2. Update `scripts/SCRIPTS_REFERENCE.py`:
+   - Add to `SCRIPTS_CATALOG`
+   - Add line in `CHANGELOG`
+3. Test: `scripts\run_script.bat my_script`
+4. Commit together
+
+#### Add a Test
+
+1. Create `tests/test_name.py`
+2. Update `scripts/SCRIPTS_REFERENCE.py`:
+   - Add to `TESTS_CATALOG`
+   - Update `CHANGELOG`
+3. Test: `scripts\run_test.bat test_name`
+4. Verify: `scripts\run_all_tests.bat`
+5. Commit together
+
+### 📋 Checklist Before Commit
+
+- [ ] Venv activated for tests
+- [ ] `SCRIPTS_REFERENCE.py` updated if adding script/test
+- [ ] All tests pass (`scripts\run_all_tests.bat`)
+- [ ] Clean root (only START.bat, INSTALL.bat, README.md)
+- [ ] Files in correct folders (config/, models/, docs/, scripts/)
+- [ ] Documentation updated if necessary
+
+### 🚫 NEVER DO
+
+- ❌ Create files at root (except START.bat, INSTALL.bat, README.md)
+- ❌ Move files from config/, models/, docs/, scripts/ to root
+- ❌ Run tests outside venv
+- ❌ Forget to update `SCRIPTS_REFERENCE.py`
+- ❌ Modify structure without confirmation
+
+---
+
+## 📄 License
+
+MIT License - See [LICENSE](../LICENSE)
+
+---
+
+## 🙏 Credits
 
 ### Inspiration
 
-This project was inspired by the research paper:
+Project inspired by:
 - 📄 **[Real-Time Pokemon Card Detection from Tournament Footage](https://cs231n.stanford.edu/2024/papers/real-time-pokemon-card-detection-from-tournament-footage.pdf)** - Stanford CS231n (2024)
 
-The paper's approach to card detection in tournament settings motivated the development of this comprehensive dataset generation and training pipeline.
+### Technologies
 
-### Technologies & Libraries
-
-- 🔥 **[YOLOv8](https://github.com/ultralytics/ultralytics)** - Ultralytics for state-of-the-art object detection
-- 🎨 **[OpenCV](https://opencv.org/)** - Computer vision and image processing
-- 🖼️ **[imgaug](https://github.com/aleju/imgaug)** - Advanced image augmentation
-- 🎴 **[TCGdex API](https://tcgdex.net/)** - Pokemon TCG card database and pricing
-- 🎭 **[Pillow](https://python-pillow.org/)** - Image manipulation
-- 🐼 **[Pandas](https://pandas.pydata.org/)** - Data processing and Excel integration
-- 🌐 **[Flask](https://flask.palletsprojects.com/)** - REST API server
-- 🎨 **[Catppuccin](https://github.com/catppuccin/catppuccin)** - Modern color scheme
+- 🔥 **[YOLOv8](https://github.com/ultralytics/ultralytics)** - Ultralytics
+- 🎨 **[OpenCV](https://opencv.org/)** - Computer vision
+- 🖼️ **[imgaug](https://github.com/aleju/imgaug)** - Advanced augmentation
+- 🎴 **[TCGdex API](https://tcgdex.net/)** - TCG database
+- 🐍 **[Python](https://www.python.org/)** - Main language
 
 ### Special Thanks
 
@@ -872,36 +1220,12 @@ The paper's approach to card detection in tournament settings motivated the deve
 
 ---
 
-## �📄 License
-
-MIT License - See [LICENSE](LICENSE) file
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
----
-
-## 📧 Support
-
--  [Read documentation](docs/)
-- 💬 [Discussions](https://github.com/lo26lo/pok/discussions)
-
----
-
 <div align="center">
 
 **Made with ❤️ for Pokemon TCG collectors and AI enthusiasts**
 
 ⭐ Star this repo if you find it useful!
 
-[🏠 Home](#-pokémon-dataset-generator-v30) • [📖 Docs](#-documentation) • [🚀 Install](#-quick-start) • [🎯 Features](#-core-features)
+[🏠 Back to Top](#-pokémon-dataset-generator-v31)
 
 </div>
