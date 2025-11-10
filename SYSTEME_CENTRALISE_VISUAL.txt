@@ -1,0 +1,250 @@
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║          🎯 SYSTÈME DE GESTION CENTRALISÉE DES SCRIPTS ET TESTS 🎯          ║
+║                                                                              ║
+║                     Pokémon Dataset Generator v3.1                          ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          📋 FICHIERS PRINCIPAUX                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    scripts/SCRIPTS_REFERENCE.py  ← 🔥 CATALOGUE CENTRALISÉ (À MAINTENIR!)
+           │
+           ├─→ SCRIPTS_CATALOG (14 scripts)
+           ├─→ TESTS_CATALOG (16 tests)
+           └─→ Interface CLI complète
+
+    Fichiers .bat
+           │
+           ├─→ run_all_tests.bat      (Exécute tous les tests)
+           ├─→ run_test.bat           (Exécute un test)
+           └─→ run_script.bat         (Exécute un script)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           📚 DOCUMENTATION                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    📖 README_SCRIPTS_SYSTEM.md
+       └─→ Guide principal d'utilisation
+
+    📖 docs/MAINTENANCE_SCRIPTS_REFERENCE.md
+       └─→ Guide complet de maintenance
+
+    📖 MEMO_VENV_USAGE.md
+       └─→ Mémo rapide quotidien
+
+    📖 CHECKLIST_MODIFICATIONS.md
+       └─→ Checklist pour toute modification
+
+    📖 RECAPITULATIF_SYSTEME_CENTRALISE.md
+       └─→ Récapitulatif de la mise en place
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        🚀 COMMANDES ESSENTIELLES                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    📋 LISTER
+    ├─→ python scripts\SCRIPTS_REFERENCE.py --list
+    └─→ python scripts\SCRIPTS_REFERENCE.py --list-tests
+
+    ▶️  EXÉCUTER
+    ├─→ run_script.bat init_prices
+    ├─→ run_test.bat test_cuda
+    └─→ run_all_tests.bat
+
+    🔍 VÉRIFIER
+    └─→ python scripts\SCRIPTS_REFERENCE.py --check-venv
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           ⚠️  RÈGLES D'OR                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    1️⃣  TOUJOURS UTILISER LE VENV
+        ✅ run_test.bat test_cuda
+        ❌ python tests\test_cuda.py
+
+    2️⃣  TOUJOURS METTRE À JOUR SCRIPTS_REFERENCE.py
+        Lors de tout ajout/modification/suppression
+
+    3️⃣  TOUJOURS TESTER AVANT DE COMMITTER
+        run_all_tests.bat
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                     📊 SCRIPTS CATALOGUÉS (14)                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    Configuration (3)
+    ├─→ init_prices
+    ├─→ init_prices_real
+    └─→ init_prices_simple
+
+    Data Processing (5)
+    ├─→ create_card_mapping
+    ├─→ create_real_mapping
+    ├─→ create_yolo_labels_test
+    ├─→ merge_dataset
+    └─→ read_excel_mapping
+
+    Debug (3)
+    ├─→ debug_excel_keys
+    ├─→ fix_class_mapping
+    └─→ fix_class_mapping_correct
+
+    Workflow (1)
+    └─→ workflow_optimized
+
+    Migration (1)
+    └─→ migrate_directories
+
+    Maintenance (1)
+    └─→ cleanup_project
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      🧪 TESTS CATALOGUÉS (16)                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    Hardware (1)
+    └─→ test_cuda
+
+    Integration (3)
+    ├─→ test_project_integrity
+    ├─→ test_workflow_simulation
+    └─→ test_full_chain
+
+    Features (1)
+    └─→ test_detection_prices
+
+    Training (1)
+    └─→ test_gpu_training
+
+    Performance (3)
+    ├─→ test_autobalancer_performance
+    ├─→ test_holographic_performance
+    └─→ test_mosaic_performance
+
+    Debug (1)
+    └─→ test_mapping_debug
+
+    Validation (4)
+    ├─→ verify_data_yaml
+    ├─→ verify_detailed
+    ├─→ check_corrupted_images
+    └─→ test_annotations
+
+    Visualization (2)
+    ├─→ visualize_annotations
+    └─→ visualize_bbox
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                     🔄 WORKFLOW DE DÉVELOPPEMENT                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    AJOUTER UN NOUVEAU SCRIPT
+    ┌─────────────────────────────────────────┐
+    │ 1. Créer scripts/mon_script.py          │
+    │ 2. Ouvrir scripts/SCRIPTS_REFERENCE.py  │
+    │ 3. Ajouter entrée dans SCRIPTS_CATALOG  │
+    │ 4. Mettre à jour CHANGELOG              │
+    │ 5. Tester: run_script.bat mon_script    │
+    │ 6. Committer ensemble                   │
+    └─────────────────────────────────────────┘
+
+    AJOUTER UN NOUVEAU TEST
+    ┌─────────────────────────────────────────┐
+    │ 1. Créer tests/test_nom.py              │
+    │ 2. Ouvrir scripts/SCRIPTS_REFERENCE.py  │
+    │ 3. Ajouter entrée dans TESTS_CATALOG    │
+    │ 4. Mettre à jour CHANGELOG              │
+    │ 5. Tester: run_test.bat test_nom        │
+    │ 6. Vérifier: run_all_tests.bat          │
+    │ 7. Committer ensemble                   │
+    └─────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      ✅ CHECKLIST AVANT COMMIT                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ☐ Le venv est utilisé
+    ☐ SCRIPTS_REFERENCE.py est à jour
+    ☐ Le CHANGELOG contient l'entrée
+    ☐ Les tests passent (run_all_tests.bat)
+    ☐ La liste est cohérente (--list / --list-tests)
+    ☐ Le commit inclut SCRIPTS_REFERENCE.py si modifié
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           🎓 EXEMPLES RAPIDES                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    # Initialiser les prix
+    run_script.bat init_prices
+
+    # Tester CUDA
+    run_test.bat test_cuda
+
+    # Lancer tous les tests d'intégration
+    python scripts\SCRIPTS_REFERENCE.py --run-all-tests --category Integration
+
+    # Tester les performances
+    python scripts\SCRIPTS_REFERENCE.py --run-all-tests --category Performance
+
+    # Valider le dataset
+    python scripts\SCRIPTS_REFERENCE.py --run-all-tests --category Validation
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           📞 BESOIN D'AIDE ?                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    1. README_SCRIPTS_SYSTEM.md
+       → Guide principal
+
+    2. MEMO_VENV_USAGE.md
+       → Mémo rapide
+
+    3. docs/MAINTENANCE_SCRIPTS_REFERENCE.md
+       → Guide détaillé
+
+    4. CHECKLIST_MODIFICATIONS.md
+       → Procédures pas-à-pas
+
+    5. python scripts\SCRIPTS_REFERENCE.py --help
+       → Aide CLI
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              🏆 RÉSULTAT                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ✅ Système centralisé opérationnel
+    ✅ 14 scripts catalogués
+    ✅ 16 tests catalogués
+    ✅ Utilisation du venv garantie
+    ✅ Documentation complète
+    ✅ Workflow clair
+    ✅ Maintenance simplifiée
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║              📌 NE JAMAIS OUBLIER DE METTRE À JOUR                          ║
+║                    scripts/SCRIPTS_REFERENCE.py                              ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+                             Créé le : 2025-11-10
+                            Version : 1.0
+                         Statut : ✅ Opérationnel
+
