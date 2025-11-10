@@ -14,9 +14,27 @@
 
     scripts/SCRIPTS_REFERENCE.py  ← 🔥 CATALOGUE CENTRALISÉ (À MAINTENIR!)
            │
-           ├─→ SCRIPTS_CATALOG (14 scripts)
-           ├─→ TESTS_CATALOG (16 tests)
+           ├─→ SCRIPTS_CATALOG (14 scripts avec "called_by")
+           ├─→ TESTS_CATALOG (16 tests avec "called_by")
            └─→ Interface CLI complète
+
+    DEPENDENCIES_MAP.md          ← 🗺️ CARTOGRAPHIE DES DÉPENDANCES
+           │
+           ├─→ GUI → Core Modules
+           ├─→ Modules Core → Autres Modules
+           ├─→ Scripts → Modules Core
+           ├─→ Tests → Modules Core
+           ├─→ Workflows complets
+           └─→ Matrice de dépendances
+
+    docs/DEPENDENCY_GRAPH.md     ← 📊 DIAGRAMMES VISUELS (Mermaid)
+           │
+           ├─→ Architecture complète
+           ├─→ Workflow téléchargement → entraînement
+           ├─→ Workflow détection avec prix
+           ├─→ Architecture des tests
+           ├─→ Modules core interdépendances
+           └─→ Dépendances externes
 
     Fichiers .bat
            │

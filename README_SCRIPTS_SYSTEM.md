@@ -7,10 +7,22 @@ Ce projet utilise maintenant un **système centralisé** pour gérer tous les sc
 ### ✨ Avantages
 
 - ✅ **Catalogue unique** : Tous les scripts et tests sont documentés dans un seul fichier
+- ✅ **Cartographie des dépendances** : Visualisation complète de qui appelle quoi
 - ✅ **Utilisation du venv garantie** : Tous les tests s'exécutent dans l'environnement virtuel
 - ✅ **Exécution simplifiée** : Fichiers .bat pour lancer n'importe quel script/test
 - ✅ **Traçabilité** : CHANGELOG intégré pour suivre les modifications
 - ✅ **Documentation automatique** : Liste des dépendances et descriptions
+
+## 📚 Documentation Complète
+
+| Fichier | Description |
+|---------|-------------|
+| **README_SCRIPTS_SYSTEM.md** (ce fichier) | Guide d'utilisation principal |
+| **DEPENDENCIES_MAP.md** | Cartographie complète : Qui appelle quoi ? |
+| **docs/DEPENDENCY_GRAPH.md** | Diagrammes visuels interactifs (Mermaid) |
+| **docs/MAINTENANCE_SCRIPTS_REFERENCE.md** | Guide de maintenance détaillé |
+| **MEMO_VENV_USAGE.md** | Mémo rapide pour l'usage quotidien |
+| **CHECKLIST_MODIFICATIONS.md** | Checklist lors de modifications |
 
 ## 🎯 Règle d'or
 

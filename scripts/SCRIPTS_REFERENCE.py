@@ -41,6 +41,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["pandas", "openpyxl", "PyYAML"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)", "workflow après téléchargement images"],
         "last_modified": "2025-11-10"
     },
     "init_prices_real": {
@@ -50,6 +51,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["pandas", "openpyxl", "requests"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
         "last_modified": "2025-11-10"
     },
     "init_prices_simple": {
@@ -59,6 +61,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["pandas", "openpyxl"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
         "last_modified": "2025-11-10"
     },
     
@@ -70,6 +73,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["PyYAML"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)", "workflow après création dataset"],
         "last_modified": "2025-11-10"
     },
     "create_real_mapping": {
@@ -79,6 +83,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["PyYAML"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
         "last_modified": "2025-11-10"
     },
     "read_excel_mapping": {
@@ -88,6 +93,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["pandas", "openpyxl"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
         "last_modified": "2025-11-10"
     },
     
@@ -99,6 +105,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["PyYAML"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
         "last_modified": "2025-11-10"
     },
     "fix_class_mapping_correct": {
@@ -108,6 +115,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["PyYAML"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
         "last_modified": "2025-11-10"
     },
     "debug_excel_keys": {
@@ -117,6 +125,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["pandas", "openpyxl"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
         "last_modified": "2025-11-10"
     },
     
@@ -128,6 +137,7 @@ SCRIPTS_CATALOG = {
         "dependencies": ["ultralytics", "opencv-python", "numpy"],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)", "run_script.bat"],
         "last_modified": "2025-11-10"
     },
     "merge_dataset": {
@@ -137,6 +147,7 @@ SCRIPTS_CATALOG = {
         "dependencies": [],
         "arguments": ["--source1", "--source2", "--output"],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
         "last_modified": "2025-11-10"
     },
     
@@ -148,6 +159,7 @@ SCRIPTS_CATALOG = {
         "dependencies": [],
         "arguments": [],
         "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
         "last_modified": "2025-11-10"
     },
     
@@ -186,6 +198,7 @@ TESTS_CATALOG = {
         "category": "Hardware",
         "dependencies": ["torch"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat", "test_pytorch_gpu.bat"],
         "last_modified": "2025-11-10"
     },
     "test_project_integrity": {
@@ -194,6 +207,7 @@ TESTS_CATALOG = {
         "category": "Integration",
         "dependencies": [],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "test_workflow_simulation": {
@@ -202,6 +216,7 @@ TESTS_CATALOG = {
         "category": "Integration",
         "dependencies": ["opencv-python", "requests"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "test_detection_prices": {
@@ -210,6 +225,7 @@ TESTS_CATALOG = {
         "category": "Features",
         "dependencies": ["ultralytics", "opencv-python", "pandas"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat", "test_detection_with_prices.bat"],
         "last_modified": "2025-11-10"
     },
     "test_full_chain": {
@@ -218,6 +234,7 @@ TESTS_CATALOG = {
         "category": "Integration",
         "dependencies": ["ultralytics", "opencv-python"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "test_gpu_training": {
@@ -226,6 +243,7 @@ TESTS_CATALOG = {
         "category": "Training",
         "dependencies": ["ultralytics", "torch"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "test_autobalancer_performance": {
@@ -234,6 +252,7 @@ TESTS_CATALOG = {
         "category": "Performance",
         "dependencies": [],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "test_holographic_performance": {
@@ -242,6 +261,7 @@ TESTS_CATALOG = {
         "category": "Performance",
         "dependencies": ["opencv-python", "numpy"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "test_mosaic_performance": {
@@ -250,6 +270,7 @@ TESTS_CATALOG = {
         "category": "Performance",
         "dependencies": ["opencv-python"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "test_mapping_debug": {
@@ -258,6 +279,7 @@ TESTS_CATALOG = {
         "category": "Debug",
         "dependencies": [],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "verify_data_yaml": {
@@ -266,6 +288,7 @@ TESTS_CATALOG = {
         "category": "Validation",
         "dependencies": ["PyYAML"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "verify_detailed": {
@@ -274,6 +297,7 @@ TESTS_CATALOG = {
         "category": "Validation",
         "dependencies": [],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "check_corrupted_images": {
@@ -282,6 +306,7 @@ TESTS_CATALOG = {
         "category": "Validation",
         "dependencies": ["opencv-python", "PIL"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "test_annotations": {
@@ -290,6 +315,7 @@ TESTS_CATALOG = {
         "category": "Validation",
         "dependencies": [],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "visualize_annotations": {
@@ -298,6 +324,7 @@ TESTS_CATALOG = {
         "category": "Visualization",
         "dependencies": ["opencv-python"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
     "visualize_bbox": {
@@ -306,6 +333,7 @@ TESTS_CATALOG = {
         "category": "Visualization",
         "dependencies": ["opencv-python"],
         "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     }
 }
@@ -414,6 +442,8 @@ def run_script(script_name: str, args: List[str] = None) -> int:
     print(f"\n▶️  Exécution: {' '.join(cmd)}")
     print(f"📝 Description: {info['description']}")
     print(f"📦 Dépendances: {', '.join(info['dependencies']) if info['dependencies'] else 'Aucune'}")
+    if info.get("called_by"):
+        print(f"🔗 Appelé par: {', '.join(info['called_by'])}")
     print("-" * 80)
     
     # Exécuter
@@ -461,6 +491,8 @@ def run_test(test_name: str, args: List[str] = None) -> int:
     print(f"\n🧪 Exécution du test: {test_name}")
     print(f"📝 Description: {info['description']}")
     print(f"📦 Dépendances: {', '.join(info['dependencies']) if info['dependencies'] else 'Aucune'}")
+    if info.get("called_by"):
+        print(f"🔗 Appelé par: {', '.join(info['called_by'])}")
     print(f"▶️  Commande: {' '.join(cmd)}")
     print("-" * 80)
     
