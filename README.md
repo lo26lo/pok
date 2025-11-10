@@ -652,19 +652,11 @@ python core/auto_balancer.py --target 50 --strategy augment
 
 #### Step 9: YOLO Training 🎓
 
-**5 Model Sizes**:
-
-| Model | Speed | Accuracy | VRAM | Use Case |
-|-------|-------|----------|------|----------|
-| **n** | ⚡⚡⚡ | ⭐⭐ | ~2GB | Mobile, real-time |
-| **s** | ⚡⚡ | ⭐⭐⭐ | ~4GB | Balanced (recommended) |
-| **m** | ⚡ | ⭐⭐⭐⭐ | ~6GB | High accuracy |
-| **l** | 🐌 | ⭐⭐⭐⭐⭐ | ~8GB | Maximum accuracy |
-| **x** | 🐢 | ⭐⭐⭐⭐⭐ | ~12GB | Research |
+**5 Model Sizes**: n, s, m, l, x (see [YOLO Training](#-yolo-training) section for details)
 
 **Via GUI**:
 1. **Training** tab
-2. Select model size (e.g., `n`)
+2. Select model size (e.g., `n` for nano, `s` for small)
 3. Set epochs (50-100)
 4. Set batch size (auto or manual)
 5. Set image size (640 standard)
@@ -678,16 +670,7 @@ python core/training_manager.py --data output/yolov8/data.yaml --epochs 50 --mod
 
 **Output**:
 - Best model: `runs/train/pokemon_detector/weights/best.pt`
-- Last checkpoint: `runs/train/pokemon_detector/weights/last.pt`
 - Metrics: `results.png`, `confusion_matrix.png`
-- Validation predictions: `val_batch0_pred.jpg`
-
-**Training Metrics Displayed**:
-- **mAP@50**: Mean Average Precision at 50% IoU
-- **mAP@50-95**: Mean Average Precision at 50-95% IoU
-- **Precision**: TP / (TP + FP)
-- **Recall**: TP / (TP + FN)
-- **Loss**: Box loss, Class loss, DFL loss
 
 ---
 
