@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="../examples/banner.png" alt="Pokemon Dataset Generator Banner" width="100%"/>
+<img src="examples/banner.png" alt="Pokemon Dataset Generator Banner" width="100%"/>
 
 # 🎮 Pokémon Dataset Generator v3.1
 
@@ -15,7 +15,7 @@
 
 ---
 
-[📖 Documentation](README.md) • [📜 Changelog](CHANGELOG.md) • [🚀 Features](FEATURES.md) • [🛠️ Maintenance](MAINTENANCE_SCRIPTS_REFERENCE.md)
+[📖 Documentation](docs/README.md) • [📜 Changelog](docs/CHANGELOG.md) • [🚀 Features](docs/FEATURES.md) • [🛠️ Maintenance](docs/MAINTENANCE_SCRIPTS_REFERENCE.md)
 
 </div>
 
@@ -48,13 +48,13 @@
 <table>
 <tr>
 <td align="center" width="50%">
-<img src="../examples/gui_dashboard.png" alt="GUI Dashboard" width="100%"/>
+<img src="examples/gui_dashboard.png" alt="GUI Dashboard" width="100%"/>
 
 **Dashboard (Home)**  
 Real-time statistics, environment checks, quick actions
 </td>
 <td align="center" width="50%">
-<img src="../examples/gui_settings.png" alt="Settings" width="100%"/>
+<img src="examples/gui_settings.png" alt="Settings" width="100%"/>
 
 **Settings Dialog**  
 6 configuration tabs with live preview
@@ -69,19 +69,19 @@ Real-time statistics, environment checks, quick actions
 <table>
 <tr>
 <td align="center" width="33%">
-<img src="../examples/example_original.png" alt="Original Card" width="100%"/>
+<img src="examples/example_original.png" alt="Original Card" width="100%"/>
 
 **Original Card**  
 Source image from TCGdex API
 </td>
 <td align="center" width="33%">
-<img src="../examples/example_augmented.png" alt="Augmented" width="100%"/>
+<img src="examples/example_augmented.png" alt="Augmented" width="100%"/>
 
 **Augmented Cards**  
 22 transformation types
 </td>
 <td align="center" width="33%">
-<img src="../examples/example_holographic.png" alt="Holographic" width="100%"/>
+<img src="examples/example_holographic.png" alt="Holographic" width="100%"/>
 
 **Holographic Effect**  
 5 shiny styles (rainbow, metallic, glitter)
@@ -93,7 +93,7 @@ Source image from TCGdex API
 
 ### Mosaic Generation & Annotations
 
-<img src="../examples/example_layout_annotated.png" alt="Annotated Mosaic" width="100%"/>
+<img src="examples/example_layout_annotated.png" alt="Annotated Mosaic" width="100%"/>
 
 **Annotated Mosaic - YOLO Format Ready**  
 Complete dataset with bounding boxes and 4-point polygons
@@ -105,13 +105,13 @@ Complete dataset with bounding boxes and 4-point polygons
 <table>
 <tr>
 <td align="center" width="50%">
-<img src="../examples/training_metrics.png" alt="Training Metrics" width="100%"/>
+<img src="examples/training_metrics.png" alt="Training Metrics" width="100%"/>
 
 **Training Dashboard**  
 Real-time metrics: mAP, precision, recall, loss curves
 </td>
 <td align="center" width="50%">
-<img src="../examples/detection_with_prices.png" alt="Detection with Prices" width="100%"/>
+<img src="examples/detection_with_prices.png" alt="Detection with Prices" width="100%"/>
 
 **Live Detection with Prices**  
 Real-time card detection with Cardmarket pricing
@@ -123,7 +123,7 @@ Real-time card detection with Cardmarket pricing
 
 ### Price System Integration
 
-<img src="../examples/excel_prices.png" alt="Excel Prices" width="80%"/>
+<img src="examples/excel_prices.png" alt="Excel Prices" width="80%"/>
 
 **Excel Price Database**  
 Auto-generated from TCGdex API with Cardmarket + TCGPlayer prices
@@ -1043,11 +1043,11 @@ python core/detection_with_prices.py --source 0 --model runs/train/pokemon_detec
 
 ### 🔗 Quick Links
 
-- **Installation problem?** → [HELP.md](HELP.md) Troubleshooting section
-- **Add a script?** → [CHECKLIST_MODIFICATIONS.md](CHECKLIST_MODIFICATIONS.md)
-- **Understand dependencies?** → [DEPENDENCIES_MAP.md](DEPENDENCIES_MAP.md)
-- **Use venv?** → [MEMO_VENV_USAGE.md](MEMO_VENV_USAGE.md)
-- **Complete workflow?** → [README_SCRIPTS_SYSTEM.md](README_SCRIPTS_SYSTEM.md)
+- **Installation problem?** → [HELP.md](docs/HELP.md) Troubleshooting section
+- **Add a script?** → [CHECKLIST_MODIFICATIONS.md](docs/CHECKLIST_MODIFICATIONS.md)
+- **Understand dependencies?** → [DEPENDENCIES_MAP.md](docs/DEPENDENCIES_MAP.md)
+- **Use venv?** → [MEMO_VENV_USAGE.md](docs/MEMO_VENV_USAGE.md)
+- **Complete workflow?** → [README_SCRIPTS_SYSTEM.md](docs/README_SCRIPTS_SYSTEM.md)
 
 ---
 
@@ -1136,8 +1136,8 @@ python tests\test_name.py
 
 ### 📞 Need Help?
 
-1. Check [HELP.md](HELP.md)
-2. Review [CHANGELOG.md](CHANGELOG.md) for known bugs
+1. Check [HELP.md](docs/HELP.md)
+2. Review [CHANGELOG.md](docs/CHANGELOG.md) for known bugs
 3. Run diagnostic:
    ```batch
    scripts\run_test.bat test_project_integrity
