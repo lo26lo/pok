@@ -1,7 +1,8 @@
 # 🤖 Instructions GitHub Copilot - Projet Pokémon Dataset Generator
 
 **Date de création** : 10 novembre 2025  
-**Version** : 1.0
+**Dernière mise à jour** : 10 novembre 2025  
+**Version** : 2.0
 
 ---
 
@@ -29,6 +30,159 @@ pok/
 ├── core/                        # Modules Python
 ├── tests/                       # Tests
 └── [images/, output/, runs/]   # Données
+```
+
+---
+
+## ⚙️ Contraintes Techniques
+
+### Python
+- **Version recommandée** : Python 3.12
+- **Versions supportées** : 3.10, 3.11, 3.12
+- **Versions interdites** : 3.13+ (problèmes de compatibilité NumPy 1.x)
+
+### Dépendances critiques
+- **NumPy** : `< 2.0` (OBLIGATOIRE pour imgaug)
+- **OpenCV** : `< 4.10.0` (compatibilité NumPy 1.x)
+- **imgaug** : `>= 0.4.0` (nécessite NumPy < 2.0)
+- **scipy** : `< 1.14`
+- **scikit-image** : `< 0.23`
+
+### GPU & CUDA
+- **PyTorch** : Installation selon GPU :
+  - RTX 40xx/50xx → CUDA 12.4
+  - RTX 30xx → CUDA 11.8
+  - CPU uniquement → version CPU
+- **Ultralytics** : Détection auto du GPU
+
+### Encodage & Unicode
+- **Toujours** UTF-8 pour les fichiers
+- **Utiliser** `safe_print()` pour les logs (gère ASCII/Unicode)
+- **Windows** : `PYTHONIOENCODING=utf-8` dans START.bat
+
+### Limitations connues
+- imgaug ne supporte pas NumPy 2.0+
+- Certaines augmentations sont lentes sur CPU
+- Mosaïques : max 8 cartes par layout (performance)
+
+---
+
+## 🎨 Standards de Code Python
+
+### Style général
+- **PEP 8** pour la mise en forme de base
+- **Type hints** encouragés pour les fonctions publiques
+- **Docstrings** pour les fonctions complexes (format Google ou NumPy)
+- **Imports** : stdlib → third-party → local (séparés par ligne vide)
+
+### Gestion des erreurs
+- Utiliser `try/except` avec des exceptions spécifiques
+- Logger les erreurs avec le module `logging`
+- Ne jamais utiliser `except:` sans type d'exception
+- Préférer `safe_print()` de `core/utils.py` pour l'affichage console
+
+### Fonctions utilitaires
+- **TOUJOURS** utiliser les fonctions de `core/utils.py` :
+  - `safe_print()` : Affichage console (gère Unicode)
+  - `ensure_dir()` : Création de dossiers
+  - `validate_path()` : Validation de chemins
+  
+### Chemins de fichiers
+- **TOUJOURS** utiliser `pathlib.Path` ou `os.path.join`
+- **JAMAIS** de chemins en dur avec `\` ou `/`
+- Préférer les chemins relatifs depuis la racine du projet
+
+### Exemple de fonction bien structurée
+```python
+from pathlib import Path
+from typing import Optional, List
+import logging
+
+from core.utils import safe_print, ensure_dir
+
+def process_images(
+    input_dir: Path,
+    output_dir: Path,
+    count: int = 10
+) -> Optional[List[str]]:
+    """
+    Traite les images d'un dossier.
+    
+    Args:
+        input_dir: Dossier source
+        output_dir: Dossier destination
+        count: Nombre d'images à traiter
+        
+    Returns:
+        Liste des fichiers traités ou None si erreur
+    """
+    try:
+        ensure_dir(output_dir)
+        processed = []
+        
+        # Logique ici
+        
+        safe_print(f"✅ {len(processed)} images traitées")
+        return processed
+        
+    except FileNotFoundError as e:
+        logging.error(f"Dossier introuvable : {e}")
+        return None
+    except Exception as e:
+        logging.error(f"Erreur inattendue : {e}")
+        return None
+```
+
+---
+
+## 🔤 Conventions de Nommage
+
+### Fichiers Python
+- **Scripts** : `snake_case.py` (ex: `init_prices.py`)
+- **Tests** : `test_<nom>.py` (ex: `test_cuda.py`)
+- **Modules** : `snake_case.py` (ex: `card_mapping.py`)
+
+### Fichiers Batch
+- **Lanceurs** : `MAJUSCULES.bat` (ex: `START.bat`, `INSTALL.bat`)
+- **Utilitaires** : `snake_case.bat` (ex: `run_test.bat`)
+
+### Fichiers Documentation
+- **README** : `README_DESCRIPTIF.md` (ex: `README_COMPLET.md`)
+- **Autres docs** : `MAJUSCULES.md` (ex: `CHANGELOG.md`, `HELP.md`)
+
+### Code Python
+- **Variables** : `snake_case` (ex: `image_count`, `output_dir`)
+- **Constantes** : `UPPER_SNAKE_CASE` (ex: `MAX_CARDS`, `DEFAULT_EPOCHS`)
+- **Fonctions** : `snake_case` (ex: `download_images()`, `create_mosaic()`)
+- **Classes** : `PascalCase` (ex: `ImageDownloader`, `MosaicGenerator`)
+- **Privé** : préfixe `_` (ex: `_internal_method()`)
+
+### Noms de dossiers
+- **Données** : `lowercase` (ex: `images/`, `output/`, `runs/`)
+- **Code** : `lowercase` (ex: `core/`, `tests/`, `scripts/`)
+- **Config** : `lowercase` (ex: `config/`, `models/`)
+
+### Noms de variables GUI (tkinter)
+- **Widgets** : `type_description` (ex: `btn_start`, `lbl_status`, `entry_epochs`)
+- **Variables** : `var_description` (ex: `var_model_size`, `var_batch_size`)
+
+### Exemples à suivre
+```python
+# ✅ BON
+def create_card_mapping(input_dir: Path, output_file: Path) -> bool:
+    MAX_RETRIES = 3
+    card_count = 0
+    mapping_dict = {}
+    
+    for attempt in range(MAX_RETRIES):
+        # ...
+    
+    return True
+
+# ❌ MAUVAIS
+def CreateCardMapping(InputDir, OutputFile):  # PascalCase pour fonction
+    maxRetries = 3  # camelCase pour constante
+    CardCount = 0  # PascalCase pour variable
 ```
 
 ---
@@ -223,6 +377,278 @@ python scripts\SCRIPTS_REFERENCE.py --check-venv
 
 ---
 
+## 💬 Messages de Commit
+
+### Format obligatoire
+```
+<type>(<scope>): <description courte>
+
+<description détaillée optionnelle>
+```
+
+### Types autorisés
+- **feat** : Nouvelle fonctionnalité
+- **fix** : Correction de bug
+- **docs** : Documentation uniquement
+- **style** : Formatage, pas de changement de code
+- **refactor** : Refactorisation sans changement de comportement
+- **test** : Ajout/modification de tests
+- **chore** : Maintenance (dépendances, config)
+- **perf** : Amélioration de performance
+
+### Scopes courants
+- **gui** : Interface graphique
+- **core** : Modules core/
+- **scripts** : Scripts utilitaires
+- **tests** : Tests
+- **docs** : Documentation
+- **config** : Configuration
+
+### Exemples de bons messages
+```bash
+✅ feat(gui): add holographic intensity slider
+✅ fix(core): resolve NumPy 2.0 compatibility issue
+✅ docs: update README with new workflow diagram
+✅ refactor(scripts): centralize SCRIPTS_REFERENCE.py
+✅ test: add GPU detection test
+✅ chore(config): pin NumPy to < 2.0
+```
+
+### Exemples de mauvais messages
+```bash
+❌ update files
+❌ fix bug
+❌ wip
+❌ changes
+```
+
+### Règles
+- **Impératif** : "add" pas "added" ou "adds"
+- **Minuscule** : pas de majuscule après le type
+- **Pas de point** à la fin
+- **50 caractères max** pour la description courte
+- **Corps de 72 caractères** par ligne si ajouté
+
+---
+
+## 🧪 Tests & Validation
+
+### Quand tester ?
+
+**TOUJOURS tester avant commit si modification de** :
+- ✅ `core/` : Modules principaux → `run_all_tests.bat`
+- ✅ `scripts/` : Scripts → `run_script.bat <nom>`
+- ✅ Configuration : Dependencies → `test_project_integrity`
+- ✅ GUI : Interface → Lancer `START.bat` et tester manuellement
+
+### Tests automatiques disponibles
+
+**Hardware** :
+```batch
+scripts\run_test.bat test_cuda  # Test GPU/CUDA
+```
+
+**Intégrité** :
+```batch
+scripts\run_test.bat test_project_integrity  # Structure complète
+```
+
+**Performance** :
+```batch
+scripts\run_test.bat test_mosaic_performance  # Benchmark mosaics
+scripts\run_test.bat test_holographic_performance  # Benchmark holo
+```
+
+**Validation** :
+```batch
+scripts\run_test.bat verify_data_yaml  # Vérifier dataset YOLO
+scripts\run_test.bat check_corrupted_images  # Images corrompues
+```
+
+### Workflow de test recommandé
+
+**Avant commit** :
+```batch
+# 1. Tests d'intégrité
+scripts\run_test.bat test_project_integrity
+
+# 2. Tests spécifiques selon modif
+scripts\run_test.bat <test_concerné>
+
+# 3. Vérification manuelle GUI si nécessaire
+START.bat
+```
+
+**Après modification majeure** :
+```batch
+# Tous les tests
+scripts\run_all_tests.bat
+```
+
+### Créer un nouveau test
+
+**Structure recommandée** :
+```python
+# tests/test_ma_feature.py
+import pytest
+from pathlib import Path
+import sys
+
+# Ajouter core/ au path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from core.ma_feature import ma_fonction
+
+def test_ma_fonction_basic():
+    """Test basique de ma_fonction"""
+    result = ma_fonction(input_data)
+    assert result is not None
+    assert len(result) > 0
+
+def test_ma_fonction_edge_case():
+    """Test cas limite"""
+    result = ma_fonction(None)
+    assert result == []
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
+```
+
+**Puis ajouter à `scripts/SCRIPTS_REFERENCE.py`** !
+
+---
+
+## 🔄 Workflows Types
+
+### Workflow 1 : Ajouter une nouvelle fonctionnalité GUI
+
+**Étapes** :
+1. **Modifier** `GUI_v3.1_modern.py`
+2. **Tester** : Lancer `START.bat` et vérifier
+3. **Documenter** :
+   - Mettre à jour `README.md` (section Features)
+   - Mettre à jour `docs/README_COMPLET.md` (section GUI)
+   - Mettre à jour `docs/FEATURES.md`
+   - Ajouter dans `docs/CHANGELOG.md`
+4. **Commit** : `feat(gui): add <description>`
+
+### Workflow 2 : Ajouter un nouveau script
+
+**Étapes** :
+1. **Créer** `scripts/mon_script.py`
+2. **Mettre à jour** `scripts/SCRIPTS_REFERENCE.py` :
+   - Ajouter dans `SCRIPTS_CATALOG`
+   - Ajouter ligne dans `CHANGELOG`
+3. **Tester** : `scripts\run_script.bat mon_script`
+4. **Documenter** :
+   - Mettre à jour `docs/README_COMPLET.md` (section Scripts)
+   - Ajouter dans `docs/CHANGELOG.md`
+5. **Commit ensemble** : script + SCRIPTS_REFERENCE.py + docs
+
+### Workflow 3 : Corriger un bug
+
+**Étapes** :
+1. **Identifier** le bug (fichier, ligne, symptôme)
+2. **Créer un test** qui reproduit le bug (si possible)
+3. **Corriger** le code
+4. **Vérifier** que le test passe maintenant
+5. **Tester** les cas connexes
+6. **Documenter** si bug affecte utilisateurs :
+   - Ajouter dans `docs/CHANGELOG.md`
+   - Mettre à jour doc concernée si nécessaire
+7. **Commit** : `fix(<scope>): <description>`
+
+### Workflow 4 : Modifier une dépendance
+
+**Étapes** :
+1. **Modifier** `config/requirements.txt`
+2. **Tester** la compatibilité :
+   ```batch
+   rmdir /s /q .venv
+   INSTALL.bat
+   scripts\run_all_tests.bat
+   ```
+3. **Documenter** :
+   - Mettre à jour `docs/README_COMPLET.md` (section Dependencies)
+   - Mettre à jour `docs/DEPENDENCIES_MAP.md`
+   - Ajouter dans `docs/CHANGELOG.md`
+4. **Commit** : `chore(config): update <package> to version X`
+
+### Workflow 5 : Refactoriser du code
+
+**Étapes** :
+1. **S'assurer** que les tests passent AVANT
+2. **Refactoriser** le code
+3. **Vérifier** que les tests passent APRÈS (même comportement)
+4. **Documenter** si changement d'API :
+   - Mettre à jour `docs/DEPENDENCIES_MAP.md`
+   - Mettre à jour docs techniques
+5. **Commit** : `refactor(<scope>): <description>`
+
+---
+
+## 🚨 Debugging & Troubleshooting
+
+### Problèmes courants et solutions
+
+#### 1. "ModuleNotFoundError"
+**Cause** : venv pas activé ou dépendances manquantes
+**Solution** :
+```batch
+call .venv\Scripts\activate.bat
+pip install -r config/requirements.txt
+```
+
+#### 2. "NumPy 2.0 incompatible"
+**Cause** : NumPy 2.0+ installé (incompatible imgaug)
+**Solution** :
+```batch
+pip uninstall numpy
+pip install "numpy<2.0"
+```
+
+#### 3. "UnicodeEncodeError" dans logs
+**Cause** : Caractères spéciaux sur Windows
+**Solution** : Utiliser `safe_print()` de `core/utils.py`
+
+#### 4. GPU pas détecté
+**Cause** : PyTorch CPU installé ou drivers NVIDIA manquants
+**Solution** :
+```batch
+# Vérifier
+python -c "import torch; print(torch.cuda.is_available())"
+
+# Réinstaller PyTorch GPU
+pip uninstall torch torchvision
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+```
+
+#### 5. Tests échouent sans raison
+**Cause** : Tests exécutés hors venv
+**Solution** : TOUJOURS utiliser `scripts\run_test.bat`
+
+### Outils de debug
+
+**Logs détaillés** :
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+```
+
+**Profiling** :
+```python
+import cProfile
+cProfile.run('ma_fonction()')
+```
+
+**Vérifier environnement** :
+```batch
+python scripts\SCRIPTS_REFERENCE.py --check-venv
+scripts\run_test.bat test_project_integrity
+```
+
+---
+
 ## ✅ Workflow de Validation
 
 Avant chaque commit proposé :
@@ -278,6 +704,10 @@ Ce fichier doit être mis à jour lors de :
 - Changements de structure majeurs
 - Ajout de nouvelles règles
 - Retours d'expérience de l'utilisateur
+
+**Historique des versions** :
+- **v2.0** (10 novembre 2025) : Ajout de 7 sections complètes (Contraintes Techniques, Standards de Code, Conventions de Nommage, Messages de Commit, Tests & Validation, Workflows Types, Debugging & Troubleshooting)
+- **v1.0** (10 novembre 2025) : Version initiale
 
 **Dernière mise à jour** : 10 novembre 2025  
 **Par** : Utilisateur + GitHub Copilot
