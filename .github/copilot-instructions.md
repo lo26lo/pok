@@ -82,9 +82,12 @@ python scripts\SCRIPTS_REFERENCE.py --check-venv
    - Expliquer ce qui sera fait
    - Attendre validation de l'utilisateur
 
-3. **Documenter les changements**
+3. **Documenter les changements** - ⚠️ RÈGLE ABSOLUE
+   - **TOUJOURS** mettre à jour `README.md` (racine) si changement impacte utilisation
+   - **TOUJOURS** mettre à jour `docs/README_COMPLET.md` si changement de fonctionnalité
    - Mettre à jour `docs/CHANGELOG.md` si modification majeure
    - Mettre à jour `scripts/SCRIPTS_REFERENCE.py` si ajout/modif de script/test
+   - Mettre à jour les docs concernées dans `docs/` selon le type de changement
 
 4. **Utiliser le venv pour les tests**
    - Toujours utiliser `scripts\run_test.bat` ou activer `.venv`
@@ -126,7 +129,42 @@ python scripts\SCRIPTS_REFERENCE.py --check-venv
 **Actions obligatoires** :
 1. Créer dans `docs/`
 2. Mettre à jour `README.md` (racine) si c'est une doc importante
-3. ❌ **NE JAMAIS** créer à la racine
+3. Mettre à jour l'index dans `docs/README.md`
+4. ❌ **NE JAMAIS** créer à la racine
+
+### Modification de fonctionnalité
+
+**Règle absolue** : Toute modification de fonctionnalité doit être documentée
+
+**Actions obligatoires** :
+1. **Mettre à jour `README.md` (racine)** :
+   - Si changement visible par l'utilisateur
+   - Si nouvelle fonctionnalité
+   - Si modification de workflow
+   - Si changement de commandes/scripts
+
+2. **Mettre à jour `docs/README_COMPLET.md`** :
+   - Si modification technique
+   - Si changement d'architecture
+   - Si ajout/suppression de dépendances
+   - Si modification de configuration
+
+3. **Mettre à jour `docs/CHANGELOG.md`** :
+   - TOUJOURS pour toute modification de fonctionnalité
+   - Respecter le format : `[Version] - Date - Description`
+
+4. **Mettre à jour docs spécifiques** :
+   - `docs/HELP.md` : Si impact sur l'utilisation
+   - `docs/FEATURES.md` : Si nouvelle feature ou modification
+   - `docs/DEPENDENCIES_MAP.md` : Si changement de dépendances
+   - `scripts/SCRIPTS_REFERENCE.py` : Si ajout/modif script/test
+
+**Exemples de modifications nécessitant mise à jour doc** :
+- ✅ Ajout d'une feature GUI → README.md + README_COMPLET.md + FEATURES.md
+- ✅ Modification d'un workflow → README.md + README_COMPLET.md
+- ✅ Nouveau script → README_COMPLET.md + SCRIPTS_REFERENCE.py
+- ✅ Changement de dépendance → README_COMPLET.md + DEPENDENCIES_MAP.md
+- ✅ Nouvelle commande → README.md + README_COMPLET.md + HELP.md
 
 ### Modification de configuration
 
@@ -171,10 +209,16 @@ python scripts\SCRIPTS_REFERENCE.py --check-venv
 3. **Modifier la structure sans demander**
    - Toujours proposer avant d'agir
 
-4. **Oublier de mettre à jour `SCRIPTS_REFERENCE.py`**
+4. **Oublier de mettre à jour la documentation**
+   - ❌ Modifier du code sans mettre à jour `README.md` si impact utilisateur
+   - ❌ Ajouter une feature sans documenter dans `docs/README_COMPLET.md`
+   - ❌ Changer un workflow sans mettre à jour les docs
+   - ❌ Ajouter/modifier un script sans mettre à jour `SCRIPTS_REFERENCE.py`
+
+5. **Oublier de mettre à jour `SCRIPTS_REFERENCE.py`**
    - Obligatoire pour tout script/test ajouté/modifié
 
-5. **Créer de la documentation à la racine**
+6. **Créer de la documentation à la racine**
    - Toute doc va dans `docs/`
 
 ---
