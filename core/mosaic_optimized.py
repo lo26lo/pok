@@ -10,7 +10,6 @@ Performances: 10-30x plus rapide que la version originale
 import os
 import sys
 import cv2
-import pandas as pd
 import numpy as np
 from glob import glob
 import re
@@ -24,11 +23,11 @@ from functools import partial
 from typing import List, Tuple, Optional, Dict
 import multiprocessing as mp
 
-# Import safe_print
+# Import safe_print et load_prices
 try:
-    from .utils import safe_print
+    from .utils import safe_print, load_prices
 except ImportError:
-    from utils import safe_print
+    from utils import safe_print, load_prices
 
 # Détection GPU optionnelle
 try:
@@ -43,9 +42,9 @@ except ImportError:
     CUDA_AVAILABLE = False
     DEVICE = None
 
-# Compiled regex patterns (optimisé)
-_PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}(?:_aug_\d+)?\.')
-_PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
+# Compiled regex patterns (optimisé) - Support format sv08_019, swsh7_001, etc.
+_PATTERN_FULL_ID = re.compile(r'([a-z0-9]+_\d+)_[a-z]{2}(?:_aug_\d+)?\.', re.IGNORECASE)  # sv08_019_en ou swsh7_001_en
+_PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)  # Ancien format 001, 002, etc.
 _PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
 _PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
 
@@ -80,33 +79,37 @@ class MosaicGeneratorOptimized:
         safe_print(f"   GPU: {'✅ Activé' if self.use_gpu else '❌ Désactivé'}")
         safe_print(f"   Workers: {self.num_workers} threads")
     
-    def load_card_data(self, excel_path: str) -> Tuple[Dict, Dict]:
-        """Charge les données des cartes depuis Excel"""
-        df = pd.read_excel(excel_path, usecols=["Set #", "Name"])
+    def load_card_data(self, yaml_path: str = "models/cards_database.yaml") -> Tuple[Dict, Dict]:
+        """Charge les données des cartes depuis YAML"""
+        prices_data = load_prices(yaml_path)
         card_dict = {}
         class_map = {}
-        for _, row in df.iterrows():
-            number = row["Set #"].split('/')[0].zfill(3)
-            name = row["Name"].replace(" ", "_")
-            if number not in card_dict:
-                card_dict[number] = name
-                # Le class_id dans data.yaml est 0-indexed (carte 019 -> index 18)
-                class_map[number] = int(number) - 1
+        
+        for idx, (card_id, card_info) in enumerate(prices_data.items()):
+            # card_id est déjà au format correct (ex: "sv08_019", "swsh7_001", etc.)
+            card_name = card_info.get('name', '').replace(" ", "_")
+            if card_id not in card_dict:
+                card_dict[card_id] = card_name
+                # Le class_id dans data.yaml est 0-indexed
+                class_map[card_id] = idx
+        
         return card_dict, class_map
     
     def extract_card_number(self, filename: str) -> Optional[str]:
-        """Extrait le numéro de carte (optimisé avec regex compilé)"""
-        match = _PATTERN_NEW_FORMAT.search(filename)
+        """Extrait l'identifiant de carte (format sv08_019, swsh7_001, etc.)"""
+        # Essayer le format complet (sv08_019_en.png ou swsh7_001_en_aug_1.png)
+        match = _PATTERN_FULL_ID.search(filename)
         if match:
-            num = match.group(1)
-            return num.zfill(3) if num.isdigit() else num
+            return match.group(1)  # Retourne "sv08_019" ou "swsh7_001"
         
+        # Ancien format (001, 002, etc.) - pour compatibilité
         match = _PATTERN_OLD_FORMAT.search(filename)
         if match:
-            return match.group(1)
+            return match.group(1).zfill(3)  # Retourne "001", "002", etc.
         
+        # Fallback patterns
         match = _PATTERN_FALLBACK_1.search(filename)
-        if match and re.match(r'\d{3}', match.group(1)):
+        if match:
             return match.group(1)
         
         match = _PATTERN_FALLBACK_2.search(filename)
@@ -537,7 +540,7 @@ def main():
     )
     
     # Charger les données
-    card_dict, class_map = generator.load_card_data("excel/cards_info.xlsx")
+    card_dict, class_map = generator.load_card_data("models/cards_database.yaml")
     
     # Charger les images en parallèle (OPTIMISÉ)
     safe_print("📂 Chargement des images en parallèle...")
