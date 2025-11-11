@@ -3,12 +3,36 @@
 Test de vérification d'une annotation spécifique
 """
 import yaml
+import pytest
 from pathlib import Path
 
 # Charger data.yaml
 data_yaml = Path("output/dataset/data.yaml")
-with open(data_yaml, 'r', encoding='utf-8') as f:
-    data = yaml.safe_load(f)
+
+# Skip si dataset n'existe pas
+pytestmark = pytest.mark.skipif(
+    not data_yaml.exists(),
+    reason="Dataset YOLO non généré (output/dataset/data.yaml manquant)"
+)
+
+def test_annotations_exist():
+    """Vérifie que les annotations existent et sont valides"""
+    with open(data_yaml, 'r', encoding='utf-8') as f:
+        data = yaml.safe_load(f)
+    
+    assert data is not None, "data.yaml est vide"
+    assert 'names' in data, "Pas de 'names' dans data.yaml"
+    print(f"✅ {len(data.get('names', {}))} classes détectées")
+
+if __name__ == "__main__":
+    # Code d'origine pour exécution standalone
+    if not data_yaml.exists():
+        print(f"❌ Fichier manquant: {data_yaml}")
+        import sys
+        sys.exit(1)
+    
+    with open(data_yaml, 'r', encoding='utf-8') as f:
+        data = yaml.safe_load(f)
 
 print("="*70)
 print("🔍 VÉRIFICATION DÉTAILLÉE DES ANNOTATIONS")

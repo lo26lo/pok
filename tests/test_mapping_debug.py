@@ -20,11 +20,11 @@ print()
 
 # Test 2: Chargement des prix
 print("2️⃣ Test du chargement des prix...")
-from core.utils import load_prices_from_excel
+from core.utils import load_prices
 
-prices = load_prices_from_excel("excel/cards_info.xlsx")
+prices = load_prices("models/cards_database.yaml")
 print(f"   Nombre de prix chargés: {len(prices)}")
-print(f"   Clés dans prices: {list(prices.keys())}")
+print(f"   Clés dans prices: {list(prices.keys())[:5]}...")  # Afficher seulement les 5 premières
 print()
 
 # Test 3: Vérification de la correspondance

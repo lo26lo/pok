@@ -3,16 +3,16 @@ import sys
 sys.path.insert(0, '.')
 
 from core.card_mapping import get_card_id_from_class_name
-from core.utils import load_prices_from_excel
+from core.utils import load_prices
 
 print("=" * 70)
 print("TEST COMPLET: CLASS_NAME -> CARD_ID -> PRIX")
 print("=" * 70)
 print()
 
-# Charger les prix
-prices = load_prices_from_excel("excel/cards_info.xlsx")
-print(f"✅ {len(prices)} prix chargés depuis Excel\n")
+# Charger les prix depuis YAML
+prices = load_prices("models/cards_database.yaml")
+print(f"✅ {len(prices)} prix chargés depuis YAML\n")
 
 # Tester pour chaque carte
 test_class_names = [
