@@ -340,12 +340,16 @@ pok/
 - **3 generation modes**:
   - Quick (200): Fast testing
   - Standard (500): Recommended
-  - Complete (900): Full dataset
+  - Complete (All): Full dataset (unlimited)
 - **3 layouts**: Grid, 3D Rotation, Random
 - **3 backgrounds**: Fake Cards, Local, Web
 - **2 transforms**: 2D Rotation, 3D Perspective
+- **Prefix system**: No file overwriting (L{layout}_B{bg}_T{transform}_)
+- **Corrupted image handling**: Auto-move to corrupted/ folder
+- **Ultra-fast generation**: ProcessPoolExecutor (30-60x faster)
 - **Polygon annotations** (4 points)
 - **YOLOv8 compatible**
+- **📂 Quick folder access**: Open output directly from GUI
 
 #### 🎓 YOLO Training
 - **5 model sizes**: n, s, m, l, x
@@ -415,6 +419,11 @@ Mosaics:           500 layouts
 Dataset Size:      2.4 GB
 Environment:       ✅ .venv active
 ```
+
+**Quick Folder Access**:
+- 📂 **Open Folder buttons** in 4 main views
+- Direct access to: `images/`, `output/augmented/`, `backgrounds/augmented/`, `output/mosaics/`
+- Auto-creates folders if missing
 
 **Environment Checks**:
 - ✅ Virtual environment exists

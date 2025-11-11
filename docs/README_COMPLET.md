@@ -340,12 +340,16 @@ pok/
 - **3 generation modes**:
   - Quick (200): Fast testing
   - Standard (500): Recommended
-  - Complete (900): Full dataset
+  - Complete (All): Unlimited - full dataset
 - **3 layouts**: Grid, 3D Rotation, Random
 - **3 backgrounds**: Fake Cards, Local, Web
 - **2 transforms**: 2D Rotation, 3D Perspective
+- **Ultra-fast generation**: ProcessPoolExecutor (30-60x faster)
+- **Prefix system**: Prevents file overwriting (L{layout}_B{bg}_T{transform}_)
+- **Robust error handling**: Corrupted images auto-moved to `corrupted/`
 - **Polygon annotations** (4 points)
 - **YOLOv8 compatible**
+- **📂 Quick folder access** from GUI
 
 #### 🎓 YOLO Training
 - **5 model sizes**: n, s, m, l, x
@@ -581,26 +585,34 @@ python core/holographic_augmenter.py --intensity 0.7 --variations 3
 #### Step 6: Mosaic Generation 🧩
 
 **3 Generation Modes**:
-- **Quick (200)**: 25 groups × 8 cards ≈ 200 mosaics
+- **Quick (200)**: 25 groups × 8 cards ≈ 200 mosaics (fast testing)
 - **Standard (500)**: 62 groups × 8 cards ≈ 500 mosaics (recommended)
-- **Complete (900)**: All combinations (3 layouts × 3 backgrounds × 2 transforms × 50 variations)
+- **Complete (All)**: Unlimited - generates all possible mosaics from available images
+
+**Performance Optimizations**:
+- ⚡ **ProcessPoolExecutor**: True parallel processing (30-60x faster than sequential)
+- 🚀 **PNG compression = 0**: Ultra-fast writing without compression
+- 🛡️ **Corrupted image handling**: Auto-moves bad images to `corrupted/` folder
+- 📂 **Prefix system**: `L{layout}_B{background}_T{transform}_` prevents file overwriting
 
 **Via GUI**:
 1. **Mosaics** tab
 2. Select mode (Quick/Standard/Complete)
 3. Choose layout (Grid/3D Rotation/Random)
 4. Choose background (Fake Cards/Local/Web)
-5. Click **GENERATE MOSAICS**
+5. Click **🧩 GENERATE MOSAICS**
+6. Click **📂 Open Folder** to view results
 
 **Via CLI**:
 ```batch
-python core/mosaic.py --mode standard
+python core/mosaic_optimized.py 1 0 0  # Layout 1, Background 0, Transform 0
+python core/mosaic_optimized.py 1 0 0 --max-groups 500  # Limit to 500 groups
 ```
 
 **Output**:
-- Mosaics in `output/yolov8/images/`
-- Annotations in `output/yolov8/labels/` (4-point polygons)
-- `data.yaml` configuration file
+- Mosaics in `output/mosaics/images/` with prefix (e.g., `L1_B0_T0_layout_001.png`)
+- Annotations in `output/mosaics/labels/` (4-point polygons)
+- Corrupted images moved to `corrupted/` if any
 
 ---
 
