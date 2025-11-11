@@ -13,6 +13,7 @@ IMPORTANT: Lors de modifications de scripts:
 
 CHANGELOG:
 ----------
+2025-11-11: Ajout de test_utils_performance.py et test_code_profiling.py (Performance)
 2025-11-10: Création du fichier référence centralisé
 """
 
@@ -317,6 +318,24 @@ TESTS_CATALOG = {
         "requires_venv": True,
         "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
+    },
+    "test_utils_performance": {
+        "path": TESTS_DIR / "test_utils_performance.py",
+        "description": "Teste les performances des fonctions utilitaires (resize, batch processing)",
+        "category": "Performance",
+        "dependencies": ["opencv-python", "numpy"],
+        "requires_venv": True,
+        "called_by": ["run_test.bat", "run_all_tests.bat"],
+        "last_modified": "2025-11-11"
+    },
+    "test_code_profiling": {
+        "path": TESTS_DIR / "test_code_profiling.py",
+        "description": "Profile le code pour identifier les goulots d'étranglement",
+        "category": "Performance",
+        "dependencies": [],
+        "requires_venv": False,
+        "called_by": ["Utilisateur (manuel)"],
+        "last_modified": "2025-11-11"
     },
     "visualize_annotations": {
         "path": TESTS_DIR / "visualize_annotations.py",

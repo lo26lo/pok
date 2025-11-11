@@ -127,13 +127,14 @@ def extract_card_number(filename: str) -> Optional[str]:
     match = _PATTERN_FALLBACK_2.search(filename)
     return match.group(1) if match else None
 
-def resize_cards(image_paths: List[str], target_size: Tuple[int, int] = None) -> List[Tuple[np.ndarray, str]]:
+def resize_cards(image_paths: List[str], target_size: Tuple[int, int] = None, use_multiprocessing: bool = False) -> List[Tuple[np.ndarray, str]]:
     """
     Redimensionne les images aux dimensions cibles
     
     Args:
         image_paths: Liste des chemins d'images
         target_size: Taille cible (largeur, hauteur)
+        use_multiprocessing: Si True, utilise multiprocessing pour accélérer (recommandé pour >100 images)
         
     Returns:
         Liste de tuples (image_redimensionnée, chemin_original)
@@ -141,19 +142,48 @@ def resize_cards(image_paths: List[str], target_size: Tuple[int, int] = None) ->
     if target_size is None:
         target_size = CONFIG['target_size']
     
-    resized_images = []
-    for img_path in image_paths:
+    # For small batches, use simple sequential processing
+    if not use_multiprocessing or len(image_paths) < 50:
+        resized_images = []
+        for img_path in image_paths:
+            if not os.path.exists(img_path):
+                print(f"Attention: Image non trouvée : {img_path}")
+                continue
+                
+            img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+            if img is None:
+                print(f"Attention: Impossible de charger l'image : {img_path}")
+                continue
+                
+            img = cv2.resize(img, target_size, interpolation=cv2.INTER_AREA)
+            resized_images.append((img, img_path))
+        
+        return resized_images
+    
+    # For larger batches, use multiprocessing
+    from concurrent.futures import ThreadPoolExecutor
+    import multiprocessing
+    
+    def _resize_single(img_path: str) -> Tuple[np.ndarray, str] or None:
+        """Helper function to resize a single image"""
         if not os.path.exists(img_path):
-            print(f"Attention: Image non trouvée : {img_path}")
-            continue
+            return None
             
         img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
         if img is None:
-            print(f"Attention: Impossible de charger l'image : {img_path}")
-            continue
+            return None
             
         img = cv2.resize(img, target_size, interpolation=cv2.INTER_AREA)
-        resized_images.append((img, img_path))
+        return (img, img_path)
+    
+    # Use ThreadPoolExecutor for I/O bound operations (image loading)
+    # CPU count - 1 to leave one core free
+    max_workers = max(1, multiprocessing.cpu_count() - 1)
+    
+    resized_images = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = executor.map(_resize_single, image_paths)
+        resized_images = [r for r in results if r is not None]
     
     return resized_images
 
