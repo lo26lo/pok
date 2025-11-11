@@ -185,7 +185,19 @@ SCRIPTS_CATALOG = {
         "requires_venv": False,
         "is_powershell": True,
         "last_modified": "2025-11-10"
-    }
+    },
+    
+    # --- Scripts de performance ---
+    "benchmark_quick": {
+        "path": SCRIPTS_DIR / "benchmark_quick.py",
+        "description": "Benchmark rapide des performances du système",
+        "category": "Performance",
+        "dependencies": ["numpy", "opencv-python"],
+        "arguments": [],
+        "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
+        "last_modified": "2025-11-11"
+    },
 }
 
 # ============================================================================

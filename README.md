@@ -1017,6 +1017,7 @@ python core/detection_with_prices.py --source 0 --model runs/train/pokemon_detec
 | **HELP.md** | Complete GUI user guide | Users |
 | **CHANGELOG.md** | Version history | All |
 | **FEATURES.md** | Detailed feature list | Users |
+| **PERFORMANCE_GUIDE.md** | Performance optimization guide | Developers |
 | **README_SCRIPTS_SYSTEM.md** | Centralized script system | Developers |
 | **DEPENDENCIES_MAP.md** | Dependency mapping | Developers |
 | **DEPENDENCY_GRAPH.md** | Interactive Mermaid diagrams | Developers |
@@ -1031,6 +1032,7 @@ python core/detection_with_prices.py --source 0 --model runs/train/pokemon_detec
 - **Understand dependencies?** → [DEPENDENCIES_MAP.md](docs/DEPENDENCIES_MAP.md)
 - **Use venv?** → [MEMO_VENV_USAGE.md](docs/MEMO_VENV_USAGE.md)
 - **Complete workflow?** → [README_SCRIPTS_SYSTEM.md](docs/README_SCRIPTS_SYSTEM.md)
+- **Performance optimization?** → [PERFORMANCE_GUIDE.md](docs/PERFORMANCE_GUIDE.md)
 
 ---
 

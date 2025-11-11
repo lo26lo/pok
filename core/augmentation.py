@@ -236,7 +236,13 @@ def main():
     image_paths = []
     image_paths += glob(os.path.join(BASE_IMAGES_DIR, "*.jpg"))
     image_paths += glob(os.path.join(BASE_IMAGES_DIR, "*.png"))
-    resized_images = resize_cards(image_paths, TARGET_SIZE)
+    
+    # Use multiprocessing for large batches (>50 images) for better performance
+    use_mp = len(image_paths) >= 50
+    if use_mp:
+        print(f"📊 Processing {len(image_paths)} images with multiprocessing...")
+    
+    resized_images = resize_cards(image_paths, TARGET_SIZE, use_multiprocessing=use_mp)
     if not resized_images:
         print("Aucune image valide trouvée dans le répertoire de base!")
         return
