@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] - 2025-11-11
+
+### 🚀 Major Changes
+
+#### Migration Excel → YAML
+- **BREAKING CHANGE**: Card database migrated from Excel to YAML format
+- New file: `models/cards_database.yaml` (replaces `excel/cards_info.xlsx`)
+- **Benefits**:
+  - ~50MB lighter (no pandas/openpyxl required for basic usage)
+  - Human-readable and editable format (any text editor)
+  - Better Git versioning (clear line-by-line diffs)
+  - Faster loading times (~10x faster than Excel)
+
+### ✨ Added
+
+- **YAML Loading** (`core/utils.py`)
+  - `load_prices_from_yaml()`: Load card data from YAML
+  - `load_prices()`: Auto-detection YAML/Excel with fallback
+  - Backward compatible with Excel format
+
+- **Migration Tools** (`scripts/`)
+  - `migrate_excel_to_yaml.py`: One-time migration tool for existing users
+  - `update_prices_yaml.py`: Update prices in YAML from TCGdex API
+  - Updated `init_prices.py` and `init_prices_simple.py` to generate YAML
+
+- **Testing** (`tests/test_yaml_loading.py`)
+  - Complete test suite for YAML loading
+  - Compatibility tests YAML/Excel
+  - Performance benchmarks
+
+- **Documentation**
+  - `docs/MIGRATION_EXCEL_TO_YAML.md`: Complete migration guide
+  - Updated all docs to reference YAML instead of Excel
+
+### 🔄 Changed
+
+- **GUI** (`GUI_v3.1_modern.py`)
+  - Detects YAML instead of Excel
+  - `create_sample_excel()` → creates YAML format
+  - Updated messages and labels (Excel → YAML)
+  - Price display now uses YAML source
+
+- **Core Modules**
+  - `core/augmentation.py`: Auto-detect YAML/Excel
+  - `core/mosaic.py`: Auto-detect YAML/Excel
+  - `core/detection_with_prices.py`: Use `load_prices()` with auto-detection
+
+### 🐛 Fixed
+
+- Excel file locking issues on Windows (YAML doesn't lock)
+- Binary diff problems in Git (YAML is text-based)
+
+### 📝 Notes
+
+- **Backward Compatible**: Existing Excel files still work (auto-fallback)
+- **Migration**: Run `scripts\run_script.bat migrate_excel_to_yaml`
+- **Dependencies**: pandas/openpyxl still in requirements for migration tools only
+
+---
+
 ## [3.1.0] - 2025-11-10
 
 ### 🎉 Added

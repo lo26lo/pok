@@ -2337,7 +2337,7 @@ class ModernPokemonGUI:
             ).pack(anchor='w')
             
             tk.Label(warning_content2,
-                text="File 'excel/cards_info.xlsx' not found. This file is needed for some features.\nClick below to generate a card list from the TCGdex API.",
+                text="File 'models/cards_database.yaml' not found. This file is needed for some features.\nClick below to generate a card list from the TCGdex API.",
                 font=('Segoe UI', 9),
                 bg=self.colors['warning'],
                 fg='#000000'
@@ -3592,7 +3592,7 @@ class ModernPokemonGUI:
         prices_frame.pack(fill=tk.X, pady=10)
         
         self.detect_show_prices_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(prices_frame, text="💰 Show Prices (from excel/cards_info.xlsx)",
+        ttk.Checkbutton(prices_frame, text="💰 Show Prices (from models/cards_database.yaml)",
                        variable=self.detect_show_prices_var).pack(anchor='w')
         
         tk.Label(prices_frame, text="Display card prices alongside names in detection overlay",
@@ -3889,35 +3889,107 @@ class ModernPokemonGUI:
         return venv_path.exists() and python_exe.exists()
     
     def check_excel_file(self):
-        """Vérifier si le fichier Excel des cartes existe"""
+        """Vérifier si le fichier YAML ou Excel des cartes existe"""
+        yaml_path = Path("models/cards_database.yaml")
         excel_path = Path("excel/cards_info.xlsx")
-        return excel_path.exists()
+        return yaml_path.exists() or excel_path.exists()
     
     def create_sample_excel(self):
-        """Créer un fichier Excel exemple"""
+        """Créer un fichier YAML exemple (remplace l'Excel)"""
         try:
-            import pandas as pd
+            import yaml
+            from datetime import datetime
             
             # Données exemple
-            sample_data = {
-                "Set #": ["001/191", "002/191", "003/191", "004/191", "005/191"],
-                "Name": ["Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon"],
-                "Set": ["Base Set", "Base Set", "Base Set", "Base Set", "Base Set"]
+            yaml_data = {
+                'metadata': {
+                    'version': '1.0',
+                    'format': 'YOLO-compatible card database',
+                    'last_updated': datetime.now().strftime('%Y-%m-%d'),
+                    'source': 'Sample data',
+                    'total_cards': 5,
+                    'comment': 'Bounding boxes are generated dynamically'
+                },
+                'cards': {
+                    'base_001': {
+                        'name': 'Bulbasaur',
+                        'set': 'Base Set',
+                        'set_full': '001/102',
+                        'type': 'Pokemon',
+                        'rarity': 'Common',
+                        'price': None,
+                        'price_max': None,
+                        'price_source': '',
+                        'last_updated': datetime.now().strftime('%Y-%m-%d')
+                    },
+                    'base_002': {
+                        'name': 'Ivysaur',
+                        'set': 'Base Set',
+                        'set_full': '002/102',
+                        'type': 'Pokemon',
+                        'rarity': 'Uncommon',
+                        'price': None,
+                        'price_max': None,
+                        'price_source': '',
+                        'last_updated': datetime.now().strftime('%Y-%m-%d')
+                    },
+                    'base_003': {
+                        'name': 'Venusaur',
+                        'set': 'Base Set',
+                        'set_full': '003/102',
+                        'type': 'Pokemon',
+                        'rarity': 'Rare',
+                        'price': None,
+                        'price_max': None,
+                        'price_source': '',
+                        'last_updated': datetime.now().strftime('%Y-%m-%d')
+                    },
+                    'base_004': {
+                        'name': 'Charmander',
+                        'set': 'Base Set',
+                        'set_full': '004/102',
+                        'type': 'Pokemon',
+                        'rarity': 'Common',
+                        'price': None,
+                        'price_max': None,
+                        'price_source': '',
+                        'last_updated': datetime.now().strftime('%Y-%m-%d')
+                    },
+                    'base_005': {
+                        'name': 'Charmeleon',
+                        'set': 'Base Set',
+                        'set_full': '005/102',
+                        'type': 'Pokemon',
+                        'rarity': 'Uncommon',
+                        'price': None,
+                        'price_max': None,
+                        'price_source': '',
+                        'last_updated': datetime.now().strftime('%Y-%m-%d')
+                    }
+                }
             }
             
-            df = pd.DataFrame(sample_data)
-            df.to_excel("excel/cards_info.xlsx", index=False)
+            # Créer le dossier models/ si nécessaire
+            Path("models").mkdir(exist_ok=True)
             
-            self.log("✅ Fichier cards_info.xlsx créé avec succès!")
+            # Sauvegarder en YAML
+            yaml_path = Path("models/cards_database.yaml")
+            with open(yaml_path, 'w', encoding='utf-8') as f:
+                yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
+            
+            self.log("✅ Fichier cards_database.yaml créé avec succès!")
             messagebox.showinfo(
                 "Succès",
-                "Fichier cards_info.xlsx créé!\n\n"
+                "Fichier cards_database.yaml créé!\n\n"
                 "Un fichier exemple a été créé avec 5 cartes.\n"
-                "Vous pouvez le modifier pour ajouter vos propres cartes.\n\n"
-                "Colonnes requises:\n"
-                "• Set # : Numéro de carte (ex: 001/191)\n"
-                "• Name : Nom de la carte\n"
-                "• Set : Nom du set (optionnel)"
+                "Vous pouvez l'éditer avec n'importe quel éditeur de texte.\n\n"
+                "Structure YAML:\n"
+                "• cards: dictionnaire des cartes\n"
+                "  • card_id: identifiant unique\n"
+                "    • name: nom de la carte\n"
+                "    • set: nom du set\n"
+                "    • price: prix (optionnel)\n\n"
+                "💡 Plus léger et lisible qu'Excel!"
             )
             return True
             
@@ -5760,10 +5832,10 @@ Total: {images_count + aug_count + mosaic_count} images"""
             messagebox.showerror("Error", f"Erreur stats:\n{e}")
     
     def open_excel_tools(self):
-        """Ouvrir dialog Excel & Prices avec TCGdex API"""
-        # Dialog pour outils Excel
+        """Ouvrir dialog YAML & Prices avec TCGdex API"""
+        # Dialog pour outils YAML
         dialog = tk.Toplevel(self.root)
-        dialog.title("📋 Excel & Card Prices")
+        dialog.title("📋 YAML Card Database & Prices")
         dialog.geometry("700x750")
         dialog.configure(bg=self.colors['bg_dark'])
         dialog.transient(self.root)
@@ -5777,7 +5849,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         # Titre
         tk.Label(
             dialog,
-            text="📋 Excel & Card Prices Tools",
+            text="📋 YAML Card Database & Prices Tools",
             font=('Segoe UI', 16, 'bold'),
             bg=self.colors['bg_dark'],
             fg=self.colors['text']
@@ -5838,7 +5910,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
             fg=self.colors['text']
         ).pack(anchor='w', padx=15, pady=(5, 2))
         
-        extension_output_var = tk.StringVar(value="excel/cards_info.xlsx")
+        extension_output_var = tk.StringVar(value="models/cards_database.yaml")
         tk.Entry(
             section1,
             textvariable=extension_output_var,
@@ -5884,7 +5956,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         
         tk.Label(
             section2,
-            text="Input Excel File (must have: Set #, Name, Set columns):",
+            text="Input YAML File (models/cards_database.yaml):",
             font=('Segoe UI', 9),
             bg=self.colors['bg_card'],
             fg=self.colors['text']
@@ -5893,7 +5965,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         price_input_frame = tk.Frame(section2, bg=self.colors['bg_card'])
         price_input_frame.pack(fill='x', padx=15, pady=(0, 10))
         
-        price_input_var = tk.StringVar(value="excel/cards_info.xlsx")
+        price_input_var = tk.StringVar(value="models/cards_database.yaml")
         tk.Entry(
             price_input_frame,
             textvariable=price_input_var,
@@ -5926,13 +5998,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
         
         tk.Label(
             section2,
-            text="Output Excel File:",
+            text="Output YAML File:",
             font=('Segoe UI', 9),
             bg=self.colors['bg_card'],
             fg=self.colors['text']
         ).pack(anchor='w', padx=15, pady=(5, 2))
         
-        price_output_var = tk.StringVar(value="excel/cards_with_prices.xlsx")
+        price_output_var = tk.StringVar(value="models/cards_with_prices.yaml")
         tk.Entry(
             section2,
             textvariable=price_output_var,

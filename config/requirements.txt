@@ -4,8 +4,9 @@ numpy<2.0
 # OpenCV pinned to version compatible with NumPy 1.x
 opencv-python<4.10.0
 # Core dependencies
-pandas
-openpyxl
+pyyaml  # YAML card database (replaces Excel)
+pandas  # Optional: only for migration scripts (migrate_excel_to_yaml.py)
+openpyxl  # Optional: only for migration scripts (migrate_excel_to_yaml.py)
 imgaug>=0.4.0
 pillow
 requests
