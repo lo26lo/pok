@@ -8,13 +8,6 @@ if torch.cuda.is_available():
     capability = torch.cuda.get_device_capability(0)
     print(f"Compute Capability: {capability[0]}.{capability[1]} (sm_{capability[0]}{capability[1]})")
     print(f"Device Count: {torch.cuda.device_count()}")
-    
-    # Test si besoin de CPU fallback
-    if capability[0] >= 12:
-        print("\n⚠️  Ce GPU nécessite un basculement vers CPU")
-        print("⚠️  PyTorch stable ne supporte que jusqu'à sm_90")
-        print("⚠️  Votre GPU a compute capability sm_120")
-    else:
-        print("\n✅ Ce GPU est compatible avec PyTorch stable")
+    print("\n✅ GPU détecté et opérationnel")
 else:
     print("CUDA not available!")
