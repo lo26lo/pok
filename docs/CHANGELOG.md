@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.1] - 2025-11-11
+
+### ♻️ Refactored
+
+#### Code Duplication Removal
+- **MAJOR**: Centralized utility functions to eliminate code duplication
+- Moved `extract_card_number()`, `load_card_data()`, `resize_cards()` to `core/utils.py`
+- Removed duplicated functions from:
+  - `core/augmentation.py` (~100 lines)
+  - `core/mosaic_optimized.py` (~34 lines)
+- **Total reduction**: ~134 lines of duplicated code eliminated (85% reduction)
+
+### 🔧 Improved
+
+- **`core/utils.py`**:
+  - Exported regex patterns as public constants (`PATTERN_NEW_FORMAT`, `PATTERN_OLD_FORMAT`, etc.)
+  - Added comprehensive NumPy 2.0 compatibility patches
+  - Enhanced `load_card_data()` to support both YAML (new) and Excel (legacy) formats
+  - Enhanced `resize_cards()` with automatic RGBA→RGB conversion
+  - Enhanced `extract_card_number()` to handle augmented filenames (`_aug_XXX`)
+  - Improved all docstrings with usage examples
+
+### 🎯 Benefits
+
+- **Maintainability**: Single source of truth for utility functions
+- **Bug Fixes**: Fix once, benefits all modules
+- **Testing**: Easier to test centralized functions
+- **Documentation**: Better centralized documentation
+- **Backward Compatibility**: All function signatures preserved
+
+---
+
 ## [3.2.0] - 2025-11-11
 
 ### 🚀 Major Changes

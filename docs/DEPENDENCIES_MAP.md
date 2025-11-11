@@ -74,7 +74,190 @@ from core.image_downloader import ImageDownloader, LANGUAGES, POPULAR_SETS
 
 ---
 
+## 🔧 Fonctions Utilitaires Centralisées (core/utils.py)
+
+**IMPORTANT** : Depuis v3.2.1, toutes les fonctions utilitaires communes sont centralisées dans `core/utils.py` pour éviter la duplication de code.
+
+### 📋 Fonctions exportées
+
+#### 1. `extract_card_number(filename: str) -> Optional[str]`
+**Utilisé par** :
+- `core/augmentation.py` - Extraction du numéro de carte depuis le nom de fichier
+- `core/mosaic_optimized.py` - Idem pour génération de mosaïques
+- Tout module nécessitant d'extraire le numéro de carte d'un fichier
+
+**Formats supportés** :
+- `sv08_019_en.png` → `"019"`
+- `sv08_019_en_aug_042.png` → `"019"` (avec augmentation)
+- `xyp_XY05_en.png` → `"XY05"`
+- `pokemon_en_001_xyz.jpg` → `"001"`
+
+#### 2. `load_card_data(source_path: str = None) -> Tuple[Dict, Dict]`
+**Utilisé par** :
+- `core/augmentation.py` - Chargement des données de cartes pour génération labels
+- `core/mosaic_optimized.py` - Chargement pour annotations
+- Tout module nécessitant les données de cartes
+
+**Supporte** :
+- YAML (prioritaire) : `models/cards_database.yaml`
+- Excel (legacy) : `excel/cards_info.xlsx`
+- Auto-détection du format
+
+**Retourne** :
+- `card_dict`: `{card_number: card_name}`
+- `class_map`: `{card_number: class_id}`
+
+#### 3. `resize_cards(image_paths: List[str], target_size: Tuple[int, int] = None) -> List[Tuple]`
+**Utilisé par** :
+- `core/augmentation.py` - Redimensionnement des images avant augmentation
+- Tout module nécessitant un resize batch
+
+**Fonctionnalités** :
+- Resize automatique vers `CONFIG['target_size']` (280×380 par défaut)
+- Conversion RGBA → RGB automatique
+- Gestion des erreurs de chargement
+
+#### 4. Regex Patterns (exportés)
+**Constantes exportées** :
+- `PATTERN_NEW_FORMAT` - Format moderne (sv08_019_en.png)
+- `PATTERN_OLD_FORMAT` - Format ancien (_en_001_)
+- `PATTERN_FALLBACK_1` - Fallback XXX_XXX_XXX
+- `PATTERN_FALLBACK_2` - Dernier recours (\d{3})
+
+**Utilisé par** :
+- `core/augmentation.py` - Si besoin d'accéder aux patterns directement
+- `core/mosaic_optimized.py` - Idem
+- Tout module nécessitant la logique d'extraction personnalisée
+
+#### 5. NumPy Compatibility Patches
+**Appliqué automatiquement à l'import** :
+```python
+from core.utils import ...  # Les patches NumPy sont appliqués
+```
+
+**Patches inclus** :
+- `np.bool`, `np.int`, `np.float`, `np.complex`, `np.object`, `np.str`
+- Nécessaire pour imgaug avec NumPy < 2.0
+
+### 📦 CONFIG (configuration globale)
+**Contenu** :
+```python
+CONFIG = {
+    'target_size': (280, 380),
+    'excel_file': 'excel/cards_info.xlsx',
+    'base_images_dir': 'images',
+    'augmented_dir': 'images_aug',
+    'output_dir': 'output',
+    'yolo_format': True
+}
+```
+
+**Utilisé par** : Tous les modules pour accéder aux paramètres globaux
+
+### 🔄 Migration depuis v3.2.0
+**Avant (code dupliqué)** :
+```python
+# Dans augmentation.py
+def extract_card_number(filename):
+    # ... 31 lignes de code dupliqué
+    
+def load_card_data(source_path):
+    # ... 45 lignes de code dupliqué
+```
+
+**Après (v3.2.1+)** :
+```python
+# Dans augmentation.py
+from core.utils import extract_card_number, load_card_data
+# Utilisation directe des fonctions centralisées
+```
+
+**Bénéfices** :
+- ✅ ~134 lignes de code dupliqué éliminées
+- ✅ Single source of truth
+- ✅ Corrections de bugs centralisées
+- ✅ Meilleure testabilité
+
+---
+
 ## 📦 Modules Core → Autres Modules
+
+### core/utils.py
+```python
+# Appelle/Importe :
+import pandas as pd
+import yaml
+import cv2
+import numpy as np
+```
+
+**Responsabilité** : 
+- Fonctions utilitaires communes (éviter duplication)
+- Patches de compatibilité NumPy
+- Chargement YAML/Excel
+- Extraction de numéros de cartes
+- Resize batch d'images
+
+**Exportations principales** :
+- `extract_card_number()` - Extraction numéro carte
+- `load_card_data()` - Chargement YAML/Excel
+- `resize_cards()` - Resize avec conversion RGBA
+- `safe_print()` - Print Unicode-safe
+- `PATTERN_*` - Regex compilés
+- `CONFIG` - Configuration globale
+
+### core/augmentation.py
+```python
+# Appelle/Importe :
+from core.utils import (
+    safe_print,
+    extract_card_number,
+    load_card_data,
+    resize_cards,
+    PATTERN_NEW_FORMAT,
+    PATTERN_OLD_FORMAT,
+    PATTERN_FALLBACK_1,
+    PATTERN_FALLBACK_2,
+    CONFIG
+)
+import imgaug.augmenters as iaa
+import cv2
+import numpy as np
+```
+
+**Responsabilité** : Augmentation d'images avec imgaug
+
+**Dépendances de core/utils** :
+- ✅ `extract_card_number()` - Extraction numéro depuis filename
+- ✅ `load_card_data()` - Chargement données cartes
+- ✅ `resize_cards()` - Resize avant augmentation
+- ✅ NumPy patches - Compatibilité imgaug
+
+### core/mosaic_optimized.py
+```python
+# Appelle/Importe :
+from core.utils import (
+    safe_print,
+    extract_card_number,
+    load_card_data,
+    PATTERN_NEW_FORMAT,
+    PATTERN_OLD_FORMAT,
+    PATTERN_FALLBACK_1,
+    PATTERN_FALLBACK_2,
+    CONFIG
+)
+import cv2
+import numpy as np
+import requests
+from concurrent.futures import ThreadPoolExecutor
+```
+
+**Responsabilité** : Génération de mosaïques optimisée (GPU/CPU)
+
+**Dépendances de core/utils** :
+- ✅ `extract_card_number()` - Extraction numéro pour annotations
+- ✅ `load_card_data()` - Chargement données cartes
+- ✅ `safe_print()` - Affichage progression
 
 ### core/workflow_manager.py
 ```python
