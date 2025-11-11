@@ -355,7 +355,7 @@ class MosaicGeneratorOptimized:
         Traite un seul groupe de cartes (COPIE EXACTE de create_layout_group)
         Retourne 1 si succès, 0 sinon
         """
-        group, group_index, card_dict, class_map, fake_images, layout_mode, background_mode, transform_mode = args
+        group, group_index, card_dict, class_map, fake_images, layout_mode, background_mode, transform_mode, prefix = args
         
         try:
             canvas_width, canvas_height = 1920, 1080
@@ -470,14 +470,14 @@ class MosaicGeneratorOptimized:
                     annotations.append(annotation_line)
             
             # Sauvegarder l'image PNG avec compression rapide (évite corruption)
-            output_file = os.path.join(MOSAIC_IMAGES_DIR, f"layout_{group_index:03d}.png")
+            output_file = os.path.join(MOSAIC_IMAGES_DIR, f"{prefix}layout_{group_index:03d}.png")
             # Paramètres PNG: compression 1 (rapide) pour éviter les erreurs CRC
             success = cv2.imwrite(output_file, layout, [cv2.IMWRITE_PNG_COMPRESSION, 1])
             if not success:
                 raise Exception(f"Échec d'écriture de {output_file}")
             
             # Sauvegarder annotations YOLO
-            label_file = os.path.join(MOSAIC_LABELS_DIR, f"layout_{group_index:03d}.txt")
+            label_file = os.path.join(MOSAIC_LABELS_DIR, f"{prefix}layout_{group_index:03d}.txt")
             with open(label_file, "w") as f:
                 f.write("\n".join(annotations))
             
@@ -499,9 +499,13 @@ class MosaicGeneratorOptimized:
         total = len(groups)
         safe_print(f"🎨 Génération de {total} mosaïques en parallèle...")
         
+        # Créer un préfixe basé sur les modes pour éviter l'écrasement
+        prefix = f"L{layout_mode}_B{background_mode}_T{transform_mode}_"
+        safe_print(f"   Préfixe fichiers: {prefix}")
+        
         # Préparer les tâches
         tasks = [
-            (group, idx+1, card_dict, class_map, fake_images, layout_mode, background_mode, transform_mode)
+            (group, idx+1, card_dict, class_map, fake_images, layout_mode, background_mode, transform_mode, prefix)
             for idx, group in enumerate(groups)
         ]
         
