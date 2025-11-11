@@ -2,6 +2,21 @@
 """
 Module utilitaire commun pour le projet Pokemon Dataset
 Contient les fonctions partagées pour éviter la duplication de code
+
+Ce module centralise:
+- Patches de compatibilité NumPy (pour imgaug)
+- Patterns regex pour extraction de numéros de cartes
+- Fonctions utilitaires communes (load_card_data, extract_card_number, resize_cards)
+- Configuration globale du projet
+
+Usage:
+    from core.utils import (
+        safe_print,
+        extract_card_number,
+        load_card_data,
+        resize_cards,
+        CONFIG
+    )
 """
 import os
 import sys
@@ -12,14 +27,38 @@ import re
 from glob import glob
 from typing import Dict, List, Tuple, Optional
 
-# Correction pour NumPy 2.0 - centralisée ici
+# ==================== NumPy Compatibility Patches ====================
+# Patch de compatibilité NumPy 2.0 pour imgaug
+# Ces patches doivent être appliqués AVANT l'import de imgaug
 np.float_ = np.float64
 
+# Patches additionnels pour compatibilité complète
+if not hasattr(np, 'bool'):
+    np.bool = np.bool_
+if not hasattr(np, 'int'):
+    np.int = np.int_
+if not hasattr(np, 'float'):
+    np.float = np.float64
+if not hasattr(np, 'complex'):
+    np.complex = np.complex128
+if not hasattr(np, 'object'):
+    np.object = np.object_
+if not hasattr(np, 'str'):
+    np.str = np.str_
+
+# ==================== Regex Patterns ====================
 # Compiled regex patterns for card number extraction (performance optimization)
-_PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}\.')
-_PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
-_PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
-_PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
+# Ces patterns sont partagés par tous les modules
+PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}(?:_aug_\d+)?\.')
+PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
+PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
+PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
+
+# Legacy names for backward compatibility (deprecated)
+_PATTERN_NEW_FORMAT = PATTERN_NEW_FORMAT
+_PATTERN_OLD_FORMAT = PATTERN_OLD_FORMAT
+_PATTERN_FALLBACK_1 = PATTERN_FALLBACK_1
+_PATTERN_FALLBACK_2 = PATTERN_FALLBACK_2
 
 
 def safe_print(*args, **kwargs):
@@ -51,42 +90,82 @@ CONFIG = {
     'yolo_format': True
 }
 
-def load_card_data(excel_path: str = None) -> Tuple[Dict[str, str], Dict[str, int]]:
+def load_card_data(source_path: str = None) -> Tuple[Dict[str, str], Dict[str, int]]:
     """
-    Charge les données des cartes depuis le fichier Excel
+    Charge les données des cartes depuis YAML (prioritaire) ou Excel (fallback)
+    
+    Supporte deux formats:
+    - YAML: models/cards_database.yaml (nouveau format recommandé)
+    - Excel: excel/cards_info.xlsx (legacy, rétrocompatibilité)
     
     Args:
-        excel_path: Chemin vers le fichier Excel (par défaut CONFIG['excel_file'])
-        
+        source_path: Chemin vers le fichier (YAML ou Excel). 
+                    Si None, utilise CONFIG['excel_file']
+                    
     Returns:
         Tuple contenant (card_dict, class_map)
+        - card_dict: {card_number: card_name}
+        - class_map: {card_number: class_id}
         
     Raises:
-        FileNotFoundError: Si le fichier Excel n'existe pas
-        pandas.errors.EmptyDataError: Si le fichier est vide
-    """
-    if excel_path is None:
-        excel_path = CONFIG['excel_file']
+        FileNotFoundError: Si le fichier n'existe pas
+        Exception: Si erreur lors de la lecture
         
-    if not os.path.exists(excel_path):
-        raise FileNotFoundError(f"Fichier Excel non trouvé : {excel_path}")
-    
-    try:
-        df = pd.read_excel(excel_path, usecols=["Set #", "Name"])
-    except Exception as e:
-        raise pd.errors.EmptyDataError(f"Erreur lors de la lecture du fichier Excel : {e}")
+    Example:
+        >>> card_dict, class_map = load_card_data("models/cards_database.yaml")
+        >>> print(card_dict["019"])
+        'Ho-Oh'
+        >>> print(class_map["019"])
+        19
+    """
+    if source_path is None:
+        source_path = CONFIG['excel_file']
+        
+    if not os.path.exists(source_path):
+        raise FileNotFoundError(f"Fichier non trouvé : {source_path}")
     
     card_dict = {}
     class_map = {}
-    class_id = 1
     
-    for _, row in df.iterrows():
-        number = row["Set #"].split('/')[0].zfill(3)
-        name = row["Name"].replace(" ", "_")
-        if number not in card_dict:
-            card_dict[number] = name
-            class_map[number] = class_id
-            class_id += 1
+    # Détection automatique du format
+    if source_path.endswith('.yaml') or source_path.endswith('.yml'):
+        # Charger depuis YAML
+        import yaml
+        
+        try:
+            with open(source_path, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+        except Exception as e:
+            raise Exception(f"Erreur lors de la lecture du fichier YAML : {e}")
+        
+        if 'cards' not in data:
+            raise Exception(f"Structure YAML invalide (clé 'cards' manquante)")
+        
+        class_id = 1
+        for card_id, card_info in data['cards'].items():
+            # Extraire le numéro (ex: sv08_019 -> 019)
+            number = card_id.split('_')[-1].zfill(3)
+            name = card_info['name'].replace(" ", "_")
+            
+            if number not in card_dict:
+                card_dict[number] = name
+                class_map[number] = class_id
+                class_id += 1
+    else:
+        # Charger depuis Excel (legacy)
+        try:
+            df = pd.read_excel(source_path, usecols=["Set #", "Name"])
+        except Exception as e:
+            raise Exception(f"Erreur lors de la lecture du fichier Excel : {e}")
+        
+        class_id = 1
+        for _, row in df.iterrows():
+            number = row["Set #"].split('/')[0].zfill(3)
+            name = row["Name"].replace(" ", "_")
+            if number not in card_dict:
+                card_dict[number] = name
+                class_map[number] = class_id
+                class_id += 1
     
     return card_dict, class_map
 
@@ -96,47 +175,66 @@ def extract_card_number(filename: str) -> Optional[str]:
     
     Supporte plusieurs formats:
     - sv08_001_en.png → "001"
+    - sv08_001_en_aug_042.png → "001" (avec augmentation)
     - xyp_XY05_en.png → "XY05"
     - SSP_001_R_EN_SM.png → "001"
     - pokemon_en_001_xyz.jpg → "001"
+    - card_001.jpg → "001"
     
     Args:
-        filename: Nom du fichier
+        filename: Nom du fichier (avec ou sans chemin)
         
     Returns:
         Numéro de carte ou None si non trouvé
+        
+    Example:
+        >>> extract_card_number("sv08_019_en.png")
+        '019'
+        >>> extract_card_number("sv08_019_en_aug_042.png")
+        '019'
+        >>> extract_card_number("xyp_XY05_en.png")
+        'XY05'
     """
-    # Format nouveau: {set}_{number}_{lang}.ext
-    match = _PATTERN_NEW_FORMAT.search(filename)
+    # Format nouveau: {set}_{number}_{lang}.ext (supporte aussi _aug_XXX)
+    match = PATTERN_NEW_FORMAT.search(filename)
     if match:
         num = match.group(1)
         # Padder si numérique pur
         return num.zfill(3) if num.isdigit() else num
     
     # Format ancien: _en_XXX_ ou _XXX_
-    match = _PATTERN_OLD_FORMAT.search(filename)
+    match = PATTERN_OLD_FORMAT.search(filename)
     if match:
         return match.group(1)
     
     # Fallback: XXX_XXX_XXX
-    match = _PATTERN_FALLBACK_1.search(filename)
+    match = PATTERN_FALLBACK_1.search(filename)
     if match and re.match(r'\d{3}', match.group(1)):
         return match.group(1)
     
     # Dernier recours
-    match = _PATTERN_FALLBACK_2.search(filename)
+    match = PATTERN_FALLBACK_2.search(filename)
     return match.group(1) if match else None
 
 def resize_cards(image_paths: List[str], target_size: Tuple[int, int] = None) -> List[Tuple[np.ndarray, str]]:
     """
     Redimensionne les images aux dimensions cibles
     
+    Gère automatiquement la conversion RGBA → RGB si nécessaire
+    
     Args:
         image_paths: Liste des chemins d'images
-        target_size: Taille cible (largeur, hauteur)
+        target_size: Taille cible (largeur, hauteur). 
+                    Si None, utilise CONFIG['target_size']
         
     Returns:
         Liste de tuples (image_redimensionnée, chemin_original)
+        
+    Example:
+        >>> paths = ["image1.png", "image2.jpg"]
+        >>> resized = resize_cards(paths, (280, 380))
+        >>> for img, path in resized:
+        ...     print(f"{path}: {img.shape}")
     """
     if target_size is None:
         target_size = CONFIG['target_size']
@@ -144,14 +242,18 @@ def resize_cards(image_paths: List[str], target_size: Tuple[int, int] = None) ->
     resized_images = []
     for img_path in image_paths:
         if not os.path.exists(img_path):
-            print(f"Attention: Image non trouvée : {img_path}")
+            safe_print(f"Attention: Image non trouvée : {img_path}")
             continue
             
         img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
         if img is None:
-            print(f"Attention: Impossible de charger l'image : {img_path}")
+            safe_print(f"Attention: Impossible de charger l'image : {img_path}")
             continue
-            
+        
+        # Convertir RGBA en RGB si nécessaire
+        if len(img.shape) == 3 and img.shape[2] == 4:
+            img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        
         img = cv2.resize(img, target_size, interpolation=cv2.INTER_AREA)
         resized_images.append((img, img_path))
     

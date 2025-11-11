@@ -24,11 +24,17 @@ from functools import partial
 from typing import List, Tuple, Optional, Dict
 import multiprocessing as mp
 
-# Import safe_print
-try:
-    from .utils import safe_print
-except ImportError:
-    from utils import safe_print
+# Import centralized utilities
+from core.utils import (
+    safe_print,
+    extract_card_number,
+    load_card_data,
+    PATTERN_NEW_FORMAT,
+    PATTERN_OLD_FORMAT,
+    PATTERN_FALLBACK_1,
+    PATTERN_FALLBACK_2,
+    CONFIG
+)
 
 # Détection GPU optionnelle
 try:
@@ -42,12 +48,6 @@ try:
 except ImportError:
     CUDA_AVAILABLE = False
     DEVICE = None
-
-# Compiled regex patterns (optimisé)
-_PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}(?:_aug_\d+)?\.')
-_PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
-_PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
-_PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
 
 # Paramètres globaux
 THETA_MIN, THETA_MAX = -30, 30
@@ -79,38 +79,6 @@ class MosaicGeneratorOptimized:
         safe_print(f"🚀 Générateur de mosaïques optimisé initialisé:")
         safe_print(f"   GPU: {'✅ Activé' if self.use_gpu else '❌ Désactivé'}")
         safe_print(f"   Workers: {self.num_workers} threads")
-    
-    def load_card_data(self, excel_path: str) -> Tuple[Dict, Dict]:
-        """Charge les données des cartes depuis Excel"""
-        df = pd.read_excel(excel_path, usecols=["Set #", "Name"])
-        card_dict = {}
-        class_map = {}
-        for _, row in df.iterrows():
-            number = row["Set #"].split('/')[0].zfill(3)
-            name = row["Name"].replace(" ", "_")
-            if number not in card_dict:
-                card_dict[number] = name
-                # Le class_id dans data.yaml est 0-indexed (carte 019 -> index 18)
-                class_map[number] = int(number) - 1
-        return card_dict, class_map
-    
-    def extract_card_number(self, filename: str) -> Optional[str]:
-        """Extrait le numéro de carte (optimisé avec regex compilé)"""
-        match = _PATTERN_NEW_FORMAT.search(filename)
-        if match:
-            num = match.group(1)
-            return num.zfill(3) if num.isdigit() else num
-        
-        match = _PATTERN_OLD_FORMAT.search(filename)
-        if match:
-            return match.group(1)
-        
-        match = _PATTERN_FALLBACK_1.search(filename)
-        if match and re.match(r'\d{3}', match.group(1)):
-            return match.group(1)
-        
-        match = _PATTERN_FALLBACK_2.search(filename)
-        return match.group(1) if match else None
     
     def _load_and_resize_single(self, img_path: str, target_size: Tuple[int, int] = (280, 380)) -> Optional[Tuple]:
         """Charge et resize une seule image (pour parallélisation)"""
@@ -435,7 +403,7 @@ class MosaicGeneratorOptimized:
                 
                 # Annotations (EXACTEMENT comme l'original)
                 filename = os.path.basename(path)
-                card_number = self.extract_card_number(filename)
+                card_number = extract_card_number(filename)
                 
                 if card_number in card_dict and card_number in class_map:
                     class_name = card_dict[card_number]
