@@ -2319,8 +2319,8 @@ class ModernPokemonGUI:
                 cursor='hand2'
             ).pack(anchor='w')
         
-        # Avertissement si fichier Excel manquant
-        if not self.check_excel_file():
+        # Avertissement si fichier YAML/Excel manquant
+        if not self.check_excel_file():  # Note: check_excel_file() vérifie aussi YAML
             warning_frame2 = tk.Frame(container, bg=self.colors['warning'], 
                                      highlightbackground=self.colors['warning'],
                                      highlightthickness=2)
@@ -3693,7 +3693,7 @@ class ModernPokemonGUI:
         tools_content.pack(fill=tk.BOTH, padx=40, pady=(0, 20))
         
         # Tool buttons
-        ttk.Button(tools_content, text="📋 Excel & Prices",
+        ttk.Button(tools_content, text="📋 Card Database",
                   command=self.open_excel_tools,
                   width=40).pack(pady=5, fill=tk.X)
         
@@ -3994,7 +3994,7 @@ class ModernPokemonGUI:
             return True
             
         except Exception as e:
-            self.log(f"❌ Erreur création Excel: {e}")
+            self.log(f"❌ Erreur création YAML: {e}")
             messagebox.showerror("Erreur", f"Impossible de créer le fichier:\n{e}")
             return False
     
@@ -5871,7 +5871,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         canvas.pack(side="left", fill="both", expand=True, padx=20, pady=(0, 20))
         scrollbar.pack(side="right", fill="y", pady=(0, 20))
         
-        # Section 1: Générer Excel depuis API
+        # Section 1: Générer YAML depuis API
         section1 = tk.Frame(scrollable_frame, bg=self.colors['bg_card'])
         section1.pack(fill='x', pady=10)
         
@@ -5931,7 +5931,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         
         tk.Button(
             section1,
-            text="▶️ Generate Excel",
+            text="▶️ Generate YAML",
             command=lambda: [dialog.destroy(), self.generate_extension_excel_full(extension_var.get(), extension_output_var.get())],
             bg=self.colors['accent'],
             fg='#000000',
@@ -5978,8 +5978,8 @@ Total: {images_count + aug_count + mosaic_count} images"""
         
         def browse_input():
             filename = filedialog.askopenfilename(
-                title="Select Excel File",
-                filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")]
+                title="Select YAML File",
+                filetypes=[("YAML files", "*.yaml;*.yml"), ("All files", "*.*")]
             )
             if filename:
                 price_input_var.set(filename)
@@ -6122,7 +6122,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         ).pack(pady=10)
     
     def generate_extension_excel_full(self, extension, output):
-        """Générer un fichier Excel depuis l'API TCGdex pour une extension"""
+        """Générer un fichier YAML depuis l'API TCGdex pour une extension"""
         extension = extension.strip()
         output = output.strip()
         
@@ -6135,7 +6135,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
             return
         
         self.log(f"📋 Generating card list for: {extension}")
-        self.start_operation("Generating Excel")
+        self.start_operation("Generating Card Database")
         
         def task():
             try:
@@ -6243,35 +6243,58 @@ Total: {images_count + aug_count + mosaic_count} images"""
                     messagebox.showerror("Error", f"Error: {e}")
                     return
                 
-                # Créer le DataFrame
-                self.log(f"\n📝 Creating Excel file...")
+                # Créer la structure YAML
+                self.log(f"\n📝 Creating YAML file...")
                 self.log(f"📁 File: {output}")
                 
-                rows = []
+                from datetime import datetime
+                import yaml
+                
+                yaml_data = {
+                    'metadata': {
+                        'version': '1.0',
+                        'format': 'YOLO-compatible card database',
+                        'last_updated': datetime.now().strftime('%Y-%m-%d'),
+                        'source': f'TCGdex API - {set_name}',
+                        'total_cards': len(cards_list),
+                        'comment': 'Bounding boxes are generated dynamically'
+                    },
+                    'cards': {}
+                }
+                
                 for card_brief in cards_list:
                     card_number = card_brief.get('localId', '')
                     name = card_brief.get('name', '')
                     
-                    # Format: 001/191
-                    if official_cards > 0:
-                        set_number = f"{card_number}/{official_cards}"
-                    else:
-                        set_number = card_number
+                    # Format card_id: setcode_number (ex: sv08_019)
+                    set_code = set_id if set_id else 'unknown'
+                    card_id = f"{set_code}_{card_number}"
                     
-                    rows.append({
-                        "Set #": set_number,
-                        "Name": name,
-                        "Set": set_name
-                    })
+                    # Format set_full: 001/191
+                    if official_cards > 0:
+                        set_full = f"{card_number}/{official_cards}"
+                    else:
+                        set_full = card_number
+                    
+                    yaml_data['cards'][card_id] = {
+                        'name': name,
+                        'set': set_name,
+                        'set_full': set_full,
+                        'type': 'Pokemon',
+                        'rarity': 'Common',
+                        'price': None,
+                        'price_max': None,
+                        'price_source': '',
+                        'last_updated': datetime.now().strftime('%Y-%m-%d')
+                    }
                 
-                df = pd.DataFrame(rows)
+                # Créer le dossier si nécessaire
+                output_path = Path(output)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 
-                # Sort by card number
-                df['_sort'] = df['Set #'].str.extract(r'(\d+)').astype(int)
-                df = df.sort_values('_sort').drop(columns=['_sort'])
-                
-                self.log(f"💾 Writing to Excel...")
-                df.to_excel(output, index=False)
+                self.log(f"💾 Writing to YAML...")
+                with open(output, 'w', encoding='utf-8') as f:
+                    yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
                 
                 file_size = os.path.getsize(output) / 1024
                 
@@ -6280,11 +6303,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 self.log(f"{'='*60}")
                 self.log(f"📁 File: {output}")
                 self.log(f"💾 Size: {file_size:.1f} KB")
-                self.log(f"📊 Cards: {len(rows)}")
+                self.log(f"📊 Cards: {len(cards_list)}")
                 self.log(f"🌐 Source: TCGdex API (free)")
+                self.log(f"💡 Format: YAML (human-readable)")
                 self.log(f"{'='*60}")
                 
-                messagebox.showinfo("Success", f"File generated successfully!\n\n{len(rows)} cards from '{set_name}'\n\nSource: TCGdex (free)")
+                messagebox.showinfo("Success", f"File generated successfully!\n\n{len(cards_list)} cards from '{set_name}'\n\nFormat: YAML\nSource: TCGdex (free)")
                 
             except Exception as e:
                 self.log(f"❌ Error: {str(e)}")
@@ -6297,7 +6321,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         threading.Thread(target=task, daemon=True).start()
     
     def update_card_prices_full(self, input_file, output_file):
-        """Mettre à jour les prix des cartes dans un fichier Excel avec TCGdex"""
+        """Mettre à jour les prix des cartes dans un fichier YAML avec TCGdex"""
         input_file = input_file.strip()
         output_file = output_file.strip()
         
@@ -6323,9 +6347,10 @@ Total: {images_count + aug_count + mosaic_count} images"""
         
         def task():
             try:
-                import pandas as pd
+                import yaml
                 import concurrent.futures
                 import time
+                from datetime import datetime
                 from core.tcgdex_api import TCGdexAPI
                 
                 tcgdex_config = api_config.get("tcgdex", {})
@@ -6335,27 +6360,31 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 self.log(f"🔧 Initializing TCGdex client (language: {language})...")
                 tcgdex_api = TCGdexAPI(language=language)
                 
-                # Charger Excel
-                df = pd.read_excel(input_file, engine="openpyxl")
-                if "Prix" not in df.columns:
-                    df["Prix"] = None
-                if "Prix max" not in df.columns:
-                    df["Prix max"] = None
-                if "SourcePrix" not in df.columns:
-                    df["SourcePrix"] = None
+                # Charger YAML
+                with open(input_file, 'r', encoding='utf-8') as f:
+                    data = yaml.safe_load(f)
                 
-                total = len(df)
+                if 'cards' not in data:
+                    self.log("❌ Invalid YAML structure (missing 'cards' section)")
+                    messagebox.showerror("Error", "Invalid YAML file structure!")
+                    return
+                
+                cards_dict = data['cards']
+                total = len(cards_dict)
                 processed = 0
                 last_log = [0]
                 failed = []
                 
-                def worker(idx, row):
+                def worker(card_id, card_info):
                     """Worker thread to process one card"""
                     nonlocal processed
                     
-                    name = str(row.get("Name", "")).strip()
-                    set_name = str(row.get("Set", "")).strip() if "Set" in row else None
-                    set_hash = str(row.get("Set #", "")).strip() if "Set #" in row else None
+                    name = str(card_info.get("name", "")).strip()
+                    set_name = card_info.get("set", "")
+                    set_full = card_info.get("set_full", "")
+                    
+                    # Extract card number from set_full (ex: "019/191" -> "019")
+                    set_hash = set_full.split('/')[0] if '/' in set_full else ""
                     
                     # Delay between requests (free API, no strict rate limit)
                     if processed > 0:
@@ -6374,6 +6403,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
                                 source = "TCGdex(TCGPlayer)"
                             else:
                                 source = "TCGdex"
+                            
+                            # Update card_info
+                            card_info['price'] = price
+                            card_info['price_max'] = pmax if pmax else price
+                            card_info['price_source'] = source
+                            card_info['last_updated'] = datetime.now().strftime('%Y-%m-%d')
                         else:
                             source = None
                     except Exception as e:
@@ -6386,7 +6421,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                         self.log(f"📊 Progress: {processed}/{total} ({int(processed/total*100)}%)")
                         last_log[0] = now
                     
-                    return idx, price, pmax, source
+                    return card_id, price, pmax, source
                 
                 self.log(f"🔄 Processing {total} cards with TCGdex (free)")
                 self.log(f"💡 Automatic prices: Cardmarket (EUR) + TCGPlayer (USD)")
@@ -6395,23 +6430,20 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 start = time.time()
                 
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
-                    futures = [ex.submit(worker, idx, row) for idx, row in df.iterrows()]
+                    futures = [ex.submit(worker, card_id, card_info) for card_id, card_info in cards_dict.items()]
                     for fut in concurrent.futures.as_completed(futures):
-                        idx, price, pmax, source = fut.result()
-                        
-                        if price is not None:
-                            df.at[idx, "Prix"] = price
-                        if pmax is not None:
-                            df.at[idx, "Prix max"] = pmax
-                        if source:
-                            df.at[idx, "SourcePrix"] = source
+                        fut.result()  # Cards already updated in-place
                 
                 elapsed = time.time() - start
                 
-                # Save
-                df.to_excel(output_file, index=False)
+                # Update metadata
+                data['metadata']['last_updated'] = datetime.now().strftime('%Y-%m-%d')
                 
-                success_count = df["Prix"].notna().sum()
+                # Save YAML
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    yaml.dump(data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
+                
+                success_count = sum(1 for c in cards_dict.values() if c.get('price') is not None)
                 self.log(f"✅ File generated: {output_file}")
                 self.log(f"📊 Prices found: {success_count}/{total} ({int(success_count/total*100)}%)")
                 self.log(f"⏱️  Total time: {elapsed:.1f}s (~{(elapsed/total if total else 0):.2f}s/card)")
