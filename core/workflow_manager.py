@@ -298,14 +298,14 @@ class WorkflowManager:
         self._update_progress(current, total, "Génération des mosaïques...")
         
         try:
-            # Déterminer la commande selon le mode
+            # Déterminer la commande selon le mode (utilise version optimisée)
             if self.config.mosaic_mode == "complete":
-                cmd = [sys.executable, "core/mosaic.py", "all"]
+                cmd = [sys.executable, "core/mosaic_optimized.py", "all"]
             elif self.config.mosaic_mode == "custom":
-                cmd = [sys.executable, "core/mosaic.py", str(self.config.mosaic_count), "0", "0"]
+                cmd = [sys.executable, "core/mosaic_optimized.py", str(self.config.mosaic_count), "0", "0"]
             else:
                 # quick ou standard = all pour l'instant
-                cmd = [sys.executable, "core/mosaic.py", "all"]
+                cmd = [sys.executable, "core/mosaic_optimized.py", "all"]
             
             success = self._run_subprocess(cmd)
             duration = time.time() - start_time
@@ -444,7 +444,7 @@ class WorkflowManager:
         try:
             cmd = [
                 sys.executable,
-                "core/auto_balancer.py",
+                "core/auto_balancer_optimized.py",
                 str(self.config.dataset_dir),
                 "--strategy", self.config.balance_strategy,
                 "--target", str(self.config.balance_target)

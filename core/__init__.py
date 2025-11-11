@@ -52,11 +52,11 @@ __author__ = "Pokemon Dataset Generator Team"
 
 # Imports pour faciliter l'accès aux modules
 from . import augmentation
-from . import mosaic
+from . import mosaic_optimized as mosaic  # Version GPU-optimisée par défaut
 from . import dataset_validator
 from . import dataset_exporter
-from . import auto_balancer
-from . import holographic_augmenter
+from . import auto_balancer_optimized as auto_balancer  # Version GPU-optimisée par défaut
+from . import holographic_augmenter_optimized as holographic_augmenter  # Version GPU-optimisée par défaut
 from . import tcgdex_api
 from . import random_erasing
 from . import utils

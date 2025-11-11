@@ -22,7 +22,7 @@ def test_core_imports():
         from core.workflow_manager import WorkflowManager
         from core.training_manager import TrainingManager
         from core.detection_manager import DetectionManager
-        from core.utils import safe_print, load_prices_from_excel
+        from core.utils import safe_print, load_prices
         print("   ✅ Tous les imports core OK")
         return True
     except ImportError as e:

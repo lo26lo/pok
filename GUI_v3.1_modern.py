@@ -5352,7 +5352,7 @@ Continuer ?"""
                 try:
                     output_dir = "images_holographic"
                     # -u pour unbuffered output (logs en temps réel)
-                    cmd = [sys.executable, "-u", "core/holographic_augmenter.py",
+                    cmd = [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
                           "images", output_dir, "--variations", str(variations_var.get())]
                     
                     self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
