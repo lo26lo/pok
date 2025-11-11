@@ -1,12 +1,67 @@
 # 🤖 Instructions GitHub Copilot - Projet Pokémon Dataset Generator
 
 **Date de création** : 10 novembre 2025  
-**Dernière mise à jour** : 10 novembre 2025  
-**Version** : 2.0
+**Dernière mise à jour** : 11 novembre 2025  
+**Version** : 2.1
 
 ---
 
 ## 🎯 Règles Générales
+
+### 0. Workflow de Planification - NOUVEAU SYSTÈME
+
+**Pour toute nouvelle fonctionnalité ou modification majeure** :
+
+#### 📋 Créer un document de planification
+
+**Emplacement** : `.planning/YYYY-MM-DD_description-courte.md`  
+**Template** : Utiliser `.planning/TEMPLATE.md`
+
+**Quand créer un document de planification ?**
+- ✅ Nouvelle fonctionnalité demandée
+- ✅ Modification majeure d'architecture
+- ✅ Refactorisation importante
+- ✅ Ajout de plusieurs scripts/tests
+- ❌ Simple bug fix (sauf si complexe)
+- ❌ Modification mineure de documentation
+
+**Structure obligatoire du document** :
+1. **Vue d'ensemble** : Description, objectif, impact
+2. **Planification par étapes** : Étapes détaillées avec actions et validations
+3. **Suivi des progrès** : Timeline, progression, journal des modifications
+4. **Questions de clarification** : Questions ouvertes, décisions prises, points d'attention
+5. **Détails techniques** : Dépendances, modifications, tests
+6. **Documentation à mettre à jour** : Liste des docs concernées
+7. **Checklist finale** : Validation avant commit
+
+**Workflow type** :
+```
+1. Utilisateur fait une demande
+2. ⚠️ AVANT TOUT CODE : Créer document de planification
+3. Proposer les étapes à l'utilisateur
+4. Obtenir validation/clarifications
+5. Exécuter étape par étape
+6. Mettre à jour progression dans le document
+7. Finaliser (tests + docs)
+8. Checklist finale avant commit
+```
+
+**Mise à jour du document** :
+- ✅ Mettre à jour après chaque étape terminée
+- ✅ Ajouter questions au fur et à mesure
+- ✅ Logger toutes les décisions importantes
+- ✅ Marquer progrès dans la timeline
+
+**Nommage des fichiers** :
+- Format : `YYYY-MM-DD_description-courte.md`
+- Exemples :
+  - `2025-11-11_systeme-planification.md`
+  - `2025-11-11_nouveau-workflow-augmentation.md`
+  - `2025-11-11_integration-api-pokemon.md`
+
+**Ce dossier est gitignored** : Les documents de planification sont des work-in-progress et ne doivent pas être versionnés.
+
+---
 
 ### 1. Structure du Projet - NE JAMAIS MODIFIER SANS CONFIRMATION
 
@@ -587,7 +642,212 @@ if __name__ == "__main__":
 
 ---
 
-## 🚨 Debugging & Troubleshooting
+## � Système de Planification par Étapes
+
+### Quand créer un document de planification ?
+
+**✅ OBLIGATOIRE pour** :
+- Nouvelle fonctionnalité majeure
+- Refactorisation d'architecture
+- Ajout de plusieurs scripts/modules interconnectés
+- Modifications impactant plusieurs composants
+- Intégration d'API externe
+- Modification du workflow utilisateur
+
+**❌ NON NÉCESSAIRE pour** :
+- Simple bug fix ponctuel
+- Correction de typo
+- Mise à jour mineure de documentation
+- Ajout d'un seul petit script
+
+### Processus de création
+
+**1. Dès qu'une demande majeure arrive** :
+```
+⚠️ AVANT TOUT CODE : Créer le document de planification
+```
+
+**2. Créer le fichier** :
+```
+.planning/YYYY-MM-DD_description-courte.md
+```
+
+**3. Utiliser le template** :
+- Copier depuis `.planning/TEMPLATE.md`
+- Remplir les sections obligatoires
+
+**4. Proposer à l'utilisateur** :
+- Présenter les étapes prévues
+- Demander validation/clarifications
+- Ajuster selon feedback
+
+**5. Exécuter étape par étape** :
+- Marquer chaque étape en "En cours" avant de commencer
+- Effectuer les actions
+- Mettre à jour la progression
+- Marquer "Terminé" une fois validé
+
+**6. Tenir à jour** :
+- Ajouter questions au fur et à mesure
+- Logger les décisions importantes
+- Mettre à jour la timeline
+- Noter les blocages rencontrés
+
+**7. Finaliser** :
+- Cocher la checklist finale
+- S'assurer que toute la doc est à jour
+- Préparer le message de commit
+
+### Structure du document
+
+**Sections obligatoires** :
+
+1. **🎯 Vue d'ensemble**
+   - Description de la demande originale
+   - Objectif clair et mesurable
+   - Impact attendu (utilisateur, technique, doc)
+
+2. **📝 Planification par étapes**
+   - Étapes numérotées et titrées
+   - Actions concrètes (checklist)
+   - Fichiers concernés par étape
+   - Critères de validation
+
+3. **📊 Suivi des progrès**
+   - Timeline visuelle
+   - Pourcentage d'avancement
+   - Journal des modifications avec dates
+   - Temps estimé restant
+
+4. **❓ Questions de clarification**
+   - Questions ouvertes avec contexte
+   - Décisions prises (avec date)
+   - Points d'attention/risques
+
+5. **🔧 Détails techniques**
+   - Dépendances nécessaires
+   - Modifications de structure prévues
+   - Tests à effectuer
+   - Contraintes de compatibilité
+
+6. **📚 Documentation à mettre à jour**
+   - Liste des fichiers doc concernés
+   - Sections précises à modifier
+
+7. **✅ Checklist finale**
+   - Validation avant commit
+   - Points de non-régression
+
+### Exemple de nommage
+
+```
+.planning/2025-11-11_systeme-planification.md
+.planning/2025-11-15_integration-tcgdex-api.md
+.planning/2025-11-20_refonte-module-augmentation.md
+.planning/2025-12-01_support-multi-gpu.md
+```
+
+### Workflow visuel
+
+```
+Demande utilisateur
+      ↓
+⚠️ Créer document .planning/
+      ↓
+Remplir vue d'ensemble + étapes
+      ↓
+→ Proposer à l'utilisateur ←
+      ↓                    ↑
+Obtenir validation?    NON ┘
+      ↓ OUI
+Pour chaque étape:
+  - Marquer "En cours"
+  - Exécuter actions
+  - Mettre à jour progrès
+  - Logger décisions
+  - Marquer "Terminé"
+      ↓
+Checklist finale
+      ↓
+Commit avec docs à jour
+```
+
+### Mise à jour continue
+
+**Après chaque étape terminée** :
+```markdown
+### Journal des modifications
+| Date | Étape | Action | Résultat |
+|------|-------|--------|----------|
+| 2025-11-11 | Étape 1 | Création fichier X | ✅ |
+| 2025-11-11 | Étape 2 | Tests intégration | ⚠️ Ajustement nécessaire |
+```
+
+**Quand une question surgit** :
+```markdown
+### Questions ouvertes
+1. **Faut-il supporter Python 3.9 ?**
+   - Contexte : NumPy < 2.0 supporté sur 3.9
+   - Options : A) Oui, B) Non (3.10+ seulement)
+   - Recommandation : B car simplification dépendances
+   - ⏳ En attente de réponse utilisateur
+```
+
+**Quand une décision est prise** :
+```markdown
+| Date | Question | Décision | Justification |
+|------|----------|----------|---------------|
+| 2025-11-11 | Support Python 3.9 | Non | Simplification maintenance |
+```
+
+### Exemple concret
+
+Utilisateur : "Je veux intégrer l'API TCGdex pour récupérer les prix"
+
+**Copilot crée** : `.planning/2025-11-11_integration-api-tcgdex.md`
+
+**Contenu** :
+```markdown
+# 📋 Planification : Intégration API TCGdex pour récupération prix
+
+## 🎯 Vue d'ensemble
+Intégrer l'API TCGdex pour récupérer automatiquement les prix des cartes...
+
+## 📝 Planification par étapes
+
+### Étape 1 : Création module API
+**Statut** : 🔄 En cours
+**Actions** :
+- [x] Créer core/tcgdex_api.py
+- [x] Implémenter get_card_price()
+- [ ] Ajouter gestion cache
+...
+
+## 📊 Suivi des progrès
+**Avancement** : 2 / 5 étapes (40%)
+
+## ❓ Questions de clarification
+1. **Fréquence de refresh des prix ?**
+   - ⏳ En attente
+...
+```
+
+**Copilot propose** : "J'ai préparé un plan en 5 étapes. Veux-tu que je commence ?"
+
+**Utilisateur valide** → Copilot exécute étape par étape en mettant à jour le document
+
+### Avantages du système
+
+✅ **Traçabilité** : Historique complet des décisions  
+✅ **Communication** : Utilisateur voit le plan avant exécution  
+✅ **Clarifications** : Questions documentées  
+✅ **Progrès** : Suivi visuel de l'avancement  
+✅ **Documentation** : Base pour CHANGELOG et docs  
+✅ **Reproductibilité** : Plan peut être réutilisé
+
+---
+
+## �🚨 Debugging & Troubleshooting
 
 ### Problèmes courants et solutions
 
@@ -706,10 +966,11 @@ Ce fichier doit être mis à jour lors de :
 - Retours d'expérience de l'utilisateur
 
 **Historique des versions** :
+- **v2.1** (11 novembre 2025) : Ajout système de planification par étapes (.planning/)
 - **v2.0** (10 novembre 2025) : Ajout de 7 sections complètes (Contraintes Techniques, Standards de Code, Conventions de Nommage, Messages de Commit, Tests & Validation, Workflows Types, Debugging & Troubleshooting)
 - **v1.0** (10 novembre 2025) : Version initiale
 
-**Dernière mise à jour** : 10 novembre 2025  
+**Dernière mise à jour** : 11 novembre 2025  
 **Par** : Utilisateur + GitHub Copilot
 
 ---
