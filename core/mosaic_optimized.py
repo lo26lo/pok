@@ -43,7 +43,8 @@ except ImportError:
     DEVICE = None
 
 # Compiled regex patterns (optimisé) - Support format sv08_019, swsh7_001, etc.
-_PATTERN_FULL_ID = re.compile(r'([a-z0-9]+_\d+)_[a-z]{2}(?:_aug_\d+)?\.', re.IGNORECASE)  # sv08_019_en ou swsh7_001_en
+# Supporte: sv08_019_en.png, sv08_019_fr_holo1_aug_000.png, swsh7_001_en_aug_1.png
+_PATTERN_FULL_ID = re.compile(r'([a-z0-9]+_\d+)_[a-z]{2}(?:_[\w]+)*\.', re.IGNORECASE)  # Capture set_number, ignore tout après langue
 _PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)  # Ancien format 001, 002, etc.
 _PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
 _PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
