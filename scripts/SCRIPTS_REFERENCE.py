@@ -13,6 +13,7 @@ IMPORTANT: Lors de modifications de scripts:
 
 CHANGELOG:
 ----------
+2025-11-11: Ajout de visualize_mosaic_bbox.py pour visualiser les bounding boxes
 2025-11-10: Création du fichier référence centralisé
 """
 
@@ -299,6 +300,16 @@ TESTS_CATALOG = {
         "requires_venv": True,
         "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
+    },
+    "visualize_mosaic_bbox": {
+        "path": SCRIPTS_DIR / "visualize_mosaic_bbox.py",
+        "description": "Visualise les bounding boxes sur les mosaïques générées",
+        "category": "Validation",
+        "dependencies": ["opencv-python", "numpy"],
+        "arguments": ["[index|all]"],
+        "requires_venv": True,
+        "called_by": ["Utilisateur (manuel)"],
+        "last_modified": "2025-11-11"
     },
     "check_corrupted_images": {
         "path": TESTS_DIR / "check_corrupted_images.py",
