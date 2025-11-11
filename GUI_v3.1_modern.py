@@ -2319,8 +2319,8 @@ class ModernPokemonGUI:
                 cursor='hand2'
             ).pack(anchor='w')
         
-        # Avertissement si fichier YAML/Excel manquant
-        if not self.check_excel_file():  # Note: check_excel_file() vérifie aussi YAML
+        # Avertissement si fichier YAML manquant
+        if not self.check_yaml_file():
             warning_frame2 = tk.Frame(container, bg=self.colors['warning'], 
                                      highlightbackground=self.colors['warning'],
                                      highlightthickness=2)
@@ -2344,8 +2344,8 @@ class ModernPokemonGUI:
             ).pack(anchor='w', pady=(5, 10))
             
             tk.Button(warning_content2,
-                text="� Generate Card List",
-                command=self.open_excel_tools,
+                text="🚀 Generate Card List",
+                command=self.open_yaml_tools,
                 bg='#000000',
                 fg=self.colors['warning'],
                 font=self.FONT_BUTTON,
@@ -3694,7 +3694,7 @@ class ModernPokemonGUI:
         
         # Tool buttons
         ttk.Button(tools_content, text="📋 Card Database",
-                  command=self.open_excel_tools,
+                  command=self.open_yaml_tools,
                   width=40).pack(pady=5, fill=tk.X)
         
         ttk.Button(tools_content, text="⚖️ Auto-Balance Classes",
@@ -3888,14 +3888,13 @@ class ModernPokemonGUI:
         
         return venv_path.exists() and python_exe.exists()
     
-    def check_excel_file(self):
-        """Vérifier si le fichier YAML ou Excel des cartes existe"""
+    def check_yaml_file(self):
+        """Vérifier si le fichier YAML des cartes existe"""
         yaml_path = Path("models/cards_database.yaml")
-        excel_path = Path("excel/cards_info.xlsx")
-        return yaml_path.exists() or excel_path.exists()
+        return yaml_path.exists()
     
-    def create_sample_excel(self):
-        """Créer un fichier YAML exemple (remplace l'Excel)"""
+    def create_sample_yaml(self):
+        """Créer un fichier YAML exemple"""
         try:
             import yaml
             from datetime import datetime
@@ -3989,7 +3988,7 @@ class ModernPokemonGUI:
                 "    • name: nom de la carte\n"
                 "    • set: nom du set\n"
                 "    • price: prix (optionnel)\n\n"
-                "💡 Plus léger et lisible qu'Excel!"
+                "💡 Format léger et lisible!"
             )
             return True
             
@@ -5831,7 +5830,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         except Exception as e:
             messagebox.showerror("Error", f"Erreur stats:\n{e}")
     
-    def open_excel_tools(self):
+    def open_yaml_tools(self):
         """Ouvrir dialog YAML & Prices avec TCGdex API"""
         # Dialog pour outils YAML
         dialog = tk.Toplevel(self.root)

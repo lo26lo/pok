@@ -237,70 +237,6 @@ def clean_old_files(pattern: str, directory: str = ".") -> int:
     
     return count
 
-def load_prices_from_excel(excel_path: str = "excel/cards_info.xlsx") -> Dict[str, Dict[str, any]]:
-    """
-    Charge les informations de prix depuis le fichier Excel
-    
-    Args:
-        excel_path: Chemin vers le fichier Excel
-        
-    Returns:
-        Dictionnaire {card_id: {'name': str, 'price': float, 'price_max': float}}
-        
-    Example:
-        >>> prices = load_prices_from_excel()
-        >>> print(prices['sv08_019'])
-        {'name': 'Exeggcute', 'price': 0.15, 'price_max': 0.25}
-    """
-    if not os.path.exists(excel_path):
-        safe_print(f"⚠️ Fichier Excel non trouvé: {excel_path}")
-        return {}
-    
-    try:
-        df = pd.read_excel(excel_path, engine='openpyxl')
-        
-        prices_dict = {}
-        
-        for _, row in df.iterrows():
-            # Récupérer les informations
-            card_id = row.get('Set #', '')  # ex: sv08_019
-            name = row.get('Name', 'Unknown')
-            prix = row.get('Prix', None)
-            prix_max = row.get('Prix max', None)
-            
-            # Nettoyer le card_id
-            if isinstance(card_id, str):
-                card_id = card_id.strip()
-            else:
-                card_id = str(card_id)
-            
-            # Convertir les prix en float
-            try:
-                prix = float(prix) if prix is not None and not pd.isna(prix) else None
-            except (ValueError, TypeError):
-                prix = None
-                
-            try:
-                prix_max = float(prix_max) if prix_max is not None and not pd.isna(prix_max) else None
-            except (ValueError, TypeError):
-                prix_max = None
-            
-            # Stocker dans le dictionnaire
-            if card_id:
-                prices_dict[card_id] = {
-                    'name': name,
-                    'price': prix,
-                    'price_max': prix_max
-                }
-        
-        safe_print(f"✅ Chargé {len(prices_dict)} cartes avec prix depuis {excel_path}")
-        return prices_dict
-        
-    except Exception as e:
-        safe_print(f"❌ Erreur lors du chargement de {excel_path}: {e}")
-        return {}
-
-
 def load_prices_from_yaml(yaml_path: str = "models/cards_database.yaml") -> Dict[str, Dict[str, any]]:
     """
     Charge les informations de prix depuis le fichier YAML
@@ -354,29 +290,21 @@ def load_prices_from_yaml(yaml_path: str = "models/cards_database.yaml") -> Dict
         return {}
 
 
-def load_prices(yaml_path: str = "models/cards_database.yaml", 
-                excel_path: str = "excel/cards_info.xlsx") -> Dict[str, Dict[str, any]]:
+def load_prices(yaml_path: str = "models/cards_database.yaml") -> Dict[str, Dict[str, any]]:
     """
-    Charge les prix depuis YAML (prioritaire) ou Excel (fallback)
+    Charge les prix depuis YAML
     
     Args:
         yaml_path: Chemin vers le fichier YAML
-        excel_path: Chemin vers le fichier Excel (fallback)
         
     Returns:
         Dictionnaire {card_id: {'name': str, 'price': float, 'price_max': float}}
     """
-    # Priorité 1: YAML
     if os.path.exists(yaml_path):
-        safe_print(f"📄 Utilisation de {yaml_path}")
+        safe_print(f"📄 Chargement de {yaml_path}")
         return load_prices_from_yaml(yaml_path)
     
-    # Fallback: Excel
-    if os.path.exists(excel_path):
-        safe_print(f"📊 Fallback vers {excel_path}")
-        return load_prices_from_excel(excel_path)
-    
-    safe_print("⚠️ Aucun fichier de prix trouvé (ni YAML ni Excel)")
+    safe_print(f"⚠️ Fichier YAML non trouvé: {yaml_path}")
     return {}
 
 

@@ -38,30 +38,18 @@ _PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
 # Taille cible pour redimensionner les images (comme dans le script mosaic)
 TARGET_SIZE = (280, 380)
 
-# Parseur d'arguments
-parser = argparse.ArgumentParser(description="Data augmentation for Pokemon cards")
-parser.add_argument("--num_aug", type=int, default=30, help="Nombre d'augmentations par image de base")
-parser.add_argument("--source", type=str, default="images", choices=["images", "holographic"],
-                    help="Source des images : 'images' (originales) ou 'holographic' (augmentations holographiques)")
-parser.add_argument("--target", type=str, default="augmented", choices=["augmented", "images_aug"],
-                    help="Destination des images augmentées")
-args = parser.parse_args()
+# Configuration par défaut (peut être surchargée par arguments CLI)
+DEFAULT_NUM_AUG = 30
+DEFAULT_SOURCE = "images"
+DEFAULT_TARGET = "augmented"
 
-# Configuration du répertoire source selon le paramètre --source
-if args.source == "holographic":
-    BASE_IMAGES_DIR = os.path.join("output", "holographic")
-else:
-    BASE_IMAGES_DIR = "images"
+# Sera configuré dynamiquement
+BASE_IMAGES_DIR = "images"
 
-# Configuration des dossiers de sortie selon le paramètre --target
-if args.target == "augmented":
-    AUG_OUTPUT_DIR = os.path.join("output", "augmented")
-    AUG_IMAGES_DIR = os.path.join(AUG_OUTPUT_DIR, "images")
-    AUG_LABELS_DIR = os.path.join(AUG_OUTPUT_DIR, "labels")
-else:
-    AUG_OUTPUT_DIR = "images_aug"
-    AUG_IMAGES_DIR = "images_aug"
-    AUG_LABELS_DIR = os.path.join("images_aug_labels")
+# Configuration des dossiers de sortie (par défaut)
+AUG_OUTPUT_DIR = os.path.join("output", "augmented")
+AUG_IMAGES_DIR = os.path.join(AUG_OUTPUT_DIR, "images")
+AUG_LABELS_DIR = os.path.join(AUG_OUTPUT_DIR, "labels")
 
 # Création des dossiers s'ils n'existent pas
 os.makedirs(AUG_IMAGES_DIR, exist_ok=True)
@@ -199,18 +187,50 @@ seq = iaa.SomeOf((2, 5), [
 ], random_order=True)
 
 def main():
-    # Détection auto YAML/Excel
+    # Chargement depuis YAML uniquement
     import os
-    yaml_path = "models/cards_database.yaml"
-    excel_path = "excel/cards_info.xlsx"
+    global BASE_IMAGES_DIR, AUG_OUTPUT_DIR, AUG_IMAGES_DIR, AUG_LABELS_DIR
     
-    if os.path.exists(yaml_path):
-        card_dict, class_map = load_card_data(yaml_path)
-    elif os.path.exists(excel_path):
-        card_dict, class_map = load_card_data(excel_path)
+    # Parser les arguments CLI
+    parser = argparse.ArgumentParser(description="Data augmentation for Pokemon cards")
+    parser.add_argument("--num_aug", type=int, default=DEFAULT_NUM_AUG,
+                       help="Nombre d'augmentations par image de base")
+    parser.add_argument("--source", type=str, default=DEFAULT_SOURCE, 
+                       choices=["images", "holographic"],
+                       help="Source des images : 'images' (originales) ou 'holographic' (augmentations holographiques)")
+    parser.add_argument("--target", type=str, default=DEFAULT_TARGET,
+                       choices=["augmented", "images_aug"],
+                       help="Destination des images augmentées")
+    args = parser.parse_args()
+    
+    # Configuration du répertoire source selon le paramètre --source
+    if args.source == "holographic":
+        BASE_IMAGES_DIR = os.path.join("output", "holographic")
     else:
-        print("❌ Aucun fichier de cartes trouvé (ni YAML ni Excel)")
+        BASE_IMAGES_DIR = "images"
+    
+    # Configuration des dossiers de sortie selon le paramètre --target
+    if args.target == "augmented":
+        AUG_OUTPUT_DIR = os.path.join("output", "augmented")
+        AUG_IMAGES_DIR = os.path.join(AUG_OUTPUT_DIR, "images")
+        AUG_LABELS_DIR = os.path.join(AUG_OUTPUT_DIR, "labels")
+    else:
+        AUG_OUTPUT_DIR = "images_aug"
+        AUG_IMAGES_DIR = "images_aug"
+        AUG_LABELS_DIR = os.path.join("images_aug_labels")
+    
+    # Création des dossiers
+    os.makedirs(AUG_IMAGES_DIR, exist_ok=True)
+    os.makedirs(AUG_LABELS_DIR, exist_ok=True)
+    
+    yaml_path = "models/cards_database.yaml"
+    
+    if not os.path.exists(yaml_path):
+        print(f"❌ Fichier YAML non trouvé: {yaml_path}")
+        print("   Créez-le avec: scripts\\run_script.bat init_prices_simple")
         return
+    
+    card_dict, class_map = load_card_data(yaml_path)
     
     # Collecte des images de base depuis le répertoire "images"
     image_paths = []

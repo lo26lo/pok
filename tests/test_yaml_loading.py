@@ -1,6 +1,6 @@
 """
 Tests pour le chargement des données depuis YAML
-Teste load_prices_from_yaml(), load_prices(), et compatibilité Excel
+Teste load_prices_from_yaml() et load_prices() (YAML uniquement)
 """
 
 import pytest
@@ -13,7 +13,7 @@ import shutil
 # Ajouter core/ au path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.utils import load_prices_from_yaml, load_prices, load_prices_from_excel
+from core.utils import load_prices_from_yaml, load_prices
 
 
 class TestYAMLLoading:
@@ -118,36 +118,19 @@ class TestYAMLLoading:
         assert prices['test_003']['price'] is None
         assert prices['test_003']['price_max'] is None
     
-    def test_load_prices_auto_detection_yaml_priority(self, temp_yaml_file, tmp_path):
-        """Test auto-détection: YAML prioritaire sur Excel"""
-        # Créer un fichier Excel factice
-        excel_file = tmp_path / "test_excel.xlsx"
-        excel_file.touch()
-        
-        # load_prices() devrait détecter YAML en premier
-        prices = load_prices(str(temp_yaml_file), str(excel_file))
+    def test_load_prices_yaml_only(self, temp_yaml_file):
+        """Test load_prices() avec YAML uniquement"""
+        prices = load_prices(str(temp_yaml_file))
         
         # Devrait charger depuis YAML
         assert len(prices) == 3
         assert 'test_001' in prices
+        assert 'test_002' in prices
+        assert 'test_003' in prices
     
-    def test_load_prices_auto_detection_excel_fallback(self, tmp_path):
-        """Test auto-détection: Fallback Excel si pas de YAML"""
-        yaml_file = tmp_path / "nonexistent.yaml"
-        excel_file = Path("excel/cards_info.xlsx")
-        
-        if excel_file.exists():
-            prices = load_prices(str(yaml_file), str(excel_file))
-            # Devrait fallback sur Excel
-            assert isinstance(prices, dict)
-        else:
-            # Si pas d'Excel non plus, retourner dict vide
-            prices = load_prices(str(yaml_file), "nonexistent.xlsx")
-            assert prices == {}
-    
-    def test_load_prices_no_files(self):
-        """Test sans aucun fichier disponible"""
-        prices = load_prices("nonexistent.yaml", "nonexistent.xlsx")
+    def test_load_prices_no_file(self):
+        """Test sans fichier disponible"""
+        prices = load_prices("nonexistent.yaml")
         
         assert prices == {}
     
@@ -164,8 +147,8 @@ class TestYAMLLoading:
                 assert isinstance(card_data['price'], (int, float))
 
 
-class TestYAMLVsExcelCompatibility:
-    """Tests de compatibilité YAML/Excel"""
+class TestRealYAMLFile:
+    """Tests avec le vrai fichier YAML du projet"""
     
     def test_real_yaml_file_if_exists(self):
         """Test le vrai fichier YAML s'il existe"""
@@ -186,42 +169,21 @@ class TestYAMLVsExcelCompatibility:
         else:
             pytest.skip("Fichier YAML réel non trouvé")
     
-    def test_real_excel_file_if_exists(self):
-        """Test le vrai fichier Excel s'il existe (rétrocompatibilité)"""
-        excel_path = Path("excel/cards_info.xlsx")
+    def test_load_prices_with_real_files(self):
+        """Test load_prices() avec le vrai fichier YAML"""
+        yaml_path = Path("models/cards_database.yaml")
         
-        if excel_path.exists():
-            prices = load_prices_from_excel(str(excel_path))
-            
+        if yaml_path.exists():
+            prices = load_prices(str(yaml_path))
             assert isinstance(prices, dict)
             assert len(prices) > 0
-            
-            # Vérifier structure d'une carte
-            first_card = next(iter(prices.values()))
-            assert 'name' in first_card
-            assert 'price' in first_card
-            
-            print(f"✅ Chargé {len(prices)} cartes depuis Excel réel")
-        else:
-            pytest.skip("Fichier Excel réel non trouvé")
-    
-    def test_load_prices_with_real_files(self):
-        """Test load_prices() avec les vrais fichiers"""
-        yaml_path = Path("models/cards_database.yaml")
-        excel_path = Path("excel/cards_info.xlsx")
-        
-        prices = load_prices(str(yaml_path), str(excel_path))
-        
-        # Devrait charger quelque chose si au moins un fichier existe
-        if yaml_path.exists() or excel_path.exists():
-            assert isinstance(prices, dict)
             print(f"✅ load_prices() a chargé {len(prices)} cartes")
         else:
-            assert prices == {}
+            pytest.skip("Fichier YAML réel non trouvé")
 
 
 class TestYAMLPerformance:
-    """Tests de performance YAML vs Excel"""
+    """Tests de performance YAML"""
     
     def test_yaml_loading_speed(self, temp_yaml_file):
         """Mesurer vitesse de chargement YAML"""

@@ -422,17 +422,16 @@ def create_layout_group(images, group_index, card_dict, class_map, merged_mappin
 
 # ----- Fonction principale -----
 def main():
-    # Détection auto YAML/Excel
+    # Chargement depuis YAML uniquement
+    import os
     yaml_path = "models/cards_database.yaml"
-    excel_path = "excel/cards_info.xlsx"
     
-    if os.path.exists(yaml_path):
-        card_dict, class_map = load_card_data(yaml_path)
-    elif os.path.exists(excel_path):
-        card_dict, class_map = load_card_data(excel_path)
-    else:
-        print("❌ Aucun fichier de cartes trouvé (ni YAML ni Excel)")
+    if not os.path.exists(yaml_path):
+        print(f"❌ Fichier YAML non trouvé: {yaml_path}")
+        print("   Créez-le avec: scripts\\run_script.bat init_prices_simple")
         return
+    
+    card_dict, class_map = load_card_data(yaml_path)
     
     # Utilisation directe de class_map sans fusion des noms
     # Chaque numéro de carte a son propre ID unique (252 IDs au total)

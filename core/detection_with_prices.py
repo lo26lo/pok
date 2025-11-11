@@ -26,14 +26,14 @@ from core.card_mapping import get_card_id_from_class_name
 class PriceDetector:
     """Détecteur YOLO avec affichage des prix"""
     
-    def __init__(self, model_path: str, excel_path: str = "excel/cards_info.xlsx", 
+    def __init__(self, model_path: str, yaml_path: str = "models/cards_database.yaml", 
                  data_yaml_path: str = "output/dataset/data.yaml"):
         """
         Initialise le détecteur
         
         Args:
             model_path: Chemin vers le modèle YOLO (.pt)
-            excel_path: Chemin vers le fichier Excel avec prix
+            yaml_path: Chemin vers la base de données YAML des cartes
             data_yaml_path: Chemin vers data.yaml pour les noms de classes
         """
         safe_print(f"🔧 Initialisation du détecteur...")
@@ -59,8 +59,8 @@ class PriceDetector:
         else:
             safe_print(f"⚠️ data.yaml non trouvé: {data_yaml_path}")
         
-        # Charger les prix (détection auto YAML/Excel)
-        self.prices = load_prices()
+        # Charger les prix depuis YAML
+        self.prices = load_prices(yaml_path)
         safe_print(f"✅ {len(self.prices)} prix chargés")
         
     def get_card_info(self, class_id: int) -> tuple:
@@ -256,8 +256,8 @@ def main():
                        help='Source: 0 pour webcam, chemin vers image/video')
     parser.add_argument('--model', type=str, default='runs/detect/train/weights/best.pt',
                        help='Chemin vers le modèle YOLO (.pt)')
-    parser.add_argument('--excel', type=str, default='excel/cards_info.xlsx',
-                       help='Chemin vers le fichier Excel avec prix')
+    parser.add_argument('--yaml', type=str, default='models/cards_database.yaml',
+                       help='Chemin vers la base de données YAML des cartes')
     parser.add_argument('--data-yaml', type=str, default='output/dataset/data.yaml',
                        help='Chemin vers data.yaml')
     parser.add_argument('--conf', type=float, default=0.5,
@@ -269,7 +269,7 @@ def main():
     
     try:
         # Initialiser le détecteur
-        detector = PriceDetector(args.model, args.excel, args.data_yaml)
+        detector = PriceDetector(args.model, args.yaml, args.data_yaml)
         
         # Déterminer le type de source
         source_path = Path(args.source)

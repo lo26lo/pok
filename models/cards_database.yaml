@@ -1,102 +1,2528 @@
-# ⚠️ IMPORTANT: Ce fichier remplace excel/cards_info.xlsx
-# Structure: Base de données des cartes Pokémon pour YOLO + Prix
-# Les bounding boxes sont générées dynamiquement (pas stockées ici)
-
-# Métadonnées
 metadata:
-  version: "1.0"
-  format: "YOLO-compatible card database"
-  last_updated: "2025-11-11"
-  source: "TCGdex API"
-  total_cards: 8
-  comment: "Bounding boxes are generated dynamically during mosaic/augmentation"
-
-# Base de données des cartes
+  version: '1.0'
+  format: YOLO-compatible card database
+  last_updated: '2025-11-11'
+  source: TCGdex API - Surging Sparks
+  total_cards: 252
+  comment: Bounding boxes are generated dynamically
 cards:
+  sv08_001:
+    name: Exeggcute
+    set: Surging Sparks
+    set_full: 001/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_002:
+    name: Exeggcute
+    set: Surging Sparks
+    set_full: 002/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_003:
+    name: Exeggutor
+    set: Surging Sparks
+    set_full: 003/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_004:
+    name: Durant ex
+    set: Surging Sparks
+    set_full: 004/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_005:
+    name: Scatterbug
+    set: Surging Sparks
+    set_full: 005/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_006:
+    name: Spewpa
+    set: Surging Sparks
+    set_full: 006/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_007:
+    name: Vivillon
+    set: Surging Sparks
+    set_full: 007/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_008:
+    name: Morelull
+    set: Surging Sparks
+    set_full: 008/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_009:
+    name: Shiinotic
+    set: Surging Sparks
+    set_full: 009/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_010:
+    name: Dhelmise
+    set: Surging Sparks
+    set_full: 010/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_011:
+    name: Zarude
+    set: Surging Sparks
+    set_full: 011/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_012:
+    name: Capsakid
+    set: Surging Sparks
+    set_full: 012/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_013:
+    name: Rellor
+    set: Surging Sparks
+    set_full: 013/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_014:
+    name: Rabsca
+    set: Surging Sparks
+    set_full: 014/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_015:
+    name: Wo-Chien
+    set: Surging Sparks
+    set_full: 015/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_016:
+    name: Vulpix
+    set: Surging Sparks
+    set_full: 016/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_017:
+    name: Ninetales
+    set: Surging Sparks
+    set_full: 017/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_018:
+    name: Paldean Tauros
+    set: Surging Sparks
+    set_full: 018/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
   sv08_019:
-    name: "Ho-Oh"
-    set: "Surging Sparks"
-    set_full: "019/191"
-    type: "Pokemon"
-    rarity: "Common"
+    name: Ho-Oh
+    set: Surging Sparks
+    set_full: 019/191
+    type: Pokemon
+    rarity: Common
     price: null
     price_max: null
-    price_source: ""
-    last_updated: "2025-11-11"
-  
+    price_source: ''
+    last_updated: '2025-11-11'
   sv08_020:
-    name: "Castform"
-    set: "Surging Sparks"
-    set_full: "020/191"
-    type: "Pokemon"
-    rarity: "Common"
+    name: Castform Sunny Form
+    set: Surging Sparks
+    set_full: 020/191
+    type: Pokemon
+    rarity: Common
     price: null
     price_max: null
-    price_source: ""
-    last_updated: "2025-11-11"
-  
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_021:
+    name: Victini
+    set: Surging Sparks
+    set_full: 021/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_022:
+    name: Pansear
+    set: Surging Sparks
+    set_full: 022/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_023:
+    name: Simisear
+    set: Surging Sparks
+    set_full: 023/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_024:
+    name: Larvesta
+    set: Surging Sparks
+    set_full: 024/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_025:
+    name: Volcarona
+    set: Surging Sparks
+    set_full: 025/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
   sv08_026:
-    name: "Oricorio"
-    set: "Surging Sparks"
-    set_full: "026/191"
-    type: "Pokemon"
-    rarity: "Common"
+    name: Oricorio
+    set: Surging Sparks
+    set_full: 026/191
+    type: Pokemon
+    rarity: Common
     price: null
     price_max: null
-    price_source: ""
-    last_updated: "2025-11-11"
-  
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_027:
+    name: Sizzlipede
+    set: Surging Sparks
+    set_full: 027/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_028:
+    name: Centiskorch
+    set: Surging Sparks
+    set_full: 028/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_029:
+    name: Fuecoco
+    set: Surging Sparks
+    set_full: 029/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_030:
+    name: Crocalor
+    set: Surging Sparks
+    set_full: 030/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_031:
+    name: Skeledirge
+    set: Surging Sparks
+    set_full: 031/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_032:
+    name: Charcadet
+    set: Surging Sparks
+    set_full: 032/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_033:
+    name: Charcadet
+    set: Surging Sparks
+    set_full: 033/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_034:
+    name: Armarouge
+    set: Surging Sparks
+    set_full: 034/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_035:
+    name: Ceruledge
+    set: Surging Sparks
+    set_full: 035/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_036:
+    name: Ceruledge ex
+    set: Surging Sparks
+    set_full: 036/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_037:
+    name: Scovillain ex
+    set: Surging Sparks
+    set_full: 037/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_038:
+    name: Gouging Fire
+    set: Surging Sparks
+    set_full: 038/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_039:
+    name: Paldean Tauros
+    set: Surging Sparks
+    set_full: 039/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_040:
+    name: Mantine
+    set: Surging Sparks
+    set_full: 040/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_041:
+    name: Feebas
+    set: Surging Sparks
+    set_full: 041/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_042:
+    name: Milotic ex
+    set: Surging Sparks
+    set_full: 042/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_043:
+    name: Spheal
+    set: Surging Sparks
+    set_full: 043/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_044:
+    name: Sealeo
+    set: Surging Sparks
+    set_full: 044/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_045:
+    name: Walrein
+    set: Surging Sparks
+    set_full: 045/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
   sv08_046:
-    name: "Spheal"
-    set: "Surging Sparks"
-    set_full: "046/191"
-    type: "Pokemon"
-    rarity: "Common"
+    name: Shellos
+    set: Surging Sparks
+    set_full: 046/191
+    type: Pokemon
+    rarity: Common
     price: null
     price_max: null
-    price_source: ""
-    last_updated: "2025-11-11"
-  
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_047:
+    name: Cryogonal
+    set: Surging Sparks
+    set_full: 047/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_048:
+    name: Black Kyurem ex
+    set: Surging Sparks
+    set_full: 048/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_049:
+    name: Bruxish
+    set: Surging Sparks
+    set_full: 049/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_050:
+    name: Quaxly
+    set: Surging Sparks
+    set_full: 050/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
   sv08_051:
-    name: "Quaxly"
-    set: "Surging Sparks"
-    set_full: "051/191"
-    type: "Pokemon"
-    rarity: "Common"
+    name: Quaxwell
+    set: Surging Sparks
+    set_full: 051/191
+    type: Pokemon
+    rarity: Common
     price: null
     price_max: null
-    price_source: ""
-    last_updated: "2025-11-11"
-  
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_052:
+    name: Quaquaval
+    set: Surging Sparks
+    set_full: 052/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_053:
+    name: Cetoddle
+    set: Surging Sparks
+    set_full: 053/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_054:
+    name: Cetitan
+    set: Surging Sparks
+    set_full: 054/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_055:
+    name: Iron Bundle
+    set: Surging Sparks
+    set_full: 055/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_056:
+    name: Chien-Pao
+    set: Surging Sparks
+    set_full: 056/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_057:
+    name: Pikachu ex
+    set: Surging Sparks
+    set_full: 057/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_058:
+    name: Magnemite
+    set: Surging Sparks
+    set_full: 058/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_059:
+    name: Magneton
+    set: Surging Sparks
+    set_full: 059/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_060:
+    name: Magnezone
+    set: Surging Sparks
+    set_full: 060/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_061:
+    name: Rotom
+    set: Surging Sparks
+    set_full: 061/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_062:
+    name: Blitzle
+    set: Surging Sparks
+    set_full: 062/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_063:
+    name: Zebstrika
+    set: Surging Sparks
+    set_full: 063/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_064:
+    name: Stunfisk
+    set: Surging Sparks
+    set_full: 064/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_065:
+    name: Tapu Koko
+    set: Surging Sparks
+    set_full: 065/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_066:
+    name: Wattrel
+    set: Surging Sparks
+    set_full: 066/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_067:
+    name: Kilowattrel
+    set: Surging Sparks
+    set_full: 067/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_068:
+    name: Kilowattrel ex
+    set: Surging Sparks
+    set_full: 068/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_069:
+    name: Miraidon
+    set: Surging Sparks
+    set_full: 069/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_070:
+    name: Togepi
+    set: Surging Sparks
+    set_full: 070/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_071:
+    name: Togetic
+    set: Surging Sparks
+    set_full: 071/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_072:
+    name: Togekiss
+    set: Surging Sparks
+    set_full: 072/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_073:
+    name: Marill
+    set: Surging Sparks
+    set_full: 073/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_074:
+    name: Azumarill
+    set: Surging Sparks
+    set_full: 074/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_075:
+    name: Smoochum
+    set: Surging Sparks
+    set_full: 075/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_076:
+    name: Latias ex
+    set: Surging Sparks
+    set_full: 076/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_077:
+    name: Latios
+    set: Surging Sparks
+    set_full: 077/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_078:
+    name: Uxie
+    set: Surging Sparks
+    set_full: 078/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_079:
+    name: Mesprit
+    set: Surging Sparks
+    set_full: 079/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_080:
+    name: Azelf
+    set: Surging Sparks
+    set_full: 080/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_081:
+    name: Sigilyph
+    set: Surging Sparks
+    set_full: 081/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_082:
+    name: Yamask
+    set: Surging Sparks
+    set_full: 082/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_083:
+    name: Cofagrigus
+    set: Surging Sparks
+    set_full: 083/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_084:
+    name: Espurr
+    set: Surging Sparks
+    set_full: 084/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_085:
+    name: Meowstic
+    set: Surging Sparks
+    set_full: 085/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_086:
+    name: Sylveon ex
+    set: Surging Sparks
+    set_full: 086/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_087:
+    name: Dedenne
+    set: Surging Sparks
+    set_full: 087/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_088:
+    name: Xerneas
+    set: Surging Sparks
+    set_full: 088/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_089:
+    name: Oricorio
+    set: Surging Sparks
+    set_full: 089/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_090:
+    name: Sandygast
+    set: Surging Sparks
+    set_full: 090/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_091:
+    name: Palossand ex
+    set: Surging Sparks
+    set_full: 091/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_092:
+    name: Tapu Lele
+    set: Surging Sparks
+    set_full: 092/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_093:
+    name: Indeedee
+    set: Surging Sparks
+    set_full: 093/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_094:
+    name: Flittle
+    set: Surging Sparks
+    set_full: 094/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_095:
+    name: Espathra
+    set: Surging Sparks
+    set_full: 095/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_096:
+    name: Flutter Mane
+    set: Surging Sparks
+    set_full: 096/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_097:
+    name: Gimmighoul
+    set: Surging Sparks
+    set_full: 097/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_098:
+    name: Mankey
+    set: Surging Sparks
+    set_full: 098/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_099:
+    name: Primeape
+    set: Surging Sparks
+    set_full: 099/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_100:
+    name: Annihilape
+    set: Surging Sparks
+    set_full: 100/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_101:
+    name: Paldean Tauros
+    set: Surging Sparks
+    set_full: 101/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_102:
+    name: Phanpy
+    set: Surging Sparks
+    set_full: 102/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_103:
+    name: Donphan
+    set: Surging Sparks
+    set_full: 103/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_104:
+    name: Trapinch
+    set: Surging Sparks
+    set_full: 104/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_105:
+    name: Vibrava
+    set: Surging Sparks
+    set_full: 105/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_106:
+    name: Flygon ex
+    set: Surging Sparks
+    set_full: 106/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_107:
+    name: Gastrodon
+    set: Surging Sparks
+    set_full: 107/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_108:
+    name: Drilbur
+    set: Surging Sparks
+    set_full: 108/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_109:
+    name: Excadrill
+    set: Surging Sparks
+    set_full: 109/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_110:
+    name: Landorus
+    set: Surging Sparks
+    set_full: 110/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_111:
+    name: Passimian
+    set: Surging Sparks
+    set_full: 111/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_112:
+    name: Clobbopus
+    set: Surging Sparks
+    set_full: 112/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_113:
+    name: Grapploct
+    set: Surging Sparks
+    set_full: 113/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_114:
+    name: Glimmet
+    set: Surging Sparks
+    set_full: 114/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_115:
+    name: Glimmora
+    set: Surging Sparks
+    set_full: 115/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_116:
+    name: Koraidon
+    set: Surging Sparks
+    set_full: 116/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_117:
+    name: Deino
+    set: Surging Sparks
+    set_full: 117/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_118:
+    name: Zweilous
+    set: Surging Sparks
+    set_full: 118/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_119:
+    name: Hydreigon ex
+    set: Surging Sparks
+    set_full: 119/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_120:
+    name: Shroodle
+    set: Surging Sparks
+    set_full: 120/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_121:
+    name: Grafaiai
+    set: Surging Sparks
+    set_full: 121/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_122:
+    name: Alolan Diglett
+    set: Surging Sparks
+    set_full: 122/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_123:
+    name: Alolan Dugtrio
+    set: Surging Sparks
+    set_full: 123/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_124:
+    name: Skarmory
+    set: Surging Sparks
+    set_full: 124/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_125:
+    name: Registeel
+    set: Surging Sparks
+    set_full: 125/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
   sv08_126:
-    name: "Bronzor"
-    set: "Surging Sparks"
-    set_full: "126/191"
-    type: "Pokemon"
-    rarity: "Common"
+    name: Bronzor
+    set: Surging Sparks
+    set_full: 126/191
+    type: Pokemon
+    rarity: Common
     price: null
     price_max: null
-    price_source: ""
-    last_updated: "2025-11-11"
-  
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_127:
+    name: Bronzong
+    set: Surging Sparks
+    set_full: 127/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_128:
+    name: Klefki
+    set: Surging Sparks
+    set_full: 128/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_129:
+    name: Duraludon
+    set: Surging Sparks
+    set_full: 129/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_130:
+    name: Archaludon ex
+    set: Surging Sparks
+    set_full: 130/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_131:
+    name: Gholdengo
+    set: Surging Sparks
+    set_full: 131/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
   sv08_132:
-    name: "Iron Crown"
-    set: "Surging Sparks"
-    set_full: "132/191"
-    type: "Pokemon"
-    rarity: "Rare"
+    name: Iron Crown
+    set: Surging Sparks
+    set_full: 132/191
+    type: Pokemon
+    rarity: Common
     price: null
     price_max: null
-    price_source: ""
-    last_updated: "2025-11-11"
-  
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_133:
+    name: Alolan Exeggutor ex
+    set: Surging Sparks
+    set_full: 133/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_134:
+    name: Altaria
+    set: Surging Sparks
+    set_full: 134/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_135:
+    name: Dialga
+    set: Surging Sparks
+    set_full: 135/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_136:
+    name: Palkia
+    set: Surging Sparks
+    set_full: 136/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_137:
+    name: Turtonator
+    set: Surging Sparks
+    set_full: 137/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_138:
+    name: Applin
+    set: Surging Sparks
+    set_full: 138/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_139:
+    name: Flapple
+    set: Surging Sparks
+    set_full: 139/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_140:
+    name: Appletun
+    set: Surging Sparks
+    set_full: 140/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_141:
+    name: Eternatus
+    set: Surging Sparks
+    set_full: 141/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_142:
+    name: Tatsugiri ex
+    set: Surging Sparks
+    set_full: 142/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_143:
+    name: Eevee
+    set: Surging Sparks
+    set_full: 143/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_144:
+    name: Snorlax
+    set: Surging Sparks
+    set_full: 144/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_145:
+    name: Slakoth
+    set: Surging Sparks
+    set_full: 145/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_146:
+    name: Vigoroth
+    set: Surging Sparks
+    set_full: 146/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_147:
+    name: Slaking ex
+    set: Surging Sparks
+    set_full: 147/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_148:
+    name: Swablu
+    set: Surging Sparks
+    set_full: 148/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_149:
+    name: Zangoose
+    set: Surging Sparks
+    set_full: 149/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_150:
+    name: Kecleon
+    set: Surging Sparks
+    set_full: 150/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_151:
+    name: Bouffalant
+    set: Surging Sparks
+    set_full: 151/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
   sv08_152:
-    name: "Braviary"
-    set: "Surging Sparks"
-    set_full: "152/191"
-    type: "Pokemon"
-    rarity: "Uncommon"
+    name: Rufflet
+    set: Surging Sparks
+    set_full: 152/191
+    type: Pokemon
+    rarity: Common
     price: null
     price_max: null
-    price_source: ""
-    last_updated: "2025-11-11"
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_153:
+    name: Braviary
+    set: Surging Sparks
+    set_full: 153/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_154:
+    name: Helioptile
+    set: Surging Sparks
+    set_full: 154/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_155:
+    name: Heliolisk
+    set: Surging Sparks
+    set_full: 155/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_156:
+    name: Oranguru
+    set: Surging Sparks
+    set_full: 156/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_157:
+    name: Tandemaus
+    set: Surging Sparks
+    set_full: 157/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_158:
+    name: Maushold
+    set: Surging Sparks
+    set_full: 158/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_159:
+    name: Cyclizar ex
+    set: Surging Sparks
+    set_full: 159/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_160:
+    name: Flamigo ex
+    set: Surging Sparks
+    set_full: 160/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_161:
+    name: Terapagos
+    set: Surging Sparks
+    set_full: 161/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_162:
+    name: Amulet of Hope
+    set: Surging Sparks
+    set_full: 162/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_163:
+    name: Babiri Berry
+    set: Surging Sparks
+    set_full: 163/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_164:
+    name: Brilliant Blender
+    set: Surging Sparks
+    set_full: 164/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_165:
+    name: Call Bell
+    set: Surging Sparks
+    set_full: 165/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_166:
+    name: Chill Teaser Toy
+    set: Surging Sparks
+    set_full: 166/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_167:
+    name: Clemont's Quick Wit
+    set: Surging Sparks
+    set_full: 167/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_168:
+    name: Colbur Berry
+    set: Surging Sparks
+    set_full: 168/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_169:
+    name: Counter Gain
+    set: Surging Sparks
+    set_full: 169/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_170:
+    name: Cyrano
+    set: Surging Sparks
+    set_full: 170/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_171:
+    name: Deduction Kit
+    set: Surging Sparks
+    set_full: 171/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_172:
+    name: Dragon Elixir
+    set: Surging Sparks
+    set_full: 172/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_173:
+    name: Drasna
+    set: Surging Sparks
+    set_full: 173/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_174:
+    name: Drayton
+    set: Surging Sparks
+    set_full: 174/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_175:
+    name: Dusk Ball
+    set: Surging Sparks
+    set_full: 175/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_176:
+    name: Energy Search Pro
+    set: Surging Sparks
+    set_full: 176/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_177:
+    name: Gravity Mountain
+    set: Surging Sparks
+    set_full: 177/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_178:
+    name: Jasmine's Gaze
+    set: Surging Sparks
+    set_full: 178/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_179:
+    name: Lisia's Appeal
+    set: Surging Sparks
+    set_full: 179/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_180:
+    name: Lively Stadium
+    set: Surging Sparks
+    set_full: 180/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_181:
+    name: Meddling Memo
+    set: Surging Sparks
+    set_full: 181/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_182:
+    name: Megaton Blower
+    set: Surging Sparks
+    set_full: 182/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_183:
+    name: Miracle Headset
+    set: Surging Sparks
+    set_full: 183/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_184:
+    name: Passho Berry
+    set: Surging Sparks
+    set_full: 184/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_185:
+    name: Precious Trolley
+    set: Surging Sparks
+    set_full: 185/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_186:
+    name: Scramble Switch
+    set: Surging Sparks
+    set_full: 186/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_187:
+    name: Surfer
+    set: Surging Sparks
+    set_full: 187/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_188:
+    name: 'Technical Machine: Fluorite'
+    set: Surging Sparks
+    set_full: 188/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_189:
+    name: Tera Orb
+    set: Surging Sparks
+    set_full: 189/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_190:
+    name: Tyme
+    set: Surging Sparks
+    set_full: 190/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_191:
+    name: Enriching Energy
+    set: Surging Sparks
+    set_full: 191/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_192:
+    name: Exeggcute
+    set: Surging Sparks
+    set_full: 192/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_193:
+    name: Vivillon
+    set: Surging Sparks
+    set_full: 193/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_194:
+    name: Shiinotic
+    set: Surging Sparks
+    set_full: 194/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_195:
+    name: Castform Sunny Form
+    set: Surging Sparks
+    set_full: 195/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_196:
+    name: Larvesta
+    set: Surging Sparks
+    set_full: 196/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_197:
+    name: Ceruledge
+    set: Surging Sparks
+    set_full: 197/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_198:
+    name: Feebas
+    set: Surging Sparks
+    set_full: 198/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_199:
+    name: Spheal
+    set: Surging Sparks
+    set_full: 199/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_200:
+    name: Bruxish
+    set: Surging Sparks
+    set_full: 200/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_201:
+    name: Cetitan
+    set: Surging Sparks
+    set_full: 201/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_202:
+    name: Stunfisk
+    set: Surging Sparks
+    set_full: 202/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_203:
+    name: Latios
+    set: Surging Sparks
+    set_full: 203/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_204:
+    name: Mesprit
+    set: Surging Sparks
+    set_full: 204/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_205:
+    name: Phanpy
+    set: Surging Sparks
+    set_full: 205/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_206:
+    name: Vibrava
+    set: Surging Sparks
+    set_full: 206/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_207:
+    name: Clobbopus
+    set: Surging Sparks
+    set_full: 207/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_208:
+    name: Alolan Dugtrio
+    set: Surging Sparks
+    set_full: 208/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_209:
+    name: Skarmory
+    set: Surging Sparks
+    set_full: 209/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_210:
+    name: Flapple
+    set: Surging Sparks
+    set_full: 210/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_211:
+    name: Appletun
+    set: Surging Sparks
+    set_full: 211/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_212:
+    name: Slakoth
+    set: Surging Sparks
+    set_full: 212/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_213:
+    name: Kecleon
+    set: Surging Sparks
+    set_full: 213/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_214:
+    name: Braviary
+    set: Surging Sparks
+    set_full: 214/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_215:
+    name: Durant ex
+    set: Surging Sparks
+    set_full: 215/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_216:
+    name: Scovillain ex
+    set: Surging Sparks
+    set_full: 216/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_217:
+    name: Milotic ex
+    set: Surging Sparks
+    set_full: 217/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_218:
+    name: Black Kyurem ex
+    set: Surging Sparks
+    set_full: 218/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_219:
+    name: Pikachu ex
+    set: Surging Sparks
+    set_full: 219/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_220:
+    name: Latias ex
+    set: Surging Sparks
+    set_full: 220/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_221:
+    name: Palossand ex
+    set: Surging Sparks
+    set_full: 221/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_222:
+    name: Flygon ex
+    set: Surging Sparks
+    set_full: 222/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_223:
+    name: Hydreigon ex
+    set: Surging Sparks
+    set_full: 223/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_224:
+    name: Archaludon ex
+    set: Surging Sparks
+    set_full: 224/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_225:
+    name: Alolan Exeggutor ex
+    set: Surging Sparks
+    set_full: 225/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_226:
+    name: Tatsugiri ex
+    set: Surging Sparks
+    set_full: 226/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_227:
+    name: Slaking ex
+    set: Surging Sparks
+    set_full: 227/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_228:
+    name: Cyclizar ex
+    set: Surging Sparks
+    set_full: 228/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_229:
+    name: Clemont's Quick Wit
+    set: Surging Sparks
+    set_full: 229/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_230:
+    name: Cyrano
+    set: Surging Sparks
+    set_full: 230/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_231:
+    name: Drasna
+    set: Surging Sparks
+    set_full: 231/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_232:
+    name: Drayton
+    set: Surging Sparks
+    set_full: 232/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_233:
+    name: Jasmine's Gaze
+    set: Surging Sparks
+    set_full: 233/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_234:
+    name: Lisia's Appeal
+    set: Surging Sparks
+    set_full: 234/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_235:
+    name: Surfer
+    set: Surging Sparks
+    set_full: 235/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_236:
+    name: Durant ex
+    set: Surging Sparks
+    set_full: 236/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_237:
+    name: Milotic ex
+    set: Surging Sparks
+    set_full: 237/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_238:
+    name: Pikachu ex
+    set: Surging Sparks
+    set_full: 238/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_239:
+    name: Latias ex
+    set: Surging Sparks
+    set_full: 239/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_240:
+    name: Hydreigon ex
+    set: Surging Sparks
+    set_full: 240/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_241:
+    name: Archaludon ex
+    set: Surging Sparks
+    set_full: 241/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_242:
+    name: Alolan Exeggutor ex
+    set: Surging Sparks
+    set_full: 242/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_243:
+    name: Clemont's Quick Wit
+    set: Surging Sparks
+    set_full: 243/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_244:
+    name: Drayton
+    set: Surging Sparks
+    set_full: 244/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_245:
+    name: Jasmine's Gaze
+    set: Surging Sparks
+    set_full: 245/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_246:
+    name: Lisia's Appeal
+    set: Surging Sparks
+    set_full: 246/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_247:
+    name: Pikachu ex
+    set: Surging Sparks
+    set_full: 247/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_248:
+    name: Alolan Exeggutor ex
+    set: Surging Sparks
+    set_full: 248/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_249:
+    name: Counter Gain
+    set: Surging Sparks
+    set_full: 249/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_250:
+    name: Gravity Mountain
+    set: Surging Sparks
+    set_full: 250/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_251:
+    name: Night Stretcher
+    set: Surging Sparks
+    set_full: 251/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
+  sv08_252:
+    name: Jet Energy
+    set: Surging Sparks
+    set_full: 252/191
+    type: Pokemon
+    rarity: Common
+    price: null
+    price_max: null
+    price_source: ''
+    last_updated: '2025-11-11'
