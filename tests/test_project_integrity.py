@@ -15,7 +15,7 @@ def test_core_imports():
     print("\n🧪 Test des imports core...")
     try:
         from core.augmentation import Augmenter
-        from core.mosaic import MosaicGenerator
+        from core.mosaic_optimized import MosaicGenerator
         from core.tcgdex_api import TCGdexAPI
         from core.card_mapping import get_card_id_from_class_name
         from core.detection_with_prices import PriceDetector

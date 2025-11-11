@@ -80,9 +80,9 @@ from core.image_downloader import ImageDownloader, LANGUAGES, POPULAR_SETS
 ```python
 # Appelle/Importe :
 from core.augmentation import augment_images_enhanced
-from core.holographic_augmenter import HolographicAugmenter
-from core.mosaic import generate_mosaics
-from core.auto_balancer import balance_dataset_smart
+from core.holographic_augmenter_optimized import HolographicAugmenterOptimized
+from core.mosaic_optimized import generate_mosaics
+from core.auto_balancer_optimized import balance_dataset_smart
 from core.dataset_exporter import export_to_yolo_format
 from ultralytics import YOLO
 ```

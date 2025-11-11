@@ -199,11 +199,11 @@ python core/image_downloader.py \
 
 **Usage**:
 ```python
-from core.holographic_augmenter import HolographicAugmenter
+from core.holographic_augmenter_optimized import HolographicAugmenterOptimized
 
-augmenter = HolographicAugmenter(
-    intensity=0.7,
-    variations=5
+augmenter = HolographicAugmenterOptimized(
+    use_gpu=True,  # GPU auto-detected
+    num_workers=4  # Multi-threading
 )
 
 augmenter.process_directory(
@@ -340,9 +340,12 @@ python core/mosaic.py \
 
 **Usage**:
 ```python
-from core.auto_balancer import AutoBalancer
+from core.auto_balancer_optimized import AutoBalancer
 
-balancer = AutoBalancer(target_ratio=2.0)
+balancer = AutoBalancer(
+    target_ratio=2.0,
+    use_gpu=True  # GPU-accelerated operations
+)
 balancer.balance_dataset("output/yolov8/")
 ```
 
