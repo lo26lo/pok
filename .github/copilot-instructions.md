@@ -4,6 +4,9 @@
 **Dernière mise à jour** : 11 novembre 2025  
 **Version** : 2.1
 
+> **ℹ️ Note** : Ce fichier contient les instructions **détaillées** pour GitHub Copilot.  
+> Pour un résumé rapide destiné à tous les agents IA, consultez `.agent.md` à la racine.
+
 ---
 
 ## 🎯 Règles Générales
@@ -66,8 +69,8 @@
 ### 1. Structure du Projet - NE JAMAIS MODIFIER SANS CONFIRMATION
 
 **Racine propre obligatoire** :
-- ✅ Seuls fichiers autorisés à la racine : `START.bat`, `INSTALL.bat`, `README.md`, `.gitignore`, `GUI_v3.1_modern.py`
-- ❌ **JAMAIS** créer de nouveaux `.bat`, `.md`, `.py` à la racine
+- ✅ Seuls fichiers autorisés à la racine : `START.bat`, `INSTALL.bat`, `README.md`, `.gitignore`, `.agent.md`, `GUI_v3.1_modern.py`
+- ❌ **JAMAIS** créer de nouveaux `.bat`, `.md`, `.py` à la racine (sauf `.agent.md` pour instructions IA)
 - ❌ **JAMAIS** déplacer des fichiers depuis `config/`, `models/`, `docs/`, `scripts/` vers la racine
 
 **Organisation stricte** :
