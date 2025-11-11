@@ -300,6 +300,86 @@ def load_prices_from_excel(excel_path: str = "excel/cards_info.xlsx") -> Dict[st
         safe_print(f"❌ Erreur lors du chargement de {excel_path}: {e}")
         return {}
 
+
+def load_prices_from_yaml(yaml_path: str = "models/cards_database.yaml") -> Dict[str, Dict[str, any]]:
+    """
+    Charge les informations de prix depuis le fichier YAML
+    
+    Args:
+        yaml_path: Chemin vers le fichier YAML
+        
+    Returns:
+        Dictionnaire {card_id: {'name': str, 'price': float, 'price_max': float}}
+        
+    Example:
+        >>> prices = load_prices_from_yaml()
+        >>> print(prices['sv08_019'])
+        {'name': 'Ho-Oh', 'price': 0.15, 'price_max': 0.25}
+    """
+    if not os.path.exists(yaml_path):
+        safe_print(f"⚠️ Fichier YAML non trouvé: {yaml_path}")
+        return {}
+    
+    try:
+        import yaml
+        
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+        
+        prices_dict = {}
+        
+        # Vérifier que la structure est valide
+        if not data or 'cards' not in data:
+            safe_print(f"⚠️ Structure YAML invalide dans {yaml_path}")
+            return {}
+        
+        # Parcourir les cartes
+        for card_id, card_info in data['cards'].items():
+            name = card_info.get('name', 'Unknown')
+            prix = card_info.get('price')
+            prix_max = card_info.get('price_max')
+            
+            # Stocker dans le dictionnaire
+            prices_dict[card_id] = {
+                'name': name,
+                'price': prix,
+                'price_max': prix_max
+            }
+        
+        safe_print(f"✅ Chargé {len(prices_dict)} cartes avec prix depuis {yaml_path}")
+        return prices_dict
+        
+    except Exception as e:
+        safe_print(f"❌ Erreur lors du chargement de {yaml_path}: {e}")
+        return {}
+
+
+def load_prices(yaml_path: str = "models/cards_database.yaml", 
+                excel_path: str = "excel/cards_info.xlsx") -> Dict[str, Dict[str, any]]:
+    """
+    Charge les prix depuis YAML (prioritaire) ou Excel (fallback)
+    
+    Args:
+        yaml_path: Chemin vers le fichier YAML
+        excel_path: Chemin vers le fichier Excel (fallback)
+        
+    Returns:
+        Dictionnaire {card_id: {'name': str, 'price': float, 'price_max': float}}
+    """
+    # Priorité 1: YAML
+    if os.path.exists(yaml_path):
+        safe_print(f"📄 Utilisation de {yaml_path}")
+        return load_prices_from_yaml(yaml_path)
+    
+    # Fallback: Excel
+    if os.path.exists(excel_path):
+        safe_print(f"📊 Fallback vers {excel_path}")
+        return load_prices_from_excel(excel_path)
+    
+    safe_print("⚠️ Aucun fichier de prix trouvé (ni YAML ni Excel)")
+    return {}
+
+
 if __name__ == "__main__":
     # Tests basiques
     print("Test du module utilitaire...")

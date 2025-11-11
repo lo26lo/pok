@@ -1,10 +1,11 @@
 """
-Script simplifié pour mettre à jour UNIQUEMENT les prix des 8 cartes d'entraînement
-Format attendu dans data.yaml: sv08_019, sv08_020, etc.
+Script simplifié pour créer le YAML avec les 8 cartes d'entraînement + prix
+Format: models/cards_database.yaml
 """
 
-import pandas as pd
+import yaml
 from pathlib import Path
+from datetime import datetime
 import sys
 sys.path.append('.')
 
@@ -12,39 +13,58 @@ from core.tcgdex_api import TCGdexAPI
 
 # Définir manuellement les 8 cartes d'entraînement
 TRAINING_CARDS = {
-    'sv08-019': {'name': 'Exeggcute', 'set': 'Surging Sparks', 'number': '019'},
-    'sv08-020': {'name': 'Exeggutor', 'set': 'Surging Sparks', 'number': '020'},
-    'sv08-026': {'name': 'Scovillain ex', 'set': 'Surging Sparks', 'number': '026'},
-    'sv08-046': {'name': 'Milotic ex', 'set': 'Surging Sparks', 'number': '046'},
-    'sv08-051': {'name': 'Black Kyurem ex', 'set': 'Surging Sparks', 'number': '051'},
-    'sv08-126': {'name': 'Archaludon ex', 'set': 'Surging Sparks', 'number': '126'},
-    'sv08-132': {'name': 'Alolan Exeggutor ex', 'set': 'Surging Sparks', 'number': '132'},
-    'sv08-152': {'name': 'Cyrano', 'set': 'Surging Sparks', 'number': '152'},
+    'sv08_019': {'name': 'Exeggcute', 'set': 'Surging Sparks', 'number': '019'},
+    'sv08_020': {'name': 'Exeggutor', 'set': 'Surging Sparks', 'number': '020'},
+    'sv08_026': {'name': 'Scovillain ex', 'set': 'Surging Sparks', 'number': '026'},
+    'sv08_046': {'name': 'Milotic ex', 'set': 'Surging Sparks', 'number': '046'},
+    'sv08_051': {'name': 'Black Kyurem ex', 'set': 'Surging Sparks', 'number': '051'},
+    'sv08_126': {'name': 'Archaludon ex', 'set': 'Surging Sparks', 'number': '126'},
+    'sv08_132': {'name': 'Alolan Exeggutor ex', 'set': 'Surging Sparks', 'number': '132'},
+    'sv08_152': {'name': 'Cyrano', 'set': 'Surging Sparks', 'number': '152'},
 }
 
-def init_excel_with_prices():
-    """Initialise l'Excel avec les 8 cartes d'entraînement + prix"""
+def init_yaml_with_prices():
+    """Initialise le YAML avec les 8 cartes d'entraînement + prix"""
     
     print("📋 Cartes à ajouter:")
     for card_id, info in TRAINING_CARDS.items():
         print(f"   • {card_id}: {info['name']}")
     
-    # Créer DataFrame
-    df = pd.DataFrame({
-        'Name': [info['name'] for info in TRAINING_CARDS.values()],
-        'Set #': [f"sv08_{num}" for num in [info['number'] for info in TRAINING_CARDS.values()]],
-        'Prix': [None] * len(TRAINING_CARDS),
-        'Prix max': [None] * len(TRAINING_CARDS),
-        'SourcePrix': [''] * len(TRAINING_CARDS)
-    })
+    # Créer structure YAML
+    yaml_data = {
+        'metadata': {
+            'version': '1.0',
+            'format': 'YOLO-compatible card database',
+            'last_updated': datetime.now().strftime('%Y-%m-%d'),
+            'source': 'Training set (8 cards)',
+            'total_cards': len(TRAINING_CARDS),
+            'comment': 'Bounding boxes are generated dynamically during mosaic/augmentation'
+        },
+        'cards': {}
+    }
     
-    # Sauvegarder Excel
-    excel_path = Path("excel/cards_info.xlsx")
-    excel_path.parent.mkdir(exist_ok=True)
+    # Ajouter cartes
+    for card_id, info in TRAINING_CARDS.items():
+        yaml_data['cards'][card_id] = {
+            'name': info['name'],
+            'set': info['set'],
+            'set_full': f"{info['number']}/191",
+            'type': 'Pokemon',
+            'rarity': 'Common',
+            'price': None,
+            'price_max': None,
+            'price_source': '',
+            'last_updated': datetime.now().strftime('%Y-%m-%d')
+        }
     
-    print(f"\n💾 Sauvegarde dans {excel_path}...")
-    df.to_excel(excel_path, index=False, engine='openpyxl')
-    print("✅ Excel créé!")
+    # Sauvegarder YAML
+    yaml_path = Path("models/cards_database.yaml")
+    yaml_path.parent.mkdir(exist_ok=True)
+    
+    print(f"\n💾 Sauvegarde dans {yaml_path}...")
+    with open(yaml_path, 'w', encoding='utf-8') as f:
+        yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    print("✅ YAML créé!")
     
     # Mettre à jour les prix
     print("\n💰 Mise à jour des prix depuis TCGdex...")
@@ -67,9 +87,9 @@ def init_excel_with_prices():
             )
             
             if price is not None:
-                df.loc[idx-1, 'Prix'] = price
-                df.loc[idx-1, 'Prix max'] = price_max if price_max else price
-                df.loc[idx-1, 'SourcePrix'] = 'TCGdex'
+                yaml_data['cards'][card_id]['price'] = price
+                yaml_data['cards'][card_id]['price_max'] = price_max if price_max else price
+                yaml_data['cards'][card_id]['price_source'] = 'TCGdex'
                 print(f"✅ {price}€")
                 success_count += 1
             else:
@@ -78,27 +98,34 @@ def init_excel_with_prices():
         except Exception as e:
             print(f"❌ Erreur: {e}")
     
+    # Mettre à jour métadonnées
+    yaml_data['metadata']['last_updated'] = datetime.now().strftime('%Y-%m-%d')
+    
     # Sauvegarder avec prix
     print(f"\n💾 Sauvegarde des prix...")
-    df.to_excel(excel_path, index=False, engine='openpyxl')
+    with open(yaml_path, 'w', encoding='utf-8') as f:
+        yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
     
     print(f"\n✅ Terminé!")
     print(f"   📊 {success_count}/{len(TRAINING_CARDS)} cartes avec prix")
-    print(f"   💾 Fichier: {excel_path}")
+    print(f"   💾 Fichier: {yaml_path}")
     print(f"\n💡 Tu peux maintenant utiliser la détection avec prix!")
-
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("  INITIALISATION EXCEL - 8 CARTES D'ENTRAÎNEMENT")
+    print("  INITIALISATION YAML - 8 CARTES D'ENTRAÎNEMENT")
     print("=" * 60)
     print()
     
     try:
-        init_excel_with_prices()
+        init_yaml_with_prices()
     except Exception as e:
         print(f"\n❌ Erreur: {e}")
         import traceback
+        traceback.print_exc()
+    
+    print()
+    input("Appuyez sur Entrée pour quitter...")
         traceback.print_exc()
     
     print()

@@ -67,18 +67,50 @@ else:
 os.makedirs(AUG_IMAGES_DIR, exist_ok=True)
 os.makedirs(AUG_LABELS_DIR, exist_ok=True)
 
-def load_card_data(excel_path):
-    df = pd.read_excel(excel_path, usecols=["Set #", "Name"])
+def load_card_data(source_path):
+    """
+    Charge les données des cartes depuis YAML (prioritaire) ou Excel (fallback)
+    
+    Args:
+        source_path: Chemin vers le fichier (YAML ou Excel)
+        
+    Returns:
+        tuple: (card_dict, class_map)
+    """
     card_dict = {}
     class_map = {}
-    class_id = 1  # On commence à 1 (on convertira en 0-index pour YOLO)
-    for _, row in df.iterrows():
-        number = row["Set #"].split('/')[0].zfill(3)
-        name = row["Name"].replace(" ", "_")
-        if number not in card_dict:
-            card_dict[number] = name
-            class_map[number] = class_id
-            class_id += 1
+    
+    # Détection automatique du format
+    if source_path.endswith('.yaml') or source_path.endswith('.yml'):
+        # Charger depuis YAML
+        import yaml
+        
+        with open(source_path, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+        
+        class_id = 1
+        for card_id, card_info in data['cards'].items():
+            # Extraire le numéro (ex: sv08_019 -> 019)
+            number = card_id.split('_')[-1].zfill(3)
+            name = card_info['name'].replace(" ", "_")
+            
+            if number not in card_dict:
+                card_dict[number] = name
+                class_map[number] = class_id
+                class_id += 1
+    
+    else:
+        # Charger depuis Excel (legacy)
+        df = pd.read_excel(source_path, usecols=["Set #", "Name"])
+        class_id = 1
+        for _, row in df.iterrows():
+            number = row["Set #"].split('/')[0].zfill(3)
+            name = row["Name"].replace(" ", "_")
+            if number not in card_dict:
+                card_dict[number] = name
+                class_map[number] = class_id
+                class_id += 1
+    
     return card_dict, class_map
 
 def extract_card_number(filename):
@@ -167,7 +199,19 @@ seq = iaa.SomeOf((2, 5), [
 ], random_order=True)
 
 def main():
-    card_dict, class_map = load_card_data("excel/cards_info.xlsx")
+    # Détection auto YAML/Excel
+    import os
+    yaml_path = "models/cards_database.yaml"
+    excel_path = "excel/cards_info.xlsx"
+    
+    if os.path.exists(yaml_path):
+        card_dict, class_map = load_card_data(yaml_path)
+    elif os.path.exists(excel_path):
+        card_dict, class_map = load_card_data(excel_path)
+    else:
+        print("❌ Aucun fichier de cartes trouvé (ni YAML ni Excel)")
+        return
+    
     # Collecte des images de base depuis le répertoire "images"
     image_paths = []
     image_paths += glob(os.path.join(BASE_IMAGES_DIR, "*.jpg"))

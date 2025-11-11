@@ -19,7 +19,7 @@ import yaml
 
 # Ajouter le dossier parent au path pour importer utils
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from core.utils import load_prices_from_excel, safe_print
+from core.utils import load_prices, safe_print
 from core.card_mapping import get_card_id_from_class_name
 
 
@@ -59,9 +59,9 @@ class PriceDetector:
         else:
             safe_print(f"⚠️ data.yaml non trouvé: {data_yaml_path}")
         
-        # Charger les prix depuis Excel
-        self.prices = load_prices_from_excel(excel_path)
-        safe_print(f"✅ {len(self.prices)} prix chargés depuis Excel")
+        # Charger les prix (détection auto YAML/Excel)
+        self.prices = load_prices()
+        safe_print(f"✅ {len(self.prices)} prix chargés")
         
     def get_card_info(self, class_id: int) -> tuple:
         """

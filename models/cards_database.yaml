@@ -1,0 +1,102 @@
+# ⚠️ IMPORTANT: Ce fichier remplace excel/cards_info.xlsx
+# Structure: Base de données des cartes Pokémon pour YOLO + Prix
+# Les bounding boxes sont générées dynamiquement (pas stockées ici)
+
+# Métadonnées
+metadata:
+  version: "1.0"
+  format: "YOLO-compatible card database"
+  last_updated: "2025-11-11"
+  source: "TCGdex API"
+  total_cards: 8
+  comment: "Bounding boxes are generated dynamically during mosaic/augmentation"
+
+# Base de données des cartes
+cards:
+  sv08_019:
+    name: "Ho-Oh"
+    set: "Surging Sparks"
+    set_full: "019/191"
+    type: "Pokemon"
+    rarity: "Common"
+    price: null
+    price_max: null
+    price_source: ""
+    last_updated: "2025-11-11"
+  
+  sv08_020:
+    name: "Castform"
+    set: "Surging Sparks"
+    set_full: "020/191"
+    type: "Pokemon"
+    rarity: "Common"
+    price: null
+    price_max: null
+    price_source: ""
+    last_updated: "2025-11-11"
+  
+  sv08_026:
+    name: "Oricorio"
+    set: "Surging Sparks"
+    set_full: "026/191"
+    type: "Pokemon"
+    rarity: "Common"
+    price: null
+    price_max: null
+    price_source: ""
+    last_updated: "2025-11-11"
+  
+  sv08_046:
+    name: "Spheal"
+    set: "Surging Sparks"
+    set_full: "046/191"
+    type: "Pokemon"
+    rarity: "Common"
+    price: null
+    price_max: null
+    price_source: ""
+    last_updated: "2025-11-11"
+  
+  sv08_051:
+    name: "Quaxly"
+    set: "Surging Sparks"
+    set_full: "051/191"
+    type: "Pokemon"
+    rarity: "Common"
+    price: null
+    price_max: null
+    price_source: ""
+    last_updated: "2025-11-11"
+  
+  sv08_126:
+    name: "Bronzor"
+    set: "Surging Sparks"
+    set_full: "126/191"
+    type: "Pokemon"
+    rarity: "Common"
+    price: null
+    price_max: null
+    price_source: ""
+    last_updated: "2025-11-11"
+  
+  sv08_132:
+    name: "Iron Crown"
+    set: "Surging Sparks"
+    set_full: "132/191"
+    type: "Pokemon"
+    rarity: "Rare"
+    price: null
+    price_max: null
+    price_source: ""
+    last_updated: "2025-11-11"
+  
+  sv08_152:
+    name: "Braviary"
+    set: "Surging Sparks"
+    set_full: "152/191"
+    type: "Pokemon"
+    rarity: "Uncommon"
+    price: null
+    price_max: null
+    price_source: ""
+    last_updated: "2025-11-11"

@@ -51,17 +51,48 @@ os.makedirs(MOSAIC_IMAGES_DIR, exist_ok=True)
 os.makedirs(MOSAIC_LABELS_DIR, exist_ok=True)
 
 # ----- Fonctions de chargement et de traitement des images -----
-def load_card_data(excel_path):
-    df = pd.read_excel(excel_path, usecols=["Set #", "Name"])
+def load_card_data(source_path):
+    """
+    Charge les données des cartes depuis YAML (prioritaire) ou Excel (fallback)
+    
+    Args:
+        source_path: Chemin vers le fichier (YAML ou Excel)
+        
+    Returns:
+        tuple: (card_dict, class_map)
+    """
     card_dict = {}
     class_map = {}
-    for _, row in df.iterrows():
-        number = row["Set #"].split('/')[0].zfill(3)
-        name = row["Name"].replace(" ", "_")
-        if number not in card_dict:
-            card_dict[number] = name
-            # L'ID YOLO = le numéro de la carte (001 → ID 1, 050 → ID 50, etc.)
-            class_map[number] = int(number)
+    
+    # Détection automatique du format
+    if source_path.endswith('.yaml') or source_path.endswith('.yml'):
+        # Charger depuis YAML
+        import yaml
+        
+        with open(source_path, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+        
+        for card_id, card_info in data['cards'].items():
+            # Extraire le numéro (ex: sv08_019 -> 019)
+            number = card_id.split('_')[-1].zfill(3)
+            name = card_info['name'].replace(" ", "_")
+            
+            if number not in card_dict:
+                card_dict[number] = name
+                # L'ID YOLO = le numéro de la carte (001 → ID 1, 050 → ID 50, etc.)
+                class_map[number] = int(number)
+    
+    else:
+        # Charger depuis Excel (legacy)
+        df = pd.read_excel(source_path, usecols=["Set #", "Name"])
+        for _, row in df.iterrows():
+            number = row["Set #"].split('/')[0].zfill(3)
+            name = row["Name"].replace(" ", "_")
+            if number not in card_dict:
+                card_dict[number] = name
+                # L'ID YOLO = le numéro de la carte (001 → ID 1, 050 → ID 50, etc.)
+                class_map[number] = int(number)
+    
     return card_dict, class_map
 
 def extract_card_number(filename):
@@ -391,8 +422,17 @@ def create_layout_group(images, group_index, card_dict, class_map, merged_mappin
 
 # ----- Fonction principale -----
 def main():
-    # Chargement des données des cartes depuis Excel
-    card_dict, class_map = load_card_data("excel/cards_info.xlsx")
+    # Détection auto YAML/Excel
+    yaml_path = "models/cards_database.yaml"
+    excel_path = "excel/cards_info.xlsx"
+    
+    if os.path.exists(yaml_path):
+        card_dict, class_map = load_card_data(yaml_path)
+    elif os.path.exists(excel_path):
+        card_dict, class_map = load_card_data(excel_path)
+    else:
+        print("❌ Aucun fichier de cartes trouvé (ni YAML ni Excel)")
+        return
     
     # Utilisation directe de class_map sans fusion des noms
     # Chaque numéro de carte a son propre ID unique (252 IDs au total)

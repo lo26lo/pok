@@ -1,18 +1,18 @@
 """
-Script pour initialiser le fichier Excel avec les cartes du dataset
+Script pour initialiser le fichier YAML avec les cartes du dataset
 Et mettre à jour les prix depuis TCGdex API
 """
 
-import pandas as pd
 import yaml
 from pathlib import Path
+from datetime import datetime
 import sys
 sys.path.append('.')
 
 from core.tcgdex_api import TCGdexAPI
 
-def init_excel_with_cards():
-    """Initialise l'Excel avec les cartes depuis data.yaml"""
+def init_yaml_with_cards():
+    """Initialise le YAML avec les cartes depuis data.yaml"""
     
     # Charger data.yaml
     data_yaml = Path("output/dataset/data.yaml")
@@ -36,22 +36,41 @@ def init_excel_with_cards():
     for name in names:
         print(f"   • {name}")
     
-    # Créer DataFrame
-    df = pd.DataFrame({
-        'Name': names,
-        'Set #': names,  # Set # = même que le nom (ex: sv08_019)
-        'Prix': [None] * len(names),
-        'Prix max': [None] * len(names),
-        'SourcePrix': [''] * len(names)
-    })
+    # Créer structure YAML
+    yaml_data = {
+        'metadata': {
+            'version': '1.0',
+            'format': 'YOLO-compatible card database',
+            'last_updated': datetime.now().strftime('%Y-%m-%d'),
+            'source': 'Generated from data.yaml',
+            'total_cards': len(names),
+            'comment': 'Bounding boxes are generated dynamically during mosaic/augmentation'
+        },
+        'cards': {}
+    }
     
-    # Sauvegarder Excel
-    excel_path = Path("excel/cards_info.xlsx")
-    excel_path.parent.mkdir(exist_ok=True)
+    # Ajouter chaque carte
+    for card_id in names:
+        yaml_data['cards'][card_id] = {
+            'name': card_id.replace('_', ' ').title(),  # Nom formaté
+            'set': 'Surging Sparks',  # À adapter selon besoin
+            'set_full': f"{card_id.split('_')[-1]}/191" if '_' in card_id else "000/191",
+            'type': 'Pokemon',
+            'rarity': 'Common',
+            'price': None,
+            'price_max': None,
+            'price_source': '',
+            'last_updated': datetime.now().strftime('%Y-%m-%d')
+        }
     
-    print(f"\n💾 Sauvegarde dans {excel_path}...")
-    df.to_excel(excel_path, index=False, engine='openpyxl')
-    print("✅ Excel créé!")
+    # Sauvegarder YAML
+    yaml_path = Path("models/cards_database.yaml")
+    yaml_path.parent.mkdir(exist_ok=True)
+    
+    print(f"\n💾 Sauvegarde dans {yaml_path}...")
+    with open(yaml_path, 'w', encoding='utf-8') as f:
+        yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    print("✅ YAML créé!")
     
     # Mettre à jour les prix
     print("\n💰 Mise à jour des prix depuis TCGdex...")
@@ -80,9 +99,9 @@ def init_excel_with_cards():
                 )
                 
                 if price is not None:
-                    df.loc[idx-1, 'Prix'] = price
-                    df.loc[idx-1, 'Prix max'] = price_max if price_max else price
-                    df.loc[idx-1, 'SourcePrix'] = 'TCGdex'
+                    yaml_data['cards'][card_id]['price'] = price
+                    yaml_data['cards'][card_id]['price_max'] = price_max if price_max else price
+                    yaml_data['cards'][card_id]['price_source'] = 'TCGdex'
                     print(f"✅ {price}€")
                     success_count += 1
                 else:
@@ -93,27 +112,35 @@ def init_excel_with_cards():
         else:
             print(f"[{idx}/{len(names)}] {card_id} - ⚠️ Format invalide (attendu: setXX_XXX)")
     
+    # Mettre à jour métadonnées
+    yaml_data['metadata']['last_updated'] = datetime.now().strftime('%Y-%m-%d')
+    
     # Sauvegarder avec prix
     print(f"\n💾 Sauvegarde des prix...")
-    df.to_excel(excel_path, index=False, engine='openpyxl')
+    with open(yaml_path, 'w', encoding='utf-8') as f:
+        yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
     
     print(f"\n✅ Terminé!")
     print(f"   📊 {success_count}/{len(names)} cartes avec prix")
-    print(f"   💾 Fichier: {excel_path}")
+    print(f"   💾 Fichier: {yaml_path}")
     print(f"\n💡 Tu peux maintenant utiliser la détection avec prix!")
 
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("  INITIALISATION EXCEL + MISE À JOUR PRIX")
+    print("  INITIALISATION YAML + MISE À JOUR PRIX")
     print("=" * 60)
     print()
     
     try:
-        init_excel_with_cards()
+        init_yaml_with_cards()
     except Exception as e:
         print(f"\n❌ Erreur: {e}")
         import traceback
+        traceback.print_exc()
+    
+    print()
+    input("Appuyez sur Entrée pour quitter...")
         traceback.print_exc()
     
     print()
