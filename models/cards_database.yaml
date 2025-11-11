@@ -12,9 +12,9 @@ cards:
     set_full: 001/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_002:
     name: Exeggcute
@@ -22,9 +22,9 @@ cards:
     set_full: 002/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_003:
     name: Exeggutor
@@ -32,9 +32,9 @@ cards:
     set_full: 003/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_004:
     name: Durant ex
@@ -42,9 +42,9 @@ cards:
     set_full: 004/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.57
+    price_max: 0.57
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_005:
     name: Scatterbug
@@ -52,9 +52,9 @@ cards:
     set_full: 005/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_006:
     name: Spewpa
@@ -62,9 +62,9 @@ cards:
     set_full: 006/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_007:
     name: Vivillon
@@ -72,9 +72,9 @@ cards:
     set_full: 007/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_008:
     name: Morelull
@@ -82,9 +82,9 @@ cards:
     set_full: 008/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.1
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_009:
     name: Shiinotic
@@ -92,9 +92,9 @@ cards:
     set_full: 009/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_010:
     name: Dhelmise
@@ -102,9 +102,9 @@ cards:
     set_full: 010/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_011:
     name: Zarude
@@ -112,9 +112,9 @@ cards:
     set_full: 011/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.2
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_012:
     name: Capsakid
@@ -122,9 +122,9 @@ cards:
     set_full: 012/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_013:
     name: Rellor
@@ -132,9 +132,9 @@ cards:
     set_full: 013/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_014:
     name: Rabsca
@@ -142,9 +142,9 @@ cards:
     set_full: 014/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.18
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_015:
     name: Wo-Chien
@@ -152,9 +152,9 @@ cards:
     set_full: 015/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_016:
     name: Vulpix
@@ -162,9 +162,9 @@ cards:
     set_full: 016/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_017:
     name: Ninetales
@@ -172,9 +172,9 @@ cards:
     set_full: 017/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_018:
     name: Paldean Tauros
@@ -182,9 +182,9 @@ cards:
     set_full: 018/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.19
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_019:
     name: Ho-Oh
@@ -192,9 +192,9 @@ cards:
     set_full: 019/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.19
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_020:
     name: Castform Sunny Form
@@ -202,9 +202,9 @@ cards:
     set_full: 020/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.1
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_021:
     name: Victini
@@ -212,9 +212,9 @@ cards:
     set_full: 021/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_022:
     name: Pansear
@@ -222,9 +222,9 @@ cards:
     set_full: 022/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.1
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_023:
     name: Simisear
@@ -232,9 +232,9 @@ cards:
     set_full: 023/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_024:
     name: Larvesta
@@ -242,9 +242,9 @@ cards:
     set_full: 024/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_025:
     name: Volcarona
@@ -252,9 +252,9 @@ cards:
     set_full: 025/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_026:
     name: Oricorio
@@ -262,9 +262,9 @@ cards:
     set_full: 026/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_027:
     name: Sizzlipede
@@ -272,9 +272,9 @@ cards:
     set_full: 027/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_028:
     name: Centiskorch
@@ -282,9 +282,9 @@ cards:
     set_full: 028/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_029:
     name: Fuecoco
@@ -292,9 +292,9 @@ cards:
     set_full: 029/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_030:
     name: Crocalor
@@ -302,9 +302,9 @@ cards:
     set_full: 030/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_031:
     name: Skeledirge
@@ -312,9 +312,9 @@ cards:
     set_full: 031/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_032:
     name: Charcadet
@@ -322,9 +322,9 @@ cards:
     set_full: 032/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.25
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_033:
     name: Charcadet
@@ -332,9 +332,9 @@ cards:
     set_full: 033/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_034:
     name: Armarouge
@@ -342,9 +342,9 @@ cards:
     set_full: 034/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_035:
     name: Ceruledge
@@ -352,9 +352,9 @@ cards:
     set_full: 035/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.16
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_036:
     name: Ceruledge ex
@@ -362,9 +362,9 @@ cards:
     set_full: 036/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 8.12
+    price_max: 8.12
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_037:
     name: Scovillain ex
@@ -372,9 +372,9 @@ cards:
     set_full: 037/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.5
+    price_max: 0.5
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_038:
     name: Gouging Fire
@@ -382,9 +382,9 @@ cards:
     set_full: 038/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.19
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_039:
     name: Paldean Tauros
@@ -392,9 +392,9 @@ cards:
     set_full: 039/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_040:
     name: Mantine
@@ -402,9 +402,9 @@ cards:
     set_full: 040/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_041:
     name: Feebas
@@ -412,9 +412,9 @@ cards:
     set_full: 041/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_042:
     name: Milotic ex
@@ -422,9 +422,9 @@ cards:
     set_full: 042/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.82
+    price_max: 0.82
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_043:
     name: Spheal
@@ -432,9 +432,9 @@ cards:
     set_full: 043/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.11
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_044:
     name: Sealeo
@@ -442,9 +442,9 @@ cards:
     set_full: 044/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_045:
     name: Walrein
@@ -452,9 +452,9 @@ cards:
     set_full: 045/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.16
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_046:
     name: Shellos
@@ -462,9 +462,9 @@ cards:
     set_full: 046/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_047:
     name: Cryogonal
@@ -472,9 +472,9 @@ cards:
     set_full: 047/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_048:
     name: Black Kyurem ex
@@ -482,9 +482,9 @@ cards:
     set_full: 048/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.55
+    price_max: 0.55
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_049:
     name: Bruxish
@@ -492,9 +492,9 @@ cards:
     set_full: 049/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_050:
     name: Quaxly
@@ -502,9 +502,9 @@ cards:
     set_full: 050/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 21.08
+    price_max: 21.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_051:
     name: Quaxwell
@@ -512,9 +512,9 @@ cards:
     set_full: 051/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_052:
     name: Quaquaval
@@ -522,9 +522,9 @@ cards:
     set_full: 052/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_053:
     name: Cetoddle
@@ -532,9 +532,9 @@ cards:
     set_full: 053/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_054:
     name: Cetitan
@@ -542,9 +542,9 @@ cards:
     set_full: 054/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_055:
     name: Iron Bundle
@@ -552,9 +552,9 @@ cards:
     set_full: 055/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.22
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_056:
     name: Chien-Pao
@@ -562,9 +562,9 @@ cards:
     set_full: 056/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_057:
     name: Pikachu ex
@@ -572,9 +572,9 @@ cards:
     set_full: 057/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 4.17
+    price_max: 4.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_058:
     name: Magnemite
@@ -582,9 +582,9 @@ cards:
     set_full: 058/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_059:
     name: Magneton
@@ -592,9 +592,9 @@ cards:
     set_full: 059/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.19
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_060:
     name: Magnezone
@@ -602,9 +602,9 @@ cards:
     set_full: 060/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.19
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_061:
     name: Rotom
@@ -612,9 +612,9 @@ cards:
     set_full: 061/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_062:
     name: Blitzle
@@ -622,9 +622,9 @@ cards:
     set_full: 062/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_063:
     name: Zebstrika
@@ -632,9 +632,9 @@ cards:
     set_full: 063/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_064:
     name: Stunfisk
@@ -642,9 +642,9 @@ cards:
     set_full: 064/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_065:
     name: Tapu Koko
@@ -652,9 +652,9 @@ cards:
     set_full: 065/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_066:
     name: Wattrel
@@ -662,9 +662,9 @@ cards:
     set_full: 066/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_067:
     name: Kilowattrel
@@ -672,9 +672,9 @@ cards:
     set_full: 067/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_068:
     name: Kilowattrel ex
@@ -682,9 +682,9 @@ cards:
     set_full: 068/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.41
+    price_max: 0.41
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_069:
     name: Miraidon
@@ -692,9 +692,9 @@ cards:
     set_full: 069/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.18
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_070:
     name: Togepi
@@ -702,9 +702,9 @@ cards:
     set_full: 070/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.1
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_071:
     name: Togetic
@@ -712,9 +712,9 @@ cards:
     set_full: 071/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.11
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_072:
     name: Togekiss
@@ -722,9 +722,9 @@ cards:
     set_full: 072/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.24
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_073:
     name: Marill
@@ -732,9 +732,9 @@ cards:
     set_full: 073/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_074:
     name: Azumarill
@@ -742,9 +742,9 @@ cards:
     set_full: 074/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.16
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_075:
     name: Smoochum
@@ -752,9 +752,9 @@ cards:
     set_full: 075/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_076:
     name: Latias ex
@@ -762,9 +762,9 @@ cards:
     set_full: 076/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 5.77
+    price_max: 5.77
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_077:
     name: Latios
@@ -772,9 +772,9 @@ cards:
     set_full: 077/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_078:
     name: Uxie
@@ -782,9 +782,9 @@ cards:
     set_full: 078/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_079:
     name: Mesprit
@@ -792,9 +792,9 @@ cards:
     set_full: 079/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.18
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_080:
     name: Azelf
@@ -802,9 +802,9 @@ cards:
     set_full: 080/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.18
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_081:
     name: Sigilyph
@@ -812,9 +812,9 @@ cards:
     set_full: 081/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_082:
     name: Yamask
@@ -822,9 +822,9 @@ cards:
     set_full: 082/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.1
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_083:
     name: Cofagrigus
@@ -832,9 +832,9 @@ cards:
     set_full: 083/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_084:
     name: Espurr
@@ -842,9 +842,9 @@ cards:
     set_full: 084/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.12
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_085:
     name: Meowstic
@@ -852,9 +852,9 @@ cards:
     set_full: 085/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.21
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_086:
     name: Sylveon ex
@@ -862,9 +862,9 @@ cards:
     set_full: 086/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.53
+    price_max: 1.53
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_087:
     name: Dedenne
@@ -872,9 +872,9 @@ cards:
     set_full: 087/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.16
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_088:
     name: Xerneas
@@ -882,9 +882,9 @@ cards:
     set_full: 088/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_089:
     name: Oricorio
@@ -892,9 +892,9 @@ cards:
     set_full: 089/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_090:
     name: Sandygast
@@ -902,9 +902,9 @@ cards:
     set_full: 090/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_091:
     name: Palossand ex
@@ -912,9 +912,9 @@ cards:
     set_full: 091/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.51
+    price_max: 0.51
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_092:
     name: Tapu Lele
@@ -922,9 +922,9 @@ cards:
     set_full: 092/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.16
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_093:
     name: Indeedee
@@ -932,9 +932,9 @@ cards:
     set_full: 093/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.12
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_094:
     name: Flittle
@@ -942,9 +942,9 @@ cards:
     set_full: 094/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_095:
     name: Espathra
@@ -952,9 +952,9 @@ cards:
     set_full: 095/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.12
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_096:
     name: Flutter Mane
@@ -962,9 +962,9 @@ cards:
     set_full: 096/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.19
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_097:
     name: Gimmighoul
@@ -972,9 +972,9 @@ cards:
     set_full: 097/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.18
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_098:
     name: Mankey
@@ -982,9 +982,9 @@ cards:
     set_full: 098/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_099:
     name: Primeape
@@ -992,9 +992,9 @@ cards:
     set_full: 099/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.1
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_100:
     name: Annihilape
@@ -1002,9 +1002,9 @@ cards:
     set_full: 100/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_101:
     name: Paldean Tauros
@@ -1012,9 +1012,9 @@ cards:
     set_full: 101/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_102:
     name: Phanpy
@@ -1022,9 +1022,9 @@ cards:
     set_full: 102/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_103:
     name: Donphan
@@ -1032,9 +1032,9 @@ cards:
     set_full: 103/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_104:
     name: Trapinch
@@ -1042,9 +1042,9 @@ cards:
     set_full: 104/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_105:
     name: Vibrava
@@ -1052,9 +1052,9 @@ cards:
     set_full: 105/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.11
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_106:
     name: Flygon ex
@@ -1062,9 +1062,9 @@ cards:
     set_full: 106/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.64
+    price_max: 0.64
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_107:
     name: Gastrodon
@@ -1072,9 +1072,9 @@ cards:
     set_full: 107/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_108:
     name: Drilbur
@@ -1082,9 +1082,9 @@ cards:
     set_full: 108/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.1
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_109:
     name: Excadrill
@@ -1092,9 +1092,9 @@ cards:
     set_full: 109/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.11
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_110:
     name: Landorus
@@ -1102,9 +1102,9 @@ cards:
     set_full: 110/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_111:
     name: Passimian
@@ -1112,9 +1112,9 @@ cards:
     set_full: 111/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_112:
     name: Clobbopus
@@ -1122,9 +1122,9 @@ cards:
     set_full: 112/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_113:
     name: Grapploct
@@ -1132,9 +1132,9 @@ cards:
     set_full: 113/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.06
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_114:
     name: Glimmet
@@ -1142,9 +1142,9 @@ cards:
     set_full: 114/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_115:
     name: Glimmora
@@ -1152,9 +1152,9 @@ cards:
     set_full: 115/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_116:
     name: Koraidon
@@ -1162,9 +1162,9 @@ cards:
     set_full: 116/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.2
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_117:
     name: Deino
@@ -1172,9 +1172,9 @@ cards:
     set_full: 117/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.12
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_118:
     name: Zweilous
@@ -1182,9 +1182,9 @@ cards:
     set_full: 118/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.11
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_119:
     name: Hydreigon ex
@@ -1192,9 +1192,9 @@ cards:
     set_full: 119/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.99
+    price_max: 0.99
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_120:
     name: Shroodle
@@ -1202,9 +1202,9 @@ cards:
     set_full: 120/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_121:
     name: Grafaiai
@@ -1212,9 +1212,9 @@ cards:
     set_full: 121/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_122:
     name: Alolan Diglett
@@ -1222,9 +1222,9 @@ cards:
     set_full: 122/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_123:
     name: Alolan Dugtrio
@@ -1232,9 +1232,9 @@ cards:
     set_full: 123/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_124:
     name: Skarmory
@@ -1242,9 +1242,9 @@ cards:
     set_full: 124/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_125:
     name: Registeel
@@ -1252,9 +1252,9 @@ cards:
     set_full: 125/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.18
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_126:
     name: Bronzor
@@ -1262,9 +1262,9 @@ cards:
     set_full: 126/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_127:
     name: Bronzong
@@ -1272,9 +1272,9 @@ cards:
     set_full: 127/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_128:
     name: Klefki
@@ -1282,9 +1282,9 @@ cards:
     set_full: 128/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_129:
     name: Duraludon
@@ -1292,9 +1292,9 @@ cards:
     set_full: 129/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 5.32
+    price_max: 5.32
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_130:
     name: Archaludon ex
@@ -1302,9 +1302,9 @@ cards:
     set_full: 130/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.93
+    price_max: 0.93
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_131:
     name: Gholdengo
@@ -1312,9 +1312,9 @@ cards:
     set_full: 131/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.19
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_132:
     name: Iron Crown
@@ -1322,9 +1322,9 @@ cards:
     set_full: 132/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.18
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_133:
     name: Alolan Exeggutor ex
@@ -1332,9 +1332,9 @@ cards:
     set_full: 133/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.72
+    price_max: 0.72
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_134:
     name: Altaria
@@ -1342,9 +1342,9 @@ cards:
     set_full: 134/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_135:
     name: Dialga
@@ -1352,9 +1352,9 @@ cards:
     set_full: 135/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.19
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_136:
     name: Palkia
@@ -1362,9 +1362,9 @@ cards:
     set_full: 136/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.16
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_137:
     name: Turtonator
@@ -1372,9 +1372,9 @@ cards:
     set_full: 137/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.12
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_138:
     name: Applin
@@ -1382,9 +1382,9 @@ cards:
     set_full: 138/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_139:
     name: Flapple
@@ -1392,9 +1392,9 @@ cards:
     set_full: 139/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.2
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_140:
     name: Appletun
@@ -1402,9 +1402,9 @@ cards:
     set_full: 140/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_141:
     name: Eternatus
@@ -1412,9 +1412,9 @@ cards:
     set_full: 141/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.2
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_142:
     name: Tatsugiri ex
@@ -1422,9 +1422,9 @@ cards:
     set_full: 142/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.6
+    price_max: 0.6
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_143:
     name: Eevee
@@ -1432,9 +1432,9 @@ cards:
     set_full: 143/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.45
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_144:
     name: Snorlax
@@ -1442,9 +1442,9 @@ cards:
     set_full: 144/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_145:
     name: Slakoth
@@ -1452,9 +1452,9 @@ cards:
     set_full: 145/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_146:
     name: Vigoroth
@@ -1462,9 +1462,9 @@ cards:
     set_full: 146/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_147:
     name: Slaking ex
@@ -1472,9 +1472,9 @@ cards:
     set_full: 147/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.5
+    price_max: 0.5
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_148:
     name: Swablu
@@ -1482,9 +1482,9 @@ cards:
     set_full: 148/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.1
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_149:
     name: Zangoose
@@ -1492,9 +1492,9 @@ cards:
     set_full: 149/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_150:
     name: Kecleon
@@ -1502,9 +1502,9 @@ cards:
     set_full: 150/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.12
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_151:
     name: Bouffalant
@@ -1512,9 +1512,9 @@ cards:
     set_full: 151/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_152:
     name: Rufflet
@@ -1522,9 +1522,9 @@ cards:
     set_full: 152/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_153:
     name: Braviary
@@ -1532,9 +1532,9 @@ cards:
     set_full: 153/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_154:
     name: Helioptile
@@ -1542,9 +1542,9 @@ cards:
     set_full: 154/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.06
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_155:
     name: Heliolisk
@@ -1552,9 +1552,9 @@ cards:
     set_full: 155/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_156:
     name: Oranguru
@@ -1562,9 +1562,9 @@ cards:
     set_full: 156/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.08
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_157:
     name: Tandemaus
@@ -1572,9 +1572,9 @@ cards:
     set_full: 157/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.11
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_158:
     name: Maushold
@@ -1582,9 +1582,9 @@ cards:
     set_full: 158/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.19
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_159:
     name: Cyclizar ex
@@ -1592,9 +1592,9 @@ cards:
     set_full: 159/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.57
+    price_max: 0.57
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_160:
     name: Flamigo ex
@@ -1602,9 +1602,9 @@ cards:
     set_full: 160/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.49
+    price_max: 0.49
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_161:
     name: Terapagos
@@ -1612,9 +1612,9 @@ cards:
     set_full: 161/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_162:
     name: Amulet of Hope
@@ -1622,9 +1622,9 @@ cards:
     set_full: 162/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.51
+    price_max: 0.51
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_163:
     name: Babiri Berry
@@ -1632,9 +1632,9 @@ cards:
     set_full: 163/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_164:
     name: Brilliant Blender
@@ -1642,9 +1642,9 @@ cards:
     set_full: 164/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.27
+    price_max: 1.27
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_165:
     name: Call Bell
@@ -1652,9 +1652,9 @@ cards:
     set_full: 165/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_166:
     name: Chill Teaser Toy
@@ -1662,9 +1662,9 @@ cards:
     set_full: 166/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_167:
     name: Clemont's Quick Wit
@@ -1672,9 +1672,9 @@ cards:
     set_full: 167/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_168:
     name: Colbur Berry
@@ -1682,9 +1682,9 @@ cards:
     set_full: 168/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_169:
     name: Counter Gain
@@ -1692,9 +1692,9 @@ cards:
     set_full: 169/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.28
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_170:
     name: Cyrano
@@ -1702,9 +1702,9 @@ cards:
     set_full: 170/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.18
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_171:
     name: Deduction Kit
@@ -1712,9 +1712,9 @@ cards:
     set_full: 171/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.16
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_172:
     name: Dragon Elixir
@@ -1722,9 +1722,9 @@ cards:
     set_full: 172/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.12
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_173:
     name: Drasna
@@ -1732,9 +1732,9 @@ cards:
     set_full: 173/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_174:
     name: Drayton
@@ -1742,9 +1742,9 @@ cards:
     set_full: 174/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_175:
     name: Dusk Ball
@@ -1752,9 +1752,9 @@ cards:
     set_full: 175/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_176:
     name: Energy Search Pro
@@ -1762,9 +1762,9 @@ cards:
     set_full: 176/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.27
+    price_max: 1.27
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_177:
     name: Gravity Mountain
@@ -1772,9 +1772,9 @@ cards:
     set_full: 177/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.28
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_178:
     name: Jasmine's Gaze
@@ -1782,9 +1782,9 @@ cards:
     set_full: 178/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_179:
     name: Lisia's Appeal
@@ -1792,9 +1792,9 @@ cards:
     set_full: 179/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.16
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_180:
     name: Lively Stadium
@@ -1802,9 +1802,9 @@ cards:
     set_full: 180/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.28
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_181:
     name: Meddling Memo
@@ -1812,9 +1812,9 @@ cards:
     set_full: 181/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_182:
     name: Megaton Blower
@@ -1822,9 +1822,9 @@ cards:
     set_full: 182/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.47
+    price_max: 0.47
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_183:
     name: Miracle Headset
@@ -1832,9 +1832,9 @@ cards:
     set_full: 183/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.46
+    price_max: 0.46
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_184:
     name: Passho Berry
@@ -1842,9 +1842,9 @@ cards:
     set_full: 184/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.14
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_185:
     name: Precious Trolley
@@ -1852,9 +1852,9 @@ cards:
     set_full: 185/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 3.5
+    price_max: 3.5
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_186:
     name: Scramble Switch
@@ -1862,9 +1862,9 @@ cards:
     set_full: 186/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.53
+    price_max: 0.53
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_187:
     name: Surfer
@@ -1872,9 +1872,9 @@ cards:
     set_full: 187/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_188:
     name: 'Technical Machine: Fluorite'
@@ -1882,9 +1882,9 @@ cards:
     set_full: 188/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_189:
     name: Tera Orb
@@ -1892,9 +1892,9 @@ cards:
     set_full: 189/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.15
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_190:
     name: Tyme
@@ -1902,9 +1902,9 @@ cards:
     set_full: 190/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 0.02
+    price_max: 0.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_191:
     name: Enriching Energy
@@ -1912,9 +1912,9 @@ cards:
     set_full: 191/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.45
+    price_max: 1.45
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_192:
     name: Exeggcute
@@ -1922,9 +1922,9 @@ cards:
     set_full: 192/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 4.77
+    price_max: 4.77
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_193:
     name: Vivillon
@@ -1932,9 +1932,9 @@ cards:
     set_full: 193/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 3.63
+    price_max: 3.63
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_194:
     name: Shiinotic
@@ -1942,9 +1942,9 @@ cards:
     set_full: 194/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.57
+    price_max: 2.57
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_195:
     name: Castform Sunny Form
@@ -1952,9 +1952,9 @@ cards:
     set_full: 195/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 6.01
+    price_max: 6.01
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_196:
     name: Larvesta
@@ -1962,9 +1962,9 @@ cards:
     set_full: 196/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.47
+    price_max: 2.47
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_197:
     name: Ceruledge
@@ -1972,9 +1972,9 @@ cards:
     set_full: 197/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 11.84
+    price_max: 11.84
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_198:
     name: Feebas
@@ -1982,9 +1982,9 @@ cards:
     set_full: 198/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 7.95
+    price_max: 7.95
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_199:
     name: Spheal
@@ -1992,9 +1992,9 @@ cards:
     set_full: 199/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 5.87
+    price_max: 5.87
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_200:
     name: Bruxish
@@ -2002,9 +2002,9 @@ cards:
     set_full: 200/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.83
+    price_max: 1.83
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_201:
     name: Cetitan
@@ -2012,9 +2012,9 @@ cards:
     set_full: 201/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.44
+    price_max: 2.44
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_202:
     name: Stunfisk
@@ -2022,9 +2022,9 @@ cards:
     set_full: 202/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.96
+    price_max: 1.96
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_203:
     name: Latios
@@ -2032,9 +2032,9 @@ cards:
     set_full: 203/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 27.56
+    price_max: 27.56
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_204:
     name: Mesprit
@@ -2042,9 +2042,9 @@ cards:
     set_full: 204/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 10.99
+    price_max: 10.99
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_205:
     name: Phanpy
@@ -2052,9 +2052,9 @@ cards:
     set_full: 205/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 6.07
+    price_max: 6.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_206:
     name: Vibrava
@@ -2062,9 +2062,9 @@ cards:
     set_full: 206/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.22
+    price_max: 2.22
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_207:
     name: Clobbopus
@@ -2072,9 +2072,9 @@ cards:
     set_full: 207/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 7.93
+    price_max: 7.93
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_208:
     name: Alolan Dugtrio
@@ -2082,9 +2082,9 @@ cards:
     set_full: 208/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 4.35
+    price_max: 4.35
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_209:
     name: Skarmory
@@ -2092,9 +2092,9 @@ cards:
     set_full: 209/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 6.68
+    price_max: 6.68
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_210:
     name: Flapple
@@ -2102,9 +2102,9 @@ cards:
     set_full: 210/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.91
+    price_max: 2.91
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_211:
     name: Appletun
@@ -2112,9 +2112,9 @@ cards:
     set_full: 211/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 3.6
+    price_max: 3.6
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_212:
     name: Slakoth
@@ -2122,9 +2122,9 @@ cards:
     set_full: 212/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 5.36
+    price_max: 5.36
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_213:
     name: Kecleon
@@ -2132,9 +2132,9 @@ cards:
     set_full: 213/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 4.21
+    price_max: 4.21
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_214:
     name: Braviary
@@ -2142,9 +2142,9 @@ cards:
     set_full: 214/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 4.17
+    price_max: 4.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_215:
     name: Durant ex
@@ -2152,9 +2152,9 @@ cards:
     set_full: 215/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.25
+    price_max: 1.25
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_216:
     name: Scovillain ex
@@ -2162,9 +2162,9 @@ cards:
     set_full: 216/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.25
+    price_max: 1.25
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_217:
     name: Milotic ex
@@ -2172,9 +2172,9 @@ cards:
     set_full: 217/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.64
+    price_max: 2.64
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_218:
     name: Black Kyurem ex
@@ -2182,9 +2182,9 @@ cards:
     set_full: 218/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.44
+    price_max: 2.44
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_219:
     name: Pikachu ex
@@ -2192,9 +2192,9 @@ cards:
     set_full: 219/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 15.8
+    price_max: 15.8
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_220:
     name: Latias ex
@@ -2202,9 +2202,9 @@ cards:
     set_full: 220/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 6.56
+    price_max: 6.56
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_221:
     name: Palossand ex
@@ -2212,9 +2212,9 @@ cards:
     set_full: 221/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.56
+    price_max: 1.56
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_222:
     name: Flygon ex
@@ -2222,9 +2222,9 @@ cards:
     set_full: 222/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.4
+    price_max: 2.4
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_223:
     name: Hydreigon ex
@@ -2232,9 +2232,9 @@ cards:
     set_full: 223/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.93
+    price_max: 2.93
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_224:
     name: Archaludon ex
@@ -2242,9 +2242,9 @@ cards:
     set_full: 224/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.94
+    price_max: 1.94
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_225:
     name: Alolan Exeggutor ex
@@ -2252,9 +2252,9 @@ cards:
     set_full: 225/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.57
+    price_max: 2.57
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_226:
     name: Tatsugiri ex
@@ -2262,9 +2262,9 @@ cards:
     set_full: 226/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.12
+    price_max: 2.12
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_227:
     name: Slaking ex
@@ -2272,9 +2272,9 @@ cards:
     set_full: 227/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.56
+    price_max: 1.56
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_228:
     name: Cyclizar ex
@@ -2282,9 +2282,9 @@ cards:
     set_full: 228/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.7
+    price_max: 1.7
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_229:
     name: Clemont's Quick Wit
@@ -2292,9 +2292,9 @@ cards:
     set_full: 229/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.64
+    price_max: 1.64
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_230:
     name: Cyrano
@@ -2302,9 +2302,9 @@ cards:
     set_full: 230/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.07
+    price_max: 2.07
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_231:
     name: Drasna
@@ -2312,9 +2312,9 @@ cards:
     set_full: 231/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.09
+    price_max: 1.09
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_232:
     name: Drayton
@@ -2322,9 +2322,9 @@ cards:
     set_full: 232/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.33
+    price_max: 1.33
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_233:
     name: Jasmine's Gaze
@@ -2332,9 +2332,9 @@ cards:
     set_full: 233/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 2.49
+    price_max: 2.49
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_234:
     name: Lisia's Appeal
@@ -2342,9 +2342,9 @@ cards:
     set_full: 234/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 3.51
+    price_max: 3.51
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_235:
     name: Surfer
@@ -2352,9 +2352,9 @@ cards:
     set_full: 235/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 1.13
+    price_max: 1.13
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_236:
     name: Durant ex
@@ -2362,9 +2362,9 @@ cards:
     set_full: 236/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 21.81
+    price_max: 21.81
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_237:
     name: Milotic ex
@@ -2372,9 +2372,9 @@ cards:
     set_full: 237/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 136.17
+    price_max: 136.17
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_238:
     name: Pikachu ex
@@ -2382,9 +2382,9 @@ cards:
     set_full: 238/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 246.4
+    price_max: 246.4
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_239:
     name: Latias ex
@@ -2392,9 +2392,9 @@ cards:
     set_full: 239/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 123.87
+    price_max: 123.87
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_240:
     name: Hydreigon ex
@@ -2402,9 +2402,9 @@ cards:
     set_full: 240/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 43.29
+    price_max: 43.29
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_241:
     name: Archaludon ex
@@ -2412,9 +2412,9 @@ cards:
     set_full: 241/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 18.24
+    price_max: 18.24
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_242:
     name: Alolan Exeggutor ex
@@ -2422,9 +2422,9 @@ cards:
     set_full: 242/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 34.55
+    price_max: 34.55
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_243:
     name: Clemont's Quick Wit
@@ -2432,9 +2432,9 @@ cards:
     set_full: 243/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 13.63
+    price_max: 13.63
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_244:
     name: Drayton
@@ -2442,9 +2442,9 @@ cards:
     set_full: 244/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 11.94
+    price_max: 11.94
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_245:
     name: Jasmine's Gaze
@@ -2452,9 +2452,9 @@ cards:
     set_full: 245/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 21.96
+    price_max: 21.96
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_246:
     name: Lisia's Appeal
@@ -2462,9 +2462,9 @@ cards:
     set_full: 246/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 29.83
+    price_max: 29.83
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_247:
     name: Pikachu ex
@@ -2472,9 +2472,9 @@ cards:
     set_full: 247/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 13.89
+    price_max: 13.89
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_248:
     name: Alolan Exeggutor ex
@@ -2482,9 +2482,9 @@ cards:
     set_full: 248/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 48.77
+    price_max: 48.77
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_249:
     name: Counter Gain
@@ -2492,9 +2492,9 @@ cards:
     set_full: 249/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 8.54
+    price_max: 8.54
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_250:
     name: Gravity Mountain
@@ -2502,9 +2502,9 @@ cards:
     set_full: 250/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 11.62
+    price_max: 11.62
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_251:
     name: Night Stretcher
@@ -2512,9 +2512,9 @@ cards:
     set_full: 251/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 12.39
+    price_max: 12.39
+    price_source: TCGdex
     last_updated: '2025-11-11'
   sv08_252:
     name: Jet Energy
@@ -2522,7 +2522,7 @@ cards:
     set_full: 252/191
     type: Pokemon
     rarity: Common
-    price: null
-    price_max: null
-    price_source: ''
+    price: 9.71
+    price_max: 9.71
+    price_source: TCGdex
     last_updated: '2025-11-11'
