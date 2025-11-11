@@ -5,7 +5,54 @@
 **Version** : 2.1
 
 > **ℹ️ Note** : Ce fichier contient les instructions **détaillées** pour GitHub Copilot.  
-> Pour un résumé rapide destiné à tous les agents IA, consultez `.agent.md` à la racine.
+> Pour un résumé rapide destiné à tous les agents IA, consultez `.agent.md` à la racine.  
+> **Pour Claude** : Voir aussi `.claude.md` (version adaptée avec reminders explicites)
+
+---
+
+## ⚠️ RÈGLE ABSOLUE #0 : DOCUMENTATION OBLIGATOIRE
+
+**🚨 AVANT CHAQUE COMMIT, VÉRIFIER CETTE CHECKLIST 🚨**
+
+### Documentation à mettre à jour (selon type de modification) :
+
+| Modification | Fichiers à mettre à jour |
+|-------------|-------------------------|
+| ✅ Nouvelle fonctionnalité GUI | `README.md`, `docs/README_COMPLET.md`, `docs/FEATURES.md`, `docs/CHANGELOG.md` |
+| ✅ Optimisation performance | `README.md`, `docs/README_COMPLET.md`, `docs/CHANGELOG.md` |
+| ✅ Nouveau script/test | `scripts/SCRIPTS_REFERENCE.py`, `docs/README_COMPLET.md`, `docs/CHANGELOG.md` |
+| ✅ Correction de bug | `docs/CHANGELOG.md` (minimum) |
+| ✅ Changement de dépendance | `docs/README_COMPLET.md`, `docs/DEPENDENCIES_MAP.md`, `docs/CHANGELOG.md` |
+| ✅ Refactorisation | `docs/DEPENDENCIES_MAP.md`, `docs/CHANGELOG.md` |
+
+### Workflow OBLIGATOIRE :
+```
+1. Faire les modifications de code
+2. ⚠️ STOP - Vérifier checklist documentation ci-dessus
+3. Mettre à jour TOUS les fichiers doc concernés
+4. Commit code + documentation (2 commits séparés recommandés)
+5. Push sur GitHub
+```
+
+### ❌ Ne JAMAIS faire :
+```bash
+# MAUVAIS : commit code sans doc
+git add core/mosaic_optimized.py
+git commit -m "feat: optimize"
+git push  # ❌ Documentation oubliée !
+```
+
+### ✅ TOUJOURS faire :
+```bash
+# BON : commit code puis doc
+git add core/mosaic_optimized.py
+git commit -m "feat(core): optimize mosaic generation (30-60x faster)"
+
+# Puis mettre à jour docs
+git add README.md docs/README_COMPLET.md docs/CHANGELOG.md
+git commit -m "docs: update for mosaic optimizations"
+git push
+```
 
 ---
 
