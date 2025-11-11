@@ -2665,7 +2665,11 @@ class ModernPokemonGUI:
         ttk.Button(btn_frame, text="⬇️ START DOWNLOAD",
                   style='Accent.TButton',
                   command=self.start_image_download,
-                  width=30).pack(pady=5)
+                  width=30).pack(side=tk.LEFT, padx=5, pady=5)
+        
+        ttk.Button(btn_frame, text="📂 Open Folder",
+                  command=lambda: self.open_folder("images"),
+                  width=20).pack(side=tk.LEFT, padx=5, pady=5)
     
     def create_augmentation_view(self):
         """Vue Augmentation détaillée - HARMONISÉE V3.1 sans scroll"""
@@ -2796,7 +2800,11 @@ class ModernPokemonGUI:
         ttk.Button(btn_frame, text="🚀 GENERATE ALL",
                   style='Accent.TButton',
                   command=self.start_augmentation_pipeline,
-                  width=30).pack(pady=5)
+                  width=30).pack(side=tk.LEFT, padx=5, pady=5)
+        
+        ttk.Button(btn_frame, text="📂 Open Folder",
+                  command=lambda: self.open_folder("output/augmented"),
+                  width=20).pack(side=tk.LEFT, padx=5, pady=5)
     
     def create_fakeimg_view(self):
         """Vue génération de fake images (random erasing) - HARMONISÉE V3.1 sans scroll"""
@@ -2962,7 +2970,11 @@ class ModernPokemonGUI:
         ttk.Button(btn_frame, text="🎲 GENERATE FAKE IMAGES",
                   style='Accent.TButton',
                   command=self.start_fake_generator_from_view,
-                  width=30).pack(pady=5)
+                  width=30).pack(side=tk.LEFT, padx=5, pady=5)
+        
+        ttk.Button(btn_frame, text="📂 Open Folder",
+                  command=lambda: self.open_folder("backgrounds/augmented"),
+                  width=20).pack(side=tk.LEFT, padx=5, pady=5)
     
     def create_mosaic_view(self):
         """Vue Mosaics détaillée"""
@@ -3048,14 +3060,23 @@ class ModernPokemonGUI:
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=30)
         
-        ttk.Button(btn_frame, text="🧩 GENERATE MOSAICS",
+        # Main mosaic generation button with folder access on the side
+        mosaic_btn_frame = tk.Frame(btn_frame, bg=self.colors['bg_dark'])
+        mosaic_btn_frame.pack()
+        
+        ttk.Button(mosaic_btn_frame, text="🧩 GENERATE MOSAICS",
                   style='Accent.TButton',
                   command=self.start_mosaic,
-                  width=30).pack(pady=5)
+                  width=30).pack(side=tk.LEFT, padx=(0, 5))
         
+        ttk.Button(mosaic_btn_frame, text="📂 Open Folder",
+                  command=lambda: self.open_folder("output/mosaics"),
+                  width=20).pack(side=tk.LEFT)
+        
+        # Fake backgrounds button (aligned below GENERATE MOSAICS using left anchor)
         ttk.Button(btn_frame, text="📋 Generate Fake Backgrounds",
                   command=self.start_fake_generator,
-                  width=30).pack(pady=5)
+                  width=30).pack(pady=(10, 0), anchor='w')
     
     def create_validation_view(self):
         """Vue Validation détaillée"""
@@ -4773,6 +4794,40 @@ Continuer ?"""
         
         threading.Thread(target=task, daemon=True).start()
     
+    # ==================== FOLDER UTILITIES ====================
+    
+    def open_folder(self, folder_path: str):
+        """
+        Open a folder in Windows Explorer.
+        
+        Args:
+            folder_path: Relative or absolute path to the folder
+        """
+        try:
+            from pathlib import Path
+            import os
+            import subprocess
+            
+            # Convert to absolute path
+            folder = Path(folder_path).resolve()
+            
+            # Create folder if it doesn't exist
+            if not folder.exists():
+                folder.mkdir(parents=True, exist_ok=True)
+                self.log(f"📂 Created folder: {folder}")
+            
+            # Open in explorer
+            if os.name == 'nt':  # Windows
+                os.startfile(str(folder))
+            elif os.name == 'posix':  # Linux/Mac
+                subprocess.Popen(['xdg-open', str(folder)])
+            
+            self.log(f"📂 Opened folder: {folder}")
+            
+        except Exception as e:
+            self.log(f"❌ Error opening folder: {e}")
+            messagebox.showerror("Error", f"Cannot open folder:\n{e}")
+    
     # ==================== AUGMENTATION METHODS ====================
     
     def start_augmentation_pipeline(self):
@@ -5013,14 +5068,11 @@ Continuer ?"""
         def task():
             try:
                 # Utilisation de la version OPTIMISÉE par défaut
-                if "All" in mode:
-                    cmd = [sys.executable, "-u", "core/mosaic_optimized.py", "all"]
-                else:
-                    # Pass layout, background, transform parameters avec argparse moderne
-                    cmd = [sys.executable, "-u", "core/mosaic_optimized.py", 
-                           str(layout_val), str(background_val), str(transform_val)]
-                    if max_groups:
-                        cmd.extend(["--max-groups", str(max_groups)])
+                # Pass layout, background, transform parameters avec argparse moderne
+                cmd = [sys.executable, "-u", "core/mosaic_optimized.py", 
+                       str(layout_val), str(background_val), str(transform_val)]
+                if max_groups:
+                    cmd.extend(["--max-groups", str(max_groups)])
                 
                 self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                           stderr=subprocess.STDOUT, text=True,

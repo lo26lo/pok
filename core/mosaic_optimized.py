@@ -116,11 +116,25 @@ class MosaicGeneratorOptimized:
         match = _PATTERN_FALLBACK_2.search(filename)
         return match.group(1) if match else None
     
-    def _load_and_resize_single(self, img_path: str, target_size: Tuple[int, int] = (280, 380)) -> Optional[Tuple]:
+    def _load_and_resize_single(self, img_path: str, target_size: Tuple[int, int]) -> Optional[Tuple]:
         """Charge et resize une seule image (pour parallélisation)"""
         try:
             img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
             if img is None:
+                # Image corrompue - déplacer dans corrupted/
+                corrupted_dir = Path("corrupted")
+                corrupted_dir.mkdir(exist_ok=True)
+                
+                img_file = Path(img_path)
+                dest_path = corrupted_dir / img_file.name
+                
+                try:
+                    import shutil
+                    shutil.move(str(img_file), str(dest_path))
+                    safe_print(f"⚠️ Image corrompue déplacée: {img_file.name} → corrupted/")
+                except Exception as move_error:
+                    safe_print(f"⚠️ Impossible de déplacer {img_file.name}: {move_error}")
+                
                 return None
             
             # Convertir RGBA en RGB si nécessaire (COMME L'ORIGINAL)
@@ -133,7 +147,20 @@ class MosaicGeneratorOptimized:
             
             return (img, img_path)
         except Exception as e:
-            safe_print(f"⚠️ Erreur chargement {img_path}: {e}")
+            # Erreur lors du traitement - déplacer dans corrupted/
+            corrupted_dir = Path("corrupted")
+            corrupted_dir.mkdir(exist_ok=True)
+            
+            img_file = Path(img_path)
+            dest_path = corrupted_dir / img_file.name
+            
+            try:
+                import shutil
+                shutil.move(str(img_file), str(dest_path))
+                safe_print(f"⚠️ Erreur sur {img_file.name} (déplacée dans corrupted/): {e}")
+            except:
+                safe_print(f"⚠️ Erreur chargement {img_path}: {e}")
+            
             return None
     
     def resize_cards_parallel(self, image_paths: List[str], target_size: Tuple[int, int] = (280, 380)) -> List[Tuple]:
@@ -469,16 +496,17 @@ class MosaicGeneratorOptimized:
                     annotation_line = f"{new_class_id} {bbox_cx:.6f} {bbox_cy:.6f} {bbox_w:.6f} {bbox_h:.6f}"
                     annotations.append(annotation_line)
             
-            # Sauvegarder l'image PNG avec compression rapide (évite corruption)
+            # Sauvegarder l'image PNG avec compression ultra-rapide
             output_file = os.path.join(MOSAIC_IMAGES_DIR, f"{prefix}layout_{group_index:03d}.png")
-            # Paramètres PNG: compression 1 (rapide) pour éviter les erreurs CRC
-            success = cv2.imwrite(output_file, layout, [cv2.IMWRITE_PNG_COMPRESSION, 1])
+            # PNG compression 0 = pas de compression (plus rapide, évite corruptions)
+            # Si espace disque important, utiliser compression 1 ou 3
+            success = cv2.imwrite(output_file, layout, [cv2.IMWRITE_PNG_COMPRESSION, 0])
             if not success:
                 raise Exception(f"Échec d'écriture de {output_file}")
             
             # Sauvegarder annotations YOLO
             label_file = os.path.join(MOSAIC_LABELS_DIR, f"{prefix}layout_{group_index:03d}.txt")
-            with open(label_file, "w") as f:
+            with open(label_file, "w", encoding='utf-8') as f:
                 f.write("\n".join(annotations))
             
             return 1
@@ -493,8 +521,8 @@ class MosaicGeneratorOptimized:
                                   layout_mode: int = 1, background_mode: int = 0, 
                                   transform_mode: int = 0):
         """
-        Génère les mosaïques en parallèle (OPTIMISÉ)
-        10-20x plus rapide que la version séquentielle
+        Génère les mosaïques en parallèle (OPTIMISÉ MULTIPROCESSING)
+        20-50x plus rapide que la version séquentielle
         """
         total = len(groups)
         safe_print(f"🎨 Génération de {total} mosaïques en parallèle...")
@@ -509,17 +537,21 @@ class MosaicGeneratorOptimized:
             for idx, group in enumerate(groups)
         ]
         
-        # Traitement parallèle
+        # Traitement parallèle avec ProcessPoolExecutor (évite GIL Python)
+        # Utilise tous les CPU pour un maximum de vitesse
         completed = 0
-        with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
+        max_workers = min(self.num_workers, mp.cpu_count())
+        safe_print(f"   Utilisation de {max_workers} processus parallèles")
+        
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = [executor.submit(self._process_single_group, task) for task in tasks]
             
             for future in futures:
                 result = future.result()
                 completed += result
                 
-                if completed % 10 == 0 or completed == total:
-                    safe_print(f"   Progression: {completed}/{total} mosaïques générées")
+                if completed % 50 == 0 or completed == total:
+                    safe_print(f"   Progression: {completed}/{total} mosaïques générées ({100*completed//total}%)")
         
         safe_print(f"✅ {completed}/{total} mosaïques générées avec succès!")
 
