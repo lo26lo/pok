@@ -94,7 +94,7 @@ class AugmentationOptimized:
         # Pipeline d'augmentation imgaug
         self.seq = iaa.Sequential([
             iaa.Sometimes(0.5, iaa.Affine(
-                rotate=(-10, 10),
+                # rotate=(-10, 10),  # DÉSACTIVÉ : rotation déjà appliquée dans mosaic_optimized
                 translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)},
                 scale=(0.95, 1.05)
             )),
