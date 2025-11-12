@@ -19,7 +19,7 @@ from datetime import datetime
 from core.workflow_manager import WorkflowManager, WorkflowConfig
 from core.training_manager import TrainingManager, TrainingConfig
 from core.detection_manager import DetectionManager, DetectionConfig
-from core.utils import load_paths, PATHS
+from core.utils import load_paths, load_ui_messages, get_message, PATHS, UI_MESSAGES
 
 
 class SettingsDialog:
@@ -146,37 +146,37 @@ class SettingsDialog:
         
         # Onglet Général
         general_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(general_frame, text="  General  ")
+        notebook.add(general_frame, text=f"  {UI_MESSAGES['gui']['tabs']['general']}  ")
         self.create_general_tab(general_frame)
         
         # Onglet Augmentation
         aug_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(aug_frame, text="  Augmentation  ")
+        notebook.add(aug_frame, text=f"  {UI_MESSAGES['gui']['tabs']['augmentation']}  ")
         self.create_augmentation_tab(aug_frame)
         
         # Onglet Mosaic
         mosaic_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(mosaic_frame, text="  Mosaic  ")
+        notebook.add(mosaic_frame, text=f"  {UI_MESSAGES['gui']['tabs']['mosaic']}  ")
         self.create_mosaic_tab(mosaic_frame)
         
         # Onglet Fake Images
         fake_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(fake_frame, text="  Fake Images  ")
+        notebook.add(fake_frame, text=f"  {UI_MESSAGES['gui']['tabs']['fake_images']}  ")
         self.create_fakebackgrounds_tab(fake_frame)
         
         # Onglet Image Download
         download_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(download_frame, text="  Image Download  ")
+        notebook.add(download_frame, text=f"  {UI_MESSAGES['gui']['tabs']['download']}  ")
         self.create_download_tab(download_frame)
         
         # Onglet Training
         train_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(train_frame, text="  Training  ")
+        notebook.add(train_frame, text=f"  {UI_MESSAGES['gui']['tabs']['training']}  ")
         self.create_training_tab(train_frame)
         
         # Onglet Advanced
         advanced_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(advanced_frame, text="  Advanced  ")
+        notebook.add(advanced_frame, text=f"  {UI_MESSAGES['gui']['tabs']['advanced']}  ")
         self.create_advanced_tab(advanced_frame)
         
         # Footer avec boutons
@@ -1299,7 +1299,7 @@ class SettingsDialog:
 class ModernPokemonGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Pokemon Dataset Generator v3.0 - Professional")
+        self.root.title(UI_MESSAGES['gui']['title'])
         self.root.geometry("1400x900")
         self.root.configure(bg='#1e1e2e')
         
@@ -1602,7 +1602,7 @@ class ModernPokemonGUI:
         title_frame.pack(side=tk.LEFT, padx=30, pady=15)
         
         title = tk.Label(title_frame, 
-            text="🎮 Pokemon Dataset Generator",
+            text=f"🎮 {UI_MESSAGES['gui']['title']}",
             font=('Segoe UI', 16, 'bold'),
             bg=self.colors['bg_sidebar'],
             fg=self.colors['text']
@@ -2498,7 +2498,7 @@ class ModernPokemonGUI:
         launch_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         launch_frame.pack(pady=30)
         
-        ttk.Button(launch_frame, text="🚀 START WORKFLOW",
+        ttk.Button(launch_frame, text=UI_MESSAGES['gui']['buttons']['start_workflow'],
                   style='Accent.TButton',
                   command=self.start_workflow,
                   width=30).pack(pady=10)
@@ -2663,7 +2663,7 @@ class ModernPokemonGUI:
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=20)
         
-        ttk.Button(btn_frame, text="⬇️ START DOWNLOAD",
+        ttk.Button(btn_frame, text=UI_MESSAGES['gui']['buttons']['start_download'],
                   style='Accent.TButton',
                   command=self.start_image_download,
                   width=30).pack(side=tk.LEFT, padx=5, pady=5)
@@ -3428,7 +3428,7 @@ class ModernPokemonGUI:
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         btn_frame.pack(pady=30)
         
-        ttk.Button(btn_frame, text="🎓 START TRAINING",
+        ttk.Button(btn_frame, text=UI_MESSAGES['gui']['buttons']['start_training'],
                   style='Accent.TButton',
                   command=self.start_training,
                   width=30).pack(pady=5)
@@ -4055,6 +4055,82 @@ class ModernPokemonGUI:
             messagebox.showerror("Erreur", f"Impossible de créer le fichier:\n{e}")
             return False
     
+    def _generate_yaml_from_manifest(self, manifest_path: str, set_id: str, set_name: str):
+        """
+        Génère automatiquement cards_database.yaml depuis le manifest.csv du téléchargement
+        
+        Args:
+            manifest_path: Chemin vers manifest.csv
+            set_id: ID du set (ex: sv08, xyp)
+            set_name: Nom du set (ex: "Surging Sparks")
+        """
+        import yaml
+        import csv
+        from datetime import datetime
+        from pathlib import Path
+        import requests
+        
+        # Lire le manifest pour obtenir les IDs des cartes
+        # Format réel du manifest: id, localId, name, file, source_url
+        # Exemple: xyp-XY01, XY01, Chespin, images\xyp_XY01_en.png, https://...
+        cards_from_manifest = []
+        with open(manifest_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                card_id = row.get('id', '')  # ex: xyp-XY01
+                local_id = row.get('localId', '')  # ex: XY01
+                card_name = row.get('name', 'Unknown')
+                file_path = row.get('file', '')
+                
+                if card_id and file_path:
+                    # Extraire le nom du fichier sans extension ni langue
+                    # Ex: images\xyp_XY01_en.png → xyp_XY01
+                    filename = Path(file_path).stem  # xyp_XY01_en
+                    internal_id = '_'.join(filename.split('_')[:-1]) if '_' in filename else filename
+                    
+                    cards_from_manifest.append({
+                        'internal_id': internal_id,
+                        'tcgdex_id': card_id,
+                        'local_id': local_id,
+                        'name': card_name
+                    })
+        
+        # Récupérer les infos complètes depuis TCGdex API (optionnel, pour avoir rarity, etc.)
+        # Pour l'instant, on crée avec les infos du manifest
+        cards_data = {}
+        for card in cards_from_manifest:
+            cards_data[card['internal_id']] = {
+                'name': card['name'],
+                'set': set_name,
+                'set_full': f"{card['local_id']}/???",
+                'type': 'Pokemon',
+                'rarity': 'Common',
+                'price': None,
+                'price_max': None,
+                'price_source': '',
+                'last_updated': datetime.now().strftime('%Y-%m-%d')
+            }
+        
+        # Créer structure YAML
+        yaml_data = {
+            'metadata': {
+                'version': '1.0',
+                'format': 'YOLO-compatible card database',
+                'last_updated': datetime.now().strftime('%Y-%m-%d'),
+                'source': f'Auto-generated from Image Download ({set_id})',
+                'total_cards': len(cards_data),
+                'comment': 'Bounding boxes are generated dynamically during mosaic/augmentation'
+            },
+            'cards': cards_data
+        }
+        
+        # Sauvegarder YAML
+        yaml_path = Path(PATHS['files']['cards_database_yaml'])
+        yaml_path.parent.mkdir(exist_ok=True)
+        
+        with open(yaml_path, 'w', encoding='utf-8') as f:
+            yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    
     def detect_gpu_info(self):
         """V3.1: Détecter le GPU disponible de manière compacte
         
@@ -4396,8 +4472,8 @@ Lancer le téléchargement ?"""
                 card_count_data = set_info.get('cardCount', '?')
                 card_count = card_count_data.get('total', '?') if isinstance(card_count_data, dict) else card_count_data
                 
-                self.log(f"✅ Set trouvé: {set_name} ({set_id}) - {card_count} cartes")
-                self.log(f"⬇️ Téléchargement en cours...")
+                self.log(get_message('console.set_found', name=set_name, id=set_id, count=card_count))
+                self.log(get_message('console.download_progress'))
                 
                 # Download
                 ok, fail, total = downloader.download_set(
@@ -4411,13 +4487,24 @@ Lancer le téléchargement ?"""
                 
                 # Results
                 self.log(f"\n{'='*60}")
-                self.log(f"✅ TÉLÉCHARGEMENT TERMINÉ")
+                self.log(get_message('console.download_complete'))
                 self.log(f"{'='*60}")
-                self.log(f"✅ Succès : {ok}/{total} cartes")
+                self.log(get_message('console.download_success', ok=ok, total=total))
                 if fail > 0:
-                    self.log(f"❌ Échecs : {fail}/{total} cartes")
-                self.log(f"💾 Dossier : {output_dir}/{set_id}/")
-                self.log(f"📄 Manifest : {output_dir}/{set_id}/manifest.csv")
+                    self.log(get_message('console.download_failure', fail=fail, total=total))
+                self.log(get_message('console.download_folder', folder=f"{output_dir}/{set_id}/"))
+                self.log(get_message('console.download_manifest', file=f"{output_dir}/manifest.csv"))
+                
+                # 🔧 AUTO-GENERATE cards_database.yaml from manifest
+                if ok > 0:
+                    self.log(f"\n📋 Génération automatique de cards_database.yaml...")
+                    try:
+                        # Le manifest est à la racine du output_dir, pas dans le sous-dossier set_id
+                        manifest_path = f"{output_dir}/manifest.csv"
+                        self._generate_yaml_from_manifest(manifest_path, set_id, set_name)
+                        self.log(get_message('console.yaml_created'))
+                    except Exception as yaml_err:
+                        self.log(get_message('console.yaml_error', error=yaml_err))
                 
                 if fail == 0:
                     messagebox.showinfo("✅ Succès", 
@@ -4929,17 +5016,17 @@ Continuer ?"""
                             return
                         else:
                             self.log("✅ Holographic terminé!")
-                            # Changer la source pour l'augmentation
-                            source_dir = "holographic"
+                            # NOTE: On garde source_dir = "images" car l'augmentation doit partir des images ORIGINALES
                 
-                # ÉTAPE 2: Augmentation (optionnel)
+                # ÉTAPE 2: Augmentation (optionnel) - TOUJOURS depuis images originales
                 if num_aug > 0:
                     step_num = "2/2" if num_holo > 0 else "1/1"
                     self.log(f"\n🎨 ÉTAPE {step_num}: Augmentation ({num_aug} variations par image)...")
                     
-                    cmd = [sys.executable, "-u", "core/augmentation.py",
+                    # IMPORTANT: Toujours augmenter depuis les images ORIGINALES, pas depuis holographic
+                    cmd = [sys.executable, "-u", "core/augmentation_optimized.py",
                           "--num_aug", str(num_aug),
-                          "--source", source_dir,
+                          "--source", "images",  # Toujours "images", jamais "holographic"
                           "--target", "augmented"]
                     
                     self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -6513,7 +6600,9 @@ Total: {images_count + aug_count + mosaic_count} images"""
                     processed += 1
                     now = time.time()
                     if processed % 10 == 0 or (now - last_log[0]) >= 5:
-                        self.log(f"📊 Progress: {processed}/{total} ({int(processed/total*100)}%)")
+                        percent = int(processed/total*100)
+                        self.log(get_message('console.progress', 
+                                           processed=processed, total=total, percent=percent))
                         last_log[0] = now
                     
                     return card_id, price, pmax, source

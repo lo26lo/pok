@@ -10,20 +10,10 @@ import json
 import subprocess
 from pathlib import Path
 
-# Charger paths depuis config
-def load_paths():
-    config_path = Path("config/paths.json")
-    with open(config_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+# Ajouter le parent au path pour importer core
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-PATHS = load_paths()
-
-def safe_print(msg):
-    """Print Unicode-safe"""
-    try:
-        print(msg)
-    except UnicodeEncodeError:
-        print(msg.encode('ascii', 'ignore').decode('ascii'))
+from core.utils import safe_print, get_message, load_paths, PATHS, UI_MESSAGES
 
 def run_command(cmd, description):
     """Exécute une commande et affiche le résultat"""
@@ -44,13 +34,13 @@ def run_command(cmd, description):
 
 def main():
     safe_print("\n" + "="*70)
-    safe_print("🚀 WORKFLOW OPTIMISÉ GPU - GÉNÉRATION DATASET POKÉMON")
+    safe_print(get_message('console.workflow_start').replace('...', '').upper())
     safe_print("="*70)
     
     # Vérifier environnement
     venv_python = Path(".venv/Scripts/python.exe")
     if not venv_python.exists():
-        safe_print("❌ Environnement virtuel non trouvé!")
+        safe_print(get_message('console.venv_not_found'))
         sys.exit(1)
     
     python_exe = str(venv_python.absolute())
@@ -101,10 +91,10 @@ def main():
     holo_count = len(list(Path(PATHS['directories']['output_holographic']).glob("*.png")))
     safe_print(f"   📊 {holo_count} images holographiques générées (attendu: {total_holo})")
     
-    # ÉTAPE 2: Augmentation standard
+    # ÉTAPE 2: Augmentation standard (depuis images ORIGINALES, pas holo)
     if not run_command(
-        f'{python_exe} core/augmentation.py --num_aug {num_augmentations} --source holographic --target augmented',
-        f"ÉTAPE 2/5 - Augmentation standard ({num_augmentations} par image)"
+        f'{python_exe} core/augmentation_optimized.py --num_aug {num_augmentations} --source images --target augmented',
+        f"ÉTAPE 2/5 - Augmentation standard OPTIMISÉE ({num_augmentations} par image)"
     ):
         return False
     
@@ -182,7 +172,7 @@ def main():
     
     # Résumé final
     safe_print("\n" + "="*70)
-    safe_print("🎉 WORKFLOW TERMINÉ AVEC SUCCÈS!")
+    safe_print(get_message('console.workflow_complete').upper())
     safe_print("="*70)
     safe_print(f"\n📂 Dataset final : {PATHS['directories']['output_dataset']}/")
     safe_print(f"   ├── images/ ({dataset_count} fichiers)")

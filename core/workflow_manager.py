@@ -21,9 +21,9 @@ from dataclasses import dataclass
 
 # Import safe_print - gère import relatif ET absolu
 try:
-    from .utils import safe_print
+    from .utils import safe_print, get_message
 except ImportError:
-    from utils import safe_print
+    from utils import safe_print, get_message
 from enum import Enum
 import logging
 
@@ -254,8 +254,9 @@ class WorkflowManager:
         try:
             cmd = [
                 sys.executable, 
-                "core/augmentation.py",
+                "core/augmentation_optimized.py",
                 "--num_aug", str(self.config.num_augmentations),
+                "--source", "images",  # Augmenter depuis images originales
                 "--target", "augmented"
             ]
             
@@ -655,10 +656,10 @@ def main():
         sys.exit(0 if manager.is_success() else 1)
         
     except KeyboardInterrupt:
-        safe_print("\n⏹️ Workflow interrompu par l'utilisateur")
+        safe_print(f"\n{get_message('console.operation_stopped')}")
         sys.exit(1)
     except Exception as e:
-        safe_print(f"\n❌ Erreur fatale: {e}")
+        safe_print(f"\n{get_message('console.error_main', error=e)}")
         sys.exit(1)
 
 

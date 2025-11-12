@@ -54,6 +54,82 @@ PATHS = load_paths()
 # ============================================================
 
 
+# ==================== UI MESSAGES CONFIGURATION ====================
+def load_ui_messages(language: str = 'fr') -> Dict:
+    """
+    Load centralized UI messages from config/ui_messages[_LANG].json
+    NO HELPER - Direct JSON loading
+    
+    Args:
+        language: Language code ('fr', 'en', 'es', etc.)
+    
+    Returns:
+        Dictionary with all UI messages
+    """
+    # Try language-specific file first
+    if language != 'fr':
+        config_path = Path(__file__).parent.parent / "config" / f"ui_messages_{language}.json"
+        if config_path.exists():
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                pass  # Fallback to French
+    
+    # Default: French version
+    config_path = Path(__file__).parent.parent / "config" / "ui_messages.json"
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Fallback to English messages if file doesn't exist
+        return {
+            "console": {
+                "download_start": "Downloading images...",
+                "download_complete": "Download complete!",
+                "error": "Error",
+                "warning": "Warning",
+                "info": "Info",
+                "success": "Success"
+            },
+            "gui": {
+                "title": "Pokémon Dataset Generator",
+                "labels": {},
+                "buttons": {},
+                "status": {}
+            }
+        }
+
+# Load UI messages at module import
+UI_MESSAGES = load_ui_messages()
+# ============================================================
+
+
+def get_message(key_path: str, **kwargs) -> str:
+    """
+    Get UI message by dot-separated key path with optional formatting
+    
+    Examples:
+        get_message('console.download_start')
+        get_message('console.download_success', ok=10, total=15)
+        get_message('gui.buttons.start_download')
+    """
+    keys = key_path.split('.')
+    value = UI_MESSAGES
+    
+    try:
+        for key in keys:
+            value = value[key]
+        
+        # Format if kwargs provided and value is string
+        if kwargs and isinstance(value, str):
+            return value.format(**kwargs)
+        return value
+    except (KeyError, TypeError):
+        # Fallback if key not found
+        return key_path
+
+
 def safe_print(*args, **kwargs):
     """
     Print avec gestion d'encodage pour Windows
