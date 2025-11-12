@@ -5093,7 +5093,7 @@ Continuer ?"""
                 # Standard augmentation
                 if aug_type in ["Standard", "Both"]:
                     self.log("🎨 Running standard augmentation...")
-                    cmd = [sys.executable, "-u", "core/augmentation.py",
+                    cmd = [sys.executable, "-u", "core/augmentation_optimized.py",
                           "--num_aug", str(num_aug),
                           "--target", target]
                     
