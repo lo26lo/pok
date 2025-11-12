@@ -58,7 +58,7 @@ NUM_VARIATIONS_ALL = 50
 
 # Répertoires
 INPUT_DIRS = [os.path.join("output", "augmented", "images")]
-FAKE_DIR = os.path.join("backgrounds", "augmented")  # Backgrounds augmentés avec random erasing
+FAKE_DIR = os.path.join("output", "backgrounds")  # Backgrounds augmentés avec random erasing
 MOSAIC_DIR = "mosaic"
 MOSAIC_OUTPUT_DIR = os.path.join("output", "mosaics")
 MOSAIC_IMAGES_DIR = os.path.join(MOSAIC_OUTPUT_DIR, "images")

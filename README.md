@@ -260,12 +260,23 @@ pok/
 │   └── utils.py                   # Common utilities
 │
 ├── 🖼️ images/                      # Downloaded source images
-├── 🎨 augmented/                   # Generated augmented images
-├── 📊 output/                      # Generated YOLO datasets
-│   ├── augmented/                 # Augmentations + labels
-│   ├── yolov8/                    # Final YOLO dataset
-│   ├── holographic/               # Holographic effects
-│   └── mosaics/                   # Annotated mosaics
+├── 📊 output/                      # 📂 All generated outputs (centralized)
+│   ├── holographic/               # Holographic augmented images
+│   ├── augmented/                 # Standard augmentations + labels
+│   │   ├── images/
+│   │   ├── labels/
+│   │   └── data.yaml
+│   ├── backgrounds/               # Fake images (random erasing)
+│   ├── mosaics/                   # Annotated mosaics + labels
+│   │   ├── images/
+│   │   └── labels/
+│   ├── dataset/                   # Final YOLO dataset (merged)
+│   │   ├── images/
+│   │   ├── labels/
+│   │   ├── train.txt             # Train split (80%)
+│   │   ├── val.txt               # Val split (20%)
+│   │   └── data.yaml
+│   └── dataset_merged/            # Multi-dataset merging results
 ├── 🏃 runs/                        # YOLO training results
 │   └── train/                     # Training folders
 │       └── pokemon_detector/
@@ -275,9 +286,8 @@ pok/
 ├── 📈 excel/                       # Excel price files
 │   └── cards_with_prices.xlsx    # Card prices (auto-generated)
 │
-├── 🌄 backgrounds/                 # Backgrounds for mosaics
-│   ├── original/
-│   └── augmented/
+├── 🌄 backgrounds/                 # Original backgrounds for mosaics
+│   └── original/
 ├── 📦 bbox_visualization/          # Bounding box visualizations
 ├── 🗂️ dataset_voc/                 # Pascal VOC format dataset
 ├── 🌐 examples/                    # Example images for README

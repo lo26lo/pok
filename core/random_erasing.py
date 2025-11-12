@@ -94,7 +94,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--input_dir", type=str, default=os.path.join("backgrounds", "original"),
                         help="Répertoire contenant les images d'entrée")
-    parser.add_argument("--output_dir", type=str, default=os.path.join("backgrounds", "augmented"),
+    parser.add_argument("--output_dir", type=str, default=os.path.join("output", "backgrounds"),
                         help="Répertoire où enregistrer les images transformées")
     parser.add_argument("--p", type=float, default=0.5,
                         help="Probabilité initiale d'appliquer le random erasing (entre 0.0 et 1.0)")

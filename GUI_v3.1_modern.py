@@ -68,7 +68,7 @@ class SettingsDialog:
         self.default_augmented_dir = tk.StringVar(value=config.get("default_augmented_dir", "output/augmented"))
         self.default_mosaic_dir = tk.StringVar(value=config.get("default_mosaic_dir", "output/mosaics"))
         self.default_dataset_dir = tk.StringVar(value=config.get("default_dataset_dir", "output/dataset"))
-        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", "backgrounds/augmented"))
+        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", "output/backgrounds"))
         self.default_holographic_dir = tk.StringVar(value=config.get("default_holographic_dir", "output/holographic"))
         
         self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 50))
@@ -88,7 +88,7 @@ class SettingsDialog:
         
         # Fake image generation settings (random erasing)
         self.fakeimg_input_dir = tk.StringVar(value=config.get("fakeimg_input_dir", "backgrounds/original"))
-        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "backgrounds/augmented"))
+        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "output/backgrounds"))
         self.fakeimg_p = tk.DoubleVar(value=config.get("fakeimg_p", 0.5))
         self.fakeimg_sl = tk.DoubleVar(value=config.get("fakeimg_sl", 0.02))
         self.fakeimg_sh = tk.DoubleVar(value=config.get("fakeimg_sh", 0.4))
@@ -2671,6 +2671,56 @@ class ModernPokemonGUI:
                   command=lambda: self.open_folder("images"),
                   width=20).pack(side=tk.LEFT, padx=5, pady=5)
     
+    def get_augmentation_stats(self):
+        """Récupérer les statistiques d'augmentation (holo + standard)"""
+        try:
+            source_dir = "images"
+            holo_dir = "output/holographic"
+            augmented_dir = "output/augmented/images"
+            
+            source_count = 0
+            holo_count = 0
+            augmented_count = 0
+            
+            if os.path.exists(source_dir):
+                source_count = len([f for f in os.listdir(source_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
+            
+            if os.path.exists(holo_dir):
+                holo_count = len([f for f in os.listdir(holo_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
+            
+            if os.path.exists(augmented_dir):
+                augmented_count = len([f for f in os.listdir(augmented_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
+            
+            total_generated = holo_count + augmented_count
+            
+            stats_text = f"📊 Source: {source_count} images"
+            if holo_count > 0:
+                stats_text += f" | Holo: {holo_count}"
+            if augmented_count > 0:
+                stats_text += f" | Augmented: {augmented_count}"
+            if total_generated > 0:
+                ratio = total_generated / source_count if source_count > 0 else 0
+                stats_text += f" | Total: {total_generated} ({ratio:.1f}x)"
+            
+            return stats_text
+        except:
+            return "📊 Unable to read statistics"
+    
+    def refresh_augmentation_stats(self):
+        """Rafraîchir les statistiques d'augmentation toutes les 2 secondes"""
+        if hasattr(self, 'aug_stats_label') and self.aug_stats_label.winfo_exists():
+            try:
+                # Trouver le label de stats dans l'info_frame
+                for child in self.aug_stats_label.winfo_children():
+                    if isinstance(child, tk.Label) and child.cget('text').startswith('📊'):
+                        new_stats = self.get_augmentation_stats()
+                        child.config(text=new_stats)
+                        break
+            except:
+                pass
+            # Programmer le prochain rafraîchissement
+            self.root.after(2000, self.refresh_augmentation_stats)
+    
     def create_augmentation_view(self):
         """Vue Augmentation détaillée - HARMONISÉE V3.1 sans scroll"""
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
@@ -2680,27 +2730,10 @@ class ModernPokemonGUI:
         self.create_dense_header(container, "🎨", "Image Augmentation",
                                 "Generate augmented variations of your card images")
         
-        # V3.1: Compact Info Tooltip (remplace Info Card)
-        try:
-            source_dir = "images"
-            augmented_dir = "augmented"
-            source_count = 0
-            augmented_count = 0
-            
-            if os.path.exists(source_dir):
-                source_count = len([f for f in os.listdir(source_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
-            
-            if os.path.exists(augmented_dir):
-                augmented_count = len([f for f in os.listdir(augmented_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
-            
-            stats_text = f"📊 Source: {source_count} images | Augmented: {augmented_count} images"
-            if augmented_count > 0:
-                ratio = augmented_count / source_count if source_count > 0 else 0
-                stats_text += f" | Ratio: {ratio:.1f}x"
-        except:
-            stats_text = "📊 Unable to read statistics"
+        # V3.1: Compact Info Tooltip avec stats dynamiques (holo + augmented)
+        stats_text = self.get_augmentation_stats()
         
-        self.create_info_tooltip(container,
+        self.aug_stats_label = self.create_info_tooltip(container,
             "ℹ️ About Augmentation",
             stats_text,
             "Image augmentation creates variations of your original images using transformations like rotation, "
@@ -2708,6 +2741,9 @@ class ModernPokemonGUI:
             "improve model training. Standard mode uses traditional augmentations, while Holographic mode adds "
             "special effects to simulate holographic Pokemon cards."
         )
+        
+        # Lancer le rafraîchissement automatique
+        self.refresh_augmentation_stats()
         
         # Configuration Card
         config_card = tk.Frame(container, bg=self.colors['bg_card'])
@@ -2871,7 +2907,7 @@ class ModernPokemonGUI:
         
         self.fakeimg_output_var = ttk.Entry(output_frame, width=self.ENTRY_WIDTH)
         self.fakeimg_output_var.pack(side=tk.LEFT, padx=10)
-        self.fakeimg_output_var.insert(0, "backgrounds/augmented")
+        self.fakeimg_output_var.insert(0, "output/backgrounds")
         
         # Random Erasing Parameters
         tk.Label(config_content,
@@ -2973,7 +3009,7 @@ class ModernPokemonGUI:
                   width=30).pack(side=tk.LEFT, padx=5, pady=5)
         
         ttk.Button(btn_frame, text="📂 Open Folder",
-                  command=lambda: self.open_folder("backgrounds/augmented"),
+                  command=lambda: self.open_folder("output/backgrounds"),
                   width=20).pack(side=tk.LEFT, padx=5, pady=5)
     
     def create_mosaic_view(self):

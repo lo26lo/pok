@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.2] - 2025-11-12
+
+### 📁 Structure Refactoring
+
+#### Directory Reorganization
+- **Simplified structure**: All outputs now under `output/`
+  - `backgrounds/augmented/` → `output/backgrounds/`
+  - Removed scattered directories for better organization
+- **New directories**:
+  - `output/backgrounds/`: Fake images with random erasing (replaces `backgrounds/augmented/`)
+  - `output/dataset_merged/`: Multi-dataset merging results
+- **Dataset structure clarified**:
+  - `output/dataset/`: Final YOLO dataset with flat structure (images/ + labels/ + train.txt/val.txt)
+  - Merge workflow: `output/augmented/` + `output/mosaics/` → `output/dataset/`
+
+#### Files Updated
+- **core/mosaic_optimized.py**: FAKE_DIR → `output/backgrounds/`
+- **core/random_erasing.py**: Default output → `output/backgrounds/`
+- **GUI_v3.1_modern.py**: Updated all fake images paths (4 occurrences)
+- **Planning**: Added `.planning/` system for major changes tracking
+
+#### GUI Improvements
+- **Dynamic stats refresh**: Augmentation view now updates every 2 seconds
+  - Shows source, holographic, and augmented counts in real-time
+- **Settings bandeau**: Changed from gray to blue accent for better visibility
+
+---
+
 ## [3.2.1] - 2025-11-11
 
 ### 🚀 Performance & UX Improvements
