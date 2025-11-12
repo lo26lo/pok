@@ -2377,49 +2377,32 @@ class ModernPokemonGUI:
         return frame
     
     def create_home_view(self):
-        """Vue Home / Dashboard - HARMONISÉ V3.1"""
+        """Vue Home / Dashboard - V3.2 avec métriques avancées"""
         container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
         # V3.1: Dense Header
         self.create_dense_header(container, "🏠", "Dashboard",
-                                "Overview of your Pokemon dataset project")
+                                "Advanced metrics and system overview")
         
-        # Calculer les statistiques réelles
-        stats = self.get_real_stats()
+        # Initialiser le dictionnaire pour stocker les références des cartes
+        self.dashboard_cards = {}
         
-        # Initialiser le dictionnaire pour stocker les labels de stats
-        self.stat_cards = {}
-        
-        # Stats Cards (grid 2x2)
+        # V3.2: Nouvelles cartes métriques (grid 2x2)
         stats_grid = tk.Frame(container, bg=self.colors['bg_dark'])
         stats_grid.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
         
-        self.create_stat_card(stats_grid, "Source Images", str(stats['source']), "📸", 0, 0, 'source')
-        self.create_stat_card(stats_grid, "Augmented", str(stats['augmented']), "🎨", 0, 1, 'augmented')
-        self.create_stat_card(stats_grid, "Mosaics", str(stats['mosaics']), "🧩", 1, 0, 'mosaic')
-        self.create_stat_card(stats_grid, "Dataset Size", stats['size'], "💾", 1, 1, 'size')
+        # Carte 1 : Dernière Activité
+        self.create_activity_card(stats_grid, 0, 0)
         
-        # V3.1: GPU Info - Compact 1-line card
-        gpu_frame = tk.Frame(container, bg=self.colors['bg_card'])
-        gpu_frame.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
+        # Carte 2 : Progression Dataset
+        self.create_progress_card(stats_grid, 0, 1)
         
-        gpu_content = tk.Frame(gpu_frame, bg=self.colors['bg_card'])
-        gpu_content.pack(fill=tk.X, padx=20, pady=12)
+        # Carte 3 : État du Système
+        self.create_system_card(stats_grid, 1, 0)
         
-        # Détecter GPU
-        gpu_available, gpu_info = self.detect_gpu_info()
-        
-        gpu_text = f"🎮 GPU: {gpu_info} | Status: {'✅ Available' if gpu_available else '❌ Not Available'}"
-        gpu_color = self.colors['success'] if gpu_available else self.colors['warning']
-        
-        tk.Label(gpu_content,
-            text=gpu_text,
-            font=self.FONT_BUTTON,
-            bg=self.colors['bg_card'],
-            fg=gpu_color,
-            anchor='w'
-        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        # Carte 4 : Aperçu Rapide
+        self.create_preview_card(stats_grid, 1, 1)
         
         # Avertissement si environnement virtuel absent
         if not self.check_venv():
@@ -2518,8 +2501,357 @@ class ModernPokemonGUI:
         ttk.Button(buttons_frame, text="🎓 Train Model",
                   command=lambda: self.show_view('training')).pack(side=tk.LEFT, padx=5)
     
+    def create_activity_card(self, parent, row, col):
+        """Carte Dernière Activité"""
+        card = tk.Frame(parent, bg=self.colors['bg_card'], 
+                       highlightbackground=self.colors['border'],
+                       highlightthickness=1)
+        card.grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+        
+        parent.grid_rowconfigure(row, weight=1)
+        parent.grid_columnconfigure(col, weight=1)
+        
+        # Titre
+        tk.Label(card,
+            text="📊 Dernière Activité",
+            font=self.FONT_CARD_TITLE,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        ).pack(anchor='w', padx=20, pady=(15, 10))
+        
+        # Récupérer l'activité
+        activity = self.get_last_activity()
+        
+        # Opération
+        op_label = tk.Label(card,
+            text=activity['operation'],
+            font=('Segoe UI', 16, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['accent']
+        )
+        op_label.pack(anchor='w', padx=20, pady=5)
+        self.dashboard_cards['activity_operation'] = op_label
+        
+        # Temps
+        time_label = tk.Label(card,
+            text=activity['time'],
+            font=self.FONT_TEXT,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text_dim']
+        )
+        time_label.pack(anchor='w', padx=20)
+        self.dashboard_cards['activity_time'] = time_label
+        
+        # Statut
+        status_label = tk.Label(card,
+            text=activity['status'],
+            font=self.FONT_BUTTON,
+            bg=self.colors['bg_card'],
+            fg=self.colors['success'] if '✅' in activity['status'] else self.colors['text_dim']
+        )
+        status_label.pack(anchor='w', padx=20, pady=(5, 15))
+        self.dashboard_cards['activity_status'] = status_label
+    
+    def create_recommendations_card(self, parent, row, col):
+        """Carte Recommendations Intelligentes (V3.2 - Option 3)"""
+        card = tk.Frame(parent, bg=self.colors['bg_card'], 
+                       highlightbackground=self.colors['border'],
+                       highlightthickness=1)
+        card.grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+        
+        parent.grid_rowconfigure(row, weight=1)
+        parent.grid_columnconfigure(col, weight=1)
+        
+        # Titre
+        tk.Label(card,
+            text="💡 Recommendations",
+            font=self.FONT_CARD_TITLE,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        ).pack(anchor='w', padx=20, pady=(15, 10))
+        
+        # Récupérer les recommendations
+        rec = self.get_smart_recommendations()
+        
+        # Icône + Titre
+        title_frame = tk.Frame(card, bg=self.colors['bg_card'])
+        title_frame.pack(anchor='w', padx=20, pady=5)
+        
+        tk.Label(title_frame,
+            text=rec['icon'],
+            font=('Segoe UI', 20),
+            bg=self.colors['bg_card']
+        ).pack(side=tk.LEFT, padx=(0, 10))
+        
+        rec_title_label = tk.Label(title_frame,
+            text=rec['title'],
+            font=('Segoe UI', 12, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['accent'],
+            wraplength=200,
+            justify='left'
+        )
+        rec_title_label.pack(side=tk.LEFT)
+        self.dashboard_cards['rec_title'] = rec_title_label
+        
+        # Description
+        rec_desc_label = tk.Label(card,
+            text=rec['description'],
+            font=('Segoe UI', 9),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text_dim'],
+            wraplength=280,
+            justify='left'
+        )
+        rec_desc_label.pack(anchor='w', padx=20, pady=(5, 15))
+        self.dashboard_cards['rec_description'] = rec_desc_label
+        
+        # Badge de priorité
+        priority_colors = {
+            'high': self.colors['error'],
+            'medium': self.colors['warning'],
+            'low': self.colors['success']
+        }
+        priority_label = tk.Label(card,
+            text=f"Priority: {rec['priority'].upper()}",
+            font=('Segoe UI', 8, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=priority_colors.get(rec['priority'], self.colors['text_dim'])
+        )
+        priority_label.pack(anchor='w', padx=20, pady=(0, 10))
+        self.dashboard_cards['rec_priority'] = priority_label
+    
+    def create_health_score_card(self, parent, row, col):
+        """Carte Score de Santé du Dataset (V3.2 - Option 4)"""
+        card = tk.Frame(parent, bg=self.colors['bg_card'], 
+                       highlightbackground=self.colors['border'],
+                       highlightthickness=1)
+        card.grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+        
+        parent.grid_rowconfigure(row, weight=1)
+        parent.grid_columnconfigure(col, weight=1)
+        
+        # Titre
+        tk.Label(card,
+            text="📊 Dataset Health",
+            font=self.FONT_CARD_TITLE,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        ).pack(anchor='w', padx=20, pady=(15, 10))
+        
+        # Récupérer le score
+        health = self.get_dataset_health_score()
+        
+        # Score et Grade
+        score_frame = tk.Frame(card, bg=self.colors['bg_card'])
+        score_frame.pack(anchor='w', padx=20, pady=5)
+        
+        score_label = tk.Label(score_frame,
+            text=f"{health['score']}",
+            font=('Segoe UI', 32, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=health['color']
+        )
+        score_label.pack(side=tk.LEFT)
+        self.dashboard_cards['health_score'] = score_label
+        
+        tk.Label(score_frame,
+            text="/100",
+            font=('Segoe UI', 14),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text_dim']
+        ).pack(side=tk.LEFT, padx=(2, 10))
+        
+        # Grade
+        grade_label = tk.Label(card,
+            text=health['grade'],
+            font=('Segoe UI', 12, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=health['color']
+        )
+        grade_label.pack(anchor='w', padx=20, pady=5)
+        self.dashboard_cards['health_grade'] = grade_label
+        
+        # Détails (2 premiers critères seulement pour économiser l'espace)
+        if health['details']:
+            details_text = '\n'.join([f"{d[0]}: {d[1]}/30" for d in health['details'][:2]])
+            details_label = tk.Label(card,
+                text=details_text,
+                font=('Segoe UI', 9),
+                bg=self.colors['bg_card'],
+                fg=self.colors['text_dim'],
+                justify='left'
+            )
+            details_label.pack(anchor='w', padx=20, pady=(5, 15))
+            self.dashboard_cards['health_details'] = details_label
+    
+    def create_progress_card(self, parent, row, col):
+        """Carte Progression Dataset"""
+        card = tk.Frame(parent, bg=self.colors['bg_card'], 
+                       highlightbackground=self.colors['border'],
+                       highlightthickness=1)
+        card.grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+        
+        parent.grid_rowconfigure(row, weight=1)
+        parent.grid_columnconfigure(col, weight=1)
+        
+        # Titre
+        tk.Label(card,
+            text="🎯 Progression Dataset",
+            font=self.FONT_CARD_TITLE,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        ).pack(anchor='w', padx=20, pady=(15, 10))
+        
+        # Récupérer la progression
+        progress = self.get_dataset_progress()
+        
+        # Pourcentage
+        percent_label = tk.Label(card,
+            text=f"{progress['percent']}%",
+            font=('Segoe UI', 28, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['accent']
+        )
+        percent_label.pack(anchor='w', padx=20, pady=5)
+        self.dashboard_cards['progress_percent'] = percent_label
+        
+        # Barre de progression
+        progress_bg = tk.Frame(card, bg=self.colors['bg_dark'], height=10)
+        progress_bg.pack(fill=tk.X, padx=20, pady=10)
+        
+        progress_bar = tk.Frame(progress_bg, bg=self.colors['accent'], height=10)
+        progress_bar.place(x=0, y=0, relwidth=progress['percent']/100, height=10)
+        self.dashboard_cards['progress_bar'] = progress_bar
+        self.dashboard_cards['progress_bar_container'] = progress_bg
+        
+        # Texte
+        text_label = tk.Label(card,
+            text=f"{progress['current']} / {progress['target']} images",
+            font=self.FONT_TEXT,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text_dim']
+        )
+        text_label.pack(anchor='w', padx=20, pady=(0, 15))
+        self.dashboard_cards['progress_text'] = text_label
+    
+    def create_system_card(self, parent, row, col):
+        """Carte État du Système"""
+        card = tk.Frame(parent, bg=self.colors['bg_card'], 
+                       highlightbackground=self.colors['border'],
+                       highlightthickness=1)
+        card.grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+        
+        parent.grid_rowconfigure(row, weight=1)
+        parent.grid_columnconfigure(col, weight=1)
+        
+        # Titre
+        tk.Label(card,
+            text="💡 État du Système",
+            font=self.FONT_CARD_TITLE,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        ).pack(anchor='w', padx=20, pady=(15, 10))
+        
+        # Récupérer l'état
+        status = self.get_system_status()
+        
+        # GPU
+        gpu_text = f"GPU: {'✅ ' + status['gpu_info'] if status['gpu'] else '❌ Not Available'}"
+        gpu_label = tk.Label(card,
+            text=gpu_text,
+            font=self.FONT_TEXT,
+            bg=self.colors['bg_card'],
+            fg=self.colors['success'] if status['gpu'] else self.colors['warning']
+        )
+        gpu_label.pack(anchor='w', padx=20, pady=3)
+        self.dashboard_cards['system_gpu'] = gpu_label
+        
+        # Disque
+        disk_label = tk.Label(card,
+            text=f"Disque: {status['disk_free']}",
+            font=self.FONT_TEXT,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text_dim']
+        )
+        disk_label.pack(anchor='w', padx=20, pady=3)
+        self.dashboard_cards['system_disk'] = disk_label
+        
+        # Venv
+        venv_text = f"Venv: {'✅ Configuré' if status['venv'] else '❌ Manquant'}"
+        venv_label = tk.Label(card,
+            text=venv_text,
+            font=self.FONT_TEXT,
+            bg=self.colors['bg_card'],
+            fg=self.colors['success'] if status['venv'] else self.colors['error']
+        )
+        venv_label.pack(anchor='w', padx=20, pady=(3, 15))
+        self.dashboard_cards['system_venv'] = venv_label
+    
+    def create_preview_card(self, parent, row, col):
+        """Carte Aperçu Rapide"""
+        card = tk.Frame(parent, bg=self.colors['bg_card'], 
+                       highlightbackground=self.colors['border'],
+                       highlightthickness=1)
+        card.grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+        
+        parent.grid_rowconfigure(row, weight=1)
+        parent.grid_columnconfigure(col, weight=1)
+        
+        # Titre
+        tk.Label(card,
+            text="🔍 Aperçu Rapide",
+            font=self.FONT_CARD_TITLE,
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        ).pack(anchor='w', padx=20, pady=(15, 10))
+        
+        # Récupérer dernière image
+        last_image = self.get_last_generated_image()
+        
+        if last_image and last_image.exists():
+            try:
+                from PIL import Image, ImageTk
+                
+                # Charger et redimensionner l'image
+                img = Image.open(last_image)
+                img.thumbnail((120, 120))
+                photo = ImageTk.PhotoImage(img)
+                
+                # Afficher la miniature
+                img_label = tk.Label(card, image=photo, bg=self.colors['bg_card'])
+                img_label.image = photo  # Garder une référence
+                img_label.pack(padx=20, pady=5)
+                self.dashboard_cards['preview_image'] = img_label
+                
+                # Nom du fichier
+                name_label = tk.Label(card,
+                    text=last_image.name[:20] + '...' if len(last_image.name) > 20 else last_image.name,
+                    font=('Segoe UI', 9),
+                    bg=self.colors['bg_card'],
+                    fg=self.colors['text_dim']
+                )
+                name_label.pack(padx=20, pady=(5, 15))
+                self.dashboard_cards['preview_name'] = name_label
+            except Exception as e:
+                # Si erreur, afficher un message
+                tk.Label(card,
+                    text="Aucune image récente",
+                    font=self.FONT_TEXT,
+                    bg=self.colors['bg_card'],
+                    fg=self.colors['text_dim']
+                ).pack(padx=20, pady=(20, 15))
+        else:
+            # Pas d'image disponible
+            tk.Label(card,
+                text="Aucune image générée",
+                font=self.FONT_TEXT,
+                bg=self.colors['bg_card'],
+                fg=self.colors['text_dim']
+            ).pack(padx=20, pady=(30, 15))
+    
     def create_stat_card(self, parent, label, value, icon, row, col, key=None):
-        """Créer une carte de statistique"""
+        """Créer une carte de statistique (DEPRECATED - kept for compatibility)"""
         card = tk.Frame(parent, bg=self.colors['bg_card'], 
                        highlightbackground=self.colors['border'],
                        highlightthickness=1)
@@ -4417,6 +4749,281 @@ class ModernPokemonGUI:
         
         return stats
     
+    def get_last_activity(self):
+        """Récupère la dernière activité effectuée"""
+        try:
+            if hasattr(self, 'last_operation_time') and hasattr(self, 'last_operation_name'):
+                # Calculer temps écoulé
+                elapsed = datetime.now() - self.last_operation_time
+                
+                if elapsed.total_seconds() < 60:
+                    time_str = f"il y a {int(elapsed.total_seconds())} sec"
+                elif elapsed.total_seconds() < 3600:
+                    time_str = f"il y a {int(elapsed.total_seconds() / 60)} min"
+                else:
+                    time_str = f"il y a {int(elapsed.total_seconds() / 3600)} h"
+                
+                return {
+                    'operation': self.last_operation_name,
+                    'time': time_str,
+                    'status': '✅ Succès'
+                }
+            else:
+                return {
+                    'operation': 'Aucune',
+                    'time': '-',
+                    'status': '⏸️ En attente'
+                }
+        except Exception as e:
+            return {
+                'operation': 'Erreur',
+                'time': '-',
+                'status': '❌ Erreur'
+            }
+    
+    def get_dataset_progress(self, target=1000):
+        """Calcule la progression vers l'objectif"""
+        try:
+            stats = self.get_real_stats()
+            current = stats['source'] + stats['augmented'] + stats['mosaics']
+            percent = min(100, int((current / target) * 100))
+            
+            return {
+                'current': current,
+                'target': target,
+                'percent': percent
+            }
+        except Exception as e:
+            return {
+                'current': 0,
+                'target': target,
+                'percent': 0
+            }
+    
+    def get_system_status(self):
+        """Récupère l'état du système"""
+        try:
+            # GPU
+            gpu_available, gpu_info = self.detect_gpu_info()
+            
+            # Espace disque
+            output_path = Path(PATHS['directories']['output_base'])
+            if output_path.exists():
+                import shutil
+                disk_stat = shutil.disk_usage(output_path)
+                free_gb = disk_stat.free / (1024 ** 3)
+                disk_free = f"{free_gb:.1f} GB libre"
+            else:
+                disk_free = "N/A"
+            
+            # Venv
+            venv_ok = self.check_venv()
+            
+            return {
+                'gpu': gpu_available,
+                'gpu_info': gpu_info,
+                'disk_free': disk_free,
+                'venv': venv_ok
+            }
+        except Exception as e:
+            return {
+                'gpu': False,
+                'gpu_info': 'Erreur',
+                'disk_free': 'N/A',
+                'venv': False
+            }
+    
+    def get_last_generated_image(self):
+        """Récupère le chemin de la dernière image générée"""
+        try:
+            output_path = Path(PATHS['directories']['output_base'])
+            if not output_path.exists():
+                return None
+            
+            # Scanner tous les fichiers image
+            image_files = []
+            for ext in ['*.png', '*.jpg', '*.jpeg']:
+                image_files.extend(output_path.rglob(ext))
+            
+            if not image_files:
+                return None
+            
+            # Trier par date de modification (plus récent en premier)
+            latest = max(image_files, key=lambda p: p.stat().st_mtime)
+            return latest
+        except Exception as e:
+            return None
+    
+    def get_smart_recommendations(self):
+        """Génère des recommendations intelligentes basées sur l'état du dataset"""
+        try:
+            stats = self.get_real_stats()
+            recommendations = []
+            
+            # Analyser l'état actuel
+            source = stats['source']
+            augmented = stats['augmented']
+            mosaics = stats['mosaics']
+            
+            # Recommandations selon le contexte
+            if source == 0:
+                return {
+                    'icon': '📥',
+                    'title': 'Commencez par télécharger des images',
+                    'description': 'Utilisez le module Image Download pour récupérer vos cartes Pokémon',
+                    'priority': 'high'
+                }
+            
+            if source > 0 and augmented == 0:
+                aug_ratio = 0
+                return {
+                    'icon': '🎨',
+                    'title': f'Augmentez votre dataset ({source} images)',
+                    'description': f'Générez 10-15 variations par carte pour améliorer la robustesse',
+                    'priority': 'high'
+                }
+            
+            if augmented > 0:
+                aug_ratio = augmented / source if source > 0 else 0
+                
+                if aug_ratio < 5:
+                    return {
+                        'icon': '⚠️',
+                        'title': f'Ratio d\'augmentation faible ({aug_ratio:.1f}x)',
+                        'description': 'Recommandé : 10-15 augmentations par image source',
+                        'priority': 'medium'
+                    }
+                elif aug_ratio >= 10 and mosaics == 0:
+                    return {
+                        'icon': '🧩',
+                        'title': 'Dataset prêt pour les mosaïques !',
+                        'description': f'{augmented} images augmentées - Générez des mosaïques pour l\'entraînement',
+                        'priority': 'high'
+                    }
+                elif mosaics > 0 and mosaics < 50:
+                    return {
+                        'icon': '📊',
+                        'title': 'Augmentez le nombre de mosaïques',
+                        'description': f'{mosaics} mosaïques - Recommandé : 100+ pour un bon entraînement',
+                        'priority': 'medium'
+                    }
+                elif mosaics >= 50:
+                    return {
+                        'icon': '✅',
+                        'title': 'Dataset prêt pour l\'entraînement !',
+                        'description': f'{source} sources, {augmented} augmentées, {mosaics} mosaïques',
+                        'priority': 'low'
+                    }
+            
+            # Recommandation par défaut
+            return {
+                'icon': '💡',
+                'title': 'Continuez à construire votre dataset',
+                'description': 'Téléchargez plus d\'images ou augmentez celles existantes',
+                'priority': 'low'
+            }
+            
+        except Exception as e:
+            return {
+                'icon': '❓',
+                'title': 'Statut indéterminé',
+                'description': 'Consultez les statistiques pour plus d\'infos',
+                'priority': 'low'
+            }
+    
+    def get_dataset_health_score(self):
+        """Calcule un score de santé du dataset (0-100)"""
+        try:
+            stats = self.get_real_stats()
+            source = stats['source']
+            augmented = stats['augmented']
+            mosaics = stats['mosaics']
+            
+            score = 0
+            details = []
+            
+            # Critère 1: Images source (30 points max)
+            if source >= 50:
+                source_score = 30
+                details.append(('✅ Images source', 30))
+            elif source >= 20:
+                source_score = int((source / 50) * 30)
+                details.append(('🟡 Images source', source_score))
+            else:
+                source_score = int((source / 20) * 15)
+                details.append(('🔴 Images source', source_score))
+            score += source_score
+            
+            # Critère 2: Ratio d'augmentation (30 points max)
+            if source > 0:
+                aug_ratio = augmented / source
+                if aug_ratio >= 10:
+                    aug_score = 30
+                    details.append(('✅ Augmentations', 30))
+                elif aug_ratio >= 5:
+                    aug_score = int((aug_ratio / 10) * 30)
+                    details.append(('🟡 Augmentations', aug_score))
+                else:
+                    aug_score = int((aug_ratio / 5) * 15)
+                    details.append(('🔴 Augmentations', aug_score))
+                score += aug_score
+            else:
+                details.append(('⚪ Augmentations', 0))
+            
+            # Critère 3: Mosaïques (20 points max)
+            if mosaics >= 100:
+                mosaic_score = 20
+                details.append(('✅ Mosaïques', 20))
+            elif mosaics >= 50:
+                mosaic_score = int((mosaics / 100) * 20)
+                details.append(('🟡 Mosaïques', mosaic_score))
+            else:
+                mosaic_score = int((mosaics / 50) * 10)
+                details.append(('🔴 Mosaïques', mosaic_score))
+            score += mosaic_score
+            
+            # Critère 4: Diversité (20 points max)
+            total_images = source + augmented + mosaics
+            if total_images >= 500:
+                diversity_score = 20
+                details.append(('✅ Diversité', 20))
+            elif total_images >= 200:
+                diversity_score = int((total_images / 500) * 20)
+                details.append(('🟡 Diversité', diversity_score))
+            else:
+                diversity_score = int((total_images / 200) * 10)
+                details.append(('🔴 Diversité', diversity_score))
+            score += diversity_score
+            
+            # Déterminer le grade
+            if score >= 90:
+                grade = '🥇 Excellent'
+                color = '#a6e3a1'  # green
+            elif score >= 70:
+                grade = '🥈 Bon'
+                color = '#89b4fa'  # blue
+            elif score >= 50:
+                grade = '🥉 Satisfaisant'
+                color = '#f9e2af'  # yellow
+            else:
+                grade = '📊 En cours'
+                color = '#f38ba8'  # red
+            
+            return {
+                'score': score,
+                'grade': grade,
+                'color': color,
+                'details': details
+            }
+            
+        except Exception as e:
+            return {
+                'score': 0,
+                'grade': '❓ Indéterminé',
+                'color': '#6c7086',  # overlay0
+                'details': []
+            }
+    
     def log(self, message):
         """Ajouter un message aux logs"""
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -4458,6 +5065,11 @@ class ModernPokemonGUI:
     
     def end_operation(self):
         """Terminer une opération"""
+        # V3.2: Enregistrer dernière activité AVANT de reset
+        if self.current_operation_name:
+            self.last_operation_name = self.current_operation_name
+            self.last_operation_time = datetime.now()
+        
         self.is_running = False
         self.current_process = None
         self.current_operation_name = None  # V3.2: Reset nom opération
@@ -4469,22 +5081,40 @@ class ModernPokemonGUI:
         self.update_footer_stats()
     
     def update_stats(self):
-        """Mettre à jour les statistiques du dashboard"""
+        """Mettre à jour les statistiques du dashboard (V3.2 - nouvelles cartes)"""
         try:
-            # Recalculer les stats
-            stats = self.get_real_stats()
+            # V3.2: Mettre à jour les nouvelles cartes du Dashboard si actif
+            if hasattr(self, 'dashboard_cards') and self.current_view == 'home':
+                # Carte 1: Dernière Activité
+                activity = self.get_last_activity()
+                if 'activity_operation' in self.dashboard_cards:
+                    self.dashboard_cards['activity_operation'].config(text=activity['operation'])
+                if 'activity_time' in self.dashboard_cards:
+                    self.dashboard_cards['activity_time'].config(text=activity['time'])
+                if 'activity_status' in self.dashboard_cards:
+                    color = self.colors['success'] if '✅' in activity['status'] else self.colors['text_dim']
+                    self.dashboard_cards['activity_status'].config(text=activity['status'], fg=color)
+                
+                # Carte 2: Progression
+                progress = self.get_dataset_progress()
+                if 'progress_percent' in self.dashboard_cards:
+                    self.dashboard_cards['progress_percent'].config(text=f"{progress['percent']}%")
+                if 'progress_bar' in self.dashboard_cards and 'progress_bar_container' in self.dashboard_cards:
+                    # Repositionner la barre de progression
+                    self.dashboard_cards['progress_bar'].place(x=0, y=0, relwidth=progress['percent']/100, height=10)
+                if 'progress_text' in self.dashboard_cards:
+                    self.dashboard_cards['progress_text'].config(text=f"{progress['current']} / {progress['target']} images")
+                
+                # Carte 3: Système (mise à jour du disque principalement)
+                status = self.get_system_status()
+                if 'system_disk' in self.dashboard_cards:
+                    self.dashboard_cards['system_disk'].config(text=f"Disque: {status['disk_free']}")
+                
+                # Carte 4: Aperçu (on ne met pas à jour l'image à chaque fois pour performance)
+                # L'image est mise à jour seulement lors de la création de la vue
             
-            # Mettre à jour les cartes de stats si on est sur la vue home
-            if hasattr(self, 'stat_cards') and self.current_view == 'home':
-                # Mettre à jour les valeurs dans les cartes
-                if 'source' in self.stat_cards:
-                    self.stat_cards['source'].config(text=f"{stats['source']:,}")
-                if 'augmented' in self.stat_cards:
-                    self.stat_cards['augmented'].config(text=f"{stats['augmented']:,}")
-                if 'mosaic' in self.stat_cards:
-                    self.stat_cards['mosaic'].config(text=f"{stats['mosaic']:,}")
-                if 'size' in self.stat_cards:
-                    self.stat_cards['size'].config(text=stats['size'])
+            # Mettre à jour le Panneau Statistiques (sidebar)
+            self.update_all_statistics()
             
             # Mettre à jour le footer
             self.update_footer_stats()
