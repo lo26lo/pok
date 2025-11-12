@@ -4447,20 +4447,26 @@ class ModernPokemonGUI:
         """Démarrer une opération"""
         self.is_running = True
         self.operation_stopped = False  # Réinitialiser le flag
+        self.current_operation_name = operation_name  # V3.2: Stocker le nom pour le footer
         self.progress_label.config(text=f"Running: {operation_name}")
         self.progress_bar.start(10)
         self.stop_button.config(state='normal')
         # V3.1: Auto-expand footer pendant opération
         self.expand_footer_auto()
+        # V3.2: Mettre à jour le footer avec le statut
+        self.update_footer_stats()
     
     def end_operation(self):
         """Terminer une opération"""
         self.is_running = False
         self.current_process = None
+        self.current_operation_name = None  # V3.2: Reset nom opération
         self.progress_label.config(text="Ready")
         self.progress_bar.stop()
         self.stop_button.config(state='disabled')
         # V3.1: Footer reste ouvert après opération (l'utilisateur peut le fermer manuellement)
+        # V3.2: Mettre à jour le footer avec l'état final
+        self.update_footer_stats()
     
     def update_stats(self):
         """Mettre à jour les statistiques du dashboard"""
@@ -4487,10 +4493,17 @@ class ModernPokemonGUI:
             self.log(f"⚠️ Erreur mise à jour stats: {e}")
     
     def update_footer_stats(self):
-        """Mettre à jour les stats du footer"""
+        """Mettre à jour les infos contextuelles du footer (V3.2 - Harmonisé avec Statistics Panel)"""
         try:
-            stats = self.get_real_stats()
-            footer_text = f"📊 Source: {stats['source']:,} | Augmented: {stats['augmented']:,} | Mosaic: {stats['mosaic']:,} | Size: {stats['size']}"
+            # Afficher infos contextuelles au lieu de compteurs (qui sont dans le panneau Statistics)
+            if self.is_running:
+                # Pendant une opération: afficher le statut
+                footer_text = f"⚙️ Opération en cours: {self.current_operation_name if hasattr(self, 'current_operation_name') else 'Processing...'}"
+            else:
+                # Au repos: afficher l'état général
+                stats = self.get_real_stats()
+                footer_text = f"✅ Ready | Dataset size: {stats['size']} | Last update: {time.strftime('%H:%M:%S')}"
+            
             if hasattr(self, 'footer_stats_label'):
                 self.footer_stats_label.config(text=footer_text)
         except Exception:
