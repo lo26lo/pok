@@ -195,21 +195,45 @@ def main():
         print("   Veuillez d'abord générer des mosaïques.")
         return
     
-    # Trouver toutes les mosaïques
-    mosaic_images = sorted(images_dir.glob("layout_*.png"))
+    # Trouver toutes les mosaïques (avec ou sans préfixe)
+    mosaic_images = sorted(images_dir.glob("*layout_*.png"))
     
     if not mosaic_images:
         print(f"❌ Aucune mosaïque trouvée dans {images_dir}")
+        print(f"   Recherche de fichiers *layout_*.png")
         return
     
     print(f"📂 {len(mosaic_images)} mosaïques trouvées")
+    
+    # Afficher les préfixes disponibles
+    prefixes = set()
+    for img in mosaic_images:
+        if '_layout_' in img.name:
+            prefix = img.name.split('_layout_')[0]
+            if prefix:  # Si préfixe existe
+                prefixes.add(prefix)
+    
+    if prefixes:
+        print(f"   Préfixes disponibles : {', '.join(sorted(prefixes))}")
+    
     print()
     
     # Demander quelle mosaïque visualiser (ou toutes)
     if len(sys.argv) > 1:
-        if sys.argv[1].lower() == 'all':
+        arg = sys.argv[1].lower()
+        
+        if arg == 'all':
             selected = mosaic_images
             print("🎯 Traitement de TOUTES les mosaïques")
+        elif arg.startswith('l') and '_b' in arg:
+            # Filtrer par préfixe (ex: L1_B0_T0)
+            prefix = sys.argv[1].upper()
+            selected = [img for img in mosaic_images if img.name.startswith(prefix)]
+            if selected:
+                print(f"🎯 Traitement des mosaïques avec préfixe {prefix} ({len(selected)} trouvées)")
+            else:
+                print(f"❌ Aucune mosaïque avec préfixe {prefix}")
+                return
         else:
             try:
                 idx = int(sys.argv[1]) - 1
@@ -220,7 +244,7 @@ def main():
                     print(f"❌ Index invalide. Utiliser 1-{len(mosaic_images)} ou 'all'")
                     return
             except ValueError:
-                print("❌ Argument invalide. Utiliser un nombre (1-n) ou 'all'")
+                print("❌ Argument invalide. Utiliser un nombre (1-n), 'all', ou un préfixe (ex: L1_B0_T0)")
                 return
     else:
         # Par défaut, prendre la première
@@ -260,6 +284,7 @@ def main():
     print(f"   python {Path(__file__).name}           # Première mosaïque")
     print(f"   python {Path(__file__).name} 5         # Mosaïque #5")
     print(f"   python {Path(__file__).name} all       # Toutes les mosaïques")
+    print(f"   python {Path(__file__).name} L1_B0_T0  # Toutes les mosaïques avec ce préfixe")
 
 
 if __name__ == "__main__":
