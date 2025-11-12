@@ -70,22 +70,17 @@ def test_patterns_exported():
         print("❌ Les patterns ne sont pas des objets regex compilés")
         return False
 
-def test_numpy_patches():
-    """Test que les patches NumPy sont appliqués"""
+def test_numpy_version():
+    """Test que NumPy < 2.0 est utilisé (requis pour imgaug)"""
     import numpy as np
     
-    checks = [
-        hasattr(np, 'bool'),
-        hasattr(np, 'int'),
-        hasattr(np, 'float'),
-        hasattr(np, 'complex'),
-    ]
+    major_version = int(np.__version__.split('.')[0])
     
-    if all(checks):
-        print("✅ Patches NumPy appliqués correctement")
+    if major_version < 2:
+        print(f"✅ NumPy {np.__version__} < 2.0 (compatible imgaug)")
         return True
     else:
-        print("❌ Certains patches NumPy manquent")
+        print(f"❌ NumPy {np.__version__} >= 2.0 (incompatible imgaug)")
         return False
 
 def test_config_exported():
@@ -111,7 +106,7 @@ def main():
         ("Imports", test_imports),
         ("extract_card_number()", test_extract_card_number),
         ("Patterns regex exportés", test_patterns_exported),
-        ("Patches NumPy", test_numpy_patches),
+        ("NumPy version < 2.0", test_numpy_version),
         ("CONFIG exporté", test_config_exported),
     ]
     

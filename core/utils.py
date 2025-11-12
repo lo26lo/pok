@@ -4,7 +4,6 @@ Module utilitaire commun pour le projet Pokemon Dataset
 Contient les fonctions partagées pour éviter la duplication de code
 
 Ce module centralise:
-- Patches de compatibilité NumPy (pour imgaug)
 - Patterns regex pour extraction de numéros de cartes
 - Fonctions utilitaires communes (load_card_data, extract_card_number, resize_cards)
 - Configuration globale du projet
@@ -27,25 +26,6 @@ import re
 from glob import glob
 from typing import Dict, List, Tuple, Optional
 
-# ==================== NumPy Compatibility Patches ====================
-# Patch de compatibilité NumPy 2.0 pour imgaug
-# Ces patches doivent être appliqués AVANT l'import de imgaug
-np.float_ = np.float64
-
-# Patches additionnels pour compatibilité complète
-if not hasattr(np, 'bool'):
-    np.bool = np.bool_
-if not hasattr(np, 'int'):
-    np.int = np.int_
-if not hasattr(np, 'float'):
-    np.float = np.float64
-if not hasattr(np, 'complex'):
-    np.complex = np.complex128
-if not hasattr(np, 'object'):
-    np.object = np.object_
-if not hasattr(np, 'str'):
-    np.str = np.str_
-
 # ==================== Regex Patterns ====================
 # Compiled regex patterns for card number extraction (performance optimization)
 # Ces patterns sont partagés par tous les modules
@@ -53,12 +33,6 @@ PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}(?:_aug_\d+)?\.')
 PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
 PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
 PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
-
-# Legacy names for backward compatibility (deprecated)
-_PATTERN_NEW_FORMAT = PATTERN_NEW_FORMAT
-_PATTERN_OLD_FORMAT = PATTERN_OLD_FORMAT
-_PATTERN_FALLBACK_1 = PATTERN_FALLBACK_1
-_PATTERN_FALLBACK_2 = PATTERN_FALLBACK_2
 
 
 def safe_print(*args, **kwargs):

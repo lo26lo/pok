@@ -13,8 +13,7 @@ import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
 
-# Import centralized utilities (NumPy patches, functions, patterns)
-# IMPORTANT: This must be imported BEFORE imgaug to apply NumPy compatibility patches
+# Import centralized utilities (functions, patterns, config)
 from core.utils import (
     safe_print,
     extract_card_number,

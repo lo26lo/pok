@@ -129,16 +129,6 @@ from core.image_downloader import ImageDownloader, LANGUAGES, POPULAR_SETS
 - `core/mosaic_optimized.py` - Idem
 - Tout module nécessitant la logique d'extraction personnalisée
 
-#### 5. NumPy Compatibility Patches
-**Appliqué automatiquement à l'import** :
-```python
-from core.utils import ...  # Les patches NumPy sont appliqués
-```
-
-**Patches inclus** :
-- `np.bool`, `np.int`, `np.float`, `np.complex`, `np.object`, `np.str`
-- Nécessaire pour imgaug avec NumPy < 2.0
-
 ### 📦 CONFIG (configuration globale)
 **Contenu** :
 ```python
