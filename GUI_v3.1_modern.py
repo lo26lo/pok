@@ -1379,6 +1379,12 @@ class ModernPokemonGUI:
         # Variables pour clean tools
         self.clean_include_images_var = tk.BooleanVar(value=False)
         
+        # Variables pour Statistics Panel (V3.2)
+        self.stats_images_downloaded = tk.IntVar(value=0)
+        self.stats_augmentations = tk.IntVar(value=0)
+        self.stats_fake_images = tk.IntVar(value=0)
+        self.stats_mosaics = tk.IntVar(value=0)
+        
         # Chargement config
         self.load_config()
         
@@ -1752,6 +1758,120 @@ class ModernPokemonGUI:
         self.content_area = tk.Frame(parent, bg=self.colors['bg_dark'])
         self.content_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     
+    def create_statistics_panel(self, parent):
+        """Créer le panneau Statistics persistant (V3.2) - À DROITE de la vue"""
+        # Container à droite avec largeur fixe
+        self.stats_panel = tk.Frame(parent, bg=self.colors['bg_card'], width=280)
+        self.stats_panel.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 20), pady=20)
+        self.stats_panel.pack_propagate(False)
+        
+        # Titre
+        title_frame = tk.Frame(self.stats_panel, bg=self.colors['bg_card'])
+        title_frame.pack(fill=tk.X, padx=15, pady=(15, 10))
+        
+        tk.Label(title_frame,
+            text="📊 Statistics\nDashboard",
+            font=('Segoe UI', 12, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text'],
+            justify='left'
+        ).pack(side=tk.LEFT)
+        
+        # Séparateur
+        tk.Frame(self.stats_panel, bg=self.colors['border'], height=1).pack(fill=tk.X, padx=15, pady=10)
+        
+        # Compteurs verticaux (un par ligne)
+        stats_container = tk.Frame(self.stats_panel, bg=self.colors['bg_card'])
+        stats_container.pack(fill=tk.BOTH, expand=True, padx=15, pady=(0, 15))
+        
+        # Images Downloaded
+        self.create_stat_counter_vertical(stats_container, "📥 Images", self.stats_images_downloaded)
+        
+        # Augmentations
+        self.create_stat_counter_vertical(stats_container, "🎨 Augmentations", self.stats_augmentations)
+        
+        # Fake Images
+        self.create_stat_counter_vertical(stats_container, "🖼️ Fake Images", self.stats_fake_images)
+        
+        # Mosaics
+        self.create_stat_counter_vertical(stats_container, "🧩 Mosaics", self.stats_mosaics)
+        
+        # Initialiser les compteurs au démarrage
+        self.root.after(500, self.update_all_statistics)
+    
+    def create_stat_counter_vertical(self, parent, label_text, variable):
+        """Créer un compteur de statistique vertical (pour sidebar droite)"""
+        frame = tk.Frame(parent, bg=self.colors['bg_hover'], relief='flat', bd=1)
+        frame.pack(fill=tk.X, pady=8)
+        
+        # Label en haut
+        tk.Label(frame,
+            text=label_text,
+            font=('Segoe UI', 9),
+            bg=self.colors['bg_hover'],
+            fg=self.colors['text_dim'],
+            anchor='w'
+        ).pack(fill=tk.X, padx=12, pady=(10, 5))
+        
+        # Valeur en bas (grande)
+        tk.Label(frame,
+            textvariable=variable,
+            font=('Segoe UI', 20, 'bold'),
+            bg=self.colors['bg_hover'],
+            fg=self.colors['accent'],
+            anchor='w'
+        ).pack(fill=tk.X, padx=12, pady=(0, 10))
+    
+    def update_all_statistics(self):
+        """Mettre à jour toutes les statistiques au démarrage"""
+        try:
+            # Images téléchargées
+            images_dir = PATHS['directories']['images']
+            if os.path.exists(images_dir):
+                count = len([f for f in os.listdir(images_dir) 
+                           if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+                self.stats_images_downloaded.set(count)
+            
+            # Augmentations (holo + augmented)
+            holo_dir = PATHS['directories']['output_holographic']
+            aug_dir = PATHS['directories']['output_augmented_images']
+            total_aug = 0
+            if os.path.exists(holo_dir):
+                total_aug += len([f for f in os.listdir(holo_dir) 
+                                if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+            if os.path.exists(aug_dir):
+                total_aug += len([f for f in os.listdir(aug_dir) 
+                                if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+            self.stats_augmentations.set(total_aug)
+            
+            # Fake Images
+            fake_dir = PATHS['directories']['output_backgrounds']
+            if os.path.exists(fake_dir):
+                count = len([f for f in os.listdir(fake_dir) 
+                           if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+                self.stats_fake_images.set(count)
+            
+            # Mosaics
+            mosaic_dir = PATHS['directories']['output_mosaics_images']
+            if os.path.exists(mosaic_dir):
+                count = len([f for f in os.listdir(mosaic_dir) 
+                           if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+                self.stats_mosaics.set(count)
+                
+        except Exception as e:
+            self.log(f"⚠️ Error updating statistics: {e}")
+    
+    def show_statistics_panel(self):
+        """Afficher le panneau Statistics"""
+        if hasattr(self, 'stats_panel'):
+            self.stats_panel.pack(fill=tk.X, padx=20, pady=(20, 10), before=self.content_area.winfo_children()[0] if self.content_area.winfo_children() else None)
+            self.update_all_statistics()
+    
+    def hide_statistics_panel(self):
+        """Cacher le panneau Statistics"""
+        if hasattr(self, 'stats_panel'):
+            self.stats_panel.pack_forget()
+    
     def create_footer(self, parent):
         """Créer le footer avec progress bar et logs - COLLAPSIBLE V3.1+"""
         self.footer = tk.Frame(parent, bg=self.colors['bg_sidebar'], height=self.footer_height_collapsed)
@@ -1882,6 +2002,23 @@ class ModernPokemonGUI:
         # Vider le content area
         for widget in self.content_area.winfo_children():
             widget.destroy()
+        
+        # Créer container avec Statistics à droite (V3.2) pour certaines vues
+        views_with_stats = ['download', 'augmentation', 'fakeimg', 'mosaic']
+        if view_id in views_with_stats:
+            # Container horizontal (vue principale à gauche + stats à droite)
+            main_container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
+            main_container.pack(fill=tk.BOTH, expand=True)
+            
+            # Vue principale à gauche (prend l'espace restant)
+            self.view_container = tk.Frame(main_container, bg=self.colors['bg_dark'])
+            self.view_container.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            
+            # Panneau Statistics à droite
+            self.create_statistics_panel(main_container)
+        else:
+            # Pas de stats, vue utilise tout l'espace
+            self.view_container = self.content_area
         
         # Charger la vue correspondante
         if view_id == 'home':
@@ -2505,20 +2642,20 @@ class ModernPokemonGUI:
     
     def create_download_view(self):
         """Vue Image Download"""
-        container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
+        container = tk.Frame(self.view_container, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
         # V3.1: Dense Header
         self.create_dense_header(container, "⬇️", "Image Download",
                                 "Download Pokemon card images from TCGdex API")
         
-        # Main content frame (2 colonnes)
+        # Main content frame (single column - V3.2)
         main_frame = tk.Frame(container, bg=self.colors['bg_dark'])
         main_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
         
-        # Left column: Configuration Card
+        # Configuration Card (full width)
         config_card = tk.Frame(main_frame, bg=self.colors['bg_card'])
-        config_card.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+        config_card.pack(fill=tk.BOTH, expand=True)
         
         card_title = tk.Label(config_card,
             text="⚙️ Configuration",
@@ -2632,32 +2769,18 @@ class ModernPokemonGUI:
         self.download_output_var.pack(side=tk.LEFT, padx=10)
         self.download_output_var.insert(0, self.config.get("default_download_dir", "images"))
         
-        # Right column: Info Card
-        info_card = tk.Frame(main_frame, bg=self.colors['bg_card'])
-        info_card.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(10, 0))
-        
-        info_title = tk.Label(info_card,
-            text="ℹ️ About TCGdex API",
-            font=self.FONT_CARD_TITLE,
-            bg=self.colors['bg_card'],
-            fg=self.colors['text']
+        # Info tooltip (compact) - V3.2
+        self.create_info_tooltip(container,
+            "ℹ️ About TCGdex API",
+            "📊 Free API with high-quality Pokemon card images",
+            "Free API - No authentication required\n\n"
+            "• High quality card images (PNG recommended)\n"
+            "• Multiple languages supported\n"
+            "• Images named with Set # for easy identification\n"
+            "• manifest.csv generated with download details\n\n"
+            "TCGdex provides free access to a comprehensive Pokemon card database with "
+            "high-resolution images in multiple formats and languages."
         )
-        info_title.pack(anchor='w', padx=20, pady=(20, 15))
-        
-        info_content = tk.Frame(info_card, bg=self.colors['bg_card'])
-        info_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
-        
-        tk.Label(info_content,
-            text="• Free API - No authentication required\n"
-                 "• High quality card images (PNG recommended)\n"
-                 "• Multiple languages supported\n"
-                 "• Images named with Set # for easy identification\n"
-                 "• manifest.csv generated with download details",
-            font=self.FONT_TEXT,
-            bg=self.colors['bg_card'],
-            fg=self.colors['text'],
-            justify='left'
-        ).pack(anchor='w')
         
         # Button frame
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
@@ -2724,7 +2847,7 @@ class ModernPokemonGUI:
     
     def create_augmentation_view(self):
         """Vue Augmentation détaillée - HARMONISÉE V3.1 sans scroll"""
-        container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
+        container = tk.Frame(self.view_container, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
         # V3.1: Dense Header
@@ -2845,7 +2968,7 @@ class ModernPokemonGUI:
     
     def create_fakeimg_view(self):
         """Vue génération de fake images (random erasing) - HARMONISÉE V3.1 sans scroll"""
-        container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
+        container = tk.Frame(self.view_container, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
         # V3.1: Dense Header
@@ -3015,7 +3138,7 @@ class ModernPokemonGUI:
     
     def create_mosaic_view(self):
         """Vue Mosaics détaillée"""
-        container = tk.Frame(self.content_area, bg=self.colors['bg_dark'])
+        container = tk.Frame(self.view_container, bg=self.colors['bg_dark'])
         container.pack(fill=tk.BOTH, expand=True, padx=self.PADDING_VIEW, pady=self.PADDING_VIEW)
         
         # V3.1: Dense Header
