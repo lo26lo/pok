@@ -5,10 +5,19 @@ Vérifie que tous les chemins et imports fonctionnent correctement
 """
 import sys
 import os
+import json
 from pathlib import Path
 
 # Ajouter le répertoire racine au path
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Charger paths depuis config
+def load_paths():
+    config_path = Path(__file__).parent.parent / "config" / "paths.json"
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
 
 def test_core_imports():
     """Test que tous les modules core peuvent être importés"""
@@ -128,8 +137,9 @@ def test_essential_files():
         "START.bat",
         "INSTALL.bat",
         "config/requirements.txt",
+        "config/paths.json",
         ".gitignore",
-        "models/card_name_to_id.json"
+        PATHS['files']['card_name_to_id_json']
     ]
     
     all_ok = True

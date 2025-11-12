@@ -4,10 +4,19 @@ Convertit excel/cards_info.xlsx vers models/cards_database.yaml
 """
 
 import sys
+import json
 from pathlib import Path
 
 # Ajouter le répertoire parent au path
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Charger paths depuis config
+def load_paths():
+    config_path = Path("config/paths.json")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
 
 def migrate_excel_to_yaml():
     """Migre Excel vers YAML"""
@@ -15,8 +24,8 @@ def migrate_excel_to_yaml():
     import yaml
     from datetime import datetime
     
-    excel_path = Path("excel/cards_info.xlsx")
-    yaml_path = Path("models/cards_database.yaml")
+    excel_path = Path(PATHS['files']['cards_info_excel'])
+    yaml_path = Path(PATHS['files']['cards_database_yaml'])
     backup_path = Path("excel/cards_info_backup.xlsx")
     
     print("=" * 70)

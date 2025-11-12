@@ -4,6 +4,7 @@ Version avec requêtes parallèles (concurrent) pour 5-10x speedup
 """
 
 import sys
+import json
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Tuple, Optional
@@ -12,6 +13,14 @@ from typing import Dict, Tuple, Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.utils import safe_print
+
+# Charger paths depuis config
+def load_paths():
+    config_path = Path("config/paths.json")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
 
 
 def update_single_card(card_id: str, card_info: dict, api) -> Tuple[str, Optional[dict]]:
@@ -76,7 +85,7 @@ def update_prices_yaml_fast(max_workers: int = 8):
     from core.tcgdex_api import TCGdexAPI
     import time
     
-    yaml_path = Path("models/cards_database.yaml")
+    yaml_path = Path(PATHS['files']['cards_database_yaml'])
     
     safe_print("=" * 70)
     safe_print("  MISE A JOUR RAPIDE DES PRIX (YAML - Parallele)")

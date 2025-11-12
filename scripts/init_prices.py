@@ -4,6 +4,7 @@ Et mettre à jour les prix depuis TCGdex API
 """
 
 import yaml
+import json
 from pathlib import Path
 from datetime import datetime
 import sys
@@ -11,11 +12,19 @@ sys.path.append('.')
 
 from core.tcgdex_api import TCGdexAPI
 
+# Charger paths depuis config
+def load_paths():
+    config_path = Path("config/paths.json")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
+
 def init_yaml_with_cards():
     """Initialise le YAML avec les cartes depuis data.yaml"""
     
     # Charger data.yaml
-    data_yaml = Path("output/dataset/data.yaml")
+    data_yaml = Path(PATHS['files']['dataset_data_yaml'])
     
     if not data_yaml.exists():
         print("❌ Fichier data.yaml non trouvé!")
@@ -64,7 +73,7 @@ def init_yaml_with_cards():
         }
     
     # Sauvegarder YAML
-    yaml_path = Path("models/cards_database.yaml")
+    yaml_path = Path(PATHS['files']['cards_database_yaml'])
     yaml_path.parent.mkdir(exist_ok=True)
     
     print(f"\n💾 Sauvegarde dans {yaml_path}...")

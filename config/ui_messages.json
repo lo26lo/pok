@@ -1,0 +1,207 @@
+{
+  "version": "1.0.0",
+  "language": "fr",
+  "last_updated": "2025-11-12",
+  "description": "Centralized UI messages for internationalization and easy maintenance",
+  
+  "console": {
+    "download_start": "📥 Téléchargement des images...",
+    "download_progress": "⬇️ Téléchargement en cours...",
+    "download_complete": "✅ TÉLÉCHARGEMENT TERMINÉ",
+    "download_success": "✅ Succès : {ok}/{total} cartes",
+    "download_failure": "❌ Échecs : {fail}/{total} cartes",
+    "download_folder": "💾 Dossier : {folder}",
+    "download_manifest": "📄 Manifest : {file}",
+    "set_found": "✅ Set trouvé: {name} ({id}) - {count} cartes",
+    "set_not_found": "❌ Set non trouvé: {query}",
+    "loaded_sets": "✅ Loaded all Pokemon sets from TCGdex API",
+    "api_error": "⚠️ Could not load sets from API: {error}",
+    
+    "augmentation_start": "🎨 Augmentation en cours...",
+    "augmentation_complete": "✅ Augmentation terminée !",
+    "holographic_start": "✨ Application de l'effet holographique...",
+    "holographic_complete": "✅ Effet holographique appliqué !",
+    "mosaic_start": "🧩 Génération des mosaïques...",
+    "mosaic_complete": "✅ Mosaïques générées !",
+    "dataset_start": "📦 Export du dataset...",
+    "dataset_complete": "✅ Dataset exporté !",
+    "workflow_start": "🚀 Workflow complet démarré...",
+    "workflow_complete": "✅ Workflow terminé avec succès !",
+    
+    "yaml_created": "✅ Fichier cards_database.yaml créé avec succès!",
+    "yaml_error": "❌ Erreur création YAML: {error}",
+    "venv_detected": "✅ Environnement virtuel détecté",
+    "venv_not_found": "⚠️ Environnement virtuel non trouvé!",
+    "venv_installed": "✅ Environnement virtuel installé avec succès!",
+    "venv_install_failed": "❌ Installation échouée",
+    "script_not_found": "❌ Script install_env.bat non trouvé!",
+    
+    "webcam_started": "✅ Webcam démarrée! (appuyez sur 'q' pour quitter)",
+    "webcam_stopped": "✅ Webcam arrêtée",
+    "packages_missing": "❌ Packages manquants (ultralytics ou opencv)!",
+    "ultralytics_missing": "❌ Package ultralytics non installé!",
+    
+    "operation_stopped": "✅ Opération arrêtée",
+    "operation_stopped_forced": "✅ Opération arrêtée (forcé)",
+    "stop_error": "❌ Erreur d'arrêt: {error}",
+    
+    "interface_initialized": "✅ Interface initialisée - Mode Professionnel",
+    "browser_error": "⚠️ Could not open browser: {error}",
+    "stats_error": "⚠️ Erreur calcul stats: {error}",
+    "stats_update_error": "⚠️ Erreur mise à jour stats: {error}",
+    
+    "preset_desktop_fast": "✅ Desktop Fast: n/512/32 - Cache RAM activé",
+    "preset_desktop_balanced": "✅ Desktop Balanced: s/640/16 - Équilibre précision/vitesse",
+    "preset_desktop_quality": "✅ Desktop High Quality: s/640/cosine - Early Stop activé",
+    "preset_laptop_fast": "✅ Laptop Fast: n/416/16 - Optimisé 8GB VRAM",
+    "preset_laptop_balanced": "✅ Laptop Balanced: n/512/12 - Sûr pour 8GB VRAM",
+    "preset_laptop_quality": "✅ Laptop High Quality: s/512/8 - Limite 8GB (risque OOM)",
+    
+    "progress": "📊 Progress: {processed}/{total} ({percent}%)",
+    "separator": "{'='*60}",
+    
+    "error": "❌ Erreur",
+    "error_generic": "❌ Erreur: {error}",
+    "error_main": "❌ ERREUR: {error}",
+    "warning": "⚠️ Attention",
+    "info": "ℹ️ Info",
+    "success": "✅ Succès"
+  },
+  
+  "gui": {
+    "title": "Pokémon Dataset Generator v3.1",
+    
+    "tabs": {
+      "general": "General",
+      "download": "Image Download",
+      "augmentation": "Augmentation",
+      "holographic": "Holographique",
+      "mosaic": "Mosaic",
+      "fake_images": "Fake Images",
+      "training": "Training",
+      "detection": "Détection",
+      "advanced": "Advanced"
+    },
+    
+    "labels": {
+      "progress": "Progression",
+      "status": "Statut",
+      "console_output": "Console de sortie",
+      "ready": "Prêt",
+      "running": "En cours...",
+      "completed": "Terminé",
+      "error": "Erreur",
+      "images_count": "Nombre d'images",
+      "epochs": "Époques",
+      "batch_size": "Taille du batch",
+      "model_size": "Taille du modèle",
+      "dataset_path": "Chemin du dataset"
+    },
+    
+    "buttons": {
+      "start": "▶ Démarrer",
+      "stop": "⏹ Arrêter",
+      "clear": "🗑️ Effacer",
+      "browse": "📁 Parcourir",
+      "save": "💾 Sauvegarder",
+      "load": "📂 Charger",
+      "export": "📤 Exporter",
+      "import": "📥 Importer",
+      "refresh": "🔄 Rafraîchir",
+      "validate": "✔️ Valider",
+      "cancel": "✖️ Annuler",
+      "start_download": "⬇️ START DOWNLOAD",
+      "start_augmentation": "🎨 START AUGMENTATION",
+      "start_holographic": "✨ START HOLOGRAPHIC",
+      "start_mosaic": "🧩 START MOSAIC",
+      "start_fake_images": "🖼️ START FAKE IMAGES",
+      "start_workflow": "🚀 START WORKFLOW",
+      "start_training": "🎯 START TRAINING",
+      "start_detection": "🔍 START DETECTION",
+      "stop_process": "⏹ STOP",
+      "clear_console": "🗑️ CLEAR"
+    },
+    
+    "tooltips": {
+      "start_download": "Démarrer le téléchargement des images depuis l'API",
+      "start_augmentation": "Appliquer les transformations d'augmentation",
+      "start_holographic": "Ajouter l'effet holographique aux cartes",
+      "start_mosaic": "Générer des mosaïques de cartes",
+      "start_training": "Lancer l'entraînement du modèle YOLO",
+      "start_detection": "Détecter des cartes dans une image",
+      "stop_process": "Arrêter le processus en cours",
+      "clear_console": "Effacer la console de sortie"
+    },
+    
+    "status": {
+      "idle": "En attente",
+      "downloading": "Téléchargement...",
+      "augmenting": "Augmentation...",
+      "processing_holographic": "Traitement holographique...",
+      "generating_mosaics": "Génération mosaïques...",
+      "training": "Entraînement...",
+      "detecting": "Détection...",
+      "exporting": "Export...",
+      "validating": "Validation...",
+      "completed": "Terminé",
+      "error": "Erreur",
+      "cancelled": "Annulé"
+    },
+    
+    "messages": {
+      "confirm_start": "Voulez-vous vraiment démarrer ce processus ?",
+      "confirm_stop": "Voulez-vous arrêter le processus en cours ?",
+      "confirm_clear": "Voulez-vous effacer la console ?",
+      "process_running": "Un processus est déjà en cours",
+      "no_images": "Aucune image trouvée",
+      "invalid_path": "Chemin invalide",
+      "file_not_found": "Fichier introuvable",
+      "success": "Opération réussie",
+      "error_occurred": "Une erreur s'est produite",
+      "please_wait": "Veuillez patienter...",
+      "operation_cancelled": "Opération annulée"
+    },
+    
+    "errors": {
+      "no_dataset": "Aucun dataset trouvé",
+      "no_model": "Aucun modèle trouvé",
+      "invalid_config": "Configuration invalide",
+      "gpu_not_available": "GPU non disponible",
+      "insufficient_memory": "Mémoire insuffisante",
+      "network_error": "Erreur réseau",
+      "file_error": "Erreur fichier",
+      "unknown_error": "Erreur inconnue"
+    }
+  },
+  
+  "workflow": {
+    "steps": {
+      "download": "Téléchargement des images",
+      "augmentation": "Augmentation des données",
+      "holographic": "Effet holographique",
+      "mosaic": "Génération mosaïques",
+      "dataset": "Export dataset",
+      "training": "Entraînement modèle",
+      "validation": "Validation"
+    },
+    
+    "status": {
+      "pending": "En attente",
+      "running": "En cours",
+      "completed": "Terminé",
+      "failed": "Échoué",
+      "skipped": "Ignoré"
+    }
+  },
+  
+  "validation": {
+    "required_field": "Ce champ est requis",
+    "invalid_number": "Nombre invalide",
+    "invalid_path": "Chemin invalide",
+    "invalid_format": "Format invalide",
+    "out_of_range": "Valeur hors limites",
+    "file_exists": "Le fichier existe déjà",
+    "file_not_found": "Fichier introuvable",
+    "permission_denied": "Permission refusée"
+  }
+}

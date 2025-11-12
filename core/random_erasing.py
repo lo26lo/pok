@@ -4,6 +4,16 @@ import numpy as np
 from math import sqrt
 from PIL import Image
 import argparse
+import json
+from pathlib import Path
+
+# Load paths from config
+def load_paths():
+    config_path = Path(__file__).parent.parent / "config" / "paths.json"
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
 
 def random_erasing(image, p=0.5, sl=0.02, sh=0.4, r1=0.3, r2=3.3):
     """
@@ -92,9 +102,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Applique le random erasing sur un répertoire d'images avec augmentation de p pour les PNG non modifiés."
     )
-    parser.add_argument("--input_dir", type=str, default=os.path.join("backgrounds", "original"),
+    parser.add_argument("--input_dir", type=str, default=PATHS['directories']['backgrounds_original'],
                         help="Répertoire contenant les images d'entrée")
-    parser.add_argument("--output_dir", type=str, default=os.path.join("backgrounds", "augmented"),
+    parser.add_argument("--output_dir", type=str, default=PATHS['directories']['output_backgrounds'],
                         help="Répertoire où enregistrer les images transformées")
     parser.add_argument("--p", type=float, default=0.5,
                         help="Probabilité initiale d'appliquer le random erasing (entre 0.0 et 1.0)")

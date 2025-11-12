@@ -4,10 +4,19 @@ Fusionne les images augmentées et les mosaïques dans un dataset YOLO final
 Crée train/val split et data.yaml
 """
 import shutil
+import json
 from pathlib import Path
 from typing import List, Tuple
 import random
 import yaml
+
+# Charger paths depuis config
+def load_paths():
+    config_path = Path("config/paths.json")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
 
 def copy_files(src_images: Path, src_labels: Path, 
                dst_images: Path, dst_labels: Path) -> int:
@@ -121,9 +130,9 @@ def merge_dataset():
     print()
     
     # Chemins
-    augmented_dir = Path("output/augmented")
-    mosaics_dir = Path("output/mosaics")
-    dataset_dir = Path("output/dataset")
+    augmented_dir = Path(PATHS['directories']['output_augmented'])
+    mosaics_dir = Path(PATHS['directories']['output_mosaics'])
+    dataset_dir = Path(PATHS['directories']['output_dataset'])
     
     # Vérifier sources
     if not augmented_dir.exists():

@@ -3,13 +3,22 @@ Script de test pour la détection avec affichage des prix
 Utilise les bons chemins du modèle et data.yaml
 """
 import sys
+import json
 import pytest
 from pathlib import Path
 
+# Charger paths depuis config
+def load_paths():
+    config_path = Path(__file__).parent.parent / "config" / "paths.json"
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
+
 # Chemins corrects
-MODEL_PATH = "runs/train/pokemon_detector/weights/best.pt"
-DATA_YAML = "output/dataset/data.yaml"
-EXCEL_PATH = "excel/cards_info.xlsx"
+MODEL_PATH = PATHS['files']['best_model']
+DATA_YAML = PATHS['files']['dataset_data_yaml']
+EXCEL_PATH = PATHS['files']['cards_info_excel']
 
 # Vérifications au niveau module
 model_exists = Path(MODEL_PATH).exists()
@@ -75,7 +84,7 @@ from core.detection_with_prices import PriceDetector
 
 detector = PriceDetector(
     model_path=MODEL_PATH,
-    yaml_path="models/cards_database.yaml",  # Utilise YAML au lieu d'Excel
+    yaml_path=PATHS['files']['cards_database_yaml'],  # Utilise YAML au lieu d'Excel
     data_yaml_path=DATA_YAML
 )
 

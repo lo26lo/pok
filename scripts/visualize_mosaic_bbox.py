@@ -5,18 +5,30 @@ Charge une image de mosaïque et son label YOLO, puis dessine les bbox avec noms
 """
 import cv2
 import numpy as np
+import json
 from pathlib import Path
 import sys
 import random
 import yaml
 
-def load_card_names(yaml_path: Path = Path("models/cards_database.yaml")) -> dict:
+# Charger paths depuis config
+def load_paths():
+    config_path = Path("config/paths.json")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
+
+def load_card_names(yaml_path: Path = None) -> dict:
     """
     Charge les noms de cartes depuis cards_database.yaml
     
     Returns:
         {card_id: card_name}
     """
+    if yaml_path is None:
+        yaml_path = Path(PATHS['files']['cards_database_yaml'])
+    
     if not yaml_path.exists():
         print(f"⚠️  {yaml_path} introuvable, utilisation des class_id")
         return {}
@@ -34,13 +46,16 @@ def load_card_names(yaml_path: Path = Path("models/cards_database.yaml")) -> dic
     return card_names
 
 
-def load_class_mapping(dataset_yaml_path: Path = Path("output/augmented/data.yaml")) -> dict:
+def load_class_mapping(dataset_yaml_path: Path = None) -> dict:
     """
     Charge le mapping class_id -> card_id depuis data.yaml
     
     Returns:
         {class_id: card_id}
     """
+    if dataset_yaml_path is None:
+        dataset_yaml_path = Path(PATHS['files']['dataset_data_yaml'])
+    
     if not dataset_yaml_path.exists():
         print(f"⚠️  {dataset_yaml_path} introuvable")
         return {}
@@ -169,11 +184,11 @@ def main():
     print()
     
     # Dossiers
-    mosaics_dir = Path("output/mosaics")
+    mosaics_dir = Path(PATHS['directories']['output_mosaics'])
     images_dir = mosaics_dir / "images"
     labels_dir = mosaics_dir / "labels"
-    output_dir = Path("output/mosaic_visualization")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = Path(PATHS['directories']['output_base']) / "mosaic_visualization"
+    output_dir.mkdir(exist_ok=True)
     
     if not images_dir.exists():
         print(f"❌ {images_dir} n'existe pas!")

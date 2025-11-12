@@ -10,7 +10,6 @@ Performances: 10-30x plus rapide que la version originale
 import os
 import sys
 import cv2
-import pandas as pd
 import numpy as np
 from glob import glob
 import re
@@ -24,18 +23,11 @@ from functools import partial
 from typing import List, Tuple, Optional, Dict
 import multiprocessing as mp
 
-# Import centralized utilities
-from core.utils import (
-    safe_print,
-    extract_card_number,
-    load_card_data,
-    load_prices,
-    PATTERN_NEW_FORMAT,
-    PATTERN_OLD_FORMAT,
-    PATTERN_FALLBACK_1,
-    PATTERN_FALLBACK_2,
-    CONFIG
-)
+# Import safe_print et load_prices
+try:
+    from .utils import safe_print, load_prices, load_paths, PATHS
+except ImportError:
+    from utils import safe_print, load_prices, load_paths, PATHS
 
 # Détection GPU optionnelle
 try:
@@ -50,6 +42,13 @@ except ImportError:
     CUDA_AVAILABLE = False
     DEVICE = None
 
+# Compiled regex patterns (optimisé) - Support format sv08_019, swsh7_001, etc.
+# Supporte: sv08_019_en.png, sv08_019_fr_holo1_aug_000.png, swsh7_001_en_aug_1.png
+_PATTERN_FULL_ID = re.compile(r'([a-z0-9]+_\d+)_[a-z]{2}(?:_[\w]+)*\.', re.IGNORECASE)  # Capture set_number, ignore tout après langue
+_PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)  # Ancien format 001, 002, etc.
+_PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
+_PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
+
 # Paramètres globaux
 THETA_MIN, THETA_MAX = -30, 30
 PHI_MIN, PHI_MAX = -15, 15
@@ -57,13 +56,13 @@ THETA_MIN_MODE2, THETA_MAX_MODE2 = -180, 180
 PHI_MIN_MODE2, PHI_MAX_MODE2 = -30, 30
 NUM_VARIATIONS_ALL = 50
 
-# Répertoires
-INPUT_DIRS = [os.path.join("output", "augmented", "images")]
-FAKE_DIR = os.path.join("backgrounds", "augmented")  # Backgrounds augmentés avec random erasing
-MOSAIC_DIR = "mosaic"
-MOSAIC_OUTPUT_DIR = os.path.join("output", "mosaics")
-MOSAIC_IMAGES_DIR = os.path.join(MOSAIC_OUTPUT_DIR, "images")
-MOSAIC_LABELS_DIR = os.path.join(MOSAIC_OUTPUT_DIR, "labels")
+# Répertoires (from paths.json)
+INPUT_DIRS = [PATHS['directories']['output_augmented_images']]
+FAKE_DIR = PATHS['directories']['output_backgrounds']
+MOSAIC_DIR = "mosaic"  # Legacy
+MOSAIC_OUTPUT_DIR = PATHS['directories']['output_mosaics']
+MOSAIC_IMAGES_DIR = PATHS['directories']['output_mosaics_images']
+MOSAIC_LABELS_DIR = PATHS['directories']['output_mosaics_labels']
 
 
 class MosaicGeneratorOptimized:
@@ -81,11 +80,63 @@ class MosaicGeneratorOptimized:
         safe_print(f"   GPU: {'✅ Activé' if self.use_gpu else '❌ Désactivé'}")
         safe_print(f"   Workers: {self.num_workers} threads")
     
-    def _load_and_resize_single(self, img_path: str, target_size: Tuple[int, int] = (280, 380)) -> Optional[Tuple]:
+    def load_card_data(self, yaml_path: str = None) -> Tuple[Dict, Dict]:
+        """Charge les données des cartes depuis YAML (default: from paths.json)"""
+        if yaml_path is None:
+            yaml_path = PATHS['files']['cards_database_yaml']
+        prices_data = load_prices(yaml_path)
+        card_dict = {}
+        class_map = {}
+        
+        for idx, (card_id, card_info) in enumerate(prices_data.items()):
+            # card_id est déjà au format correct (ex: "sv08_019", "swsh7_001", etc.)
+            card_name = card_info.get('name', '').replace(" ", "_")
+            if card_id not in card_dict:
+                card_dict[card_id] = card_name
+                # Le class_id dans data.yaml est 0-indexed
+                class_map[card_id] = idx
+        
+        return card_dict, class_map
+    
+    def extract_card_number(self, filename: str) -> Optional[str]:
+        """Extrait l'identifiant de carte (format sv08_019, swsh7_001, etc.)"""
+        # Essayer le format complet (sv08_019_en.png ou swsh7_001_en_aug_1.png)
+        match = _PATTERN_FULL_ID.search(filename)
+        if match:
+            return match.group(1)  # Retourne "sv08_019" ou "swsh7_001"
+        
+        # Ancien format (001, 002, etc.) - pour compatibilité
+        match = _PATTERN_OLD_FORMAT.search(filename)
+        if match:
+            return match.group(1).zfill(3)  # Retourne "001", "002", etc.
+        
+        # Fallback patterns
+        match = _PATTERN_FALLBACK_1.search(filename)
+        if match:
+            return match.group(1)
+        
+        match = _PATTERN_FALLBACK_2.search(filename)
+        return match.group(1) if match else None
+    
+    def _load_and_resize_single(self, img_path: str, target_size: Tuple[int, int]) -> Optional[Tuple]:
         """Charge et resize une seule image (pour parallélisation)"""
         try:
             img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
             if img is None:
+                # Image corrompue - déplacer dans corrupted/
+                corrupted_dir = Path("corrupted")
+                corrupted_dir.mkdir(exist_ok=True)
+                
+                img_file = Path(img_path)
+                dest_path = corrupted_dir / img_file.name
+                
+                try:
+                    import shutil
+                    shutil.move(str(img_file), str(dest_path))
+                    safe_print(f"⚠️ Image corrompue déplacée: {img_file.name} → corrupted/")
+                except Exception as move_error:
+                    safe_print(f"⚠️ Impossible de déplacer {img_file.name}: {move_error}")
+                
                 return None
             
             # Convertir RGBA en RGB si nécessaire (COMME L'ORIGINAL)
@@ -98,7 +149,20 @@ class MosaicGeneratorOptimized:
             
             return (img, img_path)
         except Exception as e:
-            safe_print(f"⚠️ Erreur chargement {img_path}: {e}")
+            # Erreur lors du traitement - déplacer dans corrupted/
+            corrupted_dir = Path("corrupted")
+            corrupted_dir.mkdir(exist_ok=True)
+            
+            img_file = Path(img_path)
+            dest_path = corrupted_dir / img_file.name
+            
+            try:
+                import shutil
+                shutil.move(str(img_file), str(dest_path))
+                safe_print(f"⚠️ Erreur sur {img_file.name} (déplacée dans corrupted/): {e}")
+            except:
+                safe_print(f"⚠️ Erreur chargement {img_path}: {e}")
+            
             return None
     
     def resize_cards_parallel(self, image_paths: List[str], target_size: Tuple[int, int] = (280, 380)) -> List[Tuple]:
@@ -320,7 +384,7 @@ class MosaicGeneratorOptimized:
         Traite un seul groupe de cartes (COPIE EXACTE de create_layout_group)
         Retourne 1 si succès, 0 sinon
         """
-        group, group_index, card_dict, class_map, fake_images, layout_mode, background_mode, transform_mode = args
+        group, group_index, card_dict, class_map, fake_images, layout_mode, background_mode, transform_mode, prefix = args
         
         try:
             canvas_width, canvas_height = 1920, 1080
@@ -404,7 +468,7 @@ class MosaicGeneratorOptimized:
                 
                 # Annotations (EXACTEMENT comme l'original)
                 filename = os.path.basename(path)
-                card_number = extract_card_number(filename)
+                card_number = self.extract_card_number(filename)
                 
                 if card_number in card_dict and card_number in class_map:
                     class_name = card_dict[card_number]
@@ -434,16 +498,17 @@ class MosaicGeneratorOptimized:
                     annotation_line = f"{new_class_id} {bbox_cx:.6f} {bbox_cy:.6f} {bbox_w:.6f} {bbox_h:.6f}"
                     annotations.append(annotation_line)
             
-            # Sauvegarder l'image PNG avec compression rapide (évite corruption)
-            output_file = os.path.join(MOSAIC_IMAGES_DIR, f"layout_{group_index:03d}.png")
-            # Paramètres PNG: compression 1 (rapide) pour éviter les erreurs CRC
-            success = cv2.imwrite(output_file, layout, [cv2.IMWRITE_PNG_COMPRESSION, 1])
+            # Sauvegarder l'image PNG avec compression ultra-rapide
+            output_file = os.path.join(MOSAIC_IMAGES_DIR, f"{prefix}layout_{group_index:03d}.png")
+            # PNG compression 0 = pas de compression (plus rapide, évite corruptions)
+            # Si espace disque important, utiliser compression 1 ou 3
+            success = cv2.imwrite(output_file, layout, [cv2.IMWRITE_PNG_COMPRESSION, 0])
             if not success:
                 raise Exception(f"Échec d'écriture de {output_file}")
             
             # Sauvegarder annotations YOLO
-            label_file = os.path.join(MOSAIC_LABELS_DIR, f"layout_{group_index:03d}.txt")
-            with open(label_file, "w") as f:
+            label_file = os.path.join(MOSAIC_LABELS_DIR, f"{prefix}layout_{group_index:03d}.txt")
+            with open(label_file, "w", encoding='utf-8') as f:
                 f.write("\n".join(annotations))
             
             return 1
@@ -458,29 +523,37 @@ class MosaicGeneratorOptimized:
                                   layout_mode: int = 1, background_mode: int = 0, 
                                   transform_mode: int = 0):
         """
-        Génère les mosaïques en parallèle (OPTIMISÉ)
-        10-20x plus rapide que la version séquentielle
+        Génère les mosaïques en parallèle (OPTIMISÉ MULTIPROCESSING)
+        20-50x plus rapide que la version séquentielle
         """
         total = len(groups)
         safe_print(f"🎨 Génération de {total} mosaïques en parallèle...")
         
+        # Créer un préfixe basé sur les modes pour éviter l'écrasement
+        prefix = f"L{layout_mode}_B{background_mode}_T{transform_mode}_"
+        safe_print(f"   Préfixe fichiers: {prefix}")
+        
         # Préparer les tâches
         tasks = [
-            (group, idx+1, card_dict, class_map, fake_images, layout_mode, background_mode, transform_mode)
+            (group, idx+1, card_dict, class_map, fake_images, layout_mode, background_mode, transform_mode, prefix)
             for idx, group in enumerate(groups)
         ]
         
-        # Traitement parallèle
+        # Traitement parallèle avec ProcessPoolExecutor (évite GIL Python)
+        # Utilise tous les CPU pour un maximum de vitesse
         completed = 0
-        with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
+        max_workers = min(self.num_workers, mp.cpu_count())
+        safe_print(f"   Utilisation de {max_workers} processus parallèles")
+        
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = [executor.submit(self._process_single_group, task) for task in tasks]
             
             for future in futures:
                 result = future.result()
                 completed += result
                 
-                if completed % 10 == 0 or completed == total:
-                    safe_print(f"   Progression: {completed}/{total} mosaïques générées")
+                if completed % 50 == 0 or completed == total:
+                    safe_print(f"   Progression: {completed}/{total} mosaïques générées ({100*completed//total}%)")
         
         safe_print(f"✅ {completed}/{total} mosaïques générées avec succès!")
 
@@ -505,8 +578,8 @@ def main():
         use_gpu=not args.no_gpu
     )
     
-    # Charger les données
-    card_dict, class_map = generator.load_card_data("excel/cards_info.xlsx")
+    # Charger les données (uses paths.json automatically)
+    card_dict, class_map = generator.load_card_data()
     
     # Charger les images en parallèle (OPTIMISÉ)
     safe_print("📂 Chargement des images en parallèle...")
