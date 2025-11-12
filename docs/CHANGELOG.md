@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.2.1] - 2025-11-11
+## [3.2.1] - 2025-11-12
 
 ### 🚀 Performance & UX Improvements
 
@@ -43,10 +43,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Supports new prefix format
   - Filter by prefix (e.g., "L1_B0_T0")
 
-### 🐛 Fixed
+### ♻️ Refactored
+
+#### Code Duplication Removal
+- **MAJOR**: Centralized utility functions to eliminate code duplication
+- Moved `extract_card_number()`, `load_card_data()`, `resize_cards()` to `core/utils.py`
+- Removed duplicated functions from:
+  - `core/augmentation.py` (~100 lines)
+  - `core/mosaic_optimized.py` (~34 lines)
+- **Total reduction**: ~134 lines of duplicated code eliminated (85% reduction)
+
+### 🔧 Improved
+
+- **`core/utils.py`**:
+  - Exported regex patterns as public constants (`PATTERN_NEW_FORMAT`, `PATTERN_OLD_FORMAT`, etc.)
+  - Enhanced `load_card_data()` to support both YAML (new) and Excel (legacy) formats
+  - Enhanced `resize_cards()` with automatic RGBA→RGB conversion
+  - Enhanced `extract_card_number()` to handle augmented filenames (`_aug_XXX`)
+  - Improved all docstrings with usage examples
+
+### 🧹 Cleaned
+
+- **Removed unnecessary NumPy 2.0 compatibility patches**
+  - Project uses `numpy<2.0` (pinned in requirements.txt)
+  - Patches were redundant and added unnecessary complexity
+  - NumPy 1.x already has all required attributes
+
+### � Fixed
+
 - **check_corrupted_images.py**: Fixed for `augmented/` folder location
 - **Mode "Complete"**: Removed "all" argument that caused crash
 - **Regex pattern**: Updated to match augmented filenames with holo variants
+- **Moved `install_env.bat` from `scripts/` to project root**
+  - More intuitive location (follows same pattern as `START.bat`, `INSTALL.bat`)
+  - Fixed path to requirements: now correctly points to `config/requirements.txt`
+  - Removed incorrect `cd /d "%~dp0"` that changed directory to scripts/
+  - Virtual environment now correctly created at `.venv` (root) instead of `scripts/.venv`
+- **Updated `INSTALL.bat`** to call `install_env.bat` at root
+
+### 🎯 Benefits
+
+- **Maintainability**: Single source of truth for utility functions
+- **Bug Fixes**: Fix once, benefits all modules
+- **Testing**: Easier to test centralized functions
+- **Documentation**: Better centralized documentation
+- **Backward Compatibility**: All function signatures preserved
+- **Cleaner Code**: No unnecessary compatibility code
 
 ---
 

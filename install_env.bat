@@ -3,7 +3,6 @@ REM install_env.bat
 REM Creates a virtual environment in .venv, activates it and installs dependencies.
 REM Forces Python 3.12 for NumPy wheel compatibility (Python 3.13 lacks pre-built wheels)
 SETLOCAL
-cd /d "%~dp0"
 
 :: Try to find a compatible Python (prefer 3.12, then 3.11/3.10)
 echo Searching for a compatible Python (3.12 preferred for NumPy wheels)...
@@ -98,8 +97,8 @@ if %ERRORLEVEL% NEQ 0 (
 REM Step 2: Install remaining requirements normally (will skip already satisfied packages)
 echo.
 echo [2/2] Installing remaining requirements from requirements.txt ...
-if exist requirements.txt (
-    pip install -r requirements.txt
+if exist config\requirements.txt (
+    pip install -r config\requirements.txt
     if %ERRORLEVEL% NEQ 0 (
         echo.
         echo ERROR: Failed to install dependencies from requirements.txt
@@ -113,8 +112,8 @@ if exist requirements.txt (
         exit /b 1
     )
 ) else (
-    echo WARNING: requirements.txt not found, installing core packages manually...
-    pip install "numpy<2.0" pandas "opencv-python<4.10.0" pillow requests scipy scikit-image imgaug imagecorruptions openpyxl
+    echo WARNING: config\requirements.txt not found, installing core packages manually...
+    pip install "numpy^<2.0" pandas "opencv-python^<4.10.0" pillow requests scipy scikit-image imgaug imagecorruptions openpyxl
     if %ERRORLEVEL% NEQ 0 (
         echo ERROR: Manual installation failed. See error message above.
         pause

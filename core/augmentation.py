@@ -13,30 +13,23 @@ import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
 
-# Patch de compatibilité NumPy pour imgaug (doit être avant l'import imgaug)
-if not hasattr(np, 'bool'):
-    np.bool = np.bool_
-if not hasattr(np, 'int'):
-    np.int = np.int_
-if not hasattr(np, 'float'):
-    np.float = np.float64
-if not hasattr(np, 'complex'):
-    np.complex = np.complex128
-if not hasattr(np, 'object'):
-    np.object = np.object_
-if not hasattr(np, 'str'):
-    np.str = np.str_
+# Import centralized utilities (functions, patterns, config)
+from core.utils import (
+    safe_print,
+    extract_card_number,
+    load_card_data,
+    resize_cards,
+    PATTERN_NEW_FORMAT,
+    PATTERN_OLD_FORMAT,
+    PATTERN_FALLBACK_1,
+    PATTERN_FALLBACK_2,
+    CONFIG
+)
 
 import imgaug.augmenters as iaa
 
-# Compiled regex patterns for card number extraction (performance optimization)
-_PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}(?:_aug_\d+)?\.')
-_PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
-_PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
-_PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
-
-# Taille cible pour redimensionner les images (comme dans le script mosaic)
-TARGET_SIZE = (280, 380)
+# Taille cible pour redimensionner les images (utilise la config centralisée)
+TARGET_SIZE = CONFIG['target_size']
 
 # Configuration par défaut (peut être surchargée par arguments CLI)
 DEFAULT_NUM_AUG = 30
@@ -54,100 +47,6 @@ AUG_LABELS_DIR = os.path.join(AUG_OUTPUT_DIR, "labels")
 # Création des dossiers s'ils n'existent pas
 os.makedirs(AUG_IMAGES_DIR, exist_ok=True)
 os.makedirs(AUG_LABELS_DIR, exist_ok=True)
-
-def load_card_data(source_path):
-    """
-    Charge les données des cartes depuis YAML (prioritaire) ou Excel (fallback)
-    
-    Args:
-        source_path: Chemin vers le fichier (YAML ou Excel)
-        
-    Returns:
-        tuple: (card_dict, class_map)
-    """
-    card_dict = {}
-    class_map = {}
-    
-    # Détection automatique du format
-    if source_path.endswith('.yaml') or source_path.endswith('.yml'):
-        # Charger depuis YAML
-        import yaml
-        
-        with open(source_path, 'r', encoding='utf-8') as f:
-            data = yaml.safe_load(f)
-        
-        class_id = 1
-        for card_id, card_info in data['cards'].items():
-            # Extraire le numéro (ex: sv08_019 -> 019)
-            number = card_id.split('_')[-1].zfill(3)
-            name = card_info['name'].replace(" ", "_")
-            
-            if number not in card_dict:
-                card_dict[number] = name
-                class_map[number] = class_id
-                class_id += 1
-    
-    else:
-        # Charger depuis Excel (legacy)
-        df = pd.read_excel(source_path, usecols=["Set #", "Name"])
-        class_id = 1
-        for _, row in df.iterrows():
-            number = row["Set #"].split('/')[0].zfill(3)
-            name = row["Name"].replace(" ", "_")
-            if number not in card_dict:
-                card_dict[number] = name
-                class_map[number] = class_id
-                class_id += 1
-    
-    return card_dict, class_map
-
-def extract_card_number(filename):
-    """
-    Extrait le numéro de carte à partir du nom de fichier.
-    
-    Supporte plusieurs formats:
-    - sv08_001_en.png → "001"
-    - xyp_XY05_en.png → "XY05"
-    - SSP_001_R_EN_SM.png → "001"
-    - pokemon_en_001_xyz.jpg → "001"
-    - card_001.jpg → "001"
-    """
-    # Format nouveau: {set}_{number}_{lang}.ext
-    match = _PATTERN_NEW_FORMAT.search(filename)
-    if match:
-        num = match.group(1)
-        # Padder si numérique pur
-        return num.zfill(3) if num.isdigit() else num
-    
-    # Format ancien: _en_XXX_ ou _XXX_
-    match = _PATTERN_OLD_FORMAT.search(filename)
-    if match:
-        return match.group(1)
-    
-    # Fallback: XXX_XXX_XXX
-    match = _PATTERN_FALLBACK_1.search(filename)
-    if match and re.match(r'\d{3}', match.group(1)):
-        return match.group(1)
-    
-    # Dernier recours
-    match = _PATTERN_FALLBACK_2.search(filename)
-    return match.group(1) if match else None
-
-def resize_cards(image_paths, target_size=TARGET_SIZE):
-    resized_images = []
-    for img_path in image_paths:
-        img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
-        if img is None:
-            continue
-        
-        # Convertir RGBA en RGB si nécessaire
-        if len(img.shape) == 3 and img.shape[2] == 4:
-            # Image a un canal alpha, le convertir en RGB
-            img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-        
-        img = cv2.resize(img, target_size, interpolation=cv2.INTER_AREA)
-        resized_images.append((img, img_path))
-    return resized_images
 
 # Pipeline d'augmentation avec imgaug - VERSION AMÉLIORÉE (plus de variété)
 # Applique 2 à 5 transformations aléatoires parmi une liste étendue

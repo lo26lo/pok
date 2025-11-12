@@ -8,7 +8,7 @@ echo    Installation de l'environnement virtuel Python
 echo ====================================================================
 echo.
 
-call scripts\install_env.bat
+call install_env.bat
 
 echo.
 echo Installation terminee !
