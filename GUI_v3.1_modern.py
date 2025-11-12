@@ -4640,6 +4640,9 @@ Lancer le téléchargement ?"""
                         f"✅ Succès: {ok}/{total}\n"
                         f"❌ Échecs: {fail}/{total}")
                 
+                # Mettre à jour les statistiques (V3.2)
+                self.update_all_statistics()
+                
             except Exception as e:
                 self.log(f"❌ ERREUR: {e}")
                 import traceback
@@ -5184,6 +5187,9 @@ Continuer ?"""
                 messagebox.showinfo("Succès", summary)
                 self.update_stats()
                 
+                # Mettre à jour les statistiques (V3.2)
+                self.update_all_statistics()
+                
             except Exception as e:
                 self.log(f"❌ Erreur pipeline: {e}")
                 import traceback
@@ -5336,6 +5342,9 @@ Continuer ?"""
                         self.log("✅ Mosaïques générées!")
                         messagebox.showinfo("Succès", "Mosaïques générées avec succès!")
                         self.update_stats()
+                        
+                        # Mettre à jour les statistiques (V3.2)
+                        self.update_all_statistics()
                     elif self.current_process.returncode is not None:
                         self.log("❌ Génération échouée")
                         messagebox.showerror("Erreur", "Génération échouée!")
@@ -5944,6 +5953,9 @@ Continuer ?"""
                         self.log(f"✅ {count_var.get()} fake backgrounds generated in {output_dir}/")
                         messagebox.showinfo("Success", f"Generated {count_var.get()} fake backgrounds!")
                         self.update_stats()
+                        
+                        # Mettre à jour les statistiques (V3.2)
+                        self.update_all_statistics()
                     else:
                         self.log(f"❌ Fake generation failed (exit code: {process.returncode})")
                         messagebox.showerror("Error", "Fake generation failed!")
