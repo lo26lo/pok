@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-11-12",
+  "description": "Centralized path configuration - ALL paths are defined here",
+  
+  "directories": {
+    "images": "images",
+    "backgrounds_original": "backgrounds/original",
+    "backgrounds_augmented": "output/backgrounds",
+    "excel": "excel",
+    "models": "models",
+    "config": "config",
+    "docs": "docs",
+    "scripts": "scripts",
+    "tests": "tests",
+    "core": "core",
+    
+    "output_base": "output",
+    "output_holographic": "output/holographic",
+    "output_augmented": "output/augmented",
+    "output_augmented_images": "output/augmented/images",
+    "output_augmented_labels": "output/augmented/labels",
+    "output_backgrounds": "output/backgrounds",
+    "output_mosaics": "output/mosaics",
+    "output_mosaics_images": "output/mosaics/images",
+    "output_mosaics_labels": "output/mosaics/labels",
+    "output_dataset": "output/dataset",
+    "output_dataset_images": "output/dataset/images",
+    "output_dataset_labels": "output/dataset/labels",
+    "output_dataset_merged": "output/dataset_merged",
+    
+    "runs": "runs",
+    "runs_train": "runs/train",
+    "runs_train_pokemon": "runs/train/pokemon_detector",
+    "runs_train_weights": "runs/train/pokemon_detector/weights",
+    
+    "bbox_visualization": "bbox_visualization",
+    "examples": "examples"
+  },
+  
+  "files": {
+    "cards_database_yaml": "models/cards_database.yaml",
+    "cards_with_prices_yaml": "models/cards_with_prices.yaml",
+    "card_name_to_id_json": "models/card_name_to_id.json",
+    "yolo11n_model": "models/yolo11n.pt",
+    "yolov8n_model": "models/yolov8n.pt",
+    
+    "cards_info_excel": "excel/cards_info.xlsx",
+    "cards_with_prices_excel": "excel/cards_with_prices.xlsx",
+    
+    "dataset_data_yaml": "output/dataset/data.yaml",
+    "augmented_data_yaml": "output/augmented/data.yaml",
+    
+    "best_model": "runs/train/pokemon_detector/weights/best.pt",
+    "last_model": "runs/train/pokemon_detector/weights/last.pt",
+    
+    "gui_config": "config/gui_config.json",
+    "paths_config": "config/paths.json",
+    "api_config": "config/api_config.json",
+    "api_config_example": "config/api_config.json.example",
+    
+    "requirements": "config/requirements.txt",
+    "requirements_training": "config/requirements_training.txt",
+    "requirements_extra": "config/requirements_extra.txt"
+  }
+}

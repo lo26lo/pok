@@ -3,10 +3,19 @@ Script pour mettre à jour les prix dans models/cards_database.yaml depuis TCGde
 """
 
 import sys
+import json
 from pathlib import Path
 
 # Ajouter le répertoire parent au path
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Charger paths depuis config
+def load_paths():
+    config_path = Path("config/paths.json")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
 
 def update_prices_yaml():
     """Met à jour les prix dans le fichier YAML"""
@@ -14,7 +23,7 @@ def update_prices_yaml():
     from datetime import datetime
     from core.tcgdex_api import TCGdexAPI
     
-    yaml_path = Path("models/cards_database.yaml")
+    yaml_path = Path(PATHS['files']['cards_database_yaml'])
     
     print("=" * 70)
     print("  MISE À JOUR DES PRIX (YAML)")

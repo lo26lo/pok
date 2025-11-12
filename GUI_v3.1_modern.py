@@ -19,6 +19,7 @@ from datetime import datetime
 from core.workflow_manager import WorkflowManager, WorkflowConfig
 from core.training_manager import TrainingManager, TrainingConfig
 from core.detection_manager import DetectionManager, DetectionConfig
+from core.utils import load_paths, PATHS
 
 
 class SettingsDialog:
@@ -62,14 +63,14 @@ class SettingsDialog:
         except Exception:
             config = {}
         
-        # Paramètres par défaut
-        self.default_images_dir = tk.StringVar(value=config.get("default_images_dir", "images"))
-        self.default_output_dir = tk.StringVar(value=config.get("default_output_dir", "output"))
-        self.default_augmented_dir = tk.StringVar(value=config.get("default_augmented_dir", "output/augmented"))
-        self.default_mosaic_dir = tk.StringVar(value=config.get("default_mosaic_dir", "output/mosaics"))
-        self.default_dataset_dir = tk.StringVar(value=config.get("default_dataset_dir", "output/dataset"))
-        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", "output/backgrounds"))
-        self.default_holographic_dir = tk.StringVar(value=config.get("default_holographic_dir", "output/holographic"))
+        # Paramètres par défaut (from paths.json)
+        self.default_images_dir = tk.StringVar(value=config.get("default_images_dir", PATHS['directories']['images']))
+        self.default_output_dir = tk.StringVar(value=config.get("default_output_dir", PATHS['directories']['output_base']))
+        self.default_augmented_dir = tk.StringVar(value=config.get("default_augmented_dir", PATHS['directories']['output_augmented']))
+        self.default_mosaic_dir = tk.StringVar(value=config.get("default_mosaic_dir", PATHS['directories']['output_mosaics']))
+        self.default_dataset_dir = tk.StringVar(value=config.get("default_dataset_dir", PATHS['directories']['output_dataset']))
+        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", PATHS['directories']['output_backgrounds']))
+        self.default_holographic_dir = tk.StringVar(value=config.get("default_holographic_dir", PATHS['directories']['output_holographic']))
         
         self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 50))
         self.holographic_intensity = tk.DoubleVar(value=config.get("holographic_intensity", 0.7))
@@ -86,17 +87,17 @@ class SettingsDialog:
         self.auto_save_logs = tk.BooleanVar(value=config.get("auto_save_logs", True))
         self.enable_notifications = tk.BooleanVar(value=config.get("enable_notifications", True))
         
-        # Fake image generation settings (random erasing)
-        self.fakeimg_input_dir = tk.StringVar(value=config.get("fakeimg_input_dir", "backgrounds/original"))
-        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", "output/backgrounds"))
+        # Fake image generation settings (random erasing) - from paths.json
+        self.fakeimg_input_dir = tk.StringVar(value=config.get("fakeimg_input_dir", PATHS['directories']['backgrounds_original']))
+        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", PATHS['directories']['output_backgrounds']))
         self.fakeimg_p = tk.DoubleVar(value=config.get("fakeimg_p", 0.5))
         self.fakeimg_sl = tk.DoubleVar(value=config.get("fakeimg_sl", 0.02))
         self.fakeimg_sh = tk.DoubleVar(value=config.get("fakeimg_sh", 0.4))
         self.fakeimg_r1 = tk.DoubleVar(value=config.get("fakeimg_r1", 0.3))
         self.fakeimg_r2 = tk.DoubleVar(value=config.get("fakeimg_r2", 3.3))
         
-        # Image download settings
-        self.default_download_dir = tk.StringVar(value=config.get("default_download_dir", "images"))
+        # Image download settings - from paths.json
+        self.default_download_dir = tk.StringVar(value=config.get("default_download_dir", PATHS['directories']['images']))
         self.default_download_lang = tk.StringVar(value=config.get("default_download_lang", "English"))
         self.default_download_quality = tk.StringVar(value=config.get("default_download_quality", "high"))
         self.default_download_format = tk.StringVar(value=config.get("default_download_format", "png"))
@@ -2674,9 +2675,9 @@ class ModernPokemonGUI:
     def get_augmentation_stats(self):
         """Récupérer les statistiques d'augmentation (holo + standard)"""
         try:
-            source_dir = "images"
-            holo_dir = "output/holographic"
-            augmented_dir = "output/augmented/images"
+            source_dir = PATHS['directories']['images']
+            holo_dir = PATHS['directories']['output_holographic']
+            augmented_dir = PATHS['directories']['output_augmented_images']
             
             source_count = 0
             holo_count = 0
@@ -2839,7 +2840,7 @@ class ModernPokemonGUI:
                   width=30).pack(side=tk.LEFT, padx=5, pady=5)
         
         ttk.Button(btn_frame, text="📂 Open Folder",
-                  command=lambda: self.open_folder("output/augmented"),
+                  command=lambda: self.open_folder(PATHS['directories']['output_augmented']),
                   width=20).pack(side=tk.LEFT, padx=5, pady=5)
     
     def create_fakeimg_view(self):
@@ -2895,7 +2896,7 @@ class ModernPokemonGUI:
         
         self.fakeimg_input_var = ttk.Entry(input_frame, width=self.ENTRY_WIDTH)
         self.fakeimg_input_var.pack(side=tk.LEFT, padx=10)
-        self.fakeimg_input_var.insert(0, "backgrounds/original")
+        self.fakeimg_input_var.insert(0, PATHS['directories']['backgrounds_original'])
         
         # Output directory
         output_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
@@ -2907,7 +2908,7 @@ class ModernPokemonGUI:
         
         self.fakeimg_output_var = ttk.Entry(output_frame, width=self.ENTRY_WIDTH)
         self.fakeimg_output_var.pack(side=tk.LEFT, padx=10)
-        self.fakeimg_output_var.insert(0, "output/backgrounds")
+        self.fakeimg_output_var.insert(0, PATHS['directories']['output_backgrounds'])
         
         # Random Erasing Parameters
         tk.Label(config_content,
@@ -3009,7 +3010,7 @@ class ModernPokemonGUI:
                   width=30).pack(side=tk.LEFT, padx=5, pady=5)
         
         ttk.Button(btn_frame, text="📂 Open Folder",
-                  command=lambda: self.open_folder("output/backgrounds"),
+                  command=lambda: self.open_folder(PATHS['directories']['output_backgrounds']),
                   width=20).pack(side=tk.LEFT, padx=5, pady=5)
     
     def create_mosaic_view(self):
@@ -3106,7 +3107,7 @@ class ModernPokemonGUI:
                   width=30).pack(side=tk.LEFT, padx=(0, 5))
         
         ttk.Button(mosaic_btn_frame, text="📂 Open Folder",
-                  command=lambda: self.open_folder("output/mosaics"),
+                  command=lambda: self.open_folder(PATHS['directories']['output_mosaics']),
                   width=20).pack(side=tk.LEFT)
         
         # Fake backgrounds button (aligned below GENERATE MOSAICS using left anchor)
@@ -3149,7 +3150,7 @@ class ModernPokemonGUI:
         self.valid_path_var = tk.Entry(path_frame, width=40,
                                        bg='#FFFFFF', fg='#1a1a1a')
         self.valid_path_var.pack(side=tk.LEFT, padx=10)
-        self.valid_path_var.insert(0, "output/dataset")
+        self.valid_path_var.insert(0, PATHS['directories']['output_dataset'])
         
         ttk.Button(path_frame, text="📁", width=3,
                   command=self.browse_dataset).pack(side=tk.LEFT)
@@ -3613,7 +3614,7 @@ class ModernPokemonGUI:
         self.detect_model_var = tk.Entry(model_frame, width=40,
                                          bg='#FFFFFF', fg='#1a1a1a')
         self.detect_model_var.pack(side=tk.LEFT, padx=10)
-        self.detect_model_var.insert(0, "runs/train/pokemon_detector/weights/best.pt")
+        self.detect_model_var.insert(0, PATHS['files']['best_model'])
         
         ttk.Button(model_frame, text="�", width=3,
                   command=self.browse_model).pack(side=tk.LEFT)
@@ -3947,7 +3948,7 @@ class ModernPokemonGUI:
     
     def check_yaml_file(self):
         """Vérifier si le fichier YAML des cartes existe"""
-        yaml_path = Path("models/cards_database.yaml")
+        yaml_path = Path(PATHS['files']['cards_database_yaml'])
         return yaml_path.exists()
     
     def create_sample_yaml(self):
@@ -4026,10 +4027,10 @@ class ModernPokemonGUI:
             }
             
             # Créer le dossier models/ si nécessaire
-            Path("models").mkdir(exist_ok=True)
+            Path(PATHS['directories']['models']).mkdir(exist_ok=True)
             
             # Sauvegarder en YAML
-            yaml_path = Path("models/cards_database.yaml")
+            yaml_path = Path(PATHS['files']['cards_database_yaml'])
             with open(yaml_path, 'w', encoding='utf-8') as f:
                 yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
             
@@ -4177,26 +4178,26 @@ class ModernPokemonGUI:
         
         try:
             # Compter images source
-            images_path = Path("images")
+            images_path = Path(PATHS['directories']['images'])
             if images_path.exists():
                 stats['source'] = len(list(images_path.glob("*.png"))) + \
                                  len(list(images_path.glob("*.jpg"))) + \
                                  len(list(images_path.glob("*.jpeg")))
             
             # Compter images augmentées
-            aug_path = Path("output/augmented/images")
+            aug_path = Path(PATHS['directories']['output_augmented_images'])
             if aug_path.exists():
                 stats['augmented'] = len(list(aug_path.glob("*.png"))) + \
                                     len(list(aug_path.glob("*.jpg")))
             
             # Compter mosaïques
-            mosaic_path = Path("output/mosaics/images")
+            mosaic_path = Path(PATHS['directories']['output_mosaics_images'])
             if mosaic_path.exists():
                 stats['mosaics'] = len(list(mosaic_path.glob("*.png"))) + \
                                   len(list(mosaic_path.glob("*.jpg")))
             
             # Calculer taille totale du dossier output
-            output_path = Path("output")
+            output_path = Path(PATHS['directories']['output_base'])
             if output_path.exists():
                 total_size = 0
                 for file in output_path.rglob("*"):
@@ -4583,7 +4584,7 @@ Continuer ?"""
             return
         
         # Vérifier data.yaml
-        data_yaml = Path("output/dataset/data.yaml")
+        data_yaml = Path(PATHS['files']['dataset_data_yaml'])
         if not data_yaml.exists():
             messagebox.showerror("Error",
                 f"Fichier data.yaml non trouvé!\n{data_yaml}\n\n"
@@ -4653,7 +4654,7 @@ Continuer ?"""
     
     def show_training_plots(self):
         """Afficher les graphiques d'entraînement"""
-        plots_dir = Path("runs/train/pokemon_detector")
+        plots_dir = Path(PATHS['directories']['train_output'])
         results_png = plots_dir / "results.png"
         
         if not results_png.exists():
@@ -4678,7 +4679,7 @@ Continuer ?"""
         model_path = filedialog.askopenfilename(
             title="Sélectionner modèle YOLO",
             filetypes=[("PyTorch Model", "*.pt"), ("Tous", "*.*")],
-            initialdir="runs/train"
+            initialdir=PATHS['directories']['train_base']
         )
         if model_path:
             self.detect_model_var.delete(0, tk.END)
@@ -4901,7 +4902,7 @@ Continuer ?"""
         
         def task():
             try:
-                source_dir = "images"
+                source_dir = PATHS['directories']['images']
                 
                 # ÉTAPE 1: Holographic (optionnel)
                 if num_holo > 0:
@@ -4909,7 +4910,7 @@ Continuer ?"""
                     
                     cmd = [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
                            source_dir,
-                           "output/holographic",
+                           PATHS['directories']['output_holographic'],
                            "--variations", str(num_holo)]
                     
                     self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -5181,8 +5182,8 @@ Continuer ?"""
                 
                 self.log("✅ Dataset fusionné avec succès!")
                 messagebox.showinfo("Succès", 
-                    "Dataset fusionné!\n\n"
-                    "📂 Emplacement: output/dataset/\n"
+                    f"Dataset fusionné!\n\n"
+                    f"📂 Emplacement: {PATHS['directories']['output_dataset']}\n"
                     "✓ train.txt et val.txt créés\n"
                     "✓ data.yaml copié\n\n"
                     "Prêt pour l'entraînement!")
@@ -5278,7 +5279,7 @@ Continuer ?"""
                 for fmt in formats:
                     self.log(f"\n📦 Export format: {fmt}")
                     cmd = [sys.executable, "-u", "core/dataset_exporter.py",
-                          "output/dataset", "--format", fmt]
+                          PATHS['directories']['output_dataset'], "--format", fmt]
                     
                     self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                               stderr=subprocess.STDOUT, text=True,
@@ -5315,7 +5316,7 @@ Continuer ?"""
         def task():
             try:
                 # Utilisation de la version OPTIMISÉE
-                cmd = [sys.executable, "-u", "core/auto_balancer_optimized.py", "output/dataset",
+                cmd = [sys.executable, "-u", "core/auto_balancer_optimized.py", PATHS['directories']['output_dataset'],
                       "--strategy", "augment", "--target", "50"]
                 
                 self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -5907,10 +5908,10 @@ Continuer ?"""
     def show_statistics(self):
         """Afficher statistiques"""
         try:
-            images_count = len(list(Path("images").glob("*.png")))
-            aug_count = len(list(Path("output/augmented/images").glob("*.png"))) if Path("output/augmented/images").exists() else 0
-            mosaic_count = len(list(Path("output/mosaics/images").glob("*.png"))) if Path("output/mosaics/images").exists() else 0
-            dataset_count = len(list(Path("output/dataset/images").glob("*.png"))) if Path("output/dataset/images").exists() else 0
+            images_count = len(list(Path(PATHS['directories']['images']).glob("*.png")))
+            aug_count = len(list(Path(PATHS['directories']['output_augmented_images']).glob("*.png"))) if Path(PATHS['directories']['output_augmented_images']).exists() else 0
+            mosaic_count = len(list(Path(PATHS['directories']['output_mosaics_images']).glob("*.png"))) if Path(PATHS['directories']['output_mosaics_images']).exists() else 0
+            dataset_count = len(list(Path(PATHS['directories']['output_dataset_images']).glob("*.png"))) if Path(PATHS['directories']['output_dataset_images']).exists() else 0
             
             msg = f"""📊 Dataset Statistics
 
@@ -6004,7 +6005,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
             fg=self.colors['text']
         ).pack(anchor='w', padx=15, pady=(5, 2))
         
-        extension_output_var = tk.StringVar(value="models/cards_database.yaml")
+        extension_output_var = tk.StringVar(value=PATHS['files']['cards_database_yaml'])
         tk.Entry(
             section1,
             textvariable=extension_output_var,
@@ -6059,7 +6060,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         price_input_frame = tk.Frame(section2, bg=self.colors['bg_card'])
         price_input_frame.pack(fill='x', padx=15, pady=(0, 10))
         
-        price_input_var = tk.StringVar(value="models/cards_database.yaml")
+        price_input_var = tk.StringVar(value=PATHS['files']['cards_database_yaml'])
         tk.Entry(
             price_input_frame,
             textvariable=price_input_var,
@@ -6655,7 +6656,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         
         try:
             import shutil
-            output_path = Path("output")
+            output_path = Path(PATHS['directories']['output_base'])
             if output_path.exists():
                 shutil.rmtree(output_path)
                 self.log("✅ Output folder deleted")
@@ -6682,7 +6683,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         
         try:
             import shutil
-            aug_path = Path("output/augmented")
+            aug_path = Path(PATHS['directories']['output_augmented'])
             if aug_path.exists():
                 shutil.rmtree(aug_path)
                 self.log("✅ Augmented folder deleted")
@@ -6710,13 +6711,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
             import shutil
             
             # Nettoyer mosaics
-            mosaic_path = Path("output/mosaics")
+            mosaic_path = Path(PATHS['directories']['output_mosaics'])
             if mosaic_path.exists():
                 shutil.rmtree(mosaic_path)
                 self.log("✅ Mosaics folder deleted")
             
             # Nettoyer dataset
-            dataset_path = Path("output/dataset")
+            dataset_path = Path(PATHS['directories']['output_dataset'])
             if dataset_path.exists():
                 shutil.rmtree(dataset_path)
                 self.log("✅ Dataset folder deleted")
@@ -6744,7 +6745,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         
         try:
             import shutil
-            runs_path = Path("runs")
+            runs_path = Path(PATHS['directories']['train_base'])
             if runs_path.exists():
                 shutil.rmtree(runs_path)
                 self.log("✅ Training results deleted")
@@ -6770,7 +6771,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         
         try:
             import shutil
-            holo_path = Path("images_holographic")
+            holo_path = Path(PATHS['directories']['output_holographic'])
             if holo_path.exists():
                 shutil.rmtree(holo_path)
                 self.log("✅ Holographic folder deleted")

@@ -6,8 +6,17 @@ Utilise tous les scripts optimisés avec support GPU
 import os
 import sys
 import time
+import json
 import subprocess
 from pathlib import Path
+
+# Charger paths depuis config
+def load_paths():
+    config_path = Path("config/paths.json")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
 
 def safe_print(msg):
     """Print Unicode-safe"""
@@ -70,7 +79,12 @@ def main():
     
     # Nettoyage
     safe_print("\n🧹 Nettoyage des dossiers de sortie...")
-    for folder in ["output/holographic", "output/augmented", "output/mosaics", "output/dataset"]:
+    for folder in [
+        PATHS['directories']['output_holographic'],
+        PATHS['directories']['output_augmented'],
+        PATHS['directories']['output_mosaics'],
+        PATHS['directories']['output_dataset']
+    ]:
         if Path(folder).exists():
             import shutil
             shutil.rmtree(folder)
@@ -78,13 +92,13 @@ def main():
     
     # ÉTAPE 1: Augmentation holographique (GPU)
     if not run_command(
-        f'{python_exe} core/holographic_augmenter_optimized.py images output/holographic --variations {num_variations_holo}',
+        f'{python_exe} core/holographic_augmenter_optimized.py {PATHS["directories"]["images"]} {PATHS["directories"]["output_holographic"]} --variations {num_variations_holo}',
         f"ÉTAPE 1/5 - Augmentation holographique GPU ({num_variations_holo} variations)"
     ):
         return False
     
     # Vérifier sortie
-    holo_count = len(list(Path("output/holographic").glob("*.png")))
+    holo_count = len(list(Path(PATHS['directories']['output_holographic']).glob("*.png")))
     safe_print(f"   📊 {holo_count} images holographiques générées (attendu: {total_holo})")
     
     # ÉTAPE 2: Augmentation standard
@@ -95,7 +109,7 @@ def main():
         return False
     
     # Vérifier sortie
-    aug_count = len(list(Path("output/augmented/images").glob("*.png")))
+    aug_count = len(list(Path(PATHS['directories']['output_augmented_images']).glob("*.png")))
     safe_print(f"   📊 {aug_count} images augmentées générées (attendu: {total_aug})")
     
     # ÉTAPE 3: Génération mosaïques (GPU)
@@ -106,7 +120,7 @@ def main():
         return False
     
     # Vérifier sortie
-    mosaic_count = len(list(Path("output/mosaics/images").glob("*.png")))
+    mosaic_count = len(list(Path(PATHS['directories']['output_mosaics_images']).glob("*.png")))
     safe_print(f"   📊 {mosaic_count} mosaïques générées (attendu: {num_mosaics})")
     
     # ÉTAPE 4: Fusion dataset
@@ -117,7 +131,7 @@ def main():
         return False
     
     # Vérifier sortie
-    dataset_count = len(list(Path("output/dataset/images").glob("*.png")))
+    dataset_count = len(list(Path(PATHS['directories']['output_dataset_images']).glob("*.png")))
     safe_print(f"   📊 {dataset_count} images dans le dataset final (attendu: {total_final})")
     
     # ÉTAPE 5: Vérification annotations
@@ -125,8 +139,8 @@ def main():
     safe_print("⚙️  ÉTAPE 5/5 - Vérification des annotations YOLO")
     safe_print("="*70)
     
-    images_dir = Path("output/dataset/images")
-    labels_dir = Path("output/dataset/labels")
+    images_dir = Path(PATHS['directories']['output_dataset_images'])
+    labels_dir = Path(PATHS['directories']['output_dataset_labels'])
     
     images = set(f.stem for f in images_dir.glob("*.png"))
     labels = set(f.stem for f in labels_dir.glob("*.txt"))
@@ -170,7 +184,7 @@ def main():
     safe_print("\n" + "="*70)
     safe_print("🎉 WORKFLOW TERMINÉ AVEC SUCCÈS!")
     safe_print("="*70)
-    safe_print(f"\n📂 Dataset final : output/dataset/")
+    safe_print(f"\n📂 Dataset final : {PATHS['directories']['output_dataset']}/")
     safe_print(f"   ├── images/ ({dataset_count} fichiers)")
     safe_print(f"   ├── labels/ ({len(labels)} fichiers)")
     safe_print(f"   ├── train.txt")

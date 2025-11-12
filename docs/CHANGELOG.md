@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.2.2] - 2025-11-12
+## [3.2.3] - 2025-11-12
+
+### 🔧 Configuration System
+
+#### Path Centralization
+- **NEW**: All filesystem paths centralized in `config/paths.json`
 
 ### 📁 Structure Refactoring
 

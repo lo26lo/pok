@@ -4,12 +4,21 @@ Format: models/cards_database.yaml
 """
 
 import yaml
+import json
 from pathlib import Path
 from datetime import datetime
 import sys
 sys.path.append('.')
 
 from core.tcgdex_api import TCGdexAPI
+
+# Charger paths depuis config
+def load_paths():
+    config_path = Path("config/paths.json")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+PATHS = load_paths()
 
 # Définir manuellement les 8 cartes d'entraînement
 TRAINING_CARDS = {
@@ -58,7 +67,7 @@ def init_yaml_with_prices():
         }
     
     # Sauvegarder YAML
-    yaml_path = Path("models/cards_database.yaml")
+    yaml_path = Path(PATHS['files']['cards_database_yaml'])
     yaml_path.parent.mkdir(exist_ok=True)
     
     print(f"\n💾 Sauvegarde dans {yaml_path}...")

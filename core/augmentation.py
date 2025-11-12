@@ -38,18 +38,26 @@ _PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
 # Taille cible pour redimensionner les images (comme dans le script mosaic)
 TARGET_SIZE = (280, 380)
 
+import imgaug.augmenters as iaa
+
+# Import utils for paths
+try:
+    from .utils import load_paths, PATHS
+except ImportError:
+    from utils import load_paths, PATHS
+
 # Configuration par défaut (peut être surchargée par arguments CLI)
 DEFAULT_NUM_AUG = 30
 DEFAULT_SOURCE = "images"
 DEFAULT_TARGET = "augmented"
 
 # Sera configuré dynamiquement
-BASE_IMAGES_DIR = "images"
+BASE_IMAGES_DIR = PATHS['directories']['images']
 
-# Configuration des dossiers de sortie (par défaut)
-AUG_OUTPUT_DIR = os.path.join("output", "augmented")
-AUG_IMAGES_DIR = os.path.join(AUG_OUTPUT_DIR, "images")
-AUG_LABELS_DIR = os.path.join(AUG_OUTPUT_DIR, "labels")
+# Configuration des dossiers de sortie (from paths.json)
+AUG_OUTPUT_DIR = PATHS['directories']['output_augmented']
+AUG_IMAGES_DIR = PATHS['directories']['output_augmented_images']
+AUG_LABELS_DIR = PATHS['directories']['output_augmented_labels']
 
 # Création des dossiers s'ils n'existent pas
 os.makedirs(AUG_IMAGES_DIR, exist_ok=True)
@@ -223,7 +231,7 @@ def main():
     os.makedirs(AUG_IMAGES_DIR, exist_ok=True)
     os.makedirs(AUG_LABELS_DIR, exist_ok=True)
     
-    yaml_path = "models/cards_database.yaml"
+    yaml_path = PATHS['files']['cards_database_yaml']
     
     if not os.path.exists(yaml_path):
         print(f"❌ Fichier YAML non trouvé: {yaml_path}")

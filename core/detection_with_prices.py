@@ -19,23 +19,29 @@ import yaml
 
 # Ajouter le dossier parent au path pour importer utils
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from core.utils import load_prices, safe_print
+from core.utils import load_prices, safe_print, load_paths, PATHS
 from core.card_mapping import get_card_id_from_class_name
 
 
 class PriceDetector:
     """Détecteur YOLO avec affichage des prix"""
     
-    def __init__(self, model_path: str, yaml_path: str = "models/cards_database.yaml", 
-                 data_yaml_path: str = "output/dataset/data.yaml"):
+    def __init__(self, model_path: str, yaml_path: str = None, 
+                 data_yaml_path: str = None):
         """
         Initialise le détecteur
         
         Args:
             model_path: Chemin vers le modèle YOLO (.pt)
-            yaml_path: Chemin vers la base de données YAML des cartes
-            data_yaml_path: Chemin vers data.yaml pour les noms de classes
+            yaml_path: Chemin cards_database.yaml (default: from paths.json)
+            data_yaml_path: Chemin data.yaml (default: from paths.json)
         """
+        # Set defaults from paths.json
+        if yaml_path is None:
+            yaml_path = PATHS['files']['cards_database_yaml']
+        if data_yaml_path is None:
+            data_yaml_path = PATHS['files']['dataset_data_yaml']
+        
         safe_print(f"🔧 Initialisation du détecteur...")
         
         # Charger le modèle YOLO
@@ -254,11 +260,11 @@ def main():
     
     parser.add_argument('--source', type=str, default='0',
                        help='Source: 0 pour webcam, chemin vers image/video')
-    parser.add_argument('--model', type=str, default='runs/detect/train/weights/best.pt',
+    parser.add_argument('--model', type=str, default=PATHS['files']['best_model'],
                        help='Chemin vers le modèle YOLO (.pt)')
-    parser.add_argument('--yaml', type=str, default='models/cards_database.yaml',
+    parser.add_argument('--yaml', type=str, default=PATHS['files']['cards_database_yaml'],
                        help='Chemin vers la base de données YAML des cartes')
-    parser.add_argument('--data-yaml', type=str, default='output/dataset/data.yaml',
+    parser.add_argument('--data-yaml', type=str, default=PATHS['files']['dataset_data_yaml'],
                        help='Chemin vers data.yaml')
     parser.add_argument('--conf', type=float, default=0.5,
                        help='Seuil de confiance minimum (0-1)')

@@ -25,9 +25,9 @@ import multiprocessing as mp
 
 # Import safe_print et load_prices
 try:
-    from .utils import safe_print, load_prices
+    from .utils import safe_print, load_prices, load_paths, PATHS
 except ImportError:
-    from utils import safe_print, load_prices
+    from utils import safe_print, load_prices, load_paths, PATHS
 
 # Détection GPU optionnelle
 try:
@@ -56,13 +56,13 @@ THETA_MIN_MODE2, THETA_MAX_MODE2 = -180, 180
 PHI_MIN_MODE2, PHI_MAX_MODE2 = -30, 30
 NUM_VARIATIONS_ALL = 50
 
-# Répertoires
-INPUT_DIRS = [os.path.join("output", "augmented", "images")]
-FAKE_DIR = os.path.join("output", "backgrounds")  # Backgrounds augmentés avec random erasing
-MOSAIC_DIR = "mosaic"
-MOSAIC_OUTPUT_DIR = os.path.join("output", "mosaics")
-MOSAIC_IMAGES_DIR = os.path.join(MOSAIC_OUTPUT_DIR, "images")
-MOSAIC_LABELS_DIR = os.path.join(MOSAIC_OUTPUT_DIR, "labels")
+# Répertoires (from paths.json)
+INPUT_DIRS = [PATHS['directories']['output_augmented_images']]
+FAKE_DIR = PATHS['directories']['output_backgrounds']
+MOSAIC_DIR = "mosaic"  # Legacy
+MOSAIC_OUTPUT_DIR = PATHS['directories']['output_mosaics']
+MOSAIC_IMAGES_DIR = PATHS['directories']['output_mosaics_images']
+MOSAIC_LABELS_DIR = PATHS['directories']['output_mosaics_labels']
 
 
 class MosaicGeneratorOptimized:
@@ -80,8 +80,10 @@ class MosaicGeneratorOptimized:
         safe_print(f"   GPU: {'✅ Activé' if self.use_gpu else '❌ Désactivé'}")
         safe_print(f"   Workers: {self.num_workers} threads")
     
-    def load_card_data(self, yaml_path: str = "models/cards_database.yaml") -> Tuple[Dict, Dict]:
-        """Charge les données des cartes depuis YAML"""
+    def load_card_data(self, yaml_path: str = None) -> Tuple[Dict, Dict]:
+        """Charge les données des cartes depuis YAML (default: from paths.json)"""
+        if yaml_path is None:
+            yaml_path = PATHS['files']['cards_database_yaml']
         prices_data = load_prices(yaml_path)
         card_dict = {}
         class_map = {}
@@ -576,8 +578,8 @@ def main():
         use_gpu=not args.no_gpu
     )
     
-    # Charger les données
-    card_dict, class_map = generator.load_card_data("models/cards_database.yaml")
+    # Charger les données (uses paths.json automatically)
+    card_dict, class_map = generator.load_card_data()
     
     # Charger les images en parallèle (OPTIMISÉ)
     safe_print("📂 Chargement des images en parallèle...")

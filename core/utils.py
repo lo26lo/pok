@@ -9,6 +9,8 @@ import cv2
 import pandas as pd
 import numpy as np
 import re
+import json
+from pathlib import Path
 from glob import glob
 from typing import Dict, List, Tuple, Optional
 
@@ -20,6 +22,36 @@ _PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}\.')
 _PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
 _PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
 _PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
+
+
+# ==================== PATHS CONFIGURATION ====================
+def load_paths() -> Dict:
+    """
+    Load centralized paths from config/paths.json
+    NO HELPER - Direct JSON loading
+    """
+    config_path = Path(__file__).parent.parent / "config" / "paths.json"
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Fallback to default paths if file doesn't exist
+        return {
+            "directories": {
+                "images": "images",
+                "excel": "excel",
+                "models": "models",
+                "output_base": "output"
+            },
+            "files": {
+                "cards_info_excel": "excel/cards_info.xlsx",
+                "cards_database_yaml": "models/cards_database.yaml"
+            }
+        }
+
+# Load paths at module import
+PATHS = load_paths()
+# ============================================================
 
 
 def safe_print(*args, **kwargs):
@@ -44,10 +76,10 @@ def safe_print(*args, **kwargs):
 # Configuration globale
 CONFIG = {
     'target_size': (280, 380),
-    'excel_file': 'excel/cards_info.xlsx',
-    'base_images_dir': 'images',
-    'augmented_dir': 'images_aug',
-    'output_dir': 'output',
+    'excel_file': PATHS['files']['cards_info_excel'],
+    'base_images_dir': PATHS['directories']['images'],
+    'augmented_dir': 'images_aug',  # Legacy, will be removed
+    'output_dir': PATHS['directories']['output_base'],
     'yolo_format': True
 }
 
@@ -237,12 +269,12 @@ def clean_old_files(pattern: str, directory: str = ".") -> int:
     
     return count
 
-def load_prices_from_yaml(yaml_path: str = "models/cards_database.yaml") -> Dict[str, Dict[str, any]]:
+def load_prices_from_yaml(yaml_path: str = None) -> Dict[str, Dict[str, any]]:
     """
     Charge les informations de prix depuis le fichier YAML
     
     Args:
-        yaml_path: Chemin vers le fichier YAML
+        yaml_path: Chemin vers le fichier YAML (default: from paths.json)
         
     Returns:
         Dictionnaire {card_id: {'name': str, 'price': float, 'price_max': float}}
@@ -252,6 +284,9 @@ def load_prices_from_yaml(yaml_path: str = "models/cards_database.yaml") -> Dict
         >>> print(prices['sv08_019'])
         {'name': 'Ho-Oh', 'price': 0.15, 'price_max': 0.25}
     """
+    if yaml_path is None:
+        yaml_path = PATHS['files']['cards_database_yaml']
+    
     if not os.path.exists(yaml_path):
         safe_print(f"⚠️ Fichier YAML non trouvé: {yaml_path}")
         return {}
@@ -290,12 +325,12 @@ def load_prices_from_yaml(yaml_path: str = "models/cards_database.yaml") -> Dict
         return {}
 
 
-def load_prices(yaml_path: str = "models/cards_database.yaml") -> Dict[str, Dict[str, any]]:
+def load_prices(yaml_path: str = None) -> Dict[str, Dict[str, any]]:
     """
     Charge les prix depuis YAML
     
     Args:
-        yaml_path: Chemin vers le fichier YAML
+        yaml_path: Chemin vers le fichier YAML (default: from paths.json)
         
     Returns:
         Dictionnaire {card_id: {'name': str, 'price': float, 'price_max': float}}
