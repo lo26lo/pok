@@ -91,18 +91,49 @@ class AugmentationOptimized:
         self.num_workers = num_workers or max(1, mp.cpu_count() - 2)
         self.use_gpu = use_gpu and CUDA_AVAILABLE
         
-        # Pipeline d'augmentation imgaug
-        self.seq = iaa.Sequential([
-            iaa.Sometimes(0.5, iaa.Affine(
-                # rotate=(-10, 10),  # DÉSACTIVÉ : rotation déjà appliquée dans mosaic_optimized
-                translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)},
-                scale=(0.95, 1.05)
-            )),
-            iaa.Sometimes(0.3, iaa.GaussianBlur(sigma=(0, 0.5))),
-            iaa.Sometimes(0.3, iaa.AdditiveGaussianNoise(scale=(0, 0.03*255))),
-            iaa.Sometimes(0.3, iaa.Multiply((0.9, 1.1))),
-            iaa.Sometimes(0.3, iaa.ContrastNormalization((0.9, 1.1))),
-            iaa.Sometimes(0.2, iaa.PerspectiveTransform(scale=(0.01, 0.05))),
+        # Pipeline d'augmentation imgaug (2 à 5 transformations aléatoires)
+        # Applique une combinaison variée de transformations pour simuler différentes conditions
+        # de capture (éclairage, qualité photo, angle, environnement)
+        self.seq = iaa.SomeOf((2, 5), [
+            # === LUMINOSITÉ ET CONTRASTE ===
+            # Simule différentes conditions d'éclairage (ombre, lumière directe)
+            iaa.Add((-20, 20)),                                    # Ajuste luminosité globale (-20 à +20 pixels)
+            iaa.Multiply((0.8, 1.2)),                              # Multiplie contraste (80% à 120%)
+            iaa.LinearContrast((0.6, 1.6)),                        # Contraste linéaire (60% à 160%)
+            iaa.GammaContrast((0.7, 1.5)),                         # Correction gamma (0.7 à 1.5)
+            
+            # === COULEURS ===
+            # Simule variations de température couleur (néons, lumière naturelle, LED)
+            iaa.AddToHueAndSaturation((-30, 30)),                  # Décalage teinte/saturation (-30° à +30°)
+            iaa.ChangeColorTemperature((3000, 10000)),             # Température couleur (3000K chaud à 10000K froid)
+            iaa.MultiplyHueAndSaturation((0.8, 1.2)),              # Multiplie saturation (80% à 120%)
+            
+            # === FLOU ET NETTETÉ ===
+            # Simule bougé, mise au point, qualité optique
+            iaa.GaussianBlur((0, 2.0)),                            # Flou gaussien (0 à 2.0 sigma)
+            iaa.AverageBlur(k=(1, 5)),                             # Flou moyen (kernel 1x1 à 5x5)
+            iaa.Sharpen(alpha=(0, 0.5), lightness=(0.8, 1.3)),     # Augmente netteté (alpha 0-0.5, luminosité 80-130%)
+            
+            # === BRUIT ===
+            # Simule capteur bas de gamme, faible luminosité, compression
+            iaa.AdditiveGaussianNoise(scale=(0, 0.05*255)),        # Bruit gaussien (0 à 5% de 255)
+            iaa.ImpulseNoise(0.02),                                # Bruit impulsionnel (2% de pixels)
+            iaa.SaltAndPepper(0.01),                               # Bruit sel et poivre (1% de pixels)
+            
+            # === EFFETS VISUELS ===
+            # Simule conditions environnementales et artefacts de capture
+            iaa.imgcorruptlike.Fog(severity=(1, 2)),               # Brouillard léger (sévérité 1-2)
+            iaa.Posterize((5, 8)),                                 # Réduction couleurs (5-8 bits par canal)
+            iaa.Emboss(alpha=(0, 0.3), strength=(0.5, 1.5)),       # Effet relief (alpha 0-30%, force 0.5-1.5)
+            iaa.EdgeDetect(alpha=(0.0, 0.3)),                      # Détection contours (alpha 0-30%)
+            
+            # === COMPRESSION ===
+            # Simule photo compressée, image de mauvaise qualité
+            iaa.JpegCompression(compression=(50, 99)),             # Compression JPEG (qualité 50% à 99%)
+            
+            # === DÉFORMATION ÉLASTIQUE ===
+            # Simule léger gauchissement (optique, surface non plane)
+            iaa.ElasticTransformation(alpha=(0, 5), sigma=0.5),    # Déformation élastique (alpha 0-5, lissage sigma=0.5)
         ], random_order=True)
         
         safe_print(f"🚀 Augmenteur optimisé initialisé:")

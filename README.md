@@ -333,15 +333,43 @@ pok/
 - **CSV manifest** auto-generated
 
 #### 🎨 Advanced Augmentation
-- **22 transformation types**:
-  - Visual: Blur, Contrast, Saturation, Fog, Posterize, Sharpen, Emboss
-  - Noise: Gaussian, Salt & Pepper, JPEG compression
-  - Geometry: Rotation, Scale, Translation, Perspective
-  - Color: HSV shift, Channel shuffle, Color temperature
-  - Advanced: Random erasing, Elastic deform, Grid distortion
+- **25+ transformation types** (2-5 applied randomly):
+  
+  **Luminosité & Contraste** (simule conditions d'éclairage):
+  - `Add (-20, +20)`: Ajuste luminosité globale
+  - `Multiply (0.8, 1.2)`: Multiplie contraste
+  - `LinearContrast (0.6, 1.6)`: Contraste linéaire
+  - `GammaContrast (0.7, 1.5)`: Correction gamma
+  
+  **Couleurs** (simule températures/ambiances):
+  - `AddToHueAndSaturation (-30°, +30°)`: Décalage teinte/saturation
+  - `ChangeColorTemperature (3000K, 10000K)`: Température couleur
+  - `MultiplyHueAndSaturation (0.8, 1.2)`: Multiplie saturation
+  
+  **Flou & Netteté** (simule bougé/mise au point):
+  - `GaussianBlur (0, 2.0)`: Flou gaussien
+  - `AverageBlur (1x1, 5x5)`: Flou moyen
+  - `Sharpen (alpha 0-0.5)`: Augmente netteté
+  
+  **Bruit** (simule capteur bas de gamme):
+  - `AdditiveGaussianNoise (0-5%)`: Bruit gaussien
+  - `ImpulseNoise (2%)`: Bruit impulsionnel
+  - `SaltAndPepper (1%)`: Bruit sel et poivre
+  
+  **Effets Visuels** (simule environnement):
+  - `Fog (severity 1-2)`: Brouillard léger
+  - `Posterize (5-8 bits)`: Réduction couleurs
+  - `Emboss (alpha 0-30%)`: Effet relief
+  - `EdgeDetect (alpha 0-30%)`: Détection contours
+  
+  **Compression & Déformation**:
+  - `JpegCompression (50-99%)`: Simule photo compressée
+  - `ElasticTransformation`: Gauchissement léger
+  
 - **Holographic effects**: 5 styles (rainbow, linear, radial, metallic, glitter)
 - **Auto YOLO annotations**: Generates .txt for each image
 - **Unique counter**: 1-100 augmentations per image
+- ⚠️ **Important**: Rotation is applied ONLY in mosaic generation, not during augmentation
 
 </td>
 <td width="50%" valign="top">

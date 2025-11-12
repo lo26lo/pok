@@ -134,7 +134,7 @@ Toggle each step on/off with checkboxes:
 
 ## 🎨 Augmentation
 
-Generate **variations** of your original card images using 22 transformation types.
+Generate **variations** of your original card images using **25+ transformation types**.
 
 ### Configuration
 
@@ -143,40 +143,45 @@ Generate **variations** of your original card images using 22 transformation typ
 | **Augmentation Count** | Variations per image | 5 |
 | **Output Directory** | Where to save results | `output/augmented/` |
 
-### Transformation Types (22 total)
+### Transformation Pipeline (SomeOf: 2-5 applied randomly)
 
-**Visual Effects:**
-- Blur (motion, gaussian)
-- Contrast adjustment
-- Saturation change
-- Fog overlay
-- Posterize effect
-- Sharpen
-- Emboss
-- Color temperature shift
+**🌞 Luminosité & Contraste** (simule conditions d'éclairage):
+- `Add (-20, +20)`: Ajuste luminosité globale (-20 à +20 pixels)
+- `Multiply (0.8, 1.2)`: Multiplie contraste (80% à 120%)
+- `LinearContrast (0.6, 1.6)`: Contraste linéaire (60% à 160%)
+- `GammaContrast (0.7, 1.5)`: Correction gamma (0.7 à 1.5)
 
-**Noise & Compression:**
-- Gaussian noise
-- Salt & pepper noise
-- JPEG compression artifacts
+**🎨 Couleurs** (simule températures/ambiances):
+- `AddToHueAndSaturation (-30°, +30°)`: Décalage teinte/saturation
+- `ChangeColorTemperature (3000K, 10000K)`: Température couleur (chaud à froid)
+- `MultiplyHueAndSaturation (0.8, 1.2)`: Multiplie saturation (80% à 120%)
 
-**Spatial Transforms:**
-- Random rotation (±15°)
-- Random scale (0.9-1.1x)
-- Random translation (±10%)
-- Perspective warp
+**🌫️ Flou & Netteté** (simule bougé/mise au point):
+- `GaussianBlur (0, 2.0)`: Flou gaussien (0 à 2.0 sigma)
+- `AverageBlur (1x1, 5x5)`: Flou moyen (kernel 1x1 à 5x5)
+- `Sharpen (alpha 0-0.5, lightness 0.8-1.3)`: Augmente netteté
 
-**Advanced:**
-- HSV shift
-- Channel shuffle
-- Random erasing
-- Elastic deformation
-- Grid distortion
+**🔊 Bruit** (simule capteur bas de gamme):
+- `AdditiveGaussianNoise (0-5%)`: Bruit gaussien (0 à 5% de 255)
+- `ImpulseNoise (2%)`: Bruit impulsionnel (2% de pixels)
+- `SaltAndPepper (1%)`: Bruit sel et poivre (1% de pixels)
+
+**✨ Effets Visuels** (simule environnement):
+- `Fog (severity 1-2)`: Brouillard léger (sévérité 1-2)
+- `Posterize (5-8 bits)`: Réduction couleurs (5-8 bits par canal)
+- `Emboss (alpha 0-30%)`: Effet relief (alpha 0-30%, force 0.5-1.5)
+- `EdgeDetect (alpha 0-30%)`: Détection contours (alpha 0-30%)
+
+**📸 Compression & Déformation**:
+- `JpegCompression (50-99%)`: Compression JPEG (qualité 50% à 99%)
+- `ElasticTransformation (alpha 0-5)`: Déformation élastique (alpha 0-5, sigma 0.5)
+
+⚠️ **Note importante**: La rotation est appliquée **UNIQUEMENT** lors de la génération de mosaïques, **PAS** pendant l'augmentation. Cela évite une double rotation qui casserait l'alignement des bounding boxes.
 
 ### How It Works
 
 1. **Input**: Reads all PNG images from `images/`
-2. **Transform**: Applies 2-5 simultaneous random effects
+2. **Transform**: Applies 2-5 simultaneous random effects (from 25+ available)
 3. **Annotation**: Generates matching YOLO `.txt` files
 4. **Output**: Saves to `output/augmented/images/` and `labels/`
 
