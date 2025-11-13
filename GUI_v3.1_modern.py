@@ -1784,7 +1784,7 @@ class ModernPokemonGUI:
         
         # Compteurs verticaux (un par ligne)
         stats_container = tk.Frame(self.stats_panel, bg=self.colors['bg_card'])
-        stats_container.pack(fill=tk.BOTH, expand=True, padx=12, pady=(0, 12))
+        stats_container.pack(fill=tk.X, padx=12, pady=(0, 12))
         
         # Images Downloaded
         self.create_stat_counter_vertical(stats_container, "📥 Images", self.stats_images_downloaded)
