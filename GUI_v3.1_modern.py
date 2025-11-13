@@ -1384,6 +1384,8 @@ class ModernPokemonGUI:
         self.stats_augmentations = tk.IntVar(value=0)
         self.stats_fake_images = tk.IntVar(value=0)
         self.stats_mosaics = tk.IntVar(value=0)
+        self.stats_total_images = tk.StringVar(value="0")
+        self.stats_disk_space = tk.StringVar(value="0 MB")
         
         # Chargement config
         self.load_config()
@@ -1796,6 +1798,15 @@ class ModernPokemonGUI:
         # Mosaics
         self.create_stat_counter_vertical(stats_container, "🧩 Mosaics", self.stats_mosaics)
         
+        # Séparateur
+        tk.Frame(self.stats_panel, bg=self.colors['border'], height=1).pack(fill=tk.X, padx=15, pady=10)
+        
+        # Total (with multiplier)
+        self.create_stat_counter_vertical(stats_container, "📊 Total (×)", self.stats_total_images)
+        
+        # Disk Space
+        self.create_stat_counter_vertical(stats_container, "💾 Disk Space", self.stats_disk_space)
+        
         # Initialiser les compteurs au démarrage
         self.root.after(500, self.update_all_statistics)
     
@@ -1857,6 +1868,26 @@ class ModernPokemonGUI:
                 count = len([f for f in os.listdir(mosaic_dir) 
                            if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
                 self.stats_mosaics.set(count)
+            
+            # Total (avec multiplicateur)
+            total = self.stats_images_downloaded.get() + self.stats_augmentations.get() + self.stats_fake_images.get()
+            multiplier = 1.0
+            if self.stats_images_downloaded.get() > 0:
+                multiplier = total / self.stats_images_downloaded.get()
+            self.stats_total_images.set(f"{total} (×{multiplier:.1f})")
+            
+            # Disk Space (occupé)
+            total_size = 0
+            for dir_path in [images_dir, holo_dir, aug_dir, fake_dir, mosaic_dir]:
+                if os.path.exists(dir_path):
+                    for f in os.listdir(dir_path):
+                        if f.lower().endswith(('.png', '.jpg', '.jpeg')):
+                            total_size += os.path.getsize(os.path.join(dir_path, f))
+            
+            if total_size > 1024**3:  # > 1 GB
+                self.stats_disk_space.set(f"{total_size / 1024**3:.2f} GB")
+            else:
+                self.stats_disk_space.set(f"{total_size / 1024**2:.1f} MB")
                 
         except Exception as e:
             self.log(f"⚠️ Error updating statistics: {e}")
