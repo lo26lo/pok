@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.4] - 2025-11-12
+
+### ⚙️ Settings Enhancement
+
+#### 🐛 Debug Tab (NEW)
+- **NEW**: Comprehensive Debug tab in Settings dialog (8th tab)
+- **Device Configuration**:
+  - Auto (recommended): Automatically detects best device (GPU if available, else CPU)
+  - CPU Only: Force CPU processing
+  - GPU 0/GPU 1: Manual GPU selection for multi-GPU systems
+- **Performance Settings**:
+  - Worker count control (1-32 workers with CPU core detection)
+  - Cache mode selection: RAM (fastest), Disk (memory-saving), Disabled (minimal footprint)
+- **Logging Configuration**:
+  - Log level dropdown: ERROR, WARNING, INFO (default), DEBUG, TRACE
+  - Save debug logs to file option (`debug_logs/<timestamp>.log`)
+- **Advanced Debug Options**:
+  - Performance profiling (measures function execution time)
+  - Benchmark logging (detailed performance metrics)
+  - Multiprocessing debug (detailed parallel processing logs)
+  - Memory profiling (tracks memory usage, performance impact)
+- **Persistence**: All debug settings saved to `gui_config.json`
+- **User quote**: "j'aimerai dans setting un menu debug. ou l on peut activer GPU ou CPU, nombre de worker, choix vobose log (plusieurs mode) et tout ce que j oublie :-D"
+
+#### Documentation Updates
+- Updated `README.md`: Settings tabs count (6→8 including Debug)
+- Updated `docs/README_COMPLET.md`: Full Debug tab documentation with all features
+- Added detailed descriptions for each debug option with warnings
+
+---
+
 ## [3.2.3] - 2025-11-12
 
 ### 🔧 Configuration System

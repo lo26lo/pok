@@ -441,7 +441,9 @@ pok/
 9. **🔄 Workflow** - Complete automated pipeline
 
 **Additional features**:
-- ⚙️ **Settings dialog** (6 configuration tabs)
+- ⚙️ **Settings dialog** (7 configuration tabs)
+  - General, Augmentation, Mosaic, Fake Images, Download, Training, Advanced, **🐛 Debug**
+  - **Debug tab**: Device (Auto/CPU/GPU), workers, log level, cache mode, profiling, benchmarks
 - 🛠️ **Tools menu** (clean, export, utilities)
 - 📊 **Real-time logs** with color coding
 - ✋ **Stop button** for all operations

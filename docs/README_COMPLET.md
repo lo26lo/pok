@@ -403,7 +403,9 @@ pok/
 9. **🔄 Workflow** - Complete automated pipeline
 
 **Additional features**:
-- ⚙️ **Settings dialog** (6 configuration tabs)
+- ⚙️ **Settings dialog** (8 configuration tabs including 🐛 Debug)
+  - General, Augmentation, Mosaic, Fake Images, Download, Training, Advanced, Debug
+  - Debug tab: Device selection, worker control, log levels, cache mode, profiling
 - 🛠️ **Tools menu** (clean, export, utilities)
 - 📊 **Real-time logs** with color coding
 - ✋ **Stop button** for all operations
@@ -904,8 +906,59 @@ The file `config/gui_config.json` is auto-generated and saves:
 - Mosaic preferences
 - Last training parameters
 - Detection thresholds
+- **Debug settings** (device, workers, logging)
 
 **Do not modify manually**, use GUI interface → ⚙️ Settings.
+
+#### ⚙️ Settings Dialog Tabs
+
+**7 configuration tabs**:
+
+1. **📁 General**: Default directories (images, output, augmented, mosaic, fake images, holographic)
+2. **🎨 Augmentation**: Default augmentation count, holographic intensity, holographic variations
+3. **🧩 Mosaic**: Default mode (standard/complex), layout patterns, backgrounds, transformations
+4. **🎲 Fake Images**: Random erasing parameters (probability, scale, aspect ratio)
+5. **📥 Download**: TCGdex download settings (language, quality, format, workers)
+6. **🎓 Training**: Default model (yolov8n/s/m/l/x), epochs, batch size, device
+7. **🔧 Advanced**: TCGdex API key (optional)
+8. **🐛 Debug** *(NEW v3.1.1)*: Advanced debugging and performance settings
+
+#### 🐛 Debug Tab Features
+
+**Device Configuration**:
+- 🎮 **Auto** (recommended): Automatically selects best device (GPU if available, else CPU)
+- 💻 **CPU Only**: Force CPU processing (slower but more compatible)
+- 🎮 **GPU 0** (Primary): Use primary NVIDIA GPU
+- 🎮 **GPU 1** (Secondary): Use secondary GPU (multi-GPU systems)
+
+**Performance Settings**:
+- ⚡ **Worker Processes**: 1-32 workers for parallel processing
+  - Auto-detects CPU cores
+  - Recommended: Half of CPU cores (e.g., 8 cores → 4 workers)
+  - ⚠️ More workers = faster processing but higher RAM usage
+- 💾 **Cache Mode**: 
+  - **RAM**: Fastest (caches data in memory, high RAM usage)
+  - **Disk**: Slower but saves RAM (caches to disk)
+  - **Disabled**: No caching (minimal memory footprint)
+
+**Logging Configuration**:
+- 📊 **Log Level**:
+  - **ERROR**: Critical errors only (minimal logs)
+  - **WARNING**: Warnings + errors
+  - **INFO**: General information (recommended for normal use)
+  - **DEBUG**: Detailed debugging information
+  - **TRACE**: Maximum verbosity (extremely detailed, for debugging only)
+- 💾 **Save debug logs to file**: Saves logs to `debug_logs/<timestamp>.log`
+
+**Advanced Debug Options**:
+- 📈 **Performance Profiling**: Measures execution time of functions (slight performance impact)
+- ⏱️ **Benchmark Logging**: Logs detailed performance metrics for benchmarking
+- 🔍 **Multiprocessing Debug**: Enables detailed logging for parallel processing (useful for debugging crashes)
+- 🧠 **Memory Profiling**: Tracks memory usage (⚠️ significant performance impact, use only when debugging memory issues)
+
+⚠️ **Warning**: Advanced debug options may impact performance. Enable only when actively debugging issues.
+
+**All settings persist** to `gui_config.json` and are automatically loaded on startup.
 
 ---
 

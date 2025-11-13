@@ -452,13 +452,15 @@ python scripts/workflow_optimized.py --mode full
 6. **Detection** - Live detection with prices
 7. **Utilities** - Tools and settings
 
-**Settings Dialog** (6 tabs):
-1. **General** - Basic settings
-2. **Paths** - Directory configuration
-3. **TCGdex** - API settings
-4. **Training** - Training defaults
-5. **Detection** - Detection settings
-6. **Advanced** - Expert options
+**Settings Dialog** (8 tabs):
+1. **General** - Default directories (images, output, augmented, mosaic, fake, holographic)
+2. **Augmentation** - Augmentation count, holographic intensity/variations
+3. **Mosaic** - Default mode, layouts, backgrounds, transformations
+4. **Fake Images** - Random erasing parameters (probability, scale, aspect ratio)
+5. **Download** - TCGdex download settings (language, quality, format, workers)
+6. **Training** - Default model, epochs, batch size, device
+7. **Advanced** - TCGdex API key (optional)
+8. **Debug** *(NEW v3.1.1)* - Device (Auto/CPU/GPU), workers, log level, cache, profiling, benchmarks
 
 ---
 
