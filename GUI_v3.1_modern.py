@@ -1807,8 +1807,8 @@ class ModernPokemonGUI:
         # Disk Space
         self.create_stat_counter_vertical(stats_container, "💾 Disk Space", self.stats_disk_space)
         
-        # Spacer en bas pour éviter l'espace vide
-        tk.Frame(self.stats_panel, bg=self.colors['bg_card']).pack(expand=True)
+        # Spacer en bas pour remplir l'espace (couleur bg_dark pour se fondre)
+        tk.Frame(self.stats_panel, bg=self.colors['bg_dark']).pack(expand=True, fill=tk.BOTH)
         
         # Initialiser les compteurs au démarrage
         self.root.after(500, self.update_all_statistics)
