@@ -2404,6 +2404,16 @@ class ModernPokemonGUI:
         # Carte 4 : Aperçu Rapide
         self.create_preview_card(stats_grid, 1, 1)
         
+        # V3.2: Nouvelles cartes supplémentaires (grid 1x2)
+        additional_grid = tk.Frame(container, bg=self.colors['bg_dark'])
+        additional_grid.pack(fill=tk.X, pady=(0, self.CARD_SPACING))
+        
+        # Carte 5 : Validation Report Preview
+        self.create_validation_preview_card(additional_grid, 0, 0)
+        
+        # Carte 6 : Training Presets
+        self.create_training_presets_card(additional_grid, 0, 1)
+        
         # Avertissement si environnement virtuel absent
         if not self.check_venv():
             warning_frame = tk.Frame(container, bg=self.colors['error'], 
@@ -2513,11 +2523,11 @@ class ModernPokemonGUI:
         
         # Titre
         tk.Label(card,
-            text="📊 Dernière Activité",
-            font=self.FONT_CARD_TITLE,
+            text="📊 Activité",
+            font=('Segoe UI', 9, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['text']
-        ).pack(anchor='w', padx=20, pady=(15, 10))
+        ).pack(anchor='w', padx=12, pady=(8, 5))
         
         # Récupérer l'activité
         activity = self.get_last_activity()
@@ -2525,32 +2535,49 @@ class ModernPokemonGUI:
         # Opération
         op_label = tk.Label(card,
             text=activity['operation'],
-            font=('Segoe UI', 16, 'bold'),
+            font=('Segoe UI', 12, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['accent']
         )
-        op_label.pack(anchor='w', padx=20, pady=5)
+        op_label.pack(anchor='w', padx=12, pady=3)
         self.dashboard_cards['activity_operation'] = op_label
         
         # Temps
         time_label = tk.Label(card,
             text=activity['time'],
-            font=self.FONT_TEXT,
+            font=('Segoe UI', 7),
             bg=self.colors['bg_card'],
             fg=self.colors['text_dim']
         )
-        time_label.pack(anchor='w', padx=20)
+        time_label.pack(anchor='w', padx=12)
         self.dashboard_cards['activity_time'] = time_label
         
         # Statut
         status_label = tk.Label(card,
             text=activity['status'],
-            font=self.FONT_BUTTON,
+            font=('Segoe UI', 7),
             bg=self.colors['bg_card'],
             fg=self.colors['success'] if '✅' in activity['status'] else self.colors['text_dim']
         )
-        status_label.pack(anchor='w', padx=20, pady=(5, 15))
+        status_label.pack(anchor='w', padx=12, pady=(2, 2))
         self.dashboard_cards['activity_status'] = status_label
+        
+        # Vitesse de génération (si disponible)
+        try:
+            speed = self.get_generation_speed()
+            if speed:
+                speed_label = tk.Label(card,
+                    text=f"⚡ {speed}",
+                    font=('Segoe UI', 7),
+                    bg=self.colors['bg_card'],
+                    fg=self.colors['accent']
+                )
+                speed_label.pack(anchor='w', padx=12, pady=(0, 8))
+                self.dashboard_cards['activity_speed'] = speed_label
+            else:
+                tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
+        except:
+            tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
     
     def create_recommendations_card(self, parent, row, col):
         """Carte Recommendations Intelligentes (V3.2 - Option 3)"""
@@ -2697,11 +2724,11 @@ class ModernPokemonGUI:
         
         # Titre
         tk.Label(card,
-            text="🎯 Progression Dataset",
-            font=self.FONT_CARD_TITLE,
+            text="🎯 Progression",
+            font=('Segoe UI', 9, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['text']
-        ).pack(anchor='w', padx=20, pady=(15, 10))
+        ).pack(anchor='w', padx=12, pady=(8, 5))
         
         # Récupérer la progression
         progress = self.get_dataset_progress()
@@ -2709,11 +2736,11 @@ class ModernPokemonGUI:
         # Pourcentage
         percent_label = tk.Label(card,
             text=f"{progress['percent']}%",
-            font=('Segoe UI', 28, 'bold'),
+            font=('Segoe UI', 20, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['accent']
         )
-        percent_label.pack(anchor='w', padx=20, pady=5)
+        percent_label.pack(anchor='w', padx=12, pady=3)
         self.dashboard_cards['progress_percent'] = percent_label
         
         # Barre de progression
@@ -2728,12 +2755,26 @@ class ModernPokemonGUI:
         # Texte
         text_label = tk.Label(card,
             text=f"{progress['current']} / {progress['target']} images",
-            font=self.FONT_TEXT,
+            font=('Segoe UI', 7),
             bg=self.colors['bg_card'],
             fg=self.colors['text_dim']
         )
-        text_label.pack(anchor='w', padx=20, pady=(0, 15))
+        text_label.pack(anchor='w', padx=12, pady=(0, 2))
         self.dashboard_cards['progress_text'] = text_label
+        
+        # Ratio détaillé
+        try:
+            ratio_info = self.get_detailed_ratio()
+            ratio_label = tk.Label(card,
+                text=ratio_info,
+                font=('Segoe UI', 7),
+                bg=self.colors['bg_card'],
+                fg=self.colors['text_dim']
+            )
+            ratio_label.pack(anchor='w', padx=12, pady=(0, 8))
+            self.dashboard_cards['progress_ratio'] = ratio_label
+        except:
+            tk.Frame(card, bg=self.colors['bg_card'], height=8).pack()
     
     def create_system_card(self, parent, row, col):
         """Carte État du Système"""
@@ -2747,11 +2788,11 @@ class ModernPokemonGUI:
         
         # Titre
         tk.Label(card,
-            text="💡 État du Système",
-            font=self.FONT_CARD_TITLE,
+            text="💡 Système",
+            font=('Segoe UI', 9, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['text']
-        ).pack(anchor='w', padx=20, pady=(15, 10))
+        ).pack(anchor='w', padx=12, pady=(8, 5))
         
         # Récupérer l'état
         status = self.get_system_status()
@@ -2760,33 +2801,50 @@ class ModernPokemonGUI:
         gpu_text = f"GPU: {'✅ ' + status['gpu_info'] if status['gpu'] else '❌ Not Available'}"
         gpu_label = tk.Label(card,
             text=gpu_text,
-            font=self.FONT_TEXT,
+            font=('Segoe UI', 7),
             bg=self.colors['bg_card'],
             fg=self.colors['success'] if status['gpu'] else self.colors['warning']
         )
-        gpu_label.pack(anchor='w', padx=20, pady=3)
+        gpu_label.pack(anchor='w', padx=12, pady=2)
         self.dashboard_cards['system_gpu'] = gpu_label
         
         # Disque
         disk_label = tk.Label(card,
             text=f"Disque: {status['disk_free']}",
-            font=self.FONT_TEXT,
+            font=('Segoe UI', 7),
             bg=self.colors['bg_card'],
             fg=self.colors['text_dim']
         )
-        disk_label.pack(anchor='w', padx=20, pady=3)
+        disk_label.pack(anchor='w', padx=12, pady=2)
         self.dashboard_cards['system_disk'] = disk_label
         
         # Venv
         venv_text = f"Venv: {'✅ Configuré' if status['venv'] else '❌ Manquant'}"
         venv_label = tk.Label(card,
             text=venv_text,
-            font=self.FONT_TEXT,
+            font=('Segoe UI', 7),
             bg=self.colors['bg_card'],
             fg=self.colors['success'] if status['venv'] else self.colors['error']
         )
-        venv_label.pack(anchor='w', padx=20, pady=(3, 15))
+        venv_label.pack(anchor='w', padx=12, pady=2)
         self.dashboard_cards['system_venv'] = venv_label
+        
+        # Performance GPU/CPU (si disponible)
+        try:
+            perf_info = self.get_performance_info()
+            if perf_info:
+                perf_label = tk.Label(card,
+                    text=perf_info,
+                    font=('Segoe UI', 8),
+                    bg=self.colors['bg_card'],
+                    fg=self.colors['accent']
+                )
+                perf_label.pack(anchor='w', padx=20, pady=(3, 15))
+                self.dashboard_cards['system_performance'] = perf_label
+            else:
+                tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
+        except:
+            tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
     
     def create_preview_card(self, parent, row, col):
         """Carte Aperçu Rapide"""
@@ -2800,11 +2858,11 @@ class ModernPokemonGUI:
         
         # Titre
         tk.Label(card,
-            text="🔍 Aperçu Rapide",
-            font=self.FONT_CARD_TITLE,
+            text="🔍 Aperçu",
+            font=('Segoe UI', 9, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['text']
-        ).pack(anchor='w', padx=20, pady=(15, 10))
+        ).pack(anchor='w', padx=12, pady=(8, 5))
         
         # Récupérer dernière image
         last_image = self.get_last_generated_image()
@@ -2815,40 +2873,279 @@ class ModernPokemonGUI:
                 
                 # Charger et redimensionner l'image
                 img = Image.open(last_image)
-                img.thumbnail((120, 120))
+                img.thumbnail((100, 100))
                 photo = ImageTk.PhotoImage(img)
                 
                 # Afficher la miniature
                 img_label = tk.Label(card, image=photo, bg=self.colors['bg_card'])
                 img_label.image = photo  # Garder une référence
-                img_label.pack(padx=20, pady=5)
+                img_label.pack(padx=12, pady=3)
                 self.dashboard_cards['preview_image'] = img_label
                 
                 # Nom du fichier
                 name_label = tk.Label(card,
-                    text=last_image.name[:20] + '...' if len(last_image.name) > 20 else last_image.name,
-                    font=('Segoe UI', 9),
+                    text=last_image.name[:18] + '...' if len(last_image.name) > 18 else last_image.name,
+                    font=('Segoe UI', 7),
                     bg=self.colors['bg_card'],
                     fg=self.colors['text_dim']
                 )
-                name_label.pack(padx=20, pady=(5, 15))
+                name_label.pack(padx=12, pady=(2, 8))
                 self.dashboard_cards['preview_name'] = name_label
             except Exception as e:
                 # Si erreur, afficher un message
                 tk.Label(card,
                     text="Aucune image récente",
-                    font=self.FONT_TEXT,
+                    font=('Segoe UI', 7),
                     bg=self.colors['bg_card'],
                     fg=self.colors['text_dim']
-                ).pack(padx=20, pady=(20, 15))
+                ).pack(padx=12, pady=(10, 8))
         else:
             # Pas d'image disponible
             tk.Label(card,
                 text="Aucune image générée",
-                font=self.FONT_TEXT,
+                font=('Segoe UI', 7),
                 bg=self.colors['bg_card'],
                 fg=self.colors['text_dim']
-            ).pack(padx=20, pady=(30, 15))
+            ).pack(padx=12, pady=(15, 8))
+    
+    def create_validation_preview_card(self, parent, row, col):
+        """Carte Aperçu Validation Report"""
+        card = tk.Frame(parent, bg=self.colors['bg_card'], 
+                       highlightbackground=self.colors['border'],
+                       highlightthickness=1)
+        card.grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+        
+        parent.grid_rowconfigure(row, weight=1)
+        parent.grid_columnconfigure(col, weight=1)
+        
+        # Titre avec badge
+        title_frame = tk.Frame(card, bg=self.colors['bg_card'])
+        title_frame.pack(anchor='w', fill=tk.X, padx=12, pady=(8, 3))
+        
+        tk.Label(title_frame,
+            text="📊 Validation",
+            font=('Segoe UI', 9, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        ).pack(side=tk.LEFT)
+        
+        # Vérifier si le rapport existe
+        report_path = Path("validation_report.html")
+        
+        if report_path.exists():
+            # Badge "Available"
+            tk.Label(title_frame,
+                text=" ✓ ",
+                font=('Segoe UI', 6, 'bold'),
+                bg=self.colors['success'],
+                fg='#000000',
+                relief='flat'
+            ).pack(side=tk.LEFT, padx=3)
+            
+            # Lire quelques stats du rapport
+            try:
+                with open(report_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    # Extraire info basique (nombre de classes, images, etc.)
+                    import re
+                    
+                    # Chercher des patterns communs
+                    classes_match = re.search(r'(\d+)\s+classe', content, re.IGNORECASE)
+                    images_match = re.search(r'(\d+)\s+images?\s+total', content, re.IGNORECASE)
+                    
+                    stats_text = "📄 Rapport disponible"
+                    if classes_match:
+                        stats_text = f"📦 {classes_match.group(1)} classes"
+                    if images_match:
+                        stats_text += f" • {images_match.group(1)} images"
+                    
+                    tk.Label(card,
+                        text=stats_text,
+                        font=('Segoe UI', 7),
+                        bg=self.colors['bg_card'],
+                        fg=self.colors['text']
+                    ).pack(anchor='w', padx=12, pady=2)
+            except:
+                tk.Label(card,
+                    text="📄 Rapport disponible",
+                    font=('Segoe UI', 7),
+                    bg=self.colors['bg_card'],
+                    fg=self.colors['text']
+                ).pack(anchor='w', padx=12, pady=2)
+            
+            # Boutons d'action
+            btn_frame = tk.Frame(card, bg=self.colors['bg_card'])
+            btn_frame.pack(anchor='w', padx=12, pady=(3, 5))
+            
+            tk.Button(btn_frame,
+                text="🌐 Ouvrir",
+                command=lambda: self.open_validation_report(),
+                bg=self.colors['accent'],
+                fg='#000000',
+                font=('Segoe UI', 7, 'bold'),
+                relief='flat',
+                padx=6,
+                pady=1,
+                cursor='hand2'
+            ).pack(side=tk.LEFT, padx=(0, 3))
+            
+            # Date de modification
+            try:
+                import time
+                mtime = report_path.stat().st_mtime
+                mod_time = datetime.fromtimestamp(mtime)
+                if (datetime.now() - mod_time).days == 0:
+                    time_str = "Aujourd'hui"
+                elif (datetime.now() - mod_time).days == 1:
+                    time_str = "Hier"
+                else:
+                    time_str = f"Il y a {(datetime.now() - mod_time).days}j"
+                
+                tk.Label(card,
+                    text=f"🕒 {time_str}",
+                    font=('Segoe UI', 6),
+                    bg=self.colors['bg_card'],
+                    fg=self.colors['text_dim']
+                ).pack(anchor='w', padx=12, pady=(0, 5))
+            except:
+                tk.Frame(card, bg=self.colors['bg_card'], height=8).pack()
+        else:
+            # Pas de rapport
+            tk.Label(card,
+                text="Aucun rapport généré",
+                font=('Segoe UI', 7),
+                bg=self.colors['bg_card'],
+                fg=self.colors['text_dim']
+            ).pack(anchor='w', padx=12, pady=3)
+            
+            tk.Button(card,
+                text="▶ Générer rapport",
+                command=lambda: self.show_view('validation'),
+                bg=self.colors['bg_hover'],
+                fg=self.colors['text'],
+                font=('Segoe UI', 7),
+                relief='flat',
+                padx=6,
+                pady=1,
+                cursor='hand2'
+            ).pack(anchor='w', padx=12, pady=(0, 5))
+    
+    def create_training_presets_card(self, parent, row, col):
+        """Carte Training Presets (configuration rapide)"""
+        card = tk.Frame(parent, bg=self.colors['bg_card'], 
+                       highlightbackground=self.colors['border'],
+                       highlightthickness=1)
+        card.grid(row=row, column=col, padx=10, pady=10, sticky='nsew')
+        
+        parent.grid_rowconfigure(row, weight=1)
+        parent.grid_columnconfigure(col, weight=1)
+        
+        # Titre
+        tk.Label(card,
+            text="🎯 Presets",
+            font=('Segoe UI', 9, 'bold'),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text']
+        ).pack(anchor='w', padx=12, pady=(8, 2))
+        
+        # Description
+        tk.Label(card,
+            text="Config rapide training",
+            font=('Segoe UI', 6),
+            bg=self.colors['bg_card'],
+            fg=self.colors['text_dim']
+        ).pack(anchor='w', padx=12, pady=(0, 3))
+        
+        # Presets
+        presets_frame = tk.Frame(card, bg=self.colors['bg_card'])
+        presets_frame.pack(fill=tk.X, padx=12, pady=(0, 5))
+        
+        # Preset 1: Quick Test
+        preset1 = tk.Frame(presets_frame, bg=self.colors['bg_hover'], relief='flat')
+        preset1.pack(fill=tk.X, pady=1)
+        
+        p1_content = tk.Frame(preset1, bg=self.colors['bg_hover'])
+        p1_content.pack(fill=tk.X, padx=6, pady=2)
+        
+        tk.Label(p1_content,
+            text="⚡ Quick Test",
+            font=('Segoe UI', 7, 'bold'),
+            bg=self.colors['bg_hover'],
+            fg=self.colors['text']
+        ).pack(side=tk.LEFT)
+        
+        tk.Label(p1_content,
+            text="10 epochs",
+            font=('Segoe UI', 6),
+            bg=self.colors['bg_hover'],
+            fg=self.colors['text_dim']
+        ).pack(side=tk.RIGHT)
+        
+        preset1.bind('<Button-1>', lambda e: self.apply_training_preset('quick'))
+        preset1.bind('<Enter>', lambda e: preset1.config(bg=self.colors['accent']))
+        preset1.bind('<Leave>', lambda e: preset1.config(bg=self.colors['bg_hover']))
+        preset1.config(cursor='hand2')
+        for child in preset1.winfo_children():
+            for subchild in child.winfo_children():
+                subchild.bind('<Button-1>', lambda e: self.apply_training_preset('quick'))
+        
+        # Preset 2: Standard
+        preset2 = tk.Frame(presets_frame, bg=self.colors['bg_hover'], relief='flat')
+        preset2.pack(fill=tk.X, pady=1)
+        
+        p2_content = tk.Frame(preset2, bg=self.colors['bg_hover'])
+        p2_content.pack(fill=tk.X, padx=6, pady=2)
+        
+        tk.Label(p2_content,
+            text="📊 Standard",
+            font=('Segoe UI', 7, 'bold'),
+            bg=self.colors['bg_hover'],
+            fg=self.colors['text']
+        ).pack(side=tk.LEFT)
+        
+        tk.Label(p2_content,
+            text="50 epochs",
+            font=('Segoe UI', 6),
+            bg=self.colors['bg_hover'],
+            fg=self.colors['text_dim']
+        ).pack(side=tk.RIGHT)
+        
+        preset2.bind('<Button-1>', lambda e: self.apply_training_preset('standard'))
+        preset2.bind('<Enter>', lambda e: preset2.config(bg=self.colors['accent']))
+        preset2.bind('<Leave>', lambda e: preset2.config(bg=self.colors['bg_hover']))
+        preset2.config(cursor='hand2')
+        for child in preset2.winfo_children():
+            for subchild in child.winfo_children():
+                subchild.bind('<Button-1>', lambda e: self.apply_training_preset('standard'))
+        
+        # Preset 3: Production
+        preset3 = tk.Frame(presets_frame, bg=self.colors['bg_hover'], relief='flat')
+        preset3.pack(fill=tk.X, pady=1)
+        
+        p3_content = tk.Frame(preset3, bg=self.colors['bg_hover'])
+        p3_content.pack(fill=tk.X, padx=6, pady=2)
+        
+        tk.Label(p3_content,
+            text="🚀 Production",
+            font=('Segoe UI', 7, 'bold'),
+            bg=self.colors['bg_hover'],
+            fg=self.colors['text']
+        ).pack(side=tk.LEFT)
+        
+        tk.Label(p3_content,
+            text="100 epochs",
+            font=('Segoe UI', 6),
+            bg=self.colors['bg_hover'],
+            fg=self.colors['text_dim']
+        ).pack(side=tk.RIGHT)
+        
+        preset3.bind('<Button-1>', lambda e: self.apply_training_preset('production'))
+        preset3.bind('<Enter>', lambda e: preset3.config(bg=self.colors['accent']))
+        preset3.bind('<Leave>', lambda e: preset3.config(bg=self.colors['bg_hover']))
+        preset3.config(cursor='hand2')
+        for child in preset3.winfo_children():
+            for subchild in child.winfo_children():
+                subchild.bind('<Button-1>', lambda e: self.apply_training_preset('production'))
     
     def create_stat_card(self, parent, label, value, icon, row, col, key=None):
         """Créer une carte de statistique (DEPRECATED - kept for compatibility)"""
@@ -4749,6 +5046,77 @@ class ModernPokemonGUI:
         
         return stats
     
+    def get_generation_speed(self):
+        """Calculer la vitesse de génération (images/minute)"""
+        try:
+            # Récupérer les timestamps des dernières opérations
+            import time
+            current_time = time.time()
+            
+            # Compter les images générées dans les 5 dernières minutes
+            recent_images = 0
+            time_window = 300  # 5 minutes en secondes
+            
+            for directory in [PATHS['directories']['output_augmented_images'], 
+                            PATHS['directories']['output_mosaics_images']]:
+                if os.path.exists(directory):
+                    for file in os.listdir(directory):
+                        file_path = os.path.join(directory, file)
+                        if os.path.isfile(file_path):
+                            mtime = os.path.getmtime(file_path)
+                            if current_time - mtime < time_window:
+                                recent_images += 1
+            
+            if recent_images > 0:
+                speed = (recent_images / time_window) * 60  # images par minute
+                if speed >= 1:
+                    return f"{speed:.1f} img/min"
+                else:
+                    return f"{speed*60:.1f} img/h"
+            return None
+        except:
+            return None
+    
+    def get_detailed_ratio(self):
+        """Obtenir le ratio détaillé (originales vs augmentées vs mosaïques)"""
+        try:
+            stats = self.get_real_stats()
+            source = stats['source']
+            augmented = stats['augmented']
+            mosaics = stats['mosaics']
+            
+            if source == 0:
+                return "📊 Ratio: N/A"
+            
+            # Calculer les ratios
+            aug_ratio = augmented / source if source > 0 else 0
+            mosaic_ratio = mosaics / source if source > 0 else 0
+            
+            return f"📊 Ratio: 1:{aug_ratio:.1f}:{mosaic_ratio:.1f} (Orig:Aug:Mos)"
+        except:
+            return "📊 Ratio: N/A"
+    
+    def get_performance_info(self):
+        """Obtenir les informations de performance GPU/CPU"""
+        try:
+            # Vérifier si GPU disponible
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    # Info GPU
+                    gpu_name = torch.cuda.get_device_name(0)
+                    gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3
+                    return f"⚡ {gpu_name[:15]}... ({gpu_memory:.0f}GB)"
+            except:
+                pass
+            
+            # Si pas de GPU, info CPU
+            import multiprocessing
+            cpu_count = multiprocessing.cpu_count()
+            return f"⚡ CPU: {cpu_count} cores"
+        except:
+            return None
+    
     def get_last_activity(self):
         """Récupère la dernière activité effectuée"""
         try:
@@ -5720,6 +6088,84 @@ Continuer ?"""
         except Exception as e:
             self.log(f"❌ Error opening folder: {e}")
             messagebox.showerror("Error", f"Cannot open folder:\n{e}")
+    
+    def open_validation_report(self):
+        """Ouvrir le rapport de validation HTML dans le navigateur"""
+        try:
+            import webbrowser
+            report_path = Path("validation_report.html")
+            
+            if report_path.exists():
+                webbrowser.open(f"file:///{report_path.absolute()}")
+                self.log("🌐 Rapport de validation ouvert dans le navigateur")
+            else:
+                self.log("⚠️ Aucun rapport de validation trouvé")
+                messagebox.showwarning("Rapport introuvable", 
+                    "Aucun rapport de validation n'a été généré.\n\n"
+                    "Allez dans 'Validation' pour générer un rapport.")
+        except Exception as e:
+            self.log(f"❌ Erreur ouverture rapport: {e}")
+            messagebox.showerror("Erreur", f"Impossible d'ouvrir le rapport:\n{e}")
+    
+    def apply_training_preset(self, preset_name: str):
+        """Appliquer un preset de training et naviguer vers la vue Training"""
+        try:
+            presets = {
+                'quick': {
+                    'epochs': 10,
+                    'batch': 16,
+                    'img_size': 640,
+                    'patience': 5,
+                    'name': 'Quick Test'
+                },
+                'standard': {
+                    'epochs': 50,
+                    'batch': 16,
+                    'img_size': 640,
+                    'patience': 10,
+                    'name': 'Standard'
+                },
+                'production': {
+                    'epochs': 100,
+                    'batch': 16,
+                    'img_size': 640,
+                    'patience': 20,
+                    'name': 'Production'
+                }
+            }
+            
+            if preset_name in presets:
+                preset = presets[preset_name]
+                
+                # Naviguer vers Training
+                self.show_view('training')
+                
+                # Attendre que la vue soit créée puis appliquer les valeurs
+                def apply_values():
+                    try:
+                        if hasattr(self, 'train_epochs_var'):
+                            self.train_epochs_var.delete(0, tk.END)
+                            self.train_epochs_var.insert(0, str(preset['epochs']))
+                        
+                        if hasattr(self, 'train_batch_var'):
+                            self.train_batch_var.set(str(preset['batch']))
+                        
+                        if hasattr(self, 'train_imgsz_var'):
+                            self.train_imgsz_var.set(str(preset['img_size']))
+                        
+                        if hasattr(self, 'train_patience_var'):
+                            self.train_patience_var.delete(0, tk.END)
+                            self.train_patience_var.insert(0, str(preset['patience']))
+                        
+                        self.log(f"✅ Preset '{preset['name']}' appliqué: {preset['epochs']} epochs, batch {preset['batch']}")
+                    except Exception as e:
+                        self.log(f"⚠️ Erreur application preset: {e}")
+                
+                # Appliquer après un court délai pour laisser la vue se créer
+                self.root.after(100, apply_values)
+                
+        except Exception as e:
+            self.log(f"❌ Erreur application preset: {e}")
     
     # ==================== AUGMENTATION METHODS ====================
     
