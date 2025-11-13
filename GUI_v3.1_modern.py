@@ -1763,28 +1763,28 @@ class ModernPokemonGUI:
     def create_statistics_panel(self, parent):
         """Créer le panneau Statistics persistant (V3.2) - À DROITE de la vue"""
         # Container à droite avec largeur fixe
-        self.stats_panel = tk.Frame(parent, bg=self.colors['bg_card'], width=280)
-        self.stats_panel.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 20), pady=20)
+        self.stats_panel = tk.Frame(parent, bg=self.colors['bg_card'], width=220)
+        self.stats_panel.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 15), pady=15)
         self.stats_panel.pack_propagate(False)
         
         # Titre
         title_frame = tk.Frame(self.stats_panel, bg=self.colors['bg_card'])
-        title_frame.pack(fill=tk.X, padx=15, pady=(15, 10))
+        title_frame.pack(fill=tk.X, padx=12, pady=(12, 8))
         
         tk.Label(title_frame,
-            text="📊 Statistics\nDashboard",
-            font=('Segoe UI', 12, 'bold'),
+            text="📊 Stats",
+            font=('Segoe UI', 10, 'bold'),
             bg=self.colors['bg_card'],
             fg=self.colors['text'],
             justify='left'
         ).pack(side=tk.LEFT)
         
         # Séparateur
-        tk.Frame(self.stats_panel, bg=self.colors['border'], height=1).pack(fill=tk.X, padx=15, pady=10)
+        tk.Frame(self.stats_panel, bg=self.colors['border'], height=1).pack(fill=tk.X, padx=12, pady=8)
         
         # Compteurs verticaux (un par ligne)
         stats_container = tk.Frame(self.stats_panel, bg=self.colors['bg_card'])
-        stats_container.pack(fill=tk.BOTH, expand=True, padx=15, pady=(0, 15))
+        stats_container.pack(fill=tk.BOTH, expand=True, padx=12, pady=(0, 12))
         
         # Images Downloaded
         self.create_stat_counter_vertical(stats_container, "📥 Images", self.stats_images_downloaded)
@@ -1799,7 +1799,7 @@ class ModernPokemonGUI:
         self.create_stat_counter_vertical(stats_container, "🧩 Mosaics", self.stats_mosaics)
         
         # Séparateur
-        tk.Frame(self.stats_panel, bg=self.colors['border'], height=1).pack(fill=tk.X, padx=15, pady=10)
+        tk.Frame(self.stats_panel, bg=self.colors['border'], height=1).pack(fill=tk.X, padx=12, pady=6)
         
         # Total (with multiplier)
         self.create_stat_counter_vertical(stats_container, "📊 Total (×)", self.stats_total_images)
@@ -1813,25 +1813,25 @@ class ModernPokemonGUI:
     def create_stat_counter_vertical(self, parent, label_text, variable):
         """Créer un compteur de statistique vertical (pour sidebar droite)"""
         frame = tk.Frame(parent, bg=self.colors['bg_hover'], relief='flat', bd=1)
-        frame.pack(fill=tk.X, pady=8)
+        frame.pack(fill=tk.X, pady=5)
         
         # Label en haut
         tk.Label(frame,
             text=label_text,
-            font=('Segoe UI', 9),
+            font=('Segoe UI', 7),
             bg=self.colors['bg_hover'],
             fg=self.colors['text_dim'],
             anchor='w'
-        ).pack(fill=tk.X, padx=12, pady=(10, 5))
+        ).pack(fill=tk.X, padx=10, pady=(8, 3))
         
         # Valeur en bas (grande)
         tk.Label(frame,
             textvariable=variable,
-            font=('Segoe UI', 20, 'bold'),
+            font=('Segoe UI', 16, 'bold'),
             bg=self.colors['bg_hover'],
             fg=self.colors['accent'],
             anchor='w'
-        ).pack(fill=tk.X, padx=12, pady=(0, 10))
+        ).pack(fill=tk.X, padx=10, pady=(0, 8))
     
     def update_all_statistics(self):
         """Mettre à jour toutes les statistiques au démarrage"""
