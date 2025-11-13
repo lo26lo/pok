@@ -1764,7 +1764,7 @@ class ModernPokemonGUI:
         """Créer le panneau Statistics persistant (V3.2) - À DROITE de la vue"""
         # Container à droite avec largeur fixe
         self.stats_panel = tk.Frame(parent, bg=self.colors['bg_card'], width=220)
-        self.stats_panel.pack(side=tk.RIGHT, fill=tk.NONE, padx=(10, 15), pady=15, anchor='n')
+        self.stats_panel.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 15), pady=15)
         self.stats_panel.pack_propagate(False)
         
         # Titre
@@ -1806,6 +1806,9 @@ class ModernPokemonGUI:
         
         # Disk Space
         self.create_stat_counter_vertical(stats_container, "💾 Disk Space", self.stats_disk_space)
+        
+        # Spacer en bas pour éviter l'espace vide
+        tk.Frame(self.stats_panel, bg=self.colors['bg_card']).pack(expand=True)
         
         # Initialiser les compteurs au démarrage
         self.root.after(500, self.update_all_statistics)
