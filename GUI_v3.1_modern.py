@@ -102,6 +102,17 @@ class SettingsDialog:
         self.default_download_quality = tk.StringVar(value=config.get("default_download_quality", "high"))
         self.default_download_format = tk.StringVar(value=config.get("default_download_format", "png"))
         self.default_download_workers = tk.IntVar(value=config.get("default_download_workers", 8))
+        
+        # Debug settings
+        self.debug_device = tk.StringVar(value=config.get("debug_device", "auto"))  # auto, cpu, gpu, 0, 1, etc.
+        self.debug_workers = tk.IntVar(value=config.get("debug_workers", multiprocessing.cpu_count()))
+        self.debug_log_level = tk.StringVar(value=config.get("debug_log_level", "INFO"))  # ERROR, WARNING, INFO, DEBUG, TRACE
+        self.debug_cache_mode = tk.StringVar(value=config.get("debug_cache_mode", "ram"))  # ram, disk, disabled
+        self.debug_profiling = tk.BooleanVar(value=config.get("debug_profiling", False))
+        self.debug_benchmark = tk.BooleanVar(value=config.get("debug_benchmark", False))
+        self.debug_save_logs = tk.BooleanVar(value=config.get("debug_save_logs", False))
+        self.debug_multiprocessing = tk.BooleanVar(value=config.get("debug_multiprocessing", False))
+        self.debug_memory_profiling = tk.BooleanVar(value=config.get("debug_memory_profiling", False))
     
     def create_ui(self):
         """Créer l'interface du dialog"""
@@ -178,6 +189,11 @@ class SettingsDialog:
         advanced_frame = tk.Frame(notebook, bg=colors['bg_dark'])
         notebook.add(advanced_frame, text=f"  {UI_MESSAGES['gui']['tabs']['advanced']}  ")
         self.create_advanced_tab(advanced_frame)
+        
+        # Onglet Debug
+        debug_frame = tk.Frame(notebook, bg=colors['bg_dark'])
+        notebook.add(debug_frame, text="  🐛 Debug  ")
+        self.create_debug_tab(debug_frame)
         
         # Footer avec boutons
         footer = tk.Frame(self.dialog, bg=colors['bg_sidebar'], height=70)
@@ -1089,6 +1105,357 @@ class SettingsDialog:
         
         container.grid_columnconfigure(0, weight=1)
     
+    def create_debug_tab(self, parent):
+        """Onglet paramètres Debug"""
+        colors = self.app.colors
+        
+        # Container avec scrollbar
+        canvas = tk.Canvas(parent, bg=colors['bg_dark'], highlightthickness=0)
+        scrollbar = tk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=colors['bg_dark'])
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        container = tk.Frame(scrollable_frame, bg=colors['bg_dark'])
+        container.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Section: Device Configuration
+        tk.Label(
+            container,
+            text="🎮 Device Configuration",
+            bg=colors['bg_dark'],
+            fg=colors['accent'],
+            font=('Segoe UI', 12, 'bold')
+        ).grid(row=0, column=0, columnspan=2, sticky='w', pady=(0, 15))
+        
+        tk.Label(
+            container,
+            text="Device:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=self.app.FONT_BUTTON
+        ).grid(row=1, column=0, sticky='w', pady=(0, 5))
+        
+        device_frame = tk.Frame(container, bg=colors['bg_dark'])
+        device_frame.grid(row=2, column=0, columnspan=2, sticky='w', pady=(0, 5))
+        
+        # Radio buttons pour device
+        tk.Radiobutton(
+            device_frame,
+            text="Auto (recommended)",
+            variable=self.debug_device,
+            value="auto",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            selectcolor=colors['bg_card'],
+            activebackground=colors['bg_dark'],
+            activeforeground=colors['text'],
+            font=self.app.FONT_TEXT
+        ).pack(anchor='w', pady=2)
+        
+        tk.Radiobutton(
+            device_frame,
+            text="CPU Only",
+            variable=self.debug_device,
+            value="cpu",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            selectcolor=colors['bg_card'],
+            activebackground=colors['bg_dark'],
+            activeforeground=colors['text'],
+            font=self.app.FONT_TEXT
+        ).pack(anchor='w', pady=2)
+        
+        tk.Radiobutton(
+            device_frame,
+            text="GPU 0 (Primary)",
+            variable=self.debug_device,
+            value="0",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            selectcolor=colors['bg_card'],
+            activebackground=colors['bg_dark'],
+            activeforeground=colors['text'],
+            font=self.app.FONT_TEXT
+        ).pack(anchor='w', pady=2)
+        
+        tk.Radiobutton(
+            device_frame,
+            text="GPU 1 (Secondary)",
+            variable=self.debug_device,
+            value="1",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            selectcolor=colors['bg_card'],
+            activebackground=colors['bg_dark'],
+            activeforeground=colors['text'],
+            font=self.app.FONT_TEXT
+        ).pack(anchor='w', pady=2)
+        
+        tk.Label(
+            container,
+            text="ℹ️ Auto: Detects best device (GPU if available, else CPU)",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=3, column=0, columnspan=2, sticky='w', pady=(0, 20))
+        
+        # Section: Performance
+        tk.Label(
+            container,
+            text="⚡ Performance Settings",
+            bg=colors['bg_dark'],
+            fg=colors['accent'],
+            font=('Segoe UI', 12, 'bold')
+        ).grid(row=4, column=0, columnspan=2, sticky='w', pady=(0, 15))
+        
+        tk.Label(
+            container,
+            text="Worker Processes:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=self.app.FONT_BUTTON
+        ).grid(row=5, column=0, sticky='w', pady=(0, 5))
+        
+        workers_spinbox = tk.Spinbox(
+            container,
+            from_=1,
+            to=32,
+            textvariable=self.debug_workers,
+            font=self.app.FONT_TEXT,
+            bg='#FFFFFF',
+            fg='#1a1a1a',
+            relief='flat',
+            bd=2,
+            width=10
+        )
+        workers_spinbox.grid(row=6, column=0, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text=f"ℹ️ CPU cores detected: {multiprocessing.cpu_count()} (recommended: {max(1, multiprocessing.cpu_count() // 2)})",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=7, column=0, columnspan=2, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="⚠️ More workers = faster processing but higher RAM usage",
+            bg=colors['bg_dark'],
+            fg=colors['warning'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=8, column=0, columnspan=2, sticky='w', pady=(0, 20))
+        
+        # Cache mode
+        tk.Label(
+            container,
+            text="Cache Mode:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=self.app.FONT_BUTTON
+        ).grid(row=9, column=0, sticky='w', pady=(0, 5))
+        
+        cache_combo = ttk.Combobox(
+            container,
+            textvariable=self.debug_cache_mode,
+            values=["ram", "disk", "disabled"],
+            state='readonly',
+            font=self.app.FONT_TEXT,
+            width=15
+        )
+        cache_combo.grid(row=10, column=0, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="ℹ️ RAM: Fastest but uses more memory | Disk: Slower but saves RAM | Disabled: No caching",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=11, column=0, columnspan=2, sticky='w', pady=(0, 20))
+        
+        # Section: Logging
+        tk.Label(
+            container,
+            text="📋 Logging Configuration",
+            bg=colors['bg_dark'],
+            fg=colors['accent'],
+            font=('Segoe UI', 12, 'bold')
+        ).grid(row=12, column=0, columnspan=2, sticky='w', pady=(0, 15))
+        
+        tk.Label(
+            container,
+            text="Log Level:",
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            font=self.app.FONT_BUTTON
+        ).grid(row=13, column=0, sticky='w', pady=(0, 5))
+        
+        log_combo = ttk.Combobox(
+            container,
+            textvariable=self.debug_log_level,
+            values=["ERROR", "WARNING", "INFO", "DEBUG", "TRACE"],
+            state='readonly',
+            font=self.app.FONT_TEXT,
+            width=15
+        )
+        log_combo.grid(row=14, column=0, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="ERROR: Critical errors only | WARNING: Warnings + errors | INFO: General info (recommended)",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=15, column=0, columnspan=2, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="DEBUG: Detailed debugging | TRACE: Maximum verbosity (very detailed)",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=16, column=0, columnspan=2, sticky='w', pady=(0, 15))
+        
+        # Save logs to file
+        tk.Checkbutton(
+            container,
+            text="💾 Save debug logs to file",
+            variable=self.debug_save_logs,
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            selectcolor=colors['bg_card'],
+            activebackground=colors['bg_dark'],
+            activeforeground=colors['text'],
+            font=self.app.FONT_TEXT
+        ).grid(row=17, column=0, columnspan=2, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="ℹ️ Logs saved to: debug_logs/<timestamp>.log",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=18, column=0, columnspan=2, sticky='w', pady=(0, 20))
+        
+        # Section: Advanced Debug
+        tk.Label(
+            container,
+            text="🔧 Advanced Debug Options",
+            bg=colors['bg_dark'],
+            fg=colors['accent'],
+            font=('Segoe UI', 12, 'bold')
+        ).grid(row=19, column=0, columnspan=2, sticky='w', pady=(0, 15))
+        
+        # Profiling
+        tk.Checkbutton(
+            container,
+            text="📊 Enable performance profiling",
+            variable=self.debug_profiling,
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            selectcolor=colors['bg_card'],
+            activebackground=colors['bg_dark'],
+            activeforeground=colors['text'],
+            font=self.app.FONT_TEXT
+        ).grid(row=20, column=0, columnspan=2, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="ℹ️ Measures execution time of functions (slight performance impact)",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=21, column=0, columnspan=2, sticky='w', pady=(0, 10))
+        
+        # Benchmark
+        tk.Checkbutton(
+            container,
+            text="⏱️ Enable benchmark logging",
+            variable=self.debug_benchmark,
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            selectcolor=colors['bg_card'],
+            activebackground=colors['bg_dark'],
+            activeforeground=colors['text'],
+            font=self.app.FONT_TEXT
+        ).grid(row=22, column=0, columnspan=2, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="ℹ️ Logs detailed performance metrics for benchmarking",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=23, column=0, columnspan=2, sticky='w', pady=(0, 10))
+        
+        # Multiprocessing debug
+        tk.Checkbutton(
+            container,
+            text="🔍 Multiprocessing debug mode",
+            variable=self.debug_multiprocessing,
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            selectcolor=colors['bg_card'],
+            activebackground=colors['bg_dark'],
+            activeforeground=colors['text'],
+            font=self.app.FONT_TEXT
+        ).grid(row=24, column=0, columnspan=2, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="ℹ️ Enables detailed logging for parallel processing (useful for debugging crashes)",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=25, column=0, columnspan=2, sticky='w', pady=(0, 10))
+        
+        # Memory profiling
+        tk.Checkbutton(
+            container,
+            text="🧠 Memory profiling",
+            variable=self.debug_memory_profiling,
+            bg=colors['bg_dark'],
+            fg=colors['text'],
+            selectcolor=colors['bg_card'],
+            activebackground=colors['bg_dark'],
+            activeforeground=colors['text'],
+            font=self.app.FONT_TEXT
+        ).grid(row=26, column=0, columnspan=2, sticky='w', pady=(0, 5))
+        
+        tk.Label(
+            container,
+            text="ℹ️ Tracks memory usage (significant performance impact, use only when debugging memory issues)",
+            bg=colors['bg_dark'],
+            fg=colors['text_dim'],
+            font=('Segoe UI', 9, 'italic')
+        ).grid(row=27, column=0, columnspan=2, sticky='w', pady=(0, 10))
+        
+        # Warning banner
+        warning_frame = tk.Frame(container, bg=colors['warning'], relief='solid', bd=1)
+        warning_frame.grid(row=28, column=0, columnspan=2, sticky='ew', pady=(10, 0))
+        
+        tk.Label(
+            warning_frame,
+            text="⚠️ WARNING: Advanced debug options may impact performance. Enable only when debugging.",
+            bg=colors['warning'],
+            fg='#000000',
+            font=('Segoe UI', 9, 'bold'),
+            wraplength=550,
+            justify='left'
+        ).pack(padx=10, pady=10)
+        
+        container.grid_columnconfigure(0, weight=1)
+    
     def create_download_tab(self, parent):
         """Onglet paramètres Image Download"""
         colors = self.app.colors
@@ -1283,7 +1650,16 @@ class SettingsDialog:
             "default_download_lang": self.default_download_lang.get(),
             "default_download_quality": self.default_download_quality.get(),
             "default_download_format": self.default_download_format.get(),
-            "default_download_workers": self.default_download_workers.get()
+            "default_download_workers": self.default_download_workers.get(),
+            "debug_device": self.debug_device.get(),
+            "debug_workers": self.debug_workers.get(),
+            "debug_log_level": self.debug_log_level.get(),
+            "debug_cache_mode": self.debug_cache_mode.get(),
+            "debug_profiling": self.debug_profiling.get(),
+            "debug_benchmark": self.debug_benchmark.get(),
+            "debug_save_logs": self.debug_save_logs.get(),
+            "debug_multiprocessing": self.debug_multiprocessing.get(),
+            "debug_memory_profiling": self.debug_memory_profiling.get()
         }
         
         try:
