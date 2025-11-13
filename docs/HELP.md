@@ -766,6 +766,37 @@ Configure the GUI via **⚙️ Settings** button.
 | **Max Workers** | Parallel threads | 4 |
 | **Cache Images** | Cache for faster training | False |
 
+### Debug Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Device** | Processing device (Auto/CPU/GPU 0/GPU 1) | Auto |
+| **Worker Processes** | Parallel workers (1-32) | CPU cores / 2 |
+| **Cache Mode** | Data caching (RAM/Disk/Disabled) | RAM |
+| **Log Level** | Verbosity (ERROR/WARNING/INFO/DEBUG/TRACE) | INFO |
+| **Save Debug Logs** | Save logs to file | False |
+| **Performance Profiling** | Measure function execution time | False |
+| **Benchmark Logging** | Detailed performance metrics | False |
+| **Multiprocessing Debug** | Debug parallel processing | False |
+| **Memory Profiling** | Track memory usage (slow) | False |
+
+**Device Configuration**:
+- **Auto** (recommended): Automatically selects GPU if available, otherwise CPU
+- **CPU Only**: Forces CPU processing (slower but more compatible)
+- **GPU 0/1**: Manual GPU selection for multi-GPU systems
+
+**Performance Impact**:
+- ⚡ More workers = faster processing but higher RAM usage
+- ⚠️ Advanced debug options (profiling, memory tracking) reduce performance
+- 💡 Use DEBUG/TRACE log levels only when debugging issues
+
+**Log Levels**:
+- **ERROR**: Critical errors only (minimal)
+- **WARNING**: Warnings + errors
+- **INFO**: General information (recommended for normal use)
+- **DEBUG**: Detailed debugging information
+- **TRACE**: Maximum verbosity (very detailed, for debugging only)
+
 ### Saving Settings
 
 - **Auto-save**: Every 5 minutes
