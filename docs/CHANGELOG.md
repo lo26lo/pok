@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] - 2025-11-14
+
+### 📚 Documentation Refactoring
+
+- **BREAKING CHANGE**: Complete overhaul of the documentation structure for better modularity and maintainability.
+- **New `README.md`**: The main `README.md` has been redesigned to be a visually appealing "landing page" that provides a high-level overview and links to detailed documentation.
+- **Modular Feature Docs**: The monolithic `docs/README_COMPLET.md` and `docs/FEATURES.md` have been split into smaller, focused files located in the new `docs/features/` directory.
+  - `docs/features/1_GUI_OVERVIEW.md`
+  - `docs/features/2_DATASET_GENERATION.md`
+  - `docs/features/3_TRAINING_AND_DETECTION.md`
+  - `docs/features/4_PRICE_SYSTEM.md`
+- **Updated `docs/FEATURES.md`**: Now serves as a summary page that links to the new detailed feature documents.
+- **Archived Old README**: The previous `README.md` is archived as `README_old.md`.
+
+---
+
 ## [3.2.4] - 2025-11-12
 
 ### ⚙️ Settings Enhancement
