@@ -13,6 +13,7 @@ IMPORTANT: Lors de modifications de scripts:
 
 CHANGELOG:
 ----------
+2025-11-14: Ajout de create_public_release.ps1/.bat pour publication publique sans historique
 2025-11-11: Ajout de visualize_mosaic_bbox.py pour visualiser les bounding boxes
 2025-11-10: Création du fichier référence centralisé
 """
@@ -185,6 +186,19 @@ SCRIPTS_CATALOG = {
         "requires_venv": False,
         "is_powershell": True,
         "last_modified": "2025-11-10"
+    },
+    "create_public_release": {
+        "path": SCRIPTS_DIR / "create_public_release.ps1",
+        "description": "Crée un repository public sans historique de commits",
+        "category": "Publishing",
+        "dependencies": [],
+        "arguments": ["-RepoUrl <url>", "-Version <version>"],
+        "requires_venv": False,
+        "is_powershell": True,
+        "usage": "create_public_release.bat https://github.com/user/repo.git [v3.2]",
+        "called_by": ["Utilisateur (manuel)", "create_public_release.bat"],
+        "last_modified": "2025-11-14",
+        "notes": "Exclut automatiquement: .git, .venv, output, images, runs, .planning"
     }
 }
 
