@@ -2,7 +2,7 @@
 
 <img src="../examples/banner.png" alt="Pokemon Dataset Generator Banner" width="100%"/>
 
-# 🎮 Pokémon Dataset Generator v3.1
+# 🎮 Pokémon Dataset Generator v3.2
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -57,7 +57,7 @@ Real-time statistics, environment checks, quick actions
 <img src="../examples/gui_settings.png" alt="Settings" width="100%"/>
 
 **Settings Dialog**  
-6 configuration tabs with live preview
+8 configuration tabs (including Advanced & Debug)
 </td>
 </tr>
 </table>

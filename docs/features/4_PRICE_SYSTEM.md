@@ -42,7 +42,7 @@ Once the mapping is established, the application can fetch price data from the T
 | `init_prices_real` | Initializes prices for a larger, predefined set of real cards. |
 
 <p align="center">
-  <img src="../../examples/excel_prices.png" alt="Excel Price Database" width="80%"/>
+  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/excel_prices.png" alt="Excel Price Database" width="80%"/>
 </p>
 
 ---
@@ -59,5 +59,15 @@ This is where the system comes together. During live detection, the application 
 This entire process is seamless and provides instant feedback on the value of detected cards.
 
 <p align="center">
-  <img src="../../examples/detection_with_prices.png" alt="Detection with Prices" width="80%"/>
+  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/detection_with_prices.png" alt="Detection with Prices" width="80%"/>
 </p>
+
+---
+
+## 📚 Navigation
+
+⬅️ [Previous: Training & Detection](3_TRAINING_AND_DETECTION.md) | [Back to Features Overview](../FEATURES.md)
+
+---
+
+**Last Updated**: November 14, 2025

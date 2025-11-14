@@ -33,7 +33,7 @@ Augmentation is crucial for creating a robust model. Our tool uses `imgaug` to a
 - **Alpha Channel Preservation**: Transparency in PNG images is correctly handled.
 
 <p align="center">
-  <img src="../../examples/example_augmented.png" alt="Augmented Card" width="50%"/>
+  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/example_augmented.png" alt="Augmented Card" width="50%"/>
 </p>
 
 ---
@@ -52,7 +52,7 @@ To help the model recognize shiny cards, you can add realistic holographic effec
 - **Multiple Variations**: Generate several different holographic versions for each card.
 
 <p align="center">
-  <img src="../../examples/example_holographic.png" alt="Holographic Card" width="50%"/>
+  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/example_holographic.png" alt="Holographic Card" width="50%"/>
 </p>
 
 ---
@@ -71,7 +71,7 @@ Mosaics combine multiple cards into a single image, forcing the model to learn t
 - **Error Handling**: Corrupted source images are automatically detected and moved to a `corrupted/` folder without crashing the process.
 
 <p align="center">
-  <img src="../../examples/example_layout_annotated.png" alt="Annotated Mosaic" width="90%"/>
+  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/example_layout_annotated.png" alt="Annotated Mosaic" width="90%"/>
 </p>
 
 ---
@@ -86,3 +86,13 @@ A balanced dataset is key to a good model. The auto-balancer ensures that no sin
   3.  **Both**: Equalizes all classes to a specified target count.
 - **Configurable Target**: You can set the desired number of instances per class.
 - **Safe Operation**: Automatically backs up the dataset before making any changes.
+
+---
+
+## 📚 Navigation
+
+⬅️ [Previous: GUI Overview](1_GUI_OVERVIEW.md) | [Back to Features Overview](../FEATURES.md) | ➡️ [Next: Training & Detection](3_TRAINING_AND_DETECTION.md)
+
+---
+
+**Last Updated**: November 14, 2025

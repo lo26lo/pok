@@ -20,7 +20,7 @@ The GUI provides a simple interface to train a powerful YOLOv8 model on your cus
 | **Interruptible** | A "Stop" button allows you to safely interrupt the training process at any time. |
 
 <p align="center">
-  <img src="../../examples/training_metrics.png" alt="Training Metrics" width="80%"/>
+  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/training_metrics.png" alt="Training Metrics" width="80%"/>
   <br><em>Live training dashboard showing key performance metrics.</em>
 </p>
 
@@ -54,6 +54,16 @@ Once your model is trained, you can immediately use it for real-time object dete
 -   **Recording**: Option to record the output of webcam or video detections.
 
 <p align="center">
-  <img src="../../examples/detection_with_prices.png" alt="Detection with Prices" width="80%"/>
+  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/detection_with_prices.png" alt="Detection with Prices" width="80%"/>
   <br><em>Live detection showing card name, confidence, and market price.</em>
 </p>
+
+---
+
+## 📚 Navigation
+
+⬅️ [Previous: Dataset Generation](2_DATASET_GENERATION.md) | [Back to Features Overview](../FEATURES.md) | ➡️ [Next: Price System](4_PRICE_SYSTEM.md)
+
+---
+
+**Last Updated**: November 14, 2025

@@ -117,10 +117,14 @@ All documentation is located in the `docs/` folder. Here are some important star
 | Guide | Description |
 | :--- | :--- |
 | 📖 **[Complete Guide](docs/README_COMPLET.md)** | The main documentation with in-depth details on everything. |
-| 🚀 **[Features Guide](docs/FEATURES.md)** | A detailed breakdown of every feature listed above. |
-| 🖥️ **[GUI Guide](docs/GUI_V3_GUIDE.md)** | An overview of the graphical user interface. |
-| 🛠️ **[Scripts Reference](docs/MAINTENANCE_SCRIPTS_REFERENCE.md)** | Reference for all maintenance and utility scripts. |
-| 📜 **[Changelog](docs/CHANGELOG.md)** | A complete history of all changes, features, and fixes. |
+| 🚀 **[Features Overview](docs/FEATURES.md)** | High-level overview with links to detailed feature guides. |
+| 🎨 **[GUI Overview](docs/features/1_GUI_OVERVIEW.md)** | Complete interface documentation. |
+| ⚙️ **[Dataset Generation](docs/features/2_DATASET_GENERATION.md)** | Download, augmentation, mosaics, and balancing. |
+| 🎓 **[Training & Detection](docs/features/3_TRAINING_AND_DETECTION.md)** | YOLO training and live detection. |
+| 💰 **[Price System](docs/features/4_PRICE_SYSTEM.md)** | Card mapping and price integration. |
+| 🖥️ **[GUI Guide](docs/GUI_V3_GUIDE.md)** | Detailed GUI walkthrough. |
+| 🛠️ **[Scripts Reference](docs/MAINTENANCE_SCRIPTS_REFERENCE.md)** | All maintenance and utility scripts. |
+| 📜 **[Changelog](docs/CHANGELOG.md)** | Complete history of changes, features, and fixes. |
 
 ---
 

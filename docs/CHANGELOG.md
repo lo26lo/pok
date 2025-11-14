@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `docs/features/4_PRICE_SYSTEM.md`
 - **Updated `docs/FEATURES.md`**: Now serves as a summary page that links to the new detailed feature documents.
 - **Archived Old README**: The previous `README.md` is archived as `README_old.md`.
+- **Version Consistency**: Updated all documentation to reflect v3.2 consistently.
+- **Image Links Fixed**: Replaced relative image paths with absolute GitHub URLs for proper display.
+- **Navigation Links**: Added navigation links between feature documents for easier browsing.
+- **Settings Tabs**: Updated references from 6 tabs to 8 tabs (including Advanced & Debug).
 
 ---
 
