@@ -27,21 +27,11 @@ This project provides a powerful and intuitive graphical interface to manage the
   <tr>
     <td align="center" width="50%">
       <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/gui_dashboard.png" alt="GUI Dashboard" width="100%"/>
-      <br><em>Modern dashboard with real-time stats.</em>
+      <br><em>Modern dashboard with real-time stats and workflow management.</em>
     </td>
-    <td align="center" width="50%">
-      <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/detection_with_prices.png" alt="Detection with Prices" width="100%"/>
-      <br><em>Live detection with market prices.</em>
-    </td>
-  </tr>
-  <tr>
     <td align="center" width="50%">
       <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/example_layout_annotated.png" alt="Annotated Mosaic" width="100%"/>
       <br><em>Generate complex, annotated mosaics for training.</em>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/gui_settings.png" alt="Settings" width="100%"/>
-      <br><em>Fine-tune every parameter in the settings.</em>
     </td>
   </tr>
 </table>

@@ -1,6 +1,6 @@
 # 📖 Pokemon Dataset Generator - Help & User Manual
 
-**Version 3.0** | *Complete Guide for GUI v3.0*
+**Version 3.2** | *Complete Guide for GUI v3.2*
 
 ---
 
@@ -85,7 +85,7 @@ The **Dashboard** is your command center with real-time statistics.
 ### Environment Status
 
 - **Virtual Environment**: Shows if `.venv` is detected
-- **Excel File**: Shows if `generated_extension.xlsx` exists
+- **Price Database**: Shows if `models/cards_database.yaml` exists
 - **Fix Now**: Quick button to run installer
 
 ---

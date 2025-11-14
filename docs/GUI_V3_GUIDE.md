@@ -1,8 +1,8 @@
-# GUI v3.0 Professional - Guide Complet
+# GUI v3.2 Professional - Guide Complet
 
 ## 🎨 Nouvelle Interface
 
-L'interface v3.0 apporte une refonte complète avec :
+L'interface v3.2 apporte une refonte complète avec :
 
 - **Sidebar moderne** : Navigation hiérarchique claire
 - **Design professionnel** : Palette Catppuccin Mocha
@@ -206,7 +206,7 @@ output/
 ### Fichiers de config
 - `gui_config.json` : Paramètres GUI sauvegardés
 - `api_config.json` : Clé API Pokemon TCG
-- `cards_info.xlsx` : Base de données cartes
+- `models/cards_database.yaml` : Base de données cartes (YAML)
 
 ### Dossiers importants
 ```

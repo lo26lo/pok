@@ -19,10 +19,7 @@ The GUI provides a simple interface to train a powerful YOLOv8 model on your cus
 | **GPU Acceleration** | Automatically detects and uses your NVIDIA GPU for significantly faster training. |
 | **Interruptible** | A "Stop" button allows you to safely interrupt the training process at any time. |
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/training_metrics.png" alt="Training Metrics" width="80%"/>
-  <br><em>Live training dashboard showing key performance metrics.</em>
-</p>
+The training view displays live metrics including **mAP50**, **mAP50-95**, **precision**, **recall**, and loss curves, updated in real-time as training progresses.
 
 ### Training Output
 
@@ -53,10 +50,7 @@ Once your model is trained, you can immediately use it for real-time object dete
 -   **Visual Overlay**: Clearly shows bounding boxes, class names (card names), confidence scores, and prices.
 -   **Recording**: Option to record the output of webcam or video detections.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/detection_with_prices.png" alt="Detection with Prices" width="80%"/>
-  <br><em>Live detection showing card name, confidence, and market price.</em>
-</p>
+During detection, each identified card displays its name, confidence score (0-100%), and real-time market price fetched from the integrated price database.
 
 ---
 

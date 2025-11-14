@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.1] - 2025-11-14
+
+### 📚 Documentation Audit & Cleanup
+
+- **Image References Fixed**: Removed references to 5 missing images that were breaking documentation display
+  - Removed: `detection_with_prices.png`, `gui_settings.png`, `example_holographic.png`, `training_metrics.png`, `excel_prices.png`
+  - Replaced image sections with descriptive text to maintain documentation completeness
+  - Updated `README.md` gallery from 2x2 to 1x2 layout with existing images only
+- **Excel → YAML Migration References**: Updated all remaining Excel references to YAML format
+  - `excel/cards_with_prices.xlsx` → `models/cards_database.yaml` (10+ occurrences)
+  - `excel/generated_extension.xlsx` → Price Database detection
+  - `excel/cards_info.xlsx` → `models/cards_database.yaml`
+  - Updated in: `README.md`, `HELP.md`, `README_COMPLET.md`, `GUIDE_UTILISATION.md`, `GUI_V3_GUIDE.md`, `docs/features/4_PRICE_SYSTEM.md`
+  - Dependencies updated: `openpyxl` references → `pyyaml`
+- **Version Standardization**: Unified all documentation to v3.2
+  - `HELP.md`: v3.0 → v3.2
+  - `FEATURES.md`: v3.1.0 → v3.2.0
+  - `GUI_V3_GUIDE.md`: v3.0 → v3.2
+  - `README_COMPLET.md`: Multiple v3.1 references → v3.2
+  - `GUIDE_UTILISATION.md`: All v3.0 references → v3.2
+  - `README_SIMPLE.md`: v3.1 → v3.2
+  - Dates updated to November 14, 2025 where appropriate
+- **Documentation Verification**: Comprehensive audit of 34+ markdown files
+  - All 4 feature docs (`docs/features/*.md`) reviewed and updated
+  - Main documentation files (`HELP.md`, `README_COMPLET.md`, `GUIDE_UTILISATION.md`) verified
+  - Technical docs (`DEPENDENCIES_MAP.md`, `INTEGRATION_TCGDEX.md`) confirmed accurate
+  - 8 Settings tabs correctly documented everywhere
+  - 11 functional views properly referenced
+
+**Impact**: Documentation now accurately reflects application state with no broken image links or outdated Excel references. All version numbers consistent at v3.2.
+
+---
+
 ## [3.3.0] - 2025-11-14
 
 ### 📚 Documentation Refactoring

@@ -35,12 +35,16 @@ Pokemons/
 │   │   ├── images/           # Images augmentées
 │   │   ├── labels/           # Annotations YOLO
 │   │   └── data.yaml         # Configuration YOLO
-│   └── yolov8/               # Mosaïques (générées par mosaic.py)
-│       ├── images/           # Images de mosaïques
-│       ├── labels/           # Annotations YOLO des mosaïques
-│       ├── data.yaml         # Configuration YOLO
-│       └── annotations.json  # Annotations détaillées
-├── cards_info.xlsx           # Informations des cartes (Set #, Name)
+│   ├── yolov8/               # Mosaïques (générées par mosaic.py)
+│   │   ├── images/           # Images de mosaïques
+│   │   ├── labels/           # Annotations YOLO des mosaïques
+│   │   ├── data.yaml         # Configuration YOLO
+│   │   └── annotations.json  # Annotations détaillées
+├── models/
+│   ├── cards_database.yaml   # Base de données cartes (YAML)
+│   ├── card_name_to_id.json  # Mapping noms/IDs
+│   ├── yolo11n.pt            # Modèle YOLO11
+│   └── yolov8n.pt            # Modèle YOLOv8
 └── .venv/                    # Environnement virtuel Python
 ```
 
@@ -48,7 +52,7 @@ Pokemons/
 
 ## ⬇️ 0. TÉLÉCHARGEMENT D'IMAGES (NOUVEAU)
 
-### 📦 Via GUI v3.0
+### 📦 Via GUI v3.2
 
 **Vue: ⬇️ Image Download**
 
@@ -208,7 +212,7 @@ Génère des images augmentées à partir des cartes originales avec diverses tr
 
 ### Script : `holographic_augmenter.py`
 
-**🆕 NOUVEAUTÉ GUI v3.0** : Génère des effets holographiques réalistes sur les cartes Pokémon pour simuler les finitions brillantes et irisées des vraies cartes.
+**🆕 NOUVEAUTÉ GUI v3.2** : Génère des effets holographiques réalistes sur les cartes Pokémon pour simuler les finitions brillantes et irisées des vraies cartes.
 
 ### Utilisation via GUI
 ```batch
@@ -283,7 +287,7 @@ Crée des mosaïques de 8 cartes sur des fonds variés avec différents layouts 
 
 ### Modes de génération
 
-**🆕 GUI v3.0** propose 3 modes prédéfinis :
+**🆕 GUI v3.2** propose 3 modes prédéfinis :
 
 | Mode | Groupes | Mosaïques | Description |
 |------|---------|-----------|-------------|
@@ -358,9 +362,9 @@ Crée des mosaïques de 8 cartes sur des fonds variés avec différents layouts 
 
 ## 🖼️ 3. GÉNÉRATION DE FAUSSES CARTES (FAKE BACKGROUNDS)
 
-### 🆕 Méthode recommandée : GUI v3.0
+### 🆕 Méthode recommandée : GUI v3.2
 
-**🆕 NOUVEAUTÉ** : Vue dédiée avec configuration avancée dans le GUI v3.0
+**🆕 NOUVEAUTÉ** : Vue dédiée avec configuration avancée dans le GUI v3.2
 
 ### Script moderne : `generate_fake_backgrounds.py`
 
@@ -412,7 +416,7 @@ Dans le **Settings Dialog** → Onglet **"Fake Backgrounds"** :
 
 ### 🎲 Fake Backgrounds (Nouvelle Interface)
 
-**Via GUI v3.0:**
+**Via GUI v3.2:**
 1. Cliquer sur "🎲 Fake Backgrounds" dans la sidebar
 2. Configurer:
    - **Nombre d'images** (défaut: 100)
@@ -461,7 +465,7 @@ Génère quelques mosaïques avec les paramètres par défaut.
 
 ---
 
-## 🎮 Interface Graphique (GUI v3.0)
+## 🎮 Interface Graphique (GUI v3.2)
 
 ### 🆕 Version moderne avec design Catppuccin Mocha
 
@@ -642,7 +646,7 @@ names:
 - **scipy**
 - **scikit-image**
 - **imagecorruptions**
-- **openpyxl** (pour lire cards_info.xlsx)
+- **pyyaml** (pour lire cards_database.yaml)
 
 ---
 
@@ -665,7 +669,7 @@ names:
 
 ## 💡 Workflow recommandé
 
-### Avec GUI v3.0 (RECOMMANDÉ)
+### Avec GUI v3.2 (RECOMMANDÉ)
 1. **Préparation**
    ```batch
    .\install_env.bat

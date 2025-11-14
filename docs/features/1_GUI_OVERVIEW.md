@@ -48,9 +48,7 @@ The settings dialog, accessible via the "⚙️ Settings" button, allows for fin
 | **🔧 Advanced** | Enter your TCGdex API key (optional) for extended features. |
 | **🐛 Debug** | Access advanced options for performance tuning and debugging: device selection, worker count, log level, cache mode, and profiling tools. |
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/gui_settings.png" alt="Settings Dialog" width="70%"/>
-</p>
+**Access Settings**: Click the gear icon (⚙️) in the top toolbar or press `Ctrl+,` to open the settings dialog.
 
 ---
 

@@ -59,5 +59,5 @@ Integrate real-time market prices directly into the detection process, providing
 
 ---
 
-**Last Updated**: November 11, 2025
-**Version**: 3.1.0
+**Last Updated**: November 14, 2025
+**Version**: 3.2.0

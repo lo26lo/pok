@@ -27,7 +27,7 @@
 2. [🚀 Quick Start](#-quick-start)
 3. [📁 Project Structure](#-project-structure)
 4. [✨ Main Features](#-main-features)
-5. [🎨 GUI v3.1 Interface](#-gui-v31-interface)
+5. [🎨 GUI v3.2 Interface](#-gui-v32-interface)
 6. [🔄 Complete Workflow](#-complete-workflow)
 7. [🧪 Centralized Script System](#-centralized-script-system)
 8. [📦 Configuration & Dependencies](#-configuration--dependencies)
@@ -43,7 +43,7 @@
 
 <div align="center">
 
-### Modern GUI Interface v3.1
+### Modern GUI Interface v3.2
 
 <table>
 <tr>
@@ -272,12 +272,14 @@ pok/
 │           └── weights/
 │               ├── best.pt        # Best model
 │               └── last.pt        # Last checkpoint
-├── 📈 excel/                       # Excel price files
-│   └── cards_with_prices.xlsx    # Card prices (auto-generated)
-│
 ├── 🌄 backgrounds/                 # Backgrounds for mosaics
 │   ├── original/
 │   └── augmented/
+├── 📦 models/                      # Model files and card database
+│   ├── yolo11n.pt                 # YOLO11 nano model
+│   ├── yolov8n.pt                 # YOLOv8 nano model
+│   ├── card_name_to_id.json       # Card ID mapping
+│   └── cards_database.yaml        # Card prices database (YAML format)
 ├── 📦 bbox_visualization/          # Bounding box visualizations
 ├── 🗂️ dataset_voc/                 # Pascal VOC format dataset
 ├── 🌐 examples/                    # Example images for README
@@ -300,7 +302,7 @@ pok/
 
 ## ✨ Main Features
 
-### 🎨 Modern GUI v3.1 Interface
+### 🎨 Modern GUI v3.2 Interface
 
 <table>
 <tr>
@@ -386,7 +388,7 @@ pok/
 
 ---
 
-## 🎨 GUI v3.1 Interface
+## 🎨 GUI v3.2 Interface
 
 ### 📱 Navigation & Layout
 
@@ -528,12 +530,12 @@ scripts\run_script.bat init_prices_simple
 scripts\run_script.bat init_prices_real
 ```
 
-**Output**: `excel/cards_with_prices.xlsx`
+**Output**: `models/cards_database.yaml`
 
-**Columns**:
-- Name, Set #, Type, Rarity
-- Prix (avg), Prix max
-- SourcePrix (Cardmarket/TCGPlayer)
+**Fields**:
+- Name, Set, Type, Rarity
+- price, price_max, price_source
+- Cardmarket/TCGPlayer pricing
 
 ---
 
@@ -1051,13 +1053,16 @@ scripts\run_script.bat init_prices_simple
 scripts\run_script.bat init_prices_real
 ```
 
-**Output**: `excel/cards_with_prices.xlsx`
+**Output**: `models/cards_database.yaml`
 
-**Columns**:
+**Fields**:
 - Name: Card name
-- Set #: Number in set
+- Set: Set number
 - Type: Card type
 - Rarity: Rarity
+- price: Average market price
+- price_max: Maximum price
+- price_source: Data source (Cardmarket/TCGPlayer)
 - Prix: Average price (Cardmarket)
 - Prix max: Maximum price
 - SourcePrix: Source (Cardmarket/TCGPlayer)

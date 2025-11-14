@@ -29,9 +29,10 @@ Once the mapping is established, the application can fetch price data from the T
 
 ### Price Database
 
--   **File**: `excel/cards_with_prices.xlsx`
--   **Purpose**: Stores all fetched price data in an easily accessible Excel file. This acts as a local cache to minimize API calls.
+-   **File**: `models/cards_database.yaml`
+-   **Purpose**: Stores all fetched price data in a fast, human-readable YAML format. This acts as a local cache to minimize API calls.
 -   **Generation**: The file is created and updated by running one of the `init_prices` scripts.
+-   **Advantages**: ~10x faster loading than Excel, Git-friendly text format, no file locking issues on Windows.
 
 ### Initialization Scripts
 
@@ -41,9 +42,7 @@ Once the mapping is established, the application can fetch price data from the T
 | `init_prices_simple` | A quick test script that initializes prices for a small, predefined set of 8 cards. |
 | `init_prices_real` | Initializes prices for a larger, predefined set of real cards. |
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/excel_prices.png" alt="Excel Price Database" width="80%"/>
-</p>
+**Database Format**: The price database is stored in YAML format (`models/cards_database.yaml`) for fast loading, human readability, and easy Git tracking. Each card entry includes card ID, name, set information, rarity, and both Cardmarket and TCGPlayer prices.
 
 ---
 
@@ -53,14 +52,10 @@ This is where the system comes together. During live detection, the application 
 
 1.  A card is detected by the YOLO model, which returns its class name (e.g., "Pikachu").
 2.  The application looks up "Pikachu" in the `card_name_to_id.json` file to find its official ID.
-3.  It then queries the `cards_with_prices.xlsx` database using this ID to retrieve the stored market price.
+3.  It then queries the YAML database (`models/cards_database.yaml`) using this ID to retrieve the stored market price.
 4.  The price is displayed directly on the screen as part of the bounding box overlay.
 
-This entire process is seamless and provides instant feedback on the value of detected cards.
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/detection_with_prices.png" alt="Detection with Prices" width="80%"/>
-</p>
+This entire process is seamless and provides instant feedback on the value of detected cards. The price appears directly alongside the card name and confidence score in the detection overlay.
 
 ---
 

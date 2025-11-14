@@ -1,4 +1,4 @@
-# 🎮 Pokémon Dataset Generator v3.1
+# 🎮 Pokémon Dataset Generator v3.2
 
 **Pipeline complet YOLO : Génération de dataset → Entraînement → Détection avec prix**
 
@@ -219,6 +219,6 @@ MIT License - Voir LICENSE pour plus de détails
 
 **Créé avec ❤️ pour la communauté Pokémon TCG**
 
-*v3.1 - Novembre 2025*
+*v3.2 - Novembre 2025*
 
 </div>

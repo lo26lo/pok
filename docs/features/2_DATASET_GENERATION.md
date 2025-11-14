@@ -51,9 +51,7 @@ To help the model recognize shiny cards, you can add realistic holographic effec
 - **Configurable Intensity**: Control the strength of the effect from subtle (0.1) to strong (1.0).
 - **Multiple Variations**: Generate several different holographic versions for each card.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lo26lo/pok/main/examples/example_holographic.png" alt="Holographic Card" width="50%"/>
-</p>
+These holographic effects significantly improve model robustness by simulating real-world lighting conditions and card variations.
 
 ---
 
