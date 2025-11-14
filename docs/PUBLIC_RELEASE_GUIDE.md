@@ -76,8 +76,8 @@ Avec paramètres optionnels :
 
 ### Étape 2 : Exclusions automatiques
 Le script exclut automatiquement :
-- **Dossiers** : `.git`, `.venv`, `__pycache__`, `.vscode`, `output`, `images`, `runs`, `.planning`
-- **Fichiers** : `*.log`, `*.pyc`
+- **Dossiers** : `.git`, `.venv`, `__pycache__`, `.vscode`, `.github`, `output`, `images`, `runs`, `.planning`
+- **Fichiers** : `*.log`, `*.pyc`, `.agent.md`, `.claude.md`, `copilot-instructions.md`
 
 ### Étape 3 : Initialisation Git
 - Initialise un nouveau repository Git (sans historique)
@@ -124,8 +124,8 @@ Complete YOLO pipeline for Pokemon card detection with modern GUI:
 
 [2/7] Copie des fichiers du projet...
    Exclusions:
-   - Dossiers: .git, .venv, __pycache__, .vscode, output, images, runs, .planning
-   - Fichiers: *.log, *.pyc
+   - Dossiers: .git, .venv, __pycache__, .vscode, .github, output, images, runs, .planning
+   - Fichiers: *.log, *.pyc, .agent.md, .claude.md, copilot-instructions.md
    ✓ Fichiers copiés avec succès
 
 [3/7] Initialisation du repository Git...
@@ -194,6 +194,8 @@ Complete YOLO pipeline for Pokemon card detection with modern GUI:
 ❌ Données générées (output/, images/, runs/)  
 ❌ Fichiers de cache (__pycache__, *.pyc)  
 ❌ Configuration IDE (.vscode/)  
+❌ GitHub workflows et actions (.github/)  
+❌ Instructions IA (.agent.md, .claude.md, copilot-instructions.md)  
 ❌ Fichiers de logs  
 ❌ Documents de planification (.planning/)  
 

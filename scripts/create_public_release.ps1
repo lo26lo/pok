@@ -55,11 +55,11 @@ Write-Info ""
 # Étape 2: Copier les fichiers (en excluant les dossiers de développement)
 Write-Info "[2/7] Copie des fichiers du projet..."
 Write-Info "   Exclusions:"
-Write-Info "   - Dossiers: .git, .venv, __pycache__, .vscode, output, images, runs, .planning"
-Write-Info "   - Fichiers: *.log, *.pyc"
+Write-Info "   - Dossiers: .git, .venv, __pycache__, .vscode, .github, output, images, runs, .planning"
+Write-Info "   - Fichiers: *.log, *.pyc, .agent.md, .claude.md, copilot-instructions.md"
 
-$excludeDirs = @(".git", ".venv", "__pycache__", ".vscode", "output", "images", "runs", ".planning")
-$excludeFiles = @("*.log", "*.pyc")
+$excludeDirs = @(".git", ".venv", "__pycache__", ".vscode", ".github", "output", "images", "runs", ".planning")
+$excludeFiles = @("*.log", "*.pyc", ".agent.md", ".claude.md", "copilot-instructions.md")
 
 $robocopyArgs = @(
     $currentDir,

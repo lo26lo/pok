@@ -198,7 +198,7 @@ SCRIPTS_CATALOG = {
         "usage": "create_public_release.bat https://github.com/user/repo.git [v3.2]",
         "called_by": ["Utilisateur (manuel)", "create_public_release.bat"],
         "last_modified": "2025-11-14",
-        "notes": "Exclut automatiquement: .git, .venv, output, images, runs, .planning"
+        "notes": "Exclut automatiquement: .git, .venv, .github, output, images, runs, .planning, .agent.md, .claude.md, copilot-instructions.md"
     }
 }
 
