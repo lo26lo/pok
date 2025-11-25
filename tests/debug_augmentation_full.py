@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.augmentation import load_card_data, extract_card_number
+from core.augmentation_albumentations import load_card_data, extract_card_number
 from glob import glob
 import os
 

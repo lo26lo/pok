@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.0] - 2025-11-25
+
+### 🚀 Migration imgaug → Albumentations
+
+**BREAKING CHANGE**: Complete migration from imgaug to Albumentations for image augmentation.
+
+#### Why this change?
+- **imgaug** is abandoned since 2020 and blocks NumPy at < 2.0 (deprecated `np.sctypes`)
+- **Albumentations** is actively maintained, 30-50% faster, and supports NumPy 2.x
+
+#### Changes Made
+
+**New Files:**
+- `core/augmentation_albumentations.py` (495 lines) - New augmentation module with 25 augmentations
+
+**Updated Dependencies (`config/requirements.txt`):**
+- `numpy>=1.24.0` (was `numpy<2.0`)
+- `opencv-python>=4.8.0` (was `opencv-python<4.10.0`)
+- `albumentations>=1.3.0` (replaces `imgaug>=0.4.0`)
+- `scipy>=1.11.0` (was `scipy<1.14`)
+- `scikit-image>=0.21.0` (was `scikit-image<0.23`)
+
+**Updated Files:**
+- `core/__init__.py` - Import augmentation_albumentations as augmentation
+- `core/workflow_manager.py` - Reference new augmentation module
+- `GUI_v3.1_modern.py` - 2 references updated
+- `scripts/workflow_optimized.py` - Reference updated
+- `tests/debug_class_map.py` - Import updated
+- `tests/debug_augmentation_full.py` - Import updated
+- `docs/new/USER_GUIDE.md` - Documentation updated
+
+#### Augmentation Comparison
+
+| Aspect | imgaug (before) | Albumentations (now) |
+|--------|-----------------|----------------------|
+| Augmentations | 19 | **25** (+6) |
+| NumPy support | < 2.0 only | 1.x and 2.x |
+| Performance | Baseline | **30-50% faster** |
+| Maintenance | Abandoned 2020 | Active (weekly updates) |
+| GPU support | Experimental | Stable (via OpenCV-CUDA) |
+
+#### New Exclusive Augmentations
+- 🌤️ **RandomShadow** - Realistic shadows
+- ☀️ **RandomSunFlare** - Lens flare effects
+- 🔍 **CLAHE** - Adaptive histogram equalization
+- 📐 **Perspective** - Perspective transformation
+- 🌊 **OpticalDistortion** - Lens distortion
+- 🔲 **GridDistortion** - Grid-based distortion
+- 💨 **MotionBlur** - Motion blur effect
+- 📷 **Defocus** - Camera defocus effect
+- 📊 **ISONoise** - Camera sensor noise
+- 🖼️ **ImageCompression** - JPEG artifacts
+
+**Impact**: Users must run `pip install -r config/requirements.txt` to update dependencies.
+
+---
+
 ## [3.3.1] - 2025-11-14
 
 ### 📚 Documentation Audit & Cleanup

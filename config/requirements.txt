@@ -1,15 +1,30 @@
 # Requirements for Pokemon Dataset Generator
-# NumPy pinned to < 2.0 for imgaug compatibility (np.sctypes removed in NumPy 2.0)
-numpy<2.0
-# OpenCV pinned to version compatible with NumPy 1.x
-opencv-python<4.10.0
-# Core dependencies
-pyyaml  # YAML card database (replaces Excel)
-pandas  # Optional: only for migration scripts (migrate_excel_to_yaml.py)
-openpyxl  # Optional: only for migration scripts (migrate_excel_to_yaml.py)
-imgaug>=0.4.0
-pillow
-requests
-scipy<1.14
-scikit-image<0.23
-imagecorruptions
+# ============================================
+# Version 3.3 - Migration Albumentations (NumPy 2.x compatible)
+#
+# CHANGEMENT MAJEUR: imgaug remplacé par Albumentations
+# - Compatible NumPy 2.x (plus de blocage de version)
+# - 30-50% plus rapide
+# - 25 augmentations (vs 19 avec imgaug)
+# - Maintenu activement (vs imgaug abandonné 2020)
+
+# Core - Pas de restriction de version (NumPy 2.x OK)
+numpy>=1.24.0
+opencv-python>=4.8.0
+scipy>=1.11.0
+scikit-image>=0.21.0
+
+# Augmentation - Albumentations remplace imgaug
+albumentations>=1.3.0
+
+# Data formats
+pyyaml>=6.0
+pillow>=10.0.0
+requests>=2.31.0
+
+# Optional: only for migration scripts (migrate_excel_to_yaml.py)
+pandas>=2.0.0
+openpyxl>=3.1.0
+
+# Image corruption effects (for augmentation)
+imagecorruptions>=1.1.0

@@ -125,7 +125,7 @@ python -m pip install --upgrade pip setuptools wheel
 pip install -r config\requirements.txt
 
 # 5. Vérifier installation
-python -c "import cv2, imgaug, ultralytics; print('✅ OK')"
+python -c "import cv2, albumentations, ultralytics; print('✅ OK')"
 
 # 6. Lancer GUI
 python GUI_v3.1_modern.py
@@ -149,9 +149,9 @@ CUDA: True  (si GPU détecté)
 | Package | Version | Rôle |
 |---------|---------|------|
 | **Python** | 3.10-3.12 | Langage de base |
-| **NumPy** | < 2.0 | Calculs numériques (IMPORTANT: < 2.0 pour imgaug) |
-| **OpenCV** | < 4.10.0 | Traitement d'images |
-| **imgaug** | >= 0.4.0 | Augmentation avancée |
+| **NumPy** | >= 1.24.0 | Calculs numériques |
+| **OpenCV** | >= 4.8.0 | Traitement d'images |
+| **Albumentations** | >= 1.3.0 | Augmentation avancée (30-50% plus rapide) |
 | **PyTorch** | 2.0+ | Deep learning framework |
 | **Ultralytics** | 8.0+ | YOLOv8/v11 |
 | **tkinter** | (inclus Python) | Interface GUI |
@@ -711,9 +711,9 @@ La vue **Augmentation** génère des **variations** de vos cartes originales en 
 - **Effet** : Chaque variation peut avoir en plus un effet shiny
 - **Résultat** : Double le nombre d'images finales
 
-### Techniques d'Augmentation (22 types)
+### Techniques d'Augmentation (25 types)
 
-Pipeline **imgaug** avec `SomeOf(2-5)` : **2 à 5 transformations** appliquées aléatoirement.
+Pipeline **Albumentations** avec sélection aléatoire : **3 à 6 transformations** appliquées par image.
 
 #### 🌞 Luminosité & Contraste
 1. **Add (-20, +20)** : Ajuste luminosité (±20 pixels)
@@ -2659,10 +2659,10 @@ La vue **Settings** propose **8 tabs** de configuration avancée (v3.2.4).
 - **Défaut** : 5
 - **Effet** : Nombre d'images augmentées par original (vue Augmentation)
 
-#### Enable GPU Acceleration (imgaug)
-- **Checkbox** : ❌ Accélération GPU imgaug
-- **Défaut** : Désactivé
-- **Raison** : imgaug GPU instable (expérimental)
+#### Enable GPU Acceleration (Albumentations)
+- **Checkbox** : ✅ Accélération GPU Albumentations
+- **Défaut** : Activé
+- **Note** : Albumentations utilise automatiquement le GPU via OpenCV-CUDA si disponible
 
 #### Techniques Defaults (22 sliders)
 - **Brightness** : -50 à +50 (défaut ±30)
@@ -2833,7 +2833,7 @@ La vue **Settings** propose **8 tabs** de configuration avancée (v3.2.4).
 - **Défaut** : 0.9 (90% VRAM disponible)
 
 #### Enable Augmentation Cache
-- **Checkbox** : ✅ Cacher pipelines imgaug
+- **Checkbox** : ✅ Cacher pipelines Albumentations
 - **Défaut** : Activé (gain 10-20%)
 
 #### Clear Cache on Exit

@@ -6650,7 +6650,7 @@ Continuer ?"""
                     self.log(f"\n🎨 ÉTAPE {step_num}: Augmentation ({num_aug} variations par image)...")
                     
                     # IMPORTANT: Toujours augmenter depuis les images ORIGINALES, pas depuis holographic
-                    cmd = [sys.executable, "-u", "core/augmentation_optimized.py",
+                    cmd = [sys.executable, "-u", "core/augmentation_albumentations.py",
                           "--num_aug", str(num_aug),
                           "--source", "images",  # Toujours "images", jamais "holographic"
                           "--target", "augmented"]
@@ -6721,8 +6721,8 @@ Continuer ?"""
             try:
                 # Standard augmentation
                 if aug_type in ["Standard", "Both"]:
-                    self.log("🎨 Running standard augmentation...")
-                    cmd = [sys.executable, "-u", "core/augmentation_optimized.py",
+                    self.log("🎨 Running standard augmentation (Albumentations)...")
+                    cmd = [sys.executable, "-u", "core/augmentation_albumentations.py",
                           "--num_aug", str(num_aug),
                           "--target", target]
                     

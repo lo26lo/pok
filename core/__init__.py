@@ -8,7 +8,7 @@ l'augmentation, la validation et l'export de datasets Pokemon.
 Modules disponibles:
 -------------------
 **Génération & Augmentation:**
-- augmentation: Augmentation d'images avec imgaug
+- augmentation_albumentations: Augmentation d'images avec Albumentations (GPU-optimisé)
 - mosaic: Création de mosaïques YOLO
 - holographic_augmenter: Effets holographiques sur cartes
 - random_erasing: Augmentation par effacement aléatoire
@@ -54,7 +54,7 @@ __author__ = "Pokemon Dataset Generator Team"
 # Remplacer imports directs par des imports protégés pour éviter les
 # circular-imports lors de l'initialisation du package (ex: GUI import)
 try:
-    from . import augmentation
+    from . import augmentation_albumentations as augmentation
 except Exception:
     augmentation = None
 

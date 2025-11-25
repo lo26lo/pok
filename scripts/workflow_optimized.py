@@ -93,8 +93,8 @@ def main():
     
     # ÉTAPE 2: Augmentation standard (depuis images ORIGINALES, pas holo)
     if not run_command(
-        f'{python_exe} core/augmentation_optimized.py --num_aug {num_augmentations} --source images --target augmented',
-        f"ÉTAPE 2/5 - Augmentation standard OPTIMISÉE ({num_augmentations} par image)"
+        f'{python_exe} core/augmentation_albumentations.py --num_aug {num_augmentations} --source images --target augmented',
+        f"ÉTAPE 2/5 - Augmentation Albumentations ({num_augmentations} par image)"
     ):
         return False
     

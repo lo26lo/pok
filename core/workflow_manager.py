@@ -254,7 +254,7 @@ class WorkflowManager:
         try:
             cmd = [
                 sys.executable, 
-                "core/augmentation_optimized.py",
+                "core/augmentation_albumentations.py",
                 "--num_aug", str(self.config.num_augmentations),
                 "--source", "images",  # Augmenter depuis images originales
                 "--target", "augmented"
