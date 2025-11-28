@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.1] - 2025-11-28
+
+### 🤖 Jetson Orin AGX 32GB Support
+
+**NEW**: Complete support for NVIDIA Jetson Orin AGX 32GB edge AI platform.
+
+#### New System Profile
+- **"🤖 Jetson: Orin AGX 32GB"** added to System Config dropdown
+- Optimized defaults for unified memory architecture (32GB shared CPU/GPU)
+- Workers reduced to 2 (ARM CPU optimization)
+- Disk cache recommended (preserves unified memory)
+
+#### New Training Presets for Jetson
+
+| Preset | Model | ImgSize | Batch | Epochs | Use Case |
+|--------|-------|---------|-------|--------|----------|
+| ⚡ Fast & Efficient | yolov8n | 416 | 16 | 50 | Standard edge |
+| ⚖️ Balanced | yolov8n | 512 | 12 | 50 | Balanced |
+| 🎯 High Quality | yolov8s | 640 | 8 | 100 | Max accuracy |
+| 🚀 **Jetson Realtime** | yolov8n | 320 | 24 | 30 | **>60 FPS inference** |
+| 🤖 **Jetson Optimized** | yolov8n | 480 | 16 | 80 | **Best trade-off Orin** |
+
+#### Export for Jetson
+- **New button**: "🚀 Export for Jetson (TensorRT)" in Training view
+- Export formats:
+  - **TensorRT Engine** (.engine) - Optimal for Jetson, 2-3x speedup
+  - **ONNX** (.onnx) - Portable format
+  - **TorchScript** (.torchscript) - PyTorch native
+- Options:
+  - **FP16 (Half precision)** - Recommended for Jetson
+  - **INT8 Quantization** - Maximum speed (requires calibration)
+  - **Dynamic batch size**
+
+#### UI Updates
+- Added 480px image size option (optimal for Jetson)
+- Updated Training Presets combobox with Jetson-specific options
+
+---
+
 ## [3.4.0] - 2025-11-25
 
 ### 🚀 Migration imgaug → Albumentations

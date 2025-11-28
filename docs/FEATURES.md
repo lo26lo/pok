@@ -42,6 +42,8 @@ Train a powerful YOLOv8 model on your custom dataset and use it for live detecti
 -   **One-Click Training**: Configure and launch training for YOLOv8 or YOLOv11 models with a single click.
 -   **Real-time Metrics**: Monitor training progress with live charts for mAP, precision, recall, and loss.
 -   **Live Detection**: Use your trained model for real-time detection via webcam, video file, or static images.
+-   **System Profiles**: Pre-configured profiles for Desktop, Laptop, and **Jetson Orin AGX 32GB**.
+-   **Jetson Export**: Export models to **TensorRT** for optimized edge inference (2-3x speedup).
 
 > **➡️ [Learn more in the detailed Training and Detection guide](./features/3_TRAINING_AND_DETECTION.md)**
 
@@ -59,5 +61,5 @@ Integrate real-time market prices directly into the detection process, providing
 
 ---
 
-**Last Updated**: November 14, 2025
-**Version**: 3.2.0
+**Last Updated**: November 28, 2025
+**Version**: 3.4.1

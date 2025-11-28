@@ -4392,7 +4392,8 @@ class ModernPokemonGUI:
         self.train_system_var = ttk.Combobox(system_frame,
             values=[
                 "🖥️ Desktop: 5800X3D + 5070 Ti 16GB",
-                "💼 Laptop: Ryzen AI 7 350 + 5070 8GB"
+                "💼 Laptop: Ryzen AI 7 350 + 5070 8GB",
+                "🤖 Jetson: Orin AGX 32GB"
             ],
             state='readonly', width=35)
         self.train_system_var.pack(side=tk.LEFT, padx=10)
@@ -4412,7 +4413,9 @@ class ModernPokemonGUI:
                 "Custom",
                 "⚡ Fast & Efficient",
                 "⚖️ Balanced", 
-                "🎯 High Quality"
+                "🎯 High Quality",
+                "🚀 Jetson Realtime",
+                "🤖 Jetson Optimized"
             ],
             state='readonly', width=30)
         self.train_preset_var.pack(side=tk.LEFT, padx=10)
@@ -4496,10 +4499,10 @@ class ModernPokemonGUI:
                 font=self.FONT_BUTTON, width=12, anchor='w').pack(side=tk.LEFT)
         
         self.train_imgsz_var = ttk.Combobox(imgsz_frame,
-            values=["320", "416", "512", "640", "800", "1024"],
+            values=["320", "416", "480", "512", "640", "800", "1024"],
             state='readonly', width=self.COMBOBOX_WIDTH)
         self.train_imgsz_var.pack(side=tk.LEFT, padx=10)
-        self.train_imgsz_var.current(3)  # 640 default
+        self.train_imgsz_var.current(4)  # 640 default
         
         # V3.1: Accordion pour paramètres avancés (Workers, Cache, Patience)
         def create_advanced_basic_content(parent):
@@ -4599,6 +4602,10 @@ class ModernPokemonGUI:
         ttk.Button(btn_frame, text="📊 View Results",
                   command=self.show_training_plots,
                   width=30).pack(pady=5)
+        
+        ttk.Button(btn_frame, text="🚀 Export for Jetson (TensorRT)",
+                  command=self.export_tensorrt,
+                  width=30).pack(pady=5)
     
     def update_training_presets(self, event=None):
         """Mettre à jour les paramètres par défaut selon la config système"""
@@ -4630,6 +4637,20 @@ class ModernPokemonGUI:
             self.train_workers_var.insert(0, "4")
             self.train_cache_var.set("disk")  # Cache disk pour économiser RAM
             self.log("💻 Profil Laptop appliqué - Batch=16, ImgSz=512, Cache=Disk")
+            
+        elif system == "🤖 Jetson: Orin AGX 32GB":
+            # Defaults pour Jetson Orin AGX: mémoire unifiée 32GB, GPU Ampere intégré
+            # Optimisé pour edge AI avec mémoire partagée CPU/GPU
+            self.train_model_var.current(0)  # yolov8n.pt (optimal pour Jetson)
+            self.train_epochs_var.delete(0, tk.END)
+            self.train_epochs_var.insert(0, "50")
+            self.train_batch_var.delete(0, tk.END)
+            self.train_batch_var.insert(0, "16")  # Batch modéré (mémoire unifiée)
+            self.train_imgsz_var.set("640")  # 640 supporté avec 32GB
+            self.train_workers_var.delete(0, tk.END)
+            self.train_workers_var.insert(0, "2")  # Workers réduits (ARM CPU)
+            self.train_cache_var.set("disk")  # Disk cache (mémoire unifiée partagée)
+            self.log("🤖 Profil Jetson Orin AGX 32GB appliqué - Batch=16, Workers=2, Cache=Disk")
         
         # Réinitialiser le preset à Custom
         self.train_preset_var.set("Custom")
@@ -4691,6 +4712,89 @@ class ModernPokemonGUI:
                 self.train_patience_var.delete(0, tk.END)
                 self.train_patience_var.insert(0, "20")
                 self.log("✅ Desktop High Quality: s/640/cosine - Early Stop activé")
+        
+        # Jetson Orin AGX 32GB (mémoire unifiée, GPU Ampere intégré)
+        elif "Jetson" in system or "Orin" in system:
+            if preset == "⚡ Fast & Efficient":
+                # yolov8n.pt, 416px, batch 16, 50 epochs - Optimisé inférence edge
+                self.train_model_var.current(0)  # yolov8n.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "50")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "16")
+                self.train_imgsz_var.set("416")  # Plus rapide pour edge
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "2")  # ARM CPU - workers limités
+                self.train_cache_var.set("disk")  # Préserve mémoire unifiée
+                self.train_cosine_var.set(False)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "50")
+                self.log("✅ Jetson Fast: n/416/16 - Optimisé edge AI")
+                
+            elif preset == "⚖️ Balanced":
+                # yolov8n.pt, 512px, batch 12, 50 epochs - Équilibre edge
+                self.train_model_var.current(0)  # yolov8n.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "50")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "12")
+                self.train_imgsz_var.set("512")
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "2")  # ARM CPU
+                self.train_cache_var.set("disk")
+                self.train_cosine_var.set(False)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "50")
+                self.log("✅ Jetson Balanced: n/512/12 - Équilibre précision/vitesse")
+                
+            elif preset == "🎯 High Quality":
+                # yolov8s.pt, 640px, batch 8, 100 epochs - Max qualité Jetson
+                self.train_model_var.current(1)  # yolov8s.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "100")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "8")  # Batch réduit pour s
+                self.train_imgsz_var.set("640")  # Résolution max
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "2")  # ARM CPU
+                self.train_cache_var.set("disk")
+                self.train_cosine_var.set(True)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "20")
+                self.log("✅ Jetson High Quality: s/640/8/cosine - Max qualité edge")
+                
+            elif preset == "🚀 Jetson Realtime":
+                # yolov8n.pt, 320px, batch 24, 30 epochs - Optimisé FPS max (>60 FPS)
+                self.train_model_var.current(0)  # yolov8n.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "30")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "24")
+                self.train_imgsz_var.set("320")  # Petite taille = FPS max
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "2")
+                self.train_cache_var.set("disk")
+                self.train_cosine_var.set(False)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "30")
+                self.log("✅ Jetson Realtime: n/320/24 - Optimisé >60 FPS, export TensorRT recommandé")
+                
+            elif preset == "🤖 Jetson Optimized":
+                # yolov8n.pt, 480px, batch 16, 80 epochs - Best trade-off Orin AGX
+                # Optimisé pour mémoire unifiée 32GB avec cosine LR
+                self.train_model_var.current(0)  # yolov8n.pt
+                self.train_epochs_var.delete(0, tk.END)
+                self.train_epochs_var.insert(0, "80")
+                self.train_batch_var.delete(0, tk.END)
+                self.train_batch_var.insert(0, "16")
+                self.train_imgsz_var.set("480")  # Bon compromis taille/vitesse
+                self.train_workers_var.delete(0, tk.END)
+                self.train_workers_var.insert(0, "2")
+                self.train_cache_var.set("disk")
+                self.train_cosine_var.set(True)
+                self.train_patience_var.delete(0, tk.END)
+                self.train_patience_var.insert(0, "25")
+                self.log("✅ Jetson Optimized: n/480/16/cosine - Meilleur compromis Orin AGX 32GB")
         
         # Laptop: Ryzen AI 7 350 + 5070 8GB (8GB VRAM - batch réduit)
         else:
@@ -6286,6 +6390,186 @@ Continuer ?"""
                 self.end_operation()
         
         threading.Thread(target=task, daemon=True).start()
+    
+    def export_tensorrt(self):
+        """Exporter le modèle en TensorRT pour déploiement Jetson"""
+        try:
+            from ultralytics import YOLO
+        except ImportError:
+            messagebox.showerror("Erreur", 
+                "Package ultralytics non installé!\n\n"
+                "Installation: pip install ultralytics")
+            return
+        
+        # Chercher le modèle best.pt
+        model_path = Path(PATHS['directories']['train_output']) / "weights" / "best.pt"
+        
+        if not model_path.exists():
+            # Demander à l'utilisateur de sélectionner un modèle
+            model_path = filedialog.askopenfilename(
+                title="Sélectionner le modèle à exporter",
+                filetypes=[("PyTorch Model", "*.pt")],
+                initialdir=PATHS['directories']['train_base']
+            )
+            if not model_path:
+                return
+            model_path = Path(model_path)
+        
+        # Demander le format d'export
+        export_dialog = tk.Toplevel(self.root)
+        export_dialog.title("🚀 Export pour Jetson")
+        export_dialog.geometry("450x400")
+        export_dialog.configure(bg=self.colors['bg_dark'])
+        export_dialog.transient(self.root)
+        export_dialog.grab_set()
+        
+        # Centrer la fenêtre
+        export_dialog.update_idletasks()
+        x = (export_dialog.winfo_screenwidth() // 2) - (225)
+        y = (export_dialog.winfo_screenheight() // 2) - (200)
+        export_dialog.geometry(f"+{x}+{y}")
+        
+        tk.Label(export_dialog, 
+                text="🚀 Export Modèle pour Jetson Orin",
+                font=self.FONT_HEADER,
+                bg=self.colors['bg_dark'],
+                fg=self.colors['text']).pack(pady=20)
+        
+        tk.Label(export_dialog,
+                text=f"Modèle: {model_path.name}",
+                font=self.FONT_TEXT,
+                bg=self.colors['bg_dark'],
+                fg=self.colors['text_dim']).pack(pady=5)
+        
+        # Format selection
+        format_frame = tk.Frame(export_dialog, bg=self.colors['bg_dark'])
+        format_frame.pack(pady=20, fill=tk.X, padx=30)
+        
+        tk.Label(format_frame, text="Format d'export:",
+                font=self.FONT_BUTTON,
+                bg=self.colors['bg_dark'],
+                fg=self.colors['text']).pack(anchor='w')
+        
+        format_var = tk.StringVar(value="engine")
+        
+        formats = [
+            ("engine", "🚀 TensorRT Engine (.engine) - Optimal Jetson"),
+            ("onnx", "📦 ONNX (.onnx) - Portable"),
+            ("torchscript", "🔥 TorchScript (.torchscript) - PyTorch natif")
+        ]
+        
+        for fmt, desc in formats:
+            tk.Radiobutton(format_frame, text=desc,
+                          variable=format_var, value=fmt,
+                          bg=self.colors['bg_dark'],
+                          fg=self.colors['text'],
+                          selectcolor=self.colors['bg_card'],
+                          activebackground=self.colors['bg_dark'],
+                          font=self.FONT_TEXT).pack(anchor='w', pady=3)
+        
+        # Options TensorRT
+        options_frame = tk.Frame(export_dialog, bg=self.colors['bg_dark'])
+        options_frame.pack(pady=10, fill=tk.X, padx=30)
+        
+        tk.Label(options_frame, text="Options TensorRT:",
+                font=self.FONT_BUTTON,
+                bg=self.colors['bg_dark'],
+                fg=self.colors['text']).pack(anchor='w')
+        
+        half_var = tk.BooleanVar(value=True)
+        tk.Checkbutton(options_frame, text="✓ FP16 (Half precision) - Recommandé Jetson",
+                      variable=half_var,
+                      bg=self.colors['bg_dark'],
+                      fg=self.colors['text'],
+                      selectcolor=self.colors['bg_card'],
+                      font=self.FONT_TEXT).pack(anchor='w')
+        
+        int8_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(options_frame, text="✓ INT8 Quantization - Max vitesse (nécessite calibration)",
+                      variable=int8_var,
+                      bg=self.colors['bg_dark'],
+                      fg=self.colors['text'],
+                      selectcolor=self.colors['bg_card'],
+                      font=self.FONT_TEXT).pack(anchor='w')
+        
+        dynamic_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(options_frame, text="✓ Dynamic batch size",
+                      variable=dynamic_var,
+                      bg=self.colors['bg_dark'],
+                      fg=self.colors['text'],
+                      selectcolor=self.colors['bg_card'],
+                      font=self.FONT_TEXT).pack(anchor='w')
+        
+        # Info Jetson
+        info_label = tk.Label(export_dialog,
+            text="💡 Pour Jetson Orin AGX:\n"
+                 "• TensorRT FP16 offre 2-3x speedup\n"
+                 "• Exécuter l'export SUR le Jetson pour compatibilité\n"
+                 "• Ou exporter ONNX ici, puis convertir sur Jetson",
+            font=('Segoe UI', 9),
+            bg=self.colors['bg_dark'],
+            fg='#F9E2AF',
+            justify='left')
+        info_label.pack(pady=10, padx=30, anchor='w')
+        
+        def do_export():
+            export_dialog.destroy()
+            fmt = format_var.get()
+            self.log(f"🚀 Export {model_path.name} vers {fmt.upper()}...")
+            self.start_operation(f"Export {fmt.upper()}")
+            
+            def export_task():
+                try:
+                    model = YOLO(str(model_path))
+                    
+                    # Paramètres d'export
+                    export_kwargs = {
+                        'format': fmt,
+                        'half': half_var.get() if fmt == 'engine' else False,
+                        'int8': int8_var.get() if fmt == 'engine' else False,
+                        'dynamic': dynamic_var.get(),
+                        'simplify': True,  # Simplifier le graphe ONNX
+                    }
+                    
+                    self.log(f"   Format: {fmt}")
+                    self.log(f"   FP16: {export_kwargs.get('half', False)}")
+                    self.log(f"   INT8: {export_kwargs.get('int8', False)}")
+                    
+                    export_path = model.export(**export_kwargs)
+                    
+                    self.log(f"✅ Export réussi!")
+                    self.log(f"📁 Fichier: {export_path}")
+                    self.log("")
+                    self.log("📋 Pour déployer sur Jetson Orin AGX:")
+                    self.log("   1. Copier le fichier sur le Jetson")
+                    self.log("   2. from ultralytics import YOLO")
+                    self.log(f"   3. model = YOLO('{Path(export_path).name}')")
+                    self.log("   4. results = model.predict(source=0)  # Webcam")
+                    
+                    messagebox.showinfo("Export réussi",
+                        f"Modèle exporté:\n{export_path}\n\n"
+                        "Copiez ce fichier sur votre Jetson Orin AGX.")
+                    
+                except Exception as e:
+                    self.log(f"❌ Erreur export: {e}")
+                    messagebox.showerror("Erreur", f"Export échoué:\n{e}")
+                finally:
+                    self.end_operation()
+            
+            threading.Thread(target=export_task, daemon=True).start()
+        
+        # Buttons
+        btn_frame = tk.Frame(export_dialog, bg=self.colors['bg_dark'])
+        btn_frame.pack(pady=20)
+        
+        ttk.Button(btn_frame, text="🚀 Exporter",
+                  command=do_export,
+                  style='Accent.TButton',
+                  width=15).pack(side=tk.LEFT, padx=5)
+        
+        ttk.Button(btn_frame, text="Annuler",
+                  command=export_dialog.destroy,
+                  width=15).pack(side=tk.LEFT, padx=5)
     
     def show_training_plots(self):
         """Afficher les graphiques d'entraînement"""
