@@ -164,7 +164,7 @@ obsolete/           → anciens fichiers conservés dans le repo
 - [x] `pytest` local : 71 passés, 1 skip, 0 échec (~3 s)
 - [x] `ruff check .` : 0 erreur sur tout le dépôt
 - [x] `pip install -e .` : métadonnées OK (v3.4.3→3.5.0)
-- [ ] CI verte sur GitHub (à confirmer après le push)
+- [x] CI verte sur GitHub — run #1 : 5/5 jobs verts (lint ruff + tests Ubuntu/Windows × py3.11/3.12, pytest en ~5-7 s par job)
 
 ---
 
