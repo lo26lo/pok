@@ -1931,6 +1931,4 @@ def ensure_dir(path: Path):
 - **USER_GUIDE.md** : Guide utilisateur complet (8700 lignes)
 - **API_REFERENCE.md** : Référence API détaillée
 - **FAQ.md** : Questions fréquentes
-- **docs/new/guides/** : Guides spécialisés
-- **docs/new/technical/** : Documentation technique approfondie
 

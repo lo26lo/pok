@@ -153,7 +153,7 @@ class MosaicGeneratorOptimized:
                 import shutil
                 shutil.move(str(img_file), str(dest_path))
                 safe_print(f"⚠️ Erreur sur {img_file.name} (déplacée dans corrupted/): {e}")
-            except:
+            except Exception:
                 safe_print(f"⚠️ Erreur chargement {img_path}: {e}")
             
             return None

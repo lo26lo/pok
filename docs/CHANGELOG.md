@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.3] - 2026-07-04
+
+### 🧹 Phase 2 : Nettoyage — code mort, doc consolidée, scripts fusionnés
+
+#### Code mort supprimé
+- `obsolete/` (12+ fichiers archivés dans l'historique git), `README_old.md`
+- `core/augmentation_optimized.py` (imgaug, remplacé par Albumentations en v3.4,
+  import cassé depuis le retrait d'imgaug des requirements)
+- `core/detection_with_prices.py` + `tests/test_detection_prices.py`
+  (remplacés par `core/detection_manager.py`)
+
+#### Scripts consolidés (R7)
+- Supprimés : `init_prices_simple.py`, `init_prices_real.py` (codés en dur pour
+  l'ancien dataset 8 cartes sv08), `fix_class_mapping.py`, `fix_class_mapping_correct.py`
+  (correctifs one-shot rendus inutiles par le mapping unifié de la v3.4.2),
+  `create_real_mapping.py`
+- `update_prices_yaml_fast.py` devient LE `update_prices_yaml.py` (requêtes parallèles)
+- `init_prices.py` : fin de fichier corrompue réparée (le script ne compilait pas),
+  chemins résolus via `__file__`
+- `create_card_mapping.py` **réécrit générique** : génère `models/card_name_to_id.json`
+  depuis `cards_database.yaml` (plus de mapping codé en dur) ; fichier régénéré pour
+  la base actuelle (155 cartes xyp au lieu de 8 cartes sv08 périmées)
+- Utilitaires `debug_*`, `visualize_*`, `verify_*`, `check_corrupted_images` déplacés
+  de `tests/` vers `tools/diagnostics/` (tests/ ne contient plus que de vrais tests)
+
+#### Documentation consolidée
+- `docs/new/` promu dans `docs/` : USER_GUIDE, INSTALLATION, FAQ, TECHNICAL_GUIDE,
+  API_REFERENCE, ADVANCED (les doublons FEATURES/CHANGELOG périmés de new/ supprimés)
+- `docs/migration/` et `CHANGELOG_v3.2.3.md` déplacés vers `docs/archive/`
+- README racine : version v3.4, liens cassés corrigés (`README_COMPLET.md`,
+  `GUI_V3_GUIDE.md`, `MAINTENANCE_SCRIPTS_REFERENCE.md` n'existaient plus),
+  mention imgaug → Albumentations, liens CONTRIBUTING/LICENSE inexistants retirés
+- Tous les liens locaux de README.md, docs/README.md et docs/FEATURES.md vérifiés
+
+#### Robustesse
+- 23 `except:` nus remplacés par `except Exception:` (core + GUI) — un except nu
+  avale aussi KeyboardInterrupt/SystemExit
+- `images/.gitkeep` ajouté (le dossier existe désormais dans un clone frais)
+- `tests/test_project_integrity.py` mis à jour (7/7) et `SCRIPTS_REFERENCE.py`
+  recatalogué
+
+---
+
 ## [3.4.2] - 2026-07-04
 
 ### 🐛 Phase 1 : Corrections de bugs & fiabilité (plan `.planning/2026-07-04`)

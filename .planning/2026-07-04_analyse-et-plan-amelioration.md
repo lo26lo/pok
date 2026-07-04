@@ -132,17 +132,21 @@ obsolete/           → anciens fichiers conservés dans le repo
 ---
 
 ### Phase 2 : Nettoyage (code mort + doc)
-**Statut** : ⏳ À faire — **Effort : ~½ journée**
+**Statut** : ✅ Terminé (2026-07-04)
 
 **Actions** :
-- [ ] Supprimer `obsolete/`, `README_old.md`, `core/augmentation_optimized.py` (imgaug), `core/detection_with_prices.py` (après vérif qu'aucun script ne l'importe)
-- [ ] Consolider la doc : `docs/new/` devient la doc officielle, `docs/archive/` conservé, supprimer les doublons
-- [ ] Corriger les liens cassés du README + mettre à jour version (v3.4) et mention Albumentations
-- [ ] Remplacer les `except:` nus par des exceptions ciblées + log
+- [x] Supprimé `obsolete/`, `README_old.md`, `core/augmentation_optimized.py` (imgaug), `core/detection_with_prices.py` + son test dédié
+- [x] Doc consolidée : `docs/new/*` promu dans `docs/` (USER_GUIDE, INSTALLATION, FAQ, TECHNICAL_GUIDE, API_REFERENCE, ADVANCED), doublons FEATURES/CHANGELOG de new/ supprimés, `docs/migration/` + `CHANGELOG_v3.2.3.md` → `docs/archive/`
+- [x] README racine : v3.4, liens cassés corrigés, imgaug → Albumentations, hub de doc réécrit
+- [x] 23 `except:` nus → `except Exception:` (core + GUI)
+- [x] R7 : scripts fusionnés — `update_prices_yaml_fast` devient `update_prices_yaml`, `init_prices.py` réparé (fin corrompue, ne compilait pas), `create_card_mapping.py` réécrit générique (+ `card_name_to_id.json` régénéré : 155 cartes xyp au lieu de 8 sv08 périmées), 5 scripts one-shot supprimés
+- [x] R7 : `debug_*`/`visualize_*`/`verify_*` déplacés vers `tools/diagnostics/`
+- [x] `SCRIPTS_REFERENCE.py` + `test_project_integrity.py` + `test_workflow_simulation.py` mis à jour
 
 **Validation** :
-- [ ] `grep -rn "detection_with_prices\|augmentation_optimized"` → 0 référence active
-- [ ] Tous les liens du README résolvent
+- [x] `grep detection_with_prices|augmentation_optimized|init_prices_simple…` → 0 référence active
+- [x] Liens locaux de README.md, docs/README.md, docs/FEATURES.md : 0 cassé (vérif scriptée)
+- [x] `test_project_integrity.py` : 7/7 ; `test_refactoring.py` : 5/5 ; tous les .py compilent
 
 ---
 

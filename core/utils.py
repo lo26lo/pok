@@ -86,7 +86,7 @@ def load_ui_messages(language: str = 'fr') -> Dict:
             try:
                 with open(config_path, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except Exception:
                 pass  # Fallback to French
     
     # Default: French version

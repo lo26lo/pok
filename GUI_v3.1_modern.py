@@ -1512,7 +1512,7 @@ class SettingsDialog:
         try:
             from core.image_downloader import LANGUAGES
             lang_choices = list(LANGUAGES.keys())
-        except:
+        except Exception:
             lang_choices = ["English", "Français", "Deutsch", "Italiano", "Español"]
         
         lang_combo = ttk.Combobox(
@@ -2392,7 +2392,7 @@ class ModernPokemonGUI:
         """Obtenir le nombre de lignes de logs"""
         try:
             return int(self.log_text.index('end-1c').split('.')[0]) - 1
-        except:
+        except Exception:
             return 0
     
     def show_view(self, view_id):
@@ -3000,7 +3000,7 @@ class ModernPokemonGUI:
                 self.dashboard_cards['activity_speed'] = speed_label
             else:
                 tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
-        except:
+        except Exception:
             tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
     
     def create_recommendations_card(self, parent, row, col):
@@ -3197,7 +3197,7 @@ class ModernPokemonGUI:
             )
             ratio_label.pack(anchor='w', padx=12, pady=(0, 8))
             self.dashboard_cards['progress_ratio'] = ratio_label
-        except:
+        except Exception:
             tk.Frame(card, bg=self.colors['bg_card'], height=8).pack()
     
     def create_system_card(self, parent, row, col):
@@ -3267,7 +3267,7 @@ class ModernPokemonGUI:
                 self.dashboard_cards['system_performance'] = perf_label
             else:
                 tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
-        except:
+        except Exception:
             tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
     
     def create_preview_card(self, parent, row, col):
@@ -3389,7 +3389,7 @@ class ModernPokemonGUI:
                         bg=self.colors['bg_card'],
                         fg=self.colors['text']
                     ).pack(anchor='w', padx=12, pady=2)
-            except:
+            except Exception:
                 tk.Label(card,
                     text="📄 Rapport disponible",
                     font=('Segoe UI', 7),
@@ -3431,7 +3431,7 @@ class ModernPokemonGUI:
                     bg=self.colors['bg_card'],
                     fg=self.colors['text_dim']
                 ).pack(anchor='w', padx=12, pady=(0, 5))
-            except:
+            except Exception:
                 tk.Frame(card, bg=self.colors['bg_card'], height=8).pack()
         else:
             # Pas de rapport
@@ -3746,7 +3746,7 @@ class ModernPokemonGUI:
             try:
                 from core.image_downloader import POPULAR_SETS
                 set_choices = [f"{name} ({sid})" for name, sid in POPULAR_SETS]
-            except:
+            except Exception:
                 set_choices = ["Surging Sparks (sv08)", "Stellar Crown (sv07)"]
         
         self.download_set_var = ttk.Combobox(set_frame,
@@ -3768,7 +3768,7 @@ class ModernPokemonGUI:
         try:
             from core.image_downloader import LANGUAGES
             lang_choices = list(LANGUAGES.keys())
-        except:
+        except Exception:
             lang_choices = ["English", "Français", "Deutsch", "Italiano", "Español"]
         
         self.download_lang_var = ttk.Combobox(lang_frame,
@@ -3880,7 +3880,7 @@ class ModernPokemonGUI:
                 stats_text += f" | Total: {total_generated} ({ratio:.1f}x)"
             
             return stats_text
-        except:
+        except Exception:
             return "📊 Unable to read statistics"
     
     def refresh_augmentation_stats(self):
@@ -3893,7 +3893,7 @@ class ModernPokemonGUI:
                         new_stats = self.get_augmentation_stats()
                         child.config(text=new_stats)
                         break
-            except:
+            except Exception:
                 pass
             # Programmer le prochain rafraîchissement
             self.root.after(2000, self.refresh_augmentation_stats)
@@ -4036,7 +4036,7 @@ class ModernPokemonGUI:
                 stats_text = f"📊 Current: {count} fake images generated"
             else:
                 stats_text = "📊 No fake images generated yet"
-        except:
+        except Exception:
             stats_text = "📊 Unable to read statistics"
         
         self.create_info_tooltip(container,
@@ -5602,7 +5602,7 @@ class ModernPokemonGUI:
                 else:
                     return f"{speed*60:.1f} img/h"
             return None
-        except:
+        except Exception:
             return None
     
     def get_detailed_ratio(self):
@@ -5621,7 +5621,7 @@ class ModernPokemonGUI:
             mosaic_ratio = mosaics / source if source > 0 else 0
             
             return f"📊 Ratio: 1:{aug_ratio:.1f}:{mosaic_ratio:.1f} (Orig:Aug:Mos)"
-        except:
+        except Exception:
             return "📊 Ratio: N/A"
     
     def get_performance_info(self):
@@ -5635,14 +5635,14 @@ class ModernPokemonGUI:
                     gpu_name = torch.cuda.get_device_name(0)
                     gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3
                     return f"⚡ {gpu_name[:15]}... ({gpu_memory:.0f}GB)"
-            except:
+            except Exception:
                 pass
             
             # Si pas de GPU, info CPU
             import multiprocessing
             cpu_count = multiprocessing.cpu_count()
             return f"⚡ CPU: {cpu_count} cores"
-        except:
+        except Exception:
             return None
     
     def get_last_activity(self):
@@ -7139,7 +7139,7 @@ Continuer ?"""
             layout_val = int(self.mosaic_layout_var.get().split(' - ')[0])
             background_val = int(self.mosaic_background_var.get().split(' - ')[0])
             transform_val = int(self.mosaic_transform_var.get().split(' - ')[0])
-        except:
+        except Exception:
             layout_val = 1
             background_val = 0  # Fixed: Default to mode 0 (Fake Cards Mosaic)
             transform_val = 0
@@ -8308,7 +8308,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 try:
                     with open('api_config.json', 'r') as f:
                         api_config = json.load(f)
-                except:
+                except Exception:
                     api_config = {"tcgdex": {"language": "en"}}
                 
                 tcgdex_config = api_config.get("tcgdex", {})
@@ -8494,7 +8494,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         try:
             with open('api_config.json', 'r') as f:
                 api_config = json.load(f)
-        except:
+        except Exception:
             api_config = {"tcgdex": {"language": "en"}}
         
         self.log(f"💰 Updating prices from: {input_file}")
@@ -8647,7 +8647,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 try:
                     with open('api_config.json', 'r') as f:
                         api_config = json.load(f)
-                except:
+                except Exception:
                     api_config = {"tcgdex": {"language": "en"}}
                 
                 tcgdex_config = api_config.get("tcgdex", {})

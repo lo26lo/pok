@@ -8,13 +8,16 @@ import json
 from pathlib import Path
 from datetime import datetime
 import sys
-sys.path.append('.')
+
+# Racine du projet résolue depuis ce fichier (indépendant du CWD)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from core.tcgdex_api import TCGdexAPI
 
 # Charger paths depuis config
 def load_paths():
-    config_path = Path("config/paths.json")
+    config_path = PROJECT_ROOT / "config" / "paths.json"
     with open(config_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
@@ -147,10 +150,6 @@ if __name__ == "__main__":
         print(f"\n❌ Erreur: {e}")
         import traceback
         traceback.print_exc()
-    
-    print()
-    input("Appuyez sur Entrée pour quitter...")
-        traceback.print_exc()
-    
+
     print()
     input("Appuyez sur Entrée pour quitter...")
