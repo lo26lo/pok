@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+<<<<<<< HEAD
 ## [Unreleased]
 
 ### ✨ Backlog F05 : mains plus réalistes dans les mosaïques
@@ -243,6 +244,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 17 nouveaux tests (`tests/test_background_generator.py`) —
   suite complète : 96 passés, 0 échec
 - Suivi : `docs/JOURNAL_FEATURES.md` (journal des features F01–F10)
+
+## [3.7.0] - 2026-07-04
+
+### 🖥️ Nouvelle interface Qt (PySide6) — thème clair/sombre
+
+#### Package `gui_qt/` (~2 300 lignes, remplace les ~7 100 lignes Tkinter)
+- `app.py` : fenêtre principale — sidebar de navigation (11 vues),
+  vues empilées, dock de logs, barre de statut avec progression + Stop
+- `theme.py` : **thème sombre (Catppuccin Mocha, identique à l'historique)
+  ET thème clair (Catppuccin Latte)**, commutables à chaud, persistés
+- `bridge.py` : QtTaskBridge — le TaskRunner (Phase 4) branché sur des
+  signaux Qt, thread-safe nativement (plus de file manuelle)
+- `views/` : un module par écran — home (stats + workflow auto), download
+  (TCGdex + régénération auto de la base), augmentation (+ pipeline holo),
+  mosaïques, validation & merge, export, training (presets Jetson inclus,
+  export ONNX/TensorRT), détection (webcam/image/dossier + prix), fake
+  images, tools, settings (7 onglets déclaratifs sur GuiConfig)
+- `GUI_qt.py` : point d'entrée
+
+#### Partage de code
+- `core/manifest_tools.py` : génération de cards_database.yaml depuis le
+  manifest extraite du GUI Tkinter — partagée par les deux interfaces
+- Le fichier `gui_config.json` est commun aux deux GUIs (mêmes clés)
+
+#### Lanceurs
+- `START.bat` et `start.sh` lancent l'interface Qt
+- Interface Tkinter conservée en secours : `START_LEGACY.bat` /
+  `start.sh --legacy` (suppression prévue après validation sur poste réel)
+
+#### Tests & CI
+- 7 tests pytest-qt exécutés **offscreen y compris en CI**
+  (navigation, thèmes, bridge succès/échec/état busy, settings roundtrip)
+- CI : PySide6 + pytest-qt installés, `QT_QPA_PLATFORM=offscreen`,
+  bibliothèques Qt ajoutées au runner Linux
+- Extra pip `[gui-qt]` (pyside6) dans pyproject
+
+---
 
 ## [3.6.0] - 2026-07-04
 

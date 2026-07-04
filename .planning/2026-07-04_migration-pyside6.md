@@ -1,7 +1,7 @@
 # 📋 Planification : Migration GUI Tkinter → PySide6 (Qt)
 
 **Date de création** : 2026-07-04
-**Statut** : 🟡 Plan soumis pour validation — aucun code modifié
+**Statut** : ✅ Q0-Q4 implémentés (2026-07-04) — Tkinter conservé en secours jusqu'à validation sur poste Windows
 **Priorité** : Moyenne (confort/pérennité, pas un correctif)
 
 ---
@@ -54,22 +54,22 @@ SettingsDialog de 1 650 lignes).
 ## 📝 Planification par étapes
 
 ### Étape Q0 : Socle applicatif
-**Statut** : ⏳ À faire — **Effort : ~½ journée**
+**Statut** : ✅ Terminé — **Effort : ~½ journée**
 
-- [ ] Dépendance `pyside6` (extra `[gui-qt]` dans pyproject) + `pytest-qt` en dev
-- [ ] `gui_qt/app.py` : QMainWindow, sidebar de navigation (QListWidget),
+- [x] Dépendance `pyside6` (extra `[gui-qt]` dans pyproject) + `pytest-qt` en dev
+- [x] `gui_qt/app.py` : QMainWindow, sidebar de navigation (QListWidget),
   `QStackedWidget` pour les vues, panneau de log dockable (QPlainTextEdit),
   barre de statut avec progression + bouton Stop
-- [ ] `gui_qt/theme.py` : feuille QSS générée depuis `gui/theme.COLORS`
+- [x] `gui_qt/theme.py` : feuille QSS générée depuis `gui/theme.COLORS`
   (palette Catppuccin conservée)
-- [ ] `gui_qt/bridge.py` : `QtTaskBridge` — adapte TaskRunner à Qt
+- [x] `gui_qt/bridge.py` : `QtTaskBridge` — adapte TaskRunner à Qt
   (log → signal `logged(str)`, ui_dispatch → signal `dispatched(object)`)
-- [ ] Test pytest-qt : lancement offscreen, navigation, log streamé
+- [x] Test pytest-qt : lancement offscreen, navigation, log streamé
 
 **Validation** : fenêtre vide navigable + logs TaskRunner visibles, test CI vert
 
 ### Étape Q1 : Vues « simples » (peu de logique)
-**Statut** : ⏳ À faire — **Effort : ~1 journée**
+**Statut** : ✅ Terminé — **Effort : ~1 journée**
 
 - [ ] Home/Dashboard (stats + dernière activité)
 - [ ] Validation, Export, Tools (boutons → TaskRunner, déjà générique)
@@ -78,7 +78,7 @@ SettingsDialog de 1 650 lignes).
 **Validation** : chaque vue déclenche sa commande réelle (test sur mini-dataset)
 
 ### Étape Q2 : Vues de génération
-**Statut** : ⏳ À faire — **Effort : ~1 journée**
+**Statut** : ✅ Terminé — **Effort : ~1 journée**
 
 - [ ] Download (liste des sets TCGdex, progression par image)
 - [ ] Augmentation (+ pipeline holographic), Mosaïques (mode/layout/etc.)
@@ -88,7 +88,7 @@ SettingsDialog de 1 650 lignes).
 le GUI Qt sur le mini-dataset de test
 
 ### Étape Q3 : Training, Détection, Settings
-**Statut** : ⏳ À faire — **Effort : ~1-1,5 journée**
+**Statut** : ✅ Terminé — **Effort : ~1-1,5 journée**
 
 - [ ] Training (presets système/Jetson, métriques, export TensorRT)
 - [ ] Détection (webcam/image/dossier — la fenêtre OpenCV reste inchangée)
@@ -99,7 +99,7 @@ le GUI Qt sur le mini-dataset de test
 `docs/archive/migration/CHECKLIST_TEST_GUI.md` (adaptée)
 
 ### Étape Q4 : Bascule et retrait de Tkinter
-**Statut** : ⏳ À faire — **Effort : ~½ journée** — ⚠️ seulement après validation utilisateur sur Windows
+**Statut** : 🟡 Bascule faite — retrait Tkinter EN ATTENTE de validation Windows — **Effort : ~½ journée** — ⚠️ seulement après validation utilisateur sur Windows
 
 - [ ] START.bat / start.sh pointent vers `GUI_qt.py`
 - [ ] Suppression de `GUI_v3.1_modern.py` + `gui/settings_dialog.py`
@@ -141,3 +141,17 @@ le GUI Qt sur le mini-dataset de test
 - [ ] Tests pytest-qt verts en CI (Ubuntu + Windows, offscreen)
 - [ ] Doc et lanceurs à jour
 - [ ] Retrait Tkinter (Q4) validé explicitement par l'utilisateur
+
+
+---
+
+## 📊 Journal d'exécution (2026-07-04)
+
+- Décisions utilisateur : périmètre complet (11 vues), thèmes clair+sombre, tout d'un trait
+- Q0-Q3 : package gui_qt/ complet (~2 300 lignes), 11 vues, 2 thèmes commutables persistés
+- `core/manifest_tools.py` extrait du GUI Tkinter (partagé par les 2 interfaces)
+- Q4 partiel : START.bat/start.sh → GUI_qt.py ; Tkinter conservé (START_LEGACY.bat / start.sh --legacy).
+  ⚠️ La SUPPRESSION de GUI_v3.1_modern.py attend un passage visuel sur poste Windows —
+  seule dérogation au « tout d'un trait » (irréversible sans validation sur display réel).
+- Validation : 7 tests pytest-qt offscreen + smoke test complet (11 vues, thèmes,
+  bridge succès/échec) + 3 captures d'écran générées sous offscreen ; suite complète verte
