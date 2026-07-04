@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.2] - 2026-07-04
+
+### 🐛 Phase 1 : Corrections de bugs & fiabilité (plan `.planning/2026-07-04`)
+
+#### Mapping de classes unifié (B3/B4) — ⚠️ important
+- `core.utils.load_card_data` est désormais la **source unique de vérité** du mapping
+  de classes YOLO : **0-indexé** (standard YOLO, aligné sur data.yaml), chaque carte
+  indexée sous deux clés (id complet `xyp_XY05` + numéro court `XY05`)
+- Suppression des copies locales divergentes dans `augmentation_albumentations.py`
+  (0-indexé) et `mosaic_optimized.py` — l'ancienne version `utils` était 1-indexée
+- Le fallback silencieux `class_id = hash(filename) % 1000` est remplacé par un
+  avertissement explicite + exclusion de l'image (plus de labels aléatoires)
+- Nouvelle fonction `core.utils.build_class_names_list()` (names ordonnés par id)
+- L'augmentation écrit à nouveau `output/augmented/data.yaml` (régression de la
+  migration v3.4) → `merge_dataset` produit de vrais noms de classes au lieu de `class_N`
+
+#### Autres corrections
+- **B1** : `workflow_manager` ajoute `scripts/` au `sys.path` avant `import merge_dataset`
+  (le workflow fonctionne maintenant en standalone, pas seulement via le GUI)
+- **B2** : `core.utils.load_prices()` sans argument ne plante plus (`TypeError` sur
+  `os.path.exists(None)`) — défaut sur `models/cards_database.yaml`
+- **B5** : nouvelle étape `WorkflowStep.MERGE` (le merge n'est plus enregistré comme
+  MOSAIC) ; `is_success()` compte le merge parmi les étapes critiques
+- **B6** : `scripts/merge_dataset.py` résout `config/paths.json` depuis son emplacement
+  (`__file__`) et non le répertoire courant
+- **B7** : `detection_manager._load_prices` importait `load_prices_from_excel`
+  (inexistant) → les prix ne se chargeaient jamais en détection ; charge désormais
+  la base YAML via `load_prices()`
+- **B8** : `card_mapping.py` cherchait `card_name_to_id.json` à la racine au lieu de
+  `models/` (chemin désormais lu depuis `config/paths.json`)
+- **Albumentations** : `A.SomeOf(..., n=(3, 6))` plantait à l'init (l'API n'accepte
+  qu'un entier) → tirage aléatoire de n∈[3,6] par image via des SomeOf pré-construits ;
+  `A.RandomContrast` (supprimé en 2.x) remplacé par son équivalent
+  `RandomBrightnessContrast(brightness_limit=0)` ; requirements épinglés
+  `albumentations>=1.3.0,<2.0`
+- Pattern d'extraction de numéro de carte : support des suffixes `_holoN`
+
+#### GUI : thread-safety (R1)
+- `log()` est désormais thread-safe : les messages passent par une `queue.Queue`
+  drainée depuis le thread principal (`root.after`) — les threads workers ne touchent
+  plus jamais aux widgets Tkinter (source de freezes/crashs aléatoires)
+- Nouveaux wrappers `show_info/show_error/show_warning` (popups différées via
+  `root.after`) ; les 126 appels `messagebox.*` des workers migrés
+- `end_operation`, `update_stats`, `update_all_statistics` se replanifient sur le
+  thread principal s'ils sont appelés depuis un worker
+
+#### Tests
+- `tests/test_refactoring.py` : le test « NumPy < 2.0 (requis imgaug) » était obsolète
+  depuis la migration Albumentations → remplacé par « NumPy >= 1.24 » (5/5 tests OK)
+
+---
+
 ## [3.4.1] - 2025-11-28
 
 ### 🤖 Jetson Orin AGX 32GB Support

@@ -71,16 +71,16 @@ def test_patterns_exported():
         return False
 
 def test_numpy_version():
-    """Test que NumPy < 2.0 est utilisé (requis pour imgaug)"""
+    """Test que NumPy >= 1.24 (Albumentations supporte NumPy 2.x depuis v3.4)"""
     import numpy as np
-    
-    major_version = int(np.__version__.split('.')[0])
-    
-    if major_version < 2:
-        print(f"✅ NumPy {np.__version__} < 2.0 (compatible imgaug)")
+
+    major, minor = (int(x) for x in np.__version__.split('.')[:2])
+
+    if (major, minor) >= (1, 24):
+        print(f"✅ NumPy {np.__version__} >= 1.24 (compatible Albumentations)")
         return True
     else:
-        print(f"❌ NumPy {np.__version__} >= 2.0 (incompatible imgaug)")
+        print(f"❌ NumPy {np.__version__} < 1.24 (trop ancien)")
         return False
 
 def test_config_exported():
@@ -106,7 +106,7 @@ def main():
         ("Imports", test_imports),
         ("extract_card_number()", test_extract_card_number),
         ("Patterns regex exportés", test_patterns_exported),
-        ("NumPy version < 2.0", test_numpy_version),
+        ("NumPy version >= 1.24", test_numpy_version),
         ("CONFIG exporté", test_config_exported),
     ]
     

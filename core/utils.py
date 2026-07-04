@@ -31,7 +31,7 @@ from typing import Dict, List, Tuple, Optional
 # ==================== Regex Patterns ====================
 # Compiled regex patterns for card number extraction (performance optimization)
 # Ces patterns sont partagés par tous les modules
-PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}(?:_aug_\d+)?\.')
+PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}(?:_holo\d+)?(?:_aug_\d+)?\.')
 PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
 PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
 PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
@@ -175,81 +175,111 @@ CONFIG = {
 def load_card_data(source_path: str = None) -> Tuple[Dict[str, str], Dict[str, int]]:
     """
     Charge les données des cartes depuis YAML (prioritaire) ou Excel (fallback)
-    
+
+    ⚠️ SOURCE UNIQUE DE VÉRITÉ pour le mapping de classes YOLO.
+    Les class_id sont 0-indexés (standard YOLO) et suivent l'ordre de
+    déclaration des cartes dans le fichier source. Tous les modules
+    (augmentation, mosaïques, merge) doivent passer par cette fonction.
+
     Supporte deux formats:
     - YAML: models/cards_database.yaml (nouveau format recommandé)
     - Excel: excel/cards_info.xlsx (legacy, rétrocompatibilité)
-    
+
     Args:
-        source_path: Chemin vers le fichier (YAML ou Excel). 
-                    Si None, utilise CONFIG['excel_file']
-                    
+        source_path: Chemin vers le fichier (YAML ou Excel).
+                    Si None, utilise PATHS['files']['cards_database_yaml']
+
     Returns:
         Tuple contenant (card_dict, class_map)
-        - card_dict: {card_number: card_name}
-        - class_map: {card_number: class_id}
-        
+        - card_dict: {clé: card_name}
+        - class_map: {clé: class_id} (0-indexed)
+        Pour le format YAML, chaque carte est indexée sous DEUX clés:
+        l'identifiant complet (ex: "sv08_019") ET le numéro court (ex: "019"),
+        toutes deux associées au même class_id.
+
     Raises:
         FileNotFoundError: Si le fichier n'existe pas
         Exception: Si erreur lors de la lecture
-        
+
     Example:
         >>> card_dict, class_map = load_card_data("models/cards_database.yaml")
-        >>> print(card_dict["019"])
-        'Ho-Oh'
-        >>> print(class_map["019"])
-        19
+        >>> class_map["sv08_019"] == class_map["019"]
+        True
     """
     if source_path is None:
-        source_path = CONFIG['excel_file']
-        
+        source_path = PATHS['files']['cards_database_yaml']
+
     if not os.path.exists(source_path):
         raise FileNotFoundError(f"Fichier non trouvé : {source_path}")
-    
+
     card_dict = {}
     class_map = {}
-    
+
     # Détection automatique du format
     if source_path.endswith('.yaml') or source_path.endswith('.yml'):
         # Charger depuis YAML
         import yaml
-        
+
         try:
             with open(source_path, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
         except Exception as e:
             raise Exception(f"Erreur lors de la lecture du fichier YAML : {e}")
-        
+
         if 'cards' not in data:
             raise Exception(f"Structure YAML invalide (clé 'cards' manquante)")
-        
-        class_id = 1
-        for card_id, card_info in data['cards'].items():
-            # Extraire le numéro (ex: sv08_019 -> 019)
-            number = card_id.split('_')[-1].zfill(3)
+
+        for class_id, (card_id, card_info) in enumerate(data['cards'].items()):
             name = card_info['name'].replace(" ", "_")
-            
+
+            # Clé 1: identifiant complet (ex: "sv08_019")
+            if card_id not in card_dict:
+                card_dict[card_id] = name
+                class_map[card_id] = class_id
+
+            # Clé 2: numéro court (ex: "019"), padder si numérique
+            number = card_id.split('_')[-1] if '_' in card_id else card_id
+            if number.isdigit():
+                number = number.zfill(3)
             if number not in card_dict:
                 card_dict[number] = name
                 class_map[number] = class_id
-                class_id += 1
     else:
         # Charger depuis Excel (legacy)
         try:
             df = pd.read_excel(source_path, usecols=["Set #", "Name"])
         except Exception as e:
             raise Exception(f"Erreur lors de la lecture du fichier Excel : {e}")
-        
-        class_id = 1
+
+        class_id = 0
         for _, row in df.iterrows():
-            number = row["Set #"].split('/')[0].zfill(3)
-            name = row["Name"].replace(" ", "_")
+            number = str(row["Set #"]).split('/')[0].zfill(3)
+            name = str(row["Name"]).replace(" ", "_")
             if number not in card_dict:
                 card_dict[number] = name
                 class_map[number] = class_id
                 class_id += 1
-    
+
     return card_dict, class_map
+
+
+def build_class_names_list(card_dict: Dict[str, str], class_map: Dict[str, int]) -> List[str]:
+    """
+    Construit la liste des noms de classes ordonnée par class_id (pour data.yaml)
+
+    Args:
+        card_dict: {clé: card_name} retourné par load_card_data
+        class_map: {clé: class_id} retourné par load_card_data
+
+    Returns:
+        Liste de noms indexée par class_id (les IDs sans carte → "unused")
+    """
+    if not class_map:
+        return []
+    names = ["unused"] * (max(class_map.values()) + 1)
+    for key, class_id in class_map.items():
+        names[class_id] = card_dict[key]
+    return names
 
 def extract_card_number(filename: str) -> Optional[str]:
     """
@@ -487,10 +517,13 @@ def load_prices(yaml_path: str = None) -> Dict[str, Dict[str, any]]:
     Returns:
         Dictionnaire {card_id: {'name': str, 'price': float, 'price_max': float}}
     """
+    if yaml_path is None:
+        yaml_path = PATHS['files']['cards_database_yaml']
+
     if os.path.exists(yaml_path):
         safe_print(f"📄 Chargement de {yaml_path}")
         return load_prices_from_yaml(yaml_path)
-    
+
     safe_print(f"⚠️ Fichier YAML non trouvé: {yaml_path}")
     return {}
 

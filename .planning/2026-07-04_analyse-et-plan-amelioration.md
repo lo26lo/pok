@@ -107,22 +107,27 @@ obsolete/           → anciens fichiers conservés dans le repo
 ## 📝 PARTIE 3 — Plan d'amélioration par étapes
 
 ### Phase 1 : Corrections de bugs (sans changement d'architecture)
-**Statut** : ⏳ À faire — **Effort : ~½ journée**
+**Statut** : ✅ Terminé (2026-07-04)
 
 **Actions** :
-- [ ] B1 : ajouter `scripts/` au `sys.path` dans `workflow_manager._run_merge` (ou déplacer `merge_dataset.py` vers `core/`)
-- [ ] B2 : corriger `load_prices` (défaut depuis `PATHS` avant le `os.path.exists`)
-- [ ] B3 : **unifier le mapping de classes** — une seule fonction dans `core/utils.py`, indexation 0 (standard YOLO), supprimer les copies locales
-- [ ] B4 : remplacer le fallback `hash()` par un warning explicite + skip de l'image
-- [ ] B5 : ajouter `WorkflowStep.MERGE` à l'enum
-- [ ] B6 : résoudre `paths.json` via `Path(__file__)` dans `merge_dataset.py`
-
-**Fichiers concernés** : `core/workflow_manager.py`, `core/utils.py`, `core/augmentation_albumentations.py`, `core/mosaic_optimized.py`, `scripts/merge_dataset.py`
+- [x] B1 : ajouter `scripts/` au `sys.path` dans `workflow_manager._run_merge`
+- [x] B2 : corriger `load_prices` (défaut depuis `PATHS` avant le `os.path.exists`)
+- [x] B3 : **unifier le mapping de classes** — une seule fonction dans `core/utils.py`, indexation 0 (standard YOLO), copies locales supprimées + `build_class_names_list()` + écriture de `output/augmented/data.yaml` restaurée (régression v3.4)
+- [x] B4 : remplacer le fallback `hash()` par un warning explicite + skip de l'image
+- [x] B5 : ajouter `WorkflowStep.MERGE` à l'enum (+ merge dans les étapes critiques de `is_success`)
+- [x] B6 : résoudre `paths.json` via `Path(__file__)` dans `merge_dataset.py`
+- [x] **B7** (découvert en cours) : `detection_manager` importait `load_prices_from_excel` inexistant → prix jamais chargés en détection ; bascule sur `load_prices()` YAML
+- [x] **B8** (découvert) : `card_mapping.py` cherchait `card_name_to_id.json` à la racine au lieu de `models/` → chemin via `paths.json`
+- [x] **B9** (découvert) : `A.SomeOf(n=(3,6))` plante à l'init (API n'accepte qu'un int) + `A.RandomContrast` supprimé en Albumentations 2.x → n tiré par image, équivalent `RandomBrightnessContrast`, requirements épinglés `<2.0`
+- [x] R1 : GUI thread-safe — `log()` via `queue.Queue` + poller `root.after`, wrappers `show_info/error/warning` (126 appels migrés), gardes main-thread sur `end_operation`/`update_stats`/`update_all_statistics`
 
 **Validation** :
-- [ ] `python core/workflow_manager.py` fonctionne en standalone
-- [ ] Un dataset généré avant/après a des class_id identiques et 0-indexés
-- [ ] Tests de non-régression sur `extract_card_number` et `load_card_data`
+- [x] Import de `merge_dataset` hors CWD projet OK (B1/B6 testés)
+- [x] Mapping 0-indexé et identique entre `utils`, `mosaic`, `augmentation` (213 classes, testé sur `models/cards_database.yaml`)
+- [x] E2E augmentation : 3 variations générées, labels au bon class_id, image inconnue exclue avec warning, `data.yaml` écrit (nc=213, noms corrects)
+- [x] `tests/test_refactoring.py` : 5/5 (test NumPy obsolète mis à jour)
+- [x] Compilation de tous les fichiers modifiés (GUI inclus)
+- ⚠️ GUI non testé graphiquement (environnement distant sans display) — à vérifier sur poste Windows : lancer une augmentation et vérifier logs + popup
 
 ---
 

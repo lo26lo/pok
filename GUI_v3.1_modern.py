@@ -11,6 +11,7 @@ import sys
 import os
 import json
 import threading
+import queue
 import time
 import multiprocessing
 from pathlib import Path
@@ -1694,6 +1695,12 @@ class ModernPokemonGUI:
         self.is_running = False
         self.operation_stopped = False  # Flag pour arrêt volontaire
         self.current_view = "home"
+
+        # File de logs thread-safe: les threads workers ne touchent JAMAIS
+        # aux widgets Tkinter directement (Tkinter n'est pas thread-safe).
+        # log() enfile les messages, _drain_log_queue() les affiche depuis
+        # le thread principal via root.after().
+        self._log_queue = queue.Queue()
         
         # V3.1: État responsive
         self.is_compact_mode = False
@@ -1804,7 +1811,10 @@ class ModernPokemonGUI:
         
         # Charger la vue Home par défaut
         self.show_view('home')
-        
+
+        # Démarrer le poller de logs (thread principal)
+        self.root.after(100, self._drain_log_queue)
+
         self.log("✅ Interface initialisée - Mode Professionnel")
     
     def setup_modern_style(self):
@@ -2214,7 +2224,10 @@ class ModernPokemonGUI:
         ).pack(fill=tk.X, padx=10, pady=(0, 8))
     
     def update_all_statistics(self):
-        """Mettre à jour toutes les statistiques au démarrage"""
+        """Mettre à jour toutes les statistiques (thread-safe)"""
+        if threading.current_thread() is not threading.main_thread():
+            self.root.after(0, self.update_all_statistics)
+            return
         try:
             # Images téléchargées
             images_dir = PATHS['directories']['images']
@@ -5302,7 +5315,7 @@ class ModernPokemonGUI:
                 yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
             
             self.log("✅ Fichier cards_database.yaml créé avec succès!")
-            messagebox.showinfo(
+            self.show_info(
                 "Succès",
                 "Fichier cards_database.yaml créé!\n\n"
                 "Un fichier exemple a été créé avec 5 cartes.\n"
@@ -5319,7 +5332,7 @@ class ModernPokemonGUI:
             
         except Exception as e:
             self.log(f"❌ Erreur création YAML: {e}")
-            messagebox.showerror("Erreur", f"Impossible de créer le fichier:\n{e}")
+            self.show_error("Erreur", f"Impossible de créer le fichier:\n{e}")
             return False
     
     def _generate_yaml_from_manifest(self, manifest_path: str, set_id: str, set_name: str):
@@ -5447,7 +5460,7 @@ class ModernPokemonGUI:
                     install_script = Path("install_env.bat")
                     if not install_script.exists():
                         self.log("❌ Script install_env.bat non trouvé!")
-                        messagebox.showerror("Erreur", "Script d'installation non trouvé!")
+                        self.show_error("Erreur", "Script d'installation non trouvé!")
                         return False
                     
                     process = subprocess.Popen(
@@ -5474,16 +5487,16 @@ class ModernPokemonGUI:
                 
                 if process.returncode == 0 and self.check_venv():
                     self.log("✅ Environnement virtuel installé avec succès!")
-                    messagebox.showinfo("Succès", "Environnement installé!\n\nVous pouvez maintenant utiliser toutes les fonctionnalités.")
+                    self.show_info("Succès", "Environnement installé!\n\nVous pouvez maintenant utiliser toutes les fonctionnalités.")
                     return True
                 else:
                     self.log("❌ Installation échouée")
-                    messagebox.showerror("Erreur", "Installation échouée.\nVérifiez les logs pour plus de détails.")
+                    self.show_error("Erreur", "Installation échouée.\nVérifiez les logs pour plus de détails.")
                     return False
                     
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur lors de l'installation:\n{e}")
+                self.show_error("Erreur", f"Erreur lors de l'installation:\n{e}")
                 return False
             finally:
                 self.end_operation()
@@ -5908,30 +5921,67 @@ class ModernPokemonGUI:
             }
     
     def log(self, message):
-        """Ajouter un message aux logs"""
+        """
+        Ajouter un message aux logs — THREAD-SAFE.
+
+        Peut être appelé depuis n'importe quel thread : le message est enfilé
+        et affiché dans le widget par _drain_log_queue() (thread principal).
+        """
         timestamp = datetime.now().strftime("%H:%M:%S")
-        
-        # Gérer les emojis pour éviter les erreurs d'encodage Windows
-        try:
-            # Essayer d'afficher le message tel quel
-            log_message = f"[{timestamp}] {message}\n"
-            self.log_text.insert(tk.END, log_message)
-        except Exception:
-            # Si erreur d'encodage, remplacer les emojis problématiques
-            safe_message = message.encode('ascii', 'ignore').decode('ascii')
-            log_message = f"[{timestamp}] {safe_message}\n"
-            self.log_text.insert(tk.END, log_message)
-        
-        self.log_text.see(tk.END)
-        self.log_text.update()
-        
-        # Afficher aussi dans stdout (console) avec gestion d'encodage
+        log_message = f"[{timestamp}] {message}\n"
+
+        # Afficher dans stdout (console) avec gestion d'encodage Windows
         try:
             print(log_message.strip())
         except UnicodeEncodeError:
-            # Fallback pour console Windows avec encodage limité
             safe_log = log_message.encode('ascii', 'ignore').decode('ascii')
             print(safe_log.strip())
+
+        self._log_queue.put(log_message)
+
+    def _drain_log_queue(self):
+        """Vide la file de logs vers le widget (appelé depuis le thread principal)"""
+        drained = False
+        while True:
+            try:
+                log_message = self._log_queue.get_nowait()
+            except queue.Empty:
+                break
+            try:
+                self.log_text.insert(tk.END, log_message)
+            except Exception:
+                # Erreur d'encodage: retirer emojis/caractères non-ASCII
+                safe_message = log_message.encode('ascii', 'ignore').decode('ascii')
+                try:
+                    self.log_text.insert(tk.END, safe_message)
+                except Exception:
+                    pass  # Widget détruit (fermeture app)
+            drained = True
+
+        if drained:
+            try:
+                self.log_text.see(tk.END)
+            except Exception:
+                pass
+
+        self.root.after(100, self._drain_log_queue)
+
+    # ---- Popups thread-safe -------------------------------------------------
+    # Les messagebox Tkinter ne doivent être créées que depuis le thread
+    # principal. Ces wrappers diffèrent l'affichage via root.after(), ce qui
+    # les rend utilisables depuis les threads workers.
+
+    def show_info(self, title, message):
+        """messagebox.showinfo thread-safe (non bloquant depuis un worker)"""
+        self.root.after(0, lambda: messagebox.showinfo(title, message))
+
+    def show_error(self, title, message):
+        """messagebox.showerror thread-safe (non bloquant depuis un worker)"""
+        self.root.after(0, lambda: messagebox.showerror(title, message))
+
+    def show_warning(self, title, message):
+        """messagebox.showwarning thread-safe (non bloquant depuis un worker)"""
+        self.root.after(0, lambda: messagebox.showwarning(title, message))
     
     def start_operation(self, operation_name):
         """Démarrer une opération"""
@@ -5947,7 +5997,10 @@ class ModernPokemonGUI:
         self.update_footer_stats()
     
     def end_operation(self):
-        """Terminer une opération"""
+        """Terminer une opération (thread-safe: se replanifie sur le thread principal)"""
+        if threading.current_thread() is not threading.main_thread():
+            self.root.after(0, self.end_operation)
+            return
         # V3.2: Enregistrer dernière activité AVANT de reset
         if self.current_operation_name:
             self.last_operation_name = self.current_operation_name
@@ -5964,7 +6017,10 @@ class ModernPokemonGUI:
         self.update_footer_stats()
     
     def update_stats(self):
-        """Mettre à jour les statistiques du dashboard (V3.2 - nouvelles cartes)"""
+        """Mettre à jour les statistiques du dashboard (thread-safe)"""
+        if threading.current_thread() is not threading.main_thread():
+            self.root.after(0, self.update_stats)
+            return
         try:
             # V3.2: Mettre à jour les nouvelles cartes du Dashboard si actif
             if hasattr(self, 'dashboard_cards') and self.current_view == 'home':
@@ -6044,14 +6100,14 @@ class ModernPokemonGUI:
     def start_image_download(self):
         """Démarrer le téléchargement d'images"""
         if self.is_running:
-            messagebox.showwarning("Warning", "Une opération est déjà en cours!")
+            self.show_warning("Warning", "Une opération est déjà en cours!")
             return
         
         # Récupérer les paramètres
         try:
             set_value = self.download_set_var.get().strip()
             if not set_value:
-                messagebox.showerror("Error", "Veuillez sélectionner ou saisir un set Pokemon!")
+                self.show_error("Error", "Veuillez sélectionner ou saisir un set Pokemon!")
                 return
             
             # Extract set ID if in format "Name (id)"
@@ -6073,7 +6129,7 @@ class ModernPokemonGUI:
                 output_dir = "images"
             
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         # Confirmation
@@ -6110,7 +6166,7 @@ Lancer le téléchargement ?"""
                 set_info = downloader.resolve_set(set_query, lang=lang_code)
                 if not set_info:
                     self.log(f"❌ Set non trouvé: {set_query}")
-                    messagebox.showerror("Error", f"Set non trouvé: {set_query}\n\nVérifiez le nom ou l'ID du set.")
+                    self.show_error("Error", f"Set non trouvé: {set_query}\n\nVérifiez le nom ou l'ID du set.")
                     return
                 
                 set_id = set_info.get('id', set_query)
@@ -6156,12 +6212,12 @@ Lancer le téléchargement ?"""
                         self.log(get_message('console.yaml_error', error=yaml_err))
                 
                 if fail == 0:
-                    messagebox.showinfo("✅ Succès", 
+                    self.show_info("✅ Succès", 
                         f"Téléchargement terminé !\n\n"
                         f"✅ {ok} cartes téléchargées\n"
                         f"💾 Dossier: {output_dir}/{set_id}/")
                 else:
-                    messagebox.showwarning("⚠️ Terminé avec erreurs",
+                    self.show_warning("⚠️ Terminé avec erreurs",
                         f"Téléchargement terminé avec des erreurs.\n\n"
                         f"✅ Succès: {ok}/{total}\n"
                         f"❌ Échecs: {fail}/{total}")
@@ -6173,7 +6229,7 @@ Lancer le téléchargement ?"""
                 self.log(f"❌ ERREUR: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"Erreur lors du téléchargement:\n{e}")
+                self.show_error("Error", f"Erreur lors du téléchargement:\n{e}")
             finally:
                 self.stop_operation()
         
@@ -6182,7 +6238,7 @@ Lancer le téléchargement ?"""
     def start_workflow(self):
         """Démarrer le workflow automatique avec WorkflowManager"""
         if self.is_running:
-            messagebox.showwarning("Warning", "Une opération est déjà en cours!")
+            self.show_warning("Warning", "Une opération est déjà en cours!")
             return
         
         # Vérifier l'environnement virtuel
@@ -6197,7 +6253,7 @@ Lancer le téléchargement ?"""
             do_balance = self.workflow_balance_var.get()
             do_train = self.workflow_train_var.get()
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         # Confirmation
@@ -6241,18 +6297,18 @@ Continuer ?"""
                     self.log("\n" + "="*50)
                     self.log("🎉 WORKFLOW TERMINÉ AVEC SUCCÈS!")
                     self.log("="*50)
-                    messagebox.showinfo("Succès", 
+                    self.show_info("Succès", 
                         f"✅ Workflow terminé!\n\n{manager.get_summary()}")
                 else:
                     self.log("\n⚠️ Workflow terminé avec des erreurs")
-                    messagebox.showwarning("Attention",
+                    self.show_warning("Attention",
                         f"Workflow terminé avec erreurs:\n\n{manager.get_summary()}")
                 
             except Exception as e:
                 self.log(f"\n❌ ERREUR WORKFLOW: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Erreur", f"Erreur workflow:\n{e}")
+                self.show_error("Erreur", f"Erreur workflow:\n{e}")
             finally:
                 self.end_operation()
         
@@ -6284,7 +6340,7 @@ Continuer ?"""
             # Fallback: afficher le lien
             from pathlib import Path
             help_local = Path("HELP.md").absolute()
-            messagebox.showinfo(
+            self.show_info(
                 "Help Documentation",
                 f"📖 Online:\n{github_url}\n\n"
                 f"📁 Local:\n{help_local}\n\n"
@@ -6296,7 +6352,7 @@ Continuer ?"""
     def start_training(self):
         """Démarrer l'entraînement avec TrainingManager"""
         if self.is_running:
-            messagebox.showwarning("Warning", "Une opération est déjà en cours!")
+            self.show_warning("Warning", "Une opération est déjà en cours!")
             return
         
         # Vérifier l'environnement virtuel
@@ -6319,13 +6375,13 @@ Continuer ?"""
             patience = int(self.train_patience_var.get())
                 
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         # Vérifier data.yaml
         data_yaml = Path(PATHS['files']['dataset_data_yaml'])
         if not data_yaml.exists():
-            messagebox.showerror("Error",
+            self.show_error("Error",
                 f"Fichier data.yaml non trouvé!\n{data_yaml}\n\n"
                 "Générez d'abord le dataset (Augmentation + Mosaics + Merge).")
             return
@@ -6367,13 +6423,13 @@ Continuer ?"""
                     if metrics:
                         msg += f"\n\nmAP50: {metrics.get('mAP50', 0):.3f}"
                         msg += f"\nmAP50-95: {metrics.get('mAP50-95', 0):.3f}"
-                    messagebox.showinfo("Succès", msg)
+                    self.show_info("Succès", msg)
                 else:
-                    messagebox.showerror("Erreur", "Entraînement échoué!")
+                    self.show_error("Erreur", "Entraînement échoué!")
                 
             except ImportError:
                 self.log("❌ Package ultralytics non installé!")
-                messagebox.showerror("Erreur",
+                self.show_error("Erreur",
                     "Package ultralytics non installé!\n\n"
                     "Ce package est requis pour l'entraînement YOLO.\n"
                     "Il nécessite PyTorch et un GPU compatible (recommandé).\n\n"
@@ -6385,7 +6441,7 @@ Continuer ?"""
                 self.log(f"❌ Erreur: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.show_error("Erreur", f"Erreur:\n{e}")
             finally:
                 self.end_operation()
         
@@ -6396,7 +6452,7 @@ Continuer ?"""
         try:
             from ultralytics import YOLO
         except ImportError:
-            messagebox.showerror("Erreur", 
+            self.show_error("Erreur", 
                 "Package ultralytics non installé!\n\n"
                 "Installation: pip install ultralytics")
             return
@@ -6546,13 +6602,13 @@ Continuer ?"""
                     self.log(f"   3. model = YOLO('{Path(export_path).name}')")
                     self.log("   4. results = model.predict(source=0)  # Webcam")
                     
-                    messagebox.showinfo("Export réussi",
+                    self.show_info("Export réussi",
                         f"Modèle exporté:\n{export_path}\n\n"
                         "Copiez ce fichier sur votre Jetson Orin AGX.")
                     
                 except Exception as e:
                     self.log(f"❌ Erreur export: {e}")
-                    messagebox.showerror("Erreur", f"Export échoué:\n{e}")
+                    self.show_error("Erreur", f"Export échoué:\n{e}")
                 finally:
                     self.end_operation()
             
@@ -6577,7 +6633,7 @@ Continuer ?"""
         results_png = plots_dir / "results.png"
         
         if not results_png.exists():
-            messagebox.showwarning("Attention",
+            self.show_warning("Attention",
                 f"Graphiques non trouvés!\n\n{results_png}\n\n"
                 "Entraînez d'abord un modèle.")
             return
@@ -6589,7 +6645,7 @@ Continuer ?"""
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         except Exception as e:
-            messagebox.showerror("Erreur", f"Impossible d'afficher:\n{e}")
+            self.show_error("Erreur", f"Impossible d'afficher:\n{e}")
     
     # ==================== DETECTION METHODS ====================
     
@@ -6611,11 +6667,11 @@ Continuer ?"""
             conf = self.detect_conf_var.get()
             camera_id = int(self.detect_camera_var.get())
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         if not model_path.exists():
-            messagebox.showerror("Error",
+            self.show_error("Error",
                 f"Modèle non trouvé!\n{model_path}\n\n"
                 "Entraînez d'abord un modèle.")
             return
@@ -6643,13 +6699,13 @@ Continuer ?"""
                 
             except ImportError:
                 self.log("❌ Packages manquants (ultralytics ou opencv)!")
-                messagebox.showerror("Erreur",
+                self.show_error("Erreur",
                     "Packages manquants!\n\n"
                     "Installation:\n"
                     "pip install ultralytics opencv-python")
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur webcam:\n{e}")
+                self.show_error("Erreur", f"Erreur webcam:\n{e}")
         
         threading.Thread(target=task, daemon=True).start()
     
@@ -6659,11 +6715,11 @@ Continuer ?"""
             model_path = Path(self.detect_model_var.get())
             conf = self.detect_conf_var.get()
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         if not model_path.exists():
-            messagebox.showerror("Error", "Modèle non trouvé!")
+            self.show_error("Error", "Modèle non trouvé!")
             return
         
         # Choisir image
@@ -6693,7 +6749,7 @@ Continuer ?"""
                 
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.show_error("Erreur", f"Erreur:\n{e}")
         
         threading.Thread(target=task, daemon=True).start()
     
@@ -6703,11 +6759,11 @@ Continuer ?"""
             model_path = Path(self.detect_model_var.get())
             conf = self.detect_conf_var.get()
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         if not model_path.exists():
-            messagebox.showerror("Error", "Modèle non trouvé!")
+            self.show_error("Error", "Modèle non trouvé!")
             return
         
         # Choisir dossier
@@ -6736,7 +6792,7 @@ Continuer ?"""
                 total = sum(len(dets) for dets in results.values())
                 self.log(f"✅ {total} détection(s) sur {len(results)} images")
                 
-                messagebox.showinfo("Succès",
+                self.show_info("Succès",
                     f"✅ Détection terminée!\n\n"
                     f"{len(results)} images traitées\n"
                     f"{total} détections totales\n\n"
@@ -6744,7 +6800,7 @@ Continuer ?"""
                 
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.show_error("Erreur", f"Erreur:\n{e}")
             finally:
                 self.end_operation()
         
@@ -6782,7 +6838,7 @@ Continuer ?"""
             
         except Exception as e:
             self.log(f"❌ Error opening folder: {e}")
-            messagebox.showerror("Error", f"Cannot open folder:\n{e}")
+            self.show_error("Error", f"Cannot open folder:\n{e}")
     
     def open_validation_report(self):
         """Ouvrir le rapport de validation HTML dans le navigateur"""
@@ -6795,12 +6851,12 @@ Continuer ?"""
                 self.log("🌐 Rapport de validation ouvert dans le navigateur")
             else:
                 self.log("⚠️ Aucun rapport de validation trouvé")
-                messagebox.showwarning("Rapport introuvable", 
+                self.show_warning("Rapport introuvable", 
                     "Aucun rapport de validation n'a été généré.\n\n"
                     "Allez dans 'Validation' pour générer un rapport.")
         except Exception as e:
             self.log(f"❌ Erreur ouverture rapport: {e}")
-            messagebox.showerror("Erreur", f"Impossible d'ouvrir le rapport:\n{e}")
+            self.show_error("Erreur", f"Impossible d'ouvrir le rapport:\n{e}")
     
     def apply_training_preset(self, preset_name: str):
         """Appliquer un preset de training et naviguer vers la vue Training"""
@@ -6874,12 +6930,12 @@ Continuer ?"""
             num_holo = int(self.aug_holo_var.get())
             num_aug = int(self.aug_num_var.get())
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         # Vérifier qu'au moins une opération est demandée
         if num_holo == 0 and num_aug == 0:
-            messagebox.showwarning("Warning", "Au moins une opération doit être > 0 !\n\nHolographic = 0 ET Augmentation = 0")
+            self.show_warning("Warning", "Au moins une opération doit être > 0 !\n\nHolographic = 0 ET Augmentation = 0")
             return
         
         # Message de confirmation
@@ -6922,7 +6978,7 @@ Continuer ?"""
                         self.current_process.wait()
                         if self.current_process.returncode != 0:
                             self.log("❌ Holographic génération échouée!")
-                            messagebox.showerror("Error", "Holographic génération échouée!")
+                            self.show_error("Error", "Holographic génération échouée!")
                             return
                         else:
                             self.log("✅ Holographic terminé!")
@@ -6951,7 +7007,7 @@ Continuer ?"""
                         self.current_process.wait()
                         if self.current_process.returncode != 0:
                             self.log("❌ Augmentation échouée!")
-                            messagebox.showerror("Error", "Augmentation échouée!")
+                            self.show_error("Error", "Augmentation échouée!")
                             return
                         else:
                             self.log("✅ Augmentation terminée!")
@@ -6968,7 +7024,7 @@ Continuer ?"""
                     summary += f"✅ Augmentation: {num_aug} variations par image\n"
                 summary += f"\n📂 Output: output/augmented/"
                 
-                messagebox.showinfo("Succès", summary)
+                self.show_info("Succès", summary)
                 self.update_stats()
                 
                 # Mettre à jour les statistiques (V3.2)
@@ -6978,7 +7034,7 @@ Continuer ?"""
                 self.log(f"❌ Erreur pipeline: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"Erreur pipeline:\n{e}")
+                self.show_error("Error", f"Erreur pipeline:\n{e}")
             finally:
                 self.end_operation()
         
@@ -6995,7 +7051,7 @@ Continuer ?"""
             target = self.aug_output_var.get()
             aug_type = self.aug_type_var.get()  # Standard / Holographic / Both
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         self.log(f"🎨 Augmentation ({aug_type}): {num_aug} variations → {target}/")
@@ -7023,7 +7079,7 @@ Continuer ?"""
                         if self.current_process.returncode != 0:
                             self.log("❌ Standard augmentation failed!")
                             if aug_type == "Standard":
-                                messagebox.showerror("Error", "Augmentation failed!")
+                                self.show_error("Error", "Augmentation failed!")
                                 return
                         else:
                             self.log("✅ Standard augmentation completed!")
@@ -7054,19 +7110,19 @@ Continuer ?"""
                         self.current_process.wait()
                         if self.current_process.returncode != 0:
                             self.log("❌ Holographic augmentation failed!")
-                            messagebox.showerror("Error", "Holographic augmentation failed!")
+                            self.show_error("Error", "Holographic augmentation failed!")
                             return
                         else:
                             self.log("✅ Holographic augmentation completed!")
                 
                 # Success message
                 self.log("✅ All augmentations completed successfully!")
-                messagebox.showinfo("Success", "Augmentation completed successfully!")
+                self.show_info("Success", "Augmentation completed successfully!")
                 self.update_stats()
                     
             except Exception as e:
                 self.log(f"❌ Error: {e}")
-                messagebox.showerror("Error", f"Error:\n{e}")
+                self.show_error("Error", f"Error:\n{e}")
             finally:
                 self.end_operation()
         
@@ -7124,18 +7180,18 @@ Continuer ?"""
                     
                     if self.current_process.returncode == 0:
                         self.log("✅ Mosaïques générées!")
-                        messagebox.showinfo("Succès", "Mosaïques générées avec succès!")
+                        self.show_info("Succès", "Mosaïques générées avec succès!")
                         self.update_stats()
                         
                         # Mettre à jour les statistiques (V3.2)
                         self.update_all_statistics()
                     elif self.current_process.returncode is not None:
                         self.log("❌ Génération échouée")
-                        messagebox.showerror("Erreur", "Génération échouée!")
+                        self.show_error("Erreur", "Génération échouée!")
                     
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.show_error("Erreur", f"Erreur:\n{e}")
             finally:
                 self.end_operation()
         
@@ -7184,7 +7240,7 @@ Continuer ?"""
                         self.log(line)
                 
                 self.log("✅ Dataset fusionné avec succès!")
-                messagebox.showinfo("Succès", 
+                self.show_info("Succès", 
                     f"Dataset fusionné!\n\n"
                     f"📂 Emplacement: {PATHS['directories']['output_dataset']}\n"
                     "✓ train.txt et val.txt créés\n"
@@ -7195,7 +7251,7 @@ Continuer ?"""
                 self.log(f"❌ Erreur lors du merge: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Erreur", f"Erreur lors du merge:\n{e}")
+                self.show_error("Erreur", f"Erreur lors du merge:\n{e}")
             finally:
                 self.end_operation()
         
@@ -7207,7 +7263,7 @@ Continuer ?"""
         html = self.valid_html_var.get()
         
         if not os.path.exists(dataset_path):
-            messagebox.showerror("Error", f"Dataset non trouvé:\n{dataset_path}")
+            self.show_error("Error", f"Dataset non trouvé:\n{dataset_path}")
             return
         
         self.log(f"✅ Validation: {dataset_path}")
@@ -7234,14 +7290,14 @@ Continuer ?"""
                         self.log("✅ Validation terminée!")
                         if html:
                             self.log("📄 Rapport: validation_report.html")
-                        messagebox.showinfo("Succès", "Validation terminée!\nVoir validation_report.html")
+                        self.show_info("Succès", "Validation terminée!\nVoir validation_report.html")
                     elif self.current_process.returncode is not None:
                         self.log("❌ Validation échouée")
-                        messagebox.showerror("Erreur", "Validation échouée!")
+                        self.show_error("Erreur", "Validation échouée!")
                     
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.show_error("Erreur", f"Erreur:\n{e}")
             finally:
                 self.end_operation()
         
@@ -7254,7 +7310,7 @@ Continuer ?"""
             import webbrowser
             webbrowser.open(str(report_path.absolute()))
         else:
-            messagebox.showwarning("Attention", "Rapport non trouvé!\nValidez d'abord le dataset.")
+            self.show_warning("Attention", "Rapport non trouvé!\nValidez d'abord le dataset.")
     
     # ==================== EXPORT METHODS ====================
     
@@ -7271,7 +7327,7 @@ Continuer ?"""
             formats.append("roboflow")
         
         if not formats:
-            messagebox.showwarning("Attention", "Sélectionnez au moins un format!")
+            self.show_warning("Attention", "Sélectionnez au moins un format!")
             return
         
         self.log(f"📦 Export: {', '.join(formats)}")
@@ -7299,11 +7355,11 @@ Continuer ?"""
                             self.log(f"❌ Export {fmt} échoué")
                 
                 self.log("\n✅ Export terminé!")
-                messagebox.showinfo("Succès", f"Export terminé!\n\nFormats: {', '.join(formats)}")
+                self.show_info("Succès", f"Export terminé!\n\nFormats: {', '.join(formats)}")
                 
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.show_error("Erreur", f"Erreur:\n{e}")
             finally:
                 self.end_operation()
         
@@ -7338,15 +7394,15 @@ Continuer ?"""
                         pass  # Déjà logué dans stop_operation()
                     elif self.current_process.returncode == 0:
                         self.log("✅ Balancing terminé!")
-                        messagebox.showinfo("Succès", "Classes équilibrées!")
+                        self.show_info("Succès", "Classes équilibrées!")
                     elif self.current_process.returncode is not None:
                         self.log("❌ Balancing échoué!")
-                        messagebox.showerror("Erreur", "Balancing échoué!")
+                        self.show_error("Erreur", "Balancing échoué!")
                     
             except Exception as e:
                 if not self.operation_stopped:
                     self.log(f"❌ Erreur: {e}")
-                    messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                    self.show_error("Erreur", f"Erreur:\n{e}")
             finally:
                 self.end_operation()
         
@@ -7470,15 +7526,15 @@ Continuer ?"""
                             pass  # Déjà logué dans stop_operation()
                         elif self.current_process.returncode == 0:
                             self.log("✅ Holographic augmentation terminée!")
-                            messagebox.showinfo("Succès", "Effets holographiques appliqués!")
+                            self.show_info("Succès", "Effets holographiques appliqués!")
                         elif self.current_process.returncode is not None:
                             self.log("❌ Augmentation holographique échouée!")
-                            messagebox.showerror("Erreur", "Augmentation holographique échouée!")
+                            self.show_error("Erreur", "Augmentation holographique échouée!")
                         
                 except Exception as e:
                     if not self.operation_stopped:
                         self.log(f"❌ Erreur: {e}")
-                        messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                        self.show_error("Erreur", f"Erreur:\n{e}")
                 finally:
                     self.end_operation()
             
@@ -7521,19 +7577,19 @@ Continuer ?"""
             r1 = float(self.fakeimg_r1_var.get())
             r2 = float(self.fakeimg_r2_var.get())
         except Exception as e:
-            messagebox.showerror("Error", f"Invalid configuration:\n{e}")
+            self.show_error("Error", f"Invalid configuration:\n{e}")
             return
         
         if not os.path.exists(input_dir):
-            messagebox.showerror("Error", f"Input directory '{input_dir}' does not exist!\nDownload card images first from the Image Download view.")
+            self.show_error("Error", f"Input directory '{input_dir}' does not exist!\nDownload card images first from the Image Download view.")
             return
         
         if sl >= sh:
-            messagebox.showerror("Error", "Min area (sl) must be less than max area (sh)!")
+            self.show_error("Error", "Min area (sl) must be less than max area (sh)!")
             return
         
         if r1 >= r2:
-            messagebox.showerror("Error", "Min aspect (r1) must be less than max aspect (r2)!")
+            self.show_error("Error", "Min aspect (r1) must be less than max aspect (r2)!")
             return
         
         self.log(f"🎲 Applying random erasing: {input_dir} → {output_dir}")
@@ -7571,10 +7627,10 @@ Continuer ?"""
                     if os.path.exists(output_dir):
                         count = len([f for f in os.listdir(output_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
                         self.log(f"✅ {count} fake images generated in {output_dir}/")
-                        messagebox.showinfo("Success", f"Generated {count} fake images!")
+                        self.show_info("Success", f"Generated {count} fake images!")
                     else:
                         self.log(f"✅ Fake images generated in {output_dir}/")
-                        messagebox.showinfo("Success", "Fake images generated successfully!")
+                        self.show_info("Success", "Fake images generated successfully!")
                     
                     self.update_stats()
                     # Refresh view if still on fakeimg
@@ -7582,11 +7638,11 @@ Continuer ?"""
                         self.show_view('fakeimg')
                 else:
                     self.log(f"❌ Fake generation failed (exit code: {process.returncode})")
-                    messagebox.showerror("Error", "Fake generation failed!")
+                    self.show_error("Error", "Fake generation failed!")
             
             except Exception as e:
                 self.log(f"❌ Error: {e}")
-                messagebox.showerror("Error", f"Error:\n{e}")
+                self.show_error("Error", f"Error:\n{e}")
             finally:
                 self.end_operation()
         
@@ -7735,18 +7791,18 @@ Continuer ?"""
                     
                     if process.returncode == 0:
                         self.log(f"✅ {count_var.get()} fake backgrounds generated in {output_dir}/")
-                        messagebox.showinfo("Success", f"Generated {count_var.get()} fake backgrounds!")
+                        self.show_info("Success", f"Generated {count_var.get()} fake backgrounds!")
                         self.update_stats()
                         
                         # Mettre à jour les statistiques (V3.2)
                         self.update_all_statistics()
                     else:
                         self.log(f"❌ Fake generation failed (exit code: {process.returncode})")
-                        messagebox.showerror("Error", "Fake generation failed!")
+                        self.show_error("Error", "Fake generation failed!")
                 
                 except Exception as e:
                     self.log(f"❌ Error: {e}")
-                    messagebox.showerror("Error", f"Error:\n{e}")
+                    self.show_error("Error", f"Error:\n{e}")
                 finally:
                     self.end_operation()
             
@@ -7833,7 +7889,7 @@ Continuer ?"""
         def search_card():
             query = search_var.get().strip()
             if not query:
-                messagebox.showwarning("Attention", "Entrez un nom de carte!")
+                self.show_warning("Attention", "Entrez un nom de carte!")
                 return
             
             results_text.delete('1.0', tk.END)
@@ -7928,9 +7984,9 @@ Continuer ?"""
 
 Total: {images_count + aug_count + mosaic_count} images"""
             
-            messagebox.showinfo("Statistics", msg)
+            self.show_info("Statistics", msg)
         except Exception as e:
-            messagebox.showerror("Error", f"Erreur stats:\n{e}")
+            self.show_error("Error", f"Erreur stats:\n{e}")
     
     def open_yaml_tools(self):
         """Ouvrir dialog YAML & Prices avec TCGdex API"""
@@ -8228,11 +8284,11 @@ Total: {images_count + aug_count + mosaic_count} images"""
         output = output.strip()
         
         if not extension:
-            messagebox.showerror("Error", "Please enter a set name!")
+            self.show_error("Error", "Please enter a set name!")
             return
         
         if not output:
-            messagebox.showerror("Error", "Please enter an output filename!")
+            self.show_error("Error", "Please enter an output filename!")
             return
         
         self.log(f"📋 Generating card list for: {extension}")
@@ -8289,7 +8345,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                         if not found_sets:
                             self.log(f"❌ Set '{extension}' not found")
                             self.log(f"💡 Try with an ID (e.g., sv08, sv07, base1, etc.)")
-                            messagebox.showerror("Error", f"Set '{extension}' not found.\nTry with the set ID (e.g., sv08, sv07, etc.)")
+                            self.show_error("Error", f"Set '{extension}' not found.\nTry with the set ID (e.g., sv08, sv07, etc.)")
                             return
                         
                         best_match = found_sets[0]
@@ -8300,7 +8356,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                         
                     except Exception as e:
                         self.log(f"❌ Error searching set: {e}")
-                        messagebox.showerror("Error", f"Cannot find set.\nTry with ID (e.g., sv08)")
+                        self.show_error("Error", f"Cannot find set.\nTry with ID (e.g., sv08)")
                         return
                 
                 # Récupérer toutes les cartes du set
@@ -8326,7 +8382,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                     
                     if not cards_list:
                         self.log(f"❌ No cards found in set")
-                        messagebox.showwarning("Warning", f"No cards found for '{set_name}'")
+                        self.show_warning("Warning", f"No cards found for '{set_name}'")
                         return
                     
                     self.log(f"✅ {len(cards_list)} cards fetched")
@@ -8334,14 +8390,14 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 except requests.exceptions.HTTPError as e:
                     if e.response.status_code == 404:
                         self.log(f"❌ Set '{set_id}' not found (404)")
-                        messagebox.showerror("Error", f"Set '{set_id}' not found.\nCheck the set ID.")
+                        self.show_error("Error", f"Set '{set_id}' not found.\nCheck the set ID.")
                     else:
                         self.log(f"❌ HTTP Error: {e}")
-                        messagebox.showerror("Error", f"Error fetching: {e}")
+                        self.show_error("Error", f"Error fetching: {e}")
                     return
                 except Exception as e:
                     self.log(f"❌ Error: {e}")
-                    messagebox.showerror("Error", f"Error: {e}")
+                    self.show_error("Error", f"Error: {e}")
                     return
                 
                 # Créer la structure YAML
@@ -8409,13 +8465,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 self.log(f"💡 Format: YAML (human-readable)")
                 self.log(f"{'='*60}")
                 
-                messagebox.showinfo("Success", f"File generated successfully!\n\n{len(cards_list)} cards from '{set_name}'\n\nFormat: YAML\nSource: TCGdex (free)")
+                self.show_info("Success", f"File generated successfully!\n\n{len(cards_list)} cards from '{set_name}'\n\nFormat: YAML\nSource: TCGdex (free)")
                 
             except Exception as e:
                 self.log(f"❌ Error: {str(e)}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"An error occurred:\n{str(e)}")
+                self.show_error("Error", f"An error occurred:\n{str(e)}")
             finally:
                 self.end_operation()
         
@@ -8427,11 +8483,11 @@ Total: {images_count + aug_count + mosaic_count} images"""
         output_file = output_file.strip()
         
         if not input_file or not os.path.exists(input_file):
-            messagebox.showerror("Error", f"Input file '{input_file}' doesn't exist!")
+            self.show_error("Error", f"Input file '{input_file}' doesn't exist!")
             return
         
         if not output_file:
-            messagebox.showerror("Error", "Please enter an output filename!")
+            self.show_error("Error", "Please enter an output filename!")
             return
         
         # Charger la config API
@@ -8467,7 +8523,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 
                 if 'cards' not in data:
                     self.log("❌ Invalid YAML structure (missing 'cards' section)")
-                    messagebox.showerror("Error", "Invalid YAML file structure!")
+                    self.show_error("Error", "Invalid YAML file structure!")
                     return
                 
                 cards_dict = data['cards']
@@ -8556,13 +8612,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
                     for c, num, e in failed[:5]:
                         self.log(f"   • {c} #{num}: {e[:50]}")
                 
-                messagebox.showinfo("Complete", f"Prices updated!\n{success_count}/{total} cards with prices")
+                self.show_info("Complete", f"Prices updated!\n{success_count}/{total} cards with prices")
                 
             except Exception as e:
                 self.log(f"❌ Error: {str(e)}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"Error:\n{str(e)}")
+                self.show_error("Error", f"Error:\n{str(e)}")
             finally:
                 self.end_operation()
         
@@ -8574,7 +8630,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         card_set = card_set.strip() if card_set else None
         
         if not card_name:
-            messagebox.showerror("Error", "Please enter a card name!")
+            self.show_error("Error", "Please enter a card name!")
             return
         
         self.log(f"🔍 Searching price for: {card_name}")
@@ -8629,16 +8685,16 @@ Total: {images_count + aug_count + mosaic_count} images"""
                         result += "⚠️ No prices available"
                     
                     self.log(f"✅ Card found: {name}")
-                    messagebox.showinfo("Card Prices", result)
+                    self.show_info("Card Prices", result)
                 else:
                     self.log(f"❌ Card not found: {card_name}")
-                    messagebox.showwarning("Not Found", f"Card '{card_name}' not found.\n\nTry with a different spelling or set name.")
+                    self.show_warning("Not Found", f"Card '{card_name}' not found.\n\nTry with a different spelling or set name.")
                 
             except Exception as e:
                 self.log(f"❌ Error: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"Error:\n{e}")
+                self.show_error("Error", f"Error:\n{e}")
             finally:
                 self.end_operation()
         
@@ -8668,13 +8724,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
             if output_path.exists():
                 shutil.rmtree(output_path)
                 self.log("✅ Output folder deleted")
-                messagebox.showinfo("Success", "Output folder cleaned successfully!")
+                self.show_info("Success", "Output folder cleaned successfully!")
             else:
                 self.log("⚠️ Output folder not found")
-                messagebox.showwarning("Warning", "Output folder not found!")
+                self.show_warning("Warning", "Output folder not found!")
         except Exception as e:
             self.log(f"❌ Error cleaning output: {e}")
-            messagebox.showerror("Error", f"Failed to clean output:\n{e}")
+            self.show_error("Error", f"Failed to clean output:\n{e}")
     
     def clean_augmented(self):
         """Nettoyer output/augmented/"""
@@ -8695,12 +8751,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
             if aug_path.exists():
                 shutil.rmtree(aug_path)
                 self.log("✅ Augmented folder deleted")
-                messagebox.showinfo("Success", "Augmented folder cleaned!")
+                self.show_info("Success", "Augmented folder cleaned!")
             else:
                 self.log("⚠️ Augmented folder not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_mosaics(self):
         """Nettoyer output/mosaics/ et output/dataset/"""
@@ -8730,10 +8786,10 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 shutil.rmtree(dataset_path)
                 self.log("✅ Dataset folder deleted")
             
-            messagebox.showinfo("Success", "Mosaics and Dataset folders cleaned!")
+            self.show_info("Success", "Mosaics and Dataset folders cleaned!")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_training(self):
         """Nettoyer runs/ (résultats d'entraînement)"""
@@ -8757,12 +8813,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
             if runs_path.exists():
                 shutil.rmtree(runs_path)
                 self.log("✅ Training results deleted")
-                messagebox.showinfo("Success", "Training results cleaned!")
+                self.show_info("Success", "Training results cleaned!")
             else:
                 self.log("⚠️ Training results not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_holographic(self):
         """Nettoyer images_holographic/"""
@@ -8783,12 +8839,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
             if holo_path.exists():
                 shutil.rmtree(holo_path)
                 self.log("✅ Holographic folder deleted")
-                messagebox.showinfo("Success", "Holographic folder cleaned!")
+                self.show_info("Success", "Holographic folder cleaned!")
             else:
                 self.log("⚠️ Holographic folder not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_fakeimg(self):
         """Nettoyer fakeimg_augmented/"""
@@ -8816,12 +8872,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
             
             if deleted:
                 self.log(f"✅ Deleted: {', '.join(deleted)}")
-                messagebox.showinfo("Success", f"Cleaned: {', '.join(deleted)}")
+                self.show_info("Success", f"Cleaned: {', '.join(deleted)}")
             else:
                 self.log("⚠️ Fake image folder not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_all(self):
         """Nettoyer TOUS les dossiers générés"""
@@ -8891,13 +8947,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
                     message += f"\n\n⚠️ Errors ({len(errors)}):\n"
                     message += "\n".join(f"• {e}" for e in errors)
                 
-                messagebox.showinfo("Clean Complete", message)
+                self.show_info("Clean Complete", message)
             else:
-                messagebox.showinfo("Clean Complete", "No folders found to clean.")
+                self.show_info("Clean Complete", "No folders found to clean.")
                 
         except Exception as e:
             self.log(f"❌ Error during clean all: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def open_output_folder(self):
         """Ouvrir dossier output"""
@@ -8906,7 +8962,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
             import subprocess
             subprocess.run(["explorer", str(output_path)])
         else:
-            messagebox.showwarning("Attention", "Dossier output/ non trouvé!")
+            self.show_warning("Attention", "Dossier output/ non trouvé!")
     
     def open_folder(self, folder_name):
         """Ouvrir un dossier spécifique"""
@@ -8915,7 +8971,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
             import subprocess
             subprocess.run(["explorer", str(folder_path)])
         else:
-            messagebox.showwarning("Warning", f"Folder {folder_name}/ not found!")
+            self.show_warning("Warning", f"Folder {folder_name}/ not found!")
 
 def main():
     root = tk.Tk()

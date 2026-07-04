@@ -114,18 +114,19 @@ class DetectionManager:
             self._log_callback(message)
     
     def _load_prices(self) -> None:
-        """Charge les prix depuis le fichier Excel"""
+        """Charge les prix depuis la base YAML (models/cards_database.yaml)"""
         try:
-            from .utils import load_prices_from_excel
+            from .utils import load_prices, PATHS
             from .card_mapping import get_card_id_from_class_name
-            
-            self._prices = load_prices_from_excel(self.config.excel_path)
+
+            yaml_path = PATHS['files']['cards_database_yaml']
+            self._prices = load_prices(yaml_path)
             self._get_card_id = get_card_id_from_class_name  # Stocker la fonction de mapping
-            
+
             if self._prices:
-                self._log(f"💰 {len(self._prices)} prix chargés depuis {self.config.excel_path}")
+                self._log(f"💰 {len(self._prices)} prix chargés depuis {yaml_path}")
             else:
-                self._log(f"⚠️ Aucun prix trouvé dans {self.config.excel_path}")
+                self._log(f"⚠️ Aucun prix trouvé dans {yaml_path}")
         except Exception as e:
             self._log(f"⚠️ Impossible de charger les prix: {e}")
             self._prices = {}

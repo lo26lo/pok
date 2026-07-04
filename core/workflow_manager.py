@@ -35,6 +35,7 @@ class WorkflowStep(Enum):
     """Énumération des étapes du workflow"""
     AUGMENTATION = "augmentation"
     MOSAIC = "mosaic"
+    MERGE = "merge"
     VALIDATION = "validation"
     BALANCING = "balancing"
     TRAINING = "training"
@@ -347,39 +348,43 @@ class WorkflowManager:
         self._update_progress(current, total, "Fusion augmented + mosaics...")
         
         try:
-            # Importer et exécuter merge_dataset
+            # merge_dataset vit dans scripts/ : rendre l'import indépendant
+            # du contexte d'exécution (GUI, CLI, autre CWD)
+            scripts_dir = Path(__file__).resolve().parent.parent / "scripts"
+            if str(scripts_dir) not in sys.path:
+                sys.path.insert(0, str(scripts_dir))
             import merge_dataset
-            
+
             # Rediriger stdout pour capturer les prints
             import io
             from contextlib import redirect_stdout
-            
+
             output = io.StringIO()
             with redirect_stdout(output):
                 merge_dataset.merge_dataset()
-            
+
             # Afficher la sortie dans le log
             for line in output.getvalue().split('\n'):
                 if line.strip():
                     self._log(line)
-            
+
             duration = time.time() - start_time
             self._log(f"✅ Dataset fusionné ({duration:.1f}s)")
-            
+
             return StepResult(
-                step=WorkflowStep.MOSAIC,  # Pas de WorkflowStep.MERGE défini, on utilise MOSAIC
+                step=WorkflowStep.MERGE,
                 status=StepStatus.SUCCESS,
                 duration=duration,
                 message="Dataset fusionné avec succès"
             )
-            
+
         except Exception as e:
             duration = time.time() - start_time
             self._log(f"❌ Erreur merge: {e}")
             import traceback
             self._log(traceback.format_exc())
             return StepResult(
-                step=WorkflowStep.MOSAIC,
+                step=WorkflowStep.MERGE,
                 status=StepStatus.FAILED,
                 duration=duration,
                 message=str(e),
@@ -567,11 +572,12 @@ class WorkflowManager:
         """
         if not self.results:
             return False
-        
-        # Les 2 premières étapes (augmentation + mosaic) sont critiques
-        critical_steps = [r for r in self.results 
-                         if r.step in [WorkflowStep.AUGMENTATION, WorkflowStep.MOSAIC]]
-        
+
+        # Les 3 premières étapes (augmentation + mosaic + merge) sont critiques
+        critical_steps = [r for r in self.results
+                         if r.step in [WorkflowStep.AUGMENTATION, WorkflowStep.MOSAIC,
+                                       WorkflowStep.MERGE]]
+
         return all(r.status == StepStatus.SUCCESS for r in critical_steps)
     
     def get_summary(self) -> str:
