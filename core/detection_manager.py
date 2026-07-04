@@ -24,6 +24,11 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
+try:
+    from .base_manager import BaseManager
+except ImportError:
+    from base_manager import BaseManager
+
 
 @dataclass
 class DetectionConfig:
@@ -70,7 +75,7 @@ class Detection:
         return f"Detection({self.class_name}, {self.confidence:.2%}, bbox={self.bbox})"
 
 
-class DetectionManager:
+class DetectionManager(BaseManager):
     """
     Gestionnaire de détection YOLO
     
@@ -92,27 +97,18 @@ class DetectionManager:
         Args:
             config: Configuration de détection
         """
+        super().__init__()
         self.config = config
-        self._log_callback: Optional[Callable[[str], None]] = None
         self._model = None
         self._prices: Dict[str, Dict[str, Any]] = {}
         self._class_names: Dict[int, str] = {}
-        
+
         # Charger les prix si demandé
         if self.config.show_prices:
             self._load_prices()
             self._load_class_names()
-        
-    def set_log_callback(self, callback: Callable[[str], None]) -> None:
-        """Définit le callback de log"""
-        self._log_callback = callback
-    
-    def _log(self, message: str) -> None:
-        """Log un message"""
-        logger.info(message)
-        if self._log_callback:
-            self._log_callback(message)
-    
+
+
     def _load_prices(self) -> None:
         """Charge les prix depuis la base YAML (models/cards_database.yaml)"""
         try:

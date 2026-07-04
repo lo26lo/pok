@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pokemon-dataset-generator"
-version = "3.4.3"
+version = "3.6.0"
 description = "Pipeline YOLO complet pour cartes Pokémon : génération de dataset, entraînement et détection avec prix"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -40,7 +40,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["core"]
+packages = ["core", "gui"]
 
 # ============================================================================
 # pytest

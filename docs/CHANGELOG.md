@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.6.0] - 2026-07-04
+
+### 🏗️ Phase 4 : Refactoring GUI — package gui/, TaskRunner, BaseManager
+
+#### Nouveau package `gui/` (le monolithe passe de 8 926 à ~7 100 lignes)
+- `gui/theme.py` : palette Catppuccin Mocha + constantes de mise en page
+  (source unique, préalable au thème clair/sombre)
+- `gui/config.py` : `GuiConfig`, accès centralisé à `gui_config.json`
+  — corrige un bug latent : la sauvegarde des Settings écrasait tout le
+  fichier et perdait les clés `paths`/`last_used`
+- `gui/task_runner.py` : `TaskRunner`, exécuteur unique des opérations
+  longues (R2) — remplace les ~12 blocs « Popen → parsing stdout →
+  messagebox → end_operation » copiés-collés (≈ 700 lignes dédupliquées) ;
+  streaming des logs, arrêt propre (terminate/kill), callbacks de fin
+  exécutés sur le thread UI
+- `gui/settings_dialog.py` : SettingsDialog extrait (1 650 lignes)
+- `gui/logging_setup.py` : log fichier global `logs/pokemon_gui.log`
+  (rotation 1 Mo ×3) — reçoit le panneau de log GUI ET les managers core
+
+#### Thread-safety renforcée
+- Nouvelle file de callbacks UI (`_dispatch_ui`) : les threads workers ne
+  font plus AUCUN appel Tk, même pas `root.after` (le smoke test a montré
+  un `RuntimeError: main thread is not in main loop` possible) ; popups,
+  fin d'opération et rafraîchissements passent tous par le poller du
+  thread principal
+
+#### core : `BaseManager` (R3)
+- `core/base_manager.py` factorise `set_log_callback` / `_log` /
+  `set_progress_callback` / `_update_progress`, réimplémentés à
+  l'identique dans Workflow/Training/DetectionManager
+
+#### Cross-platform & tests
+- `start.sh` : lanceur Linux/macOS (venv-aware), équivalent de START.bat
+- 13 nouveaux tests pytest (`tests/test_gui_modules.py`) : GuiConfig,
+  TaskRunner (succès/échec/stop/concurrence/subprocess réel), theme,
+  logging — **84 tests, 0 échec**
+- Smoke test GUI complet exécuté sous display virtuel (xvfb) :
+  instanciation, 11 vues, TaskRunner réel, SettingsDialog ✅
+
+#### Décision d'architecture (R8 amendé)
+- Les modules de génération restent lancés en sous-processus (isolation
+  mémoire/GPU, sortie -u temps réel) mais via le TaskRunner unique ;
+  workflow/training/détection continuent d'utiliser les managers en
+  direct. Le passage en appels directs pour la génération nécessiterait
+  des callbacks de progression dans les modules core (backlog).
+
+---
+
 ## [3.5.0] - 2026-07-04
 
 ### 🧪 Phase 3 : Tests automatisés, CI et packaging

@@ -168,18 +168,24 @@ obsolete/           → anciens fichiers conservés dans le repo
 
 ---
 
-### Phase 4 : Refactorisation GUI (optionnelle, plus ambitieuse)
-**Statut** : ⏳ À faire — **Effort : 2-3 journées** — ⚠️ à valider séparément
+### Phase 4 : Refactorisation GUI
+**Statut** : ✅ Terminé (2026-07-04) — validation finale sur poste Windows recommandée
 
 **Actions** :
-- [ ] Découper `GUI_v3.1_modern.py` en package `gui/` (dashboard, onglets, settings, thème, widgets)
-- [ ] Remplacer subprocess+parsing par appels directs aux managers dans des threads, avec une file de messages unique vers le GUI
-- [ ] Centraliser le threading (un seul « TaskRunner » avec annulation)
-- [ ] `logging` configuré globalement (fichier + panneau de log GUI)
-- [ ] Lanceurs cross-platform (`start.sh` / entry point `pokemon-dataset-gen` via pyproject)
+- [x] Package `gui/` créé : theme, config (GuiConfig), task_runner (TaskRunner), settings_dialog (1 650 lignes extraites), logging_setup — monolithe réduit de 8 926 à ~7 100 lignes
+- [x] TaskRunner centralisé avec annulation : les ~12 blocs subprocess copiés-collés remplacés (R2, ≈700 lignes dédupliquées)
+- [x] File unique de callbacks UI : plus AUCUN appel Tk depuis les workers (même root.after — RuntimeError possible détecté par smoke test)
+- [x] `core/base_manager.py` (R3) : Workflow/Training/DetectionManager héritent des callbacks communs
+- [x] logging global : logs/pokemon_gui.log (rotation), alimenté par le GUI et les managers
+- [x] `start.sh` cross-platform (venv-aware) + paquet `gui` dans pyproject
+- [x] Bug corrigé au passage : Settings → Save écrasait gui_config.json (perte de paths/last_used)
+
+**Décision (R8 amendé)** : la génération (augmentation/mosaïques/…) reste en sous-processus — isolation mémoire/GPU et sortie temps réel — mais via le TaskRunner unique ; workflow/training/détection utilisent les managers en direct. Appels directs pour la génération = backlog (nécessite des callbacks de progression dans les modules core).
 
 **Validation** :
-- [ ] Checklist `docs/migration/CHECKLIST_TEST_GUI.md` repassée entièrement
+- [x] 84 tests pytest (13 nouveaux pour gui/), 0 échec ; ruff propre
+- [x] Smoke test GUI complet sous xvfb : instanciation, 11 vues, TaskRunner réel (succès/échec/logs→widget), SettingsDialog
+- [ ] ⚠️ Checklist `docs/archive/migration/CHECKLIST_TEST_GUI.md` à repasser sur poste Windows (display réel)
 
 ---
 
