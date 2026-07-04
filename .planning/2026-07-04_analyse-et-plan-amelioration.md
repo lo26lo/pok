@@ -170,6 +170,53 @@ obsolete/           → anciens fichiers conservés dans le repo
 
 ---
 
+## 🔧 PARTIE 4 — Cibles de refactorisation supplémentaires (ajout 2026-07-04)
+
+Analyse approfondie suite à la question « que pourrait-on refactoriser encore ? ». Classées par gain/risque.
+
+### R1. Thread-safety du GUI ⚠️ (gain élevé — c'est aussi un bug latent)
+`log()` (`GUI_v3.1_modern.py:5910`) manipule directement les widgets Tkinter et est appelé depuis les threads workers ; ~140 appels `messagebox.*` dont beaucoup depuis des threads ; seulement 4 usages de `.after()`. **Tkinter n'est pas thread-safe** → freezes/crashs aléatoires possibles.
+**Refactor** : une `queue.Queue` de messages + un poller `root.after(100, ...)` unique qui fait les `insert` et affiche les messageboxes dans le thread principal.
+
+### R2. Bloc subprocess copié-collé ~12× dans le GUI (gain élevé, risque faible)
+Le pattern « `Popen` → `iter(stdout.readline)` → `self.log` → `wait()` → messagebox succès/échec → `end_operation` » est dupliqué dans `start_augmentation`, `start_mosaic`, `start_merge_dataset`, `start_validation`, `start_export`, `start_balancing`, `start_holographic`, `start_fake_generator`, etc. (~40-70 lignes chacun).
+**Refactor** : une méthode générique `run_task(name, cmd_ou_callable, on_success)` — les 12 méthodes `start_*` tombent à ~10 lignes chacune (≈ -700 lignes).
+
+### R3. Mixin/base commune pour les managers core (gain moyen)
+`workflow_manager`, `training_manager`, `detection_manager` (+ `image_downloader` en variante) réimplémentent chacun `set_log_callback` / `_log` / `_progress_callback`. Les 6 méthodes `_run_*` de `workflow_manager` répètent le même squelette de 45 lignes (chrono + try/except + StepResult).
+**Refactor** : classe `BaseManager` (log/progress) + helper `_execute_step(step, fn)` qui factorise chrono/statut/erreurs.
+
+### R4. Unifier resize/chargement d'images (gain moyen)
+`resize_cards` existe dans `utils.py:301`, `augmentation_albumentations.resize_cards_batch:359`, `mosaic_optimized.resize_cards_parallel:168` — trois implémentations du même besoin (chargement + RGBA→RGB + resize), en plus des doublons `load_card_data`/`extract_card_number` déjà notés en 2.2.
+**Refactor** : un seul module `core/image_io.py` avec version séquentielle et parallèle.
+
+### R5. Externaliser la config GUI et le thème (gain moyen)
+- Lecture/écriture de `gui_config.json` dupliquée entre `SettingsDialog.load_settings` et le GUI principal (6 accès directs, 7 `json.load/dump`) → une classe `GuiConfig` unique (load/save/défauts).
+- ~42 couleurs hex codées en dur hors du dict `self.colors` → tout passer par la palette, prérequis pour un vrai thème clair/sombre.
+- `SettingsDialog` (1 650 lignes) à extraire en module dès la Phase 4.
+
+### R6. i18n incomplète (gain faible/moyen)
+Le système `ui_messages.json`/`get_message()` existe, mais ~160 chaînes « Succès/Erreur/Error/Success » sont codées en dur dans le GUI, en mélange français/anglais.
+**Refactor** : basculer les messageboxes et logs GUI sur `get_message()` (mécanique, peut se faire progressivement).
+
+### R7. Consolider les scripts quasi-doublons (gain faible, rapide)
+- `init_prices.py` / `init_prices_simple.py` / `init_prices_real.py` → un seul `init_prices.py --mode {full,simple,manifest}`
+- `update_prices_yaml.py` / `update_prices_yaml_fast.py` → un seul avec `--fast`
+- `fix_class_mapping.py` / `fix_class_mapping_correct.py` et `create_card_mapping.py` / `create_real_mapping.py` → garder la bonne version, archiver l'autre
+- `tests/` : séparer les vrais tests des utilitaires `debug_*` / `verify_*` / `visualize_*` (à déplacer vers `tools/diagnostics/`)
+
+### R8. Remplacer subprocess par des imports directs (gain élevé, risque moyen)
+Le GUI **et** `workflow_manager` lancent `augmentation_albumentations.py`, `mosaic_optimized.py`, `dataset_validator.py`, `auto_balancer_optimized.py` en sous-processus avec parsing de stdout, alors que ce sont des classes importables du même package. Conséquences actuelles : exceptions perdues, encodage Windows fragile, pas de progression structurée.
+**Refactor** : appeler les classes directement (les callbacks log/progress existent déjà) ; garder le subprocess uniquement pour l'entraînement YOLO (isolation mémoire GPU justifiée). C'est le cœur de la Phase 4.
+
+### Intégration au plan de phases
+- **Phase 1** (bugs) : + R1 (thread-safety = correctif de fiabilité)
+- **Phase 2** (nettoyage) : + R7 (scripts doublons)
+- **Phase 3** (tests/CI) : inchangée — les tests protègent les refactors suivants
+- **Phase 4** (GUI) : R2, R3, R5, R8 en font partie ; R4 et R6 en continu
+
+---
+
 ### 💡 Idées bonus (backlog, non planifiées)
 - Cache HTTP TCGdex sur disque + reprise de téléchargement
 - Export du modèle en ONNX/TensorRT exposé dans le GUI (le code existe déjà côté training_manager)
