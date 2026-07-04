@@ -70,7 +70,7 @@ def test_workflow_simulation():
     print("\n5️⃣ Vérification des scripts d'initialisation...")
     scripts = [
         "scripts/init_prices.py",
-        "scripts/init_prices_simple.py",
+        "scripts/update_prices_yaml.py",
         "scripts/create_card_mapping.py"
     ]
     

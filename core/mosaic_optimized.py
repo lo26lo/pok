@@ -23,11 +23,13 @@ from functools import partial
 from typing import List, Tuple, Optional, Dict
 import multiprocessing as mp
 
-# Import safe_print et load_prices
+# Import safe_print, load_prices et le mapping de classes centralisé
 try:
-    from .utils import safe_print, load_prices, load_paths, PATHS
+    from .utils import (safe_print, load_prices, load_paths, PATHS,
+                        load_card_data as load_card_data_unified)
 except ImportError:
-    from utils import safe_print, load_prices, load_paths, PATHS
+    from utils import (safe_print, load_prices, load_paths, PATHS,
+                       load_card_data as load_card_data_unified)
 
 # Détection GPU optionnelle
 try:
@@ -81,22 +83,13 @@ class MosaicGeneratorOptimized:
         safe_print(f"   Workers: {self.num_workers} threads")
     
     def load_card_data(self, yaml_path: str = None) -> Tuple[Dict, Dict]:
-        """Charge les données des cartes depuis YAML (default: from paths.json)"""
-        if yaml_path is None:
-            yaml_path = PATHS['files']['cards_database_yaml']
-        prices_data = load_prices(yaml_path)
-        card_dict = {}
-        class_map = {}
-        
-        for idx, (card_id, card_info) in enumerate(prices_data.items()):
-            # card_id est déjà au format correct (ex: "sv08_019", "swsh7_001", etc.)
-            card_name = card_info.get('name', '').replace(" ", "_")
-            if card_id not in card_dict:
-                card_dict[card_id] = card_name
-                # Le class_id dans data.yaml est 0-indexed
-                class_map[card_id] = idx
-        
-        return card_dict, class_map
+        """
+        Charge les données des cartes via le mapping centralisé (core.utils)
+
+        Garantit que les class_id des mosaïques sont identiques à ceux de
+        l'augmentation (0-indexed, mêmes clés card_id complet + numéro court).
+        """
+        return load_card_data_unified(yaml_path)
     
     def extract_card_number(self, filename: str) -> Optional[str]:
         """Extrait l'identifiant de carte (format sv08_019, swsh7_001, etc.)"""
@@ -160,7 +153,7 @@ class MosaicGeneratorOptimized:
                 import shutil
                 shutil.move(str(img_file), str(dest_path))
                 safe_print(f"⚠️ Erreur sur {img_file.name} (déplacée dans corrupted/): {e}")
-            except:
+            except Exception:
                 safe_print(f"⚠️ Erreur chargement {img_path}: {e}")
             
             return None

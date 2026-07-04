@@ -7,6 +7,182 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.6.0] - 2026-07-04
+
+### 🏗️ Phase 4 : Refactoring GUI — package gui/, TaskRunner, BaseManager
+
+#### Nouveau package `gui/` (le monolithe passe de 8 926 à ~7 100 lignes)
+- `gui/theme.py` : palette Catppuccin Mocha + constantes de mise en page
+  (source unique, préalable au thème clair/sombre)
+- `gui/config.py` : `GuiConfig`, accès centralisé à `gui_config.json`
+  — corrige un bug latent : la sauvegarde des Settings écrasait tout le
+  fichier et perdait les clés `paths`/`last_used`
+- `gui/task_runner.py` : `TaskRunner`, exécuteur unique des opérations
+  longues (R2) — remplace les ~12 blocs « Popen → parsing stdout →
+  messagebox → end_operation » copiés-collés (≈ 700 lignes dédupliquées) ;
+  streaming des logs, arrêt propre (terminate/kill), callbacks de fin
+  exécutés sur le thread UI
+- `gui/settings_dialog.py` : SettingsDialog extrait (1 650 lignes)
+- `gui/logging_setup.py` : log fichier global `logs/pokemon_gui.log`
+  (rotation 1 Mo ×3) — reçoit le panneau de log GUI ET les managers core
+
+#### Thread-safety renforcée
+- Nouvelle file de callbacks UI (`_dispatch_ui`) : les threads workers ne
+  font plus AUCUN appel Tk, même pas `root.after` (le smoke test a montré
+  un `RuntimeError: main thread is not in main loop` possible) ; popups,
+  fin d'opération et rafraîchissements passent tous par le poller du
+  thread principal
+
+#### core : `BaseManager` (R3)
+- `core/base_manager.py` factorise `set_log_callback` / `_log` /
+  `set_progress_callback` / `_update_progress`, réimplémentés à
+  l'identique dans Workflow/Training/DetectionManager
+
+#### Cross-platform & tests
+- `start.sh` : lanceur Linux/macOS (venv-aware), équivalent de START.bat
+- 13 nouveaux tests pytest (`tests/test_gui_modules.py`) : GuiConfig,
+  TaskRunner (succès/échec/stop/concurrence/subprocess réel), theme,
+  logging — **84 tests, 0 échec**
+- Smoke test GUI complet exécuté sous display virtuel (xvfb) :
+  instanciation, 11 vues, TaskRunner réel, SettingsDialog ✅
+
+#### Décision d'architecture (R8 amendé)
+- Les modules de génération restent lancés en sous-processus (isolation
+  mémoire/GPU, sortie -u temps réel) mais via le TaskRunner unique ;
+  workflow/training/détection continuent d'utiliser les managers en
+  direct. Le passage en appels directs pour la génération nécessiterait
+  des callbacks de progression dans les modules core (backlog).
+
+---
+
+## [3.5.0] - 2026-07-04
+
+### 🧪 Phase 3 : Tests automatisés, CI et packaging
+
+#### Suite pytest (43 nouveaux tests)
+- `tests/conftest.py` : fixtures partagées (mini base de 3 cartes + images
+  générées) et exclusion des benchmarks manuels/GPU de la collecte
+- `tests/test_core_utils.py` : verrouille les garanties du mapping v3.4.2
+  (0-indexé, double clé, cohérence utils/mosaïque/augmentation, régression B2)
+- `tests/test_augmentation_pipeline.py` : E2E augmentation sur mini-dataset
+  (class_id corrects, exclusion des cartes inconnues, data.yaml ordonné)
+- `tests/test_merge_dataset.py` : copy_files, split train/val, extraction de
+  classes, data.yaml, fusion complète en arborescence temporaire
+- `tests/test_workflow_manager.py` : validation de config, étape MERGE
+  critique (régression B5), comptage d'étapes, résumé
+- `tests/test_yaml_loading.py` réparé : fixtures hissées au niveau module
+  (une classe utilisait la fixture d'une autre) + suppression du `test_main`
+  qui relançait pytest récursivement
+- **Bilan : 71 tests passent, 1 skip, 0 échec (~3 s)**
+
+#### CI GitHub Actions (`.github/workflows/ci.yml`)
+- Job lint : ruff (garde-fou syntaxe + noms non définis) sur tout le dépôt
+- Job tests : matrice Ubuntu + Windows × Python 3.11/3.12, cache pip
+- Déclenchement sur push, pull request et manuel
+
+#### Packaging (`pyproject.toml`)
+- Projet installable (`pip install .`), dépendances regroupées
+- Extras : `[training]` (ultralytics), `[excel]` (pandas/openpyxl legacy),
+  `[dev]` (pytest, ruff)
+- Configuration pytest et ruff centralisée dans pyproject.toml
+
+---
+
+## [3.4.3] - 2026-07-04
+
+### 🧹 Phase 2 : Nettoyage — code mort, doc consolidée, scripts fusionnés
+
+#### Code mort supprimé
+- `obsolete/` (12+ fichiers archivés dans l'historique git), `README_old.md`
+- `core/augmentation_optimized.py` (imgaug, remplacé par Albumentations en v3.4,
+  import cassé depuis le retrait d'imgaug des requirements)
+- `core/detection_with_prices.py` + `tests/test_detection_prices.py`
+  (remplacés par `core/detection_manager.py`)
+
+#### Scripts consolidés (R7)
+- Supprimés : `init_prices_simple.py`, `init_prices_real.py` (codés en dur pour
+  l'ancien dataset 8 cartes sv08), `fix_class_mapping.py`, `fix_class_mapping_correct.py`
+  (correctifs one-shot rendus inutiles par le mapping unifié de la v3.4.2),
+  `create_real_mapping.py`
+- `update_prices_yaml_fast.py` devient LE `update_prices_yaml.py` (requêtes parallèles)
+- `init_prices.py` : fin de fichier corrompue réparée (le script ne compilait pas),
+  chemins résolus via `__file__`
+- `create_card_mapping.py` **réécrit générique** : génère `models/card_name_to_id.json`
+  depuis `cards_database.yaml` (plus de mapping codé en dur) ; fichier régénéré pour
+  la base actuelle (155 cartes xyp au lieu de 8 cartes sv08 périmées)
+- Utilitaires `debug_*`, `visualize_*`, `verify_*`, `check_corrupted_images` déplacés
+  de `tests/` vers `tools/diagnostics/` (tests/ ne contient plus que de vrais tests)
+
+#### Documentation consolidée
+- `docs/new/` promu dans `docs/` : USER_GUIDE, INSTALLATION, FAQ, TECHNICAL_GUIDE,
+  API_REFERENCE, ADVANCED (les doublons FEATURES/CHANGELOG périmés de new/ supprimés)
+- `docs/migration/` et `CHANGELOG_v3.2.3.md` déplacés vers `docs/archive/`
+- README racine : version v3.4, liens cassés corrigés (`README_COMPLET.md`,
+  `GUI_V3_GUIDE.md`, `MAINTENANCE_SCRIPTS_REFERENCE.md` n'existaient plus),
+  mention imgaug → Albumentations, liens CONTRIBUTING/LICENSE inexistants retirés
+- Tous les liens locaux de README.md, docs/README.md et docs/FEATURES.md vérifiés
+
+#### Robustesse
+- 23 `except:` nus remplacés par `except Exception:` (core + GUI) — un except nu
+  avale aussi KeyboardInterrupt/SystemExit
+- `images/.gitkeep` ajouté (le dossier existe désormais dans un clone frais)
+- `tests/test_project_integrity.py` mis à jour (7/7) et `SCRIPTS_REFERENCE.py`
+  recatalogué
+
+---
+
+## [3.4.2] - 2026-07-04
+
+### 🐛 Phase 1 : Corrections de bugs & fiabilité (plan `.planning/2026-07-04`)
+
+#### Mapping de classes unifié (B3/B4) — ⚠️ important
+- `core.utils.load_card_data` est désormais la **source unique de vérité** du mapping
+  de classes YOLO : **0-indexé** (standard YOLO, aligné sur data.yaml), chaque carte
+  indexée sous deux clés (id complet `xyp_XY05` + numéro court `XY05`)
+- Suppression des copies locales divergentes dans `augmentation_albumentations.py`
+  (0-indexé) et `mosaic_optimized.py` — l'ancienne version `utils` était 1-indexée
+- Le fallback silencieux `class_id = hash(filename) % 1000` est remplacé par un
+  avertissement explicite + exclusion de l'image (plus de labels aléatoires)
+- Nouvelle fonction `core.utils.build_class_names_list()` (names ordonnés par id)
+- L'augmentation écrit à nouveau `output/augmented/data.yaml` (régression de la
+  migration v3.4) → `merge_dataset` produit de vrais noms de classes au lieu de `class_N`
+
+#### Autres corrections
+- **B1** : `workflow_manager` ajoute `scripts/` au `sys.path` avant `import merge_dataset`
+  (le workflow fonctionne maintenant en standalone, pas seulement via le GUI)
+- **B2** : `core.utils.load_prices()` sans argument ne plante plus (`TypeError` sur
+  `os.path.exists(None)`) — défaut sur `models/cards_database.yaml`
+- **B5** : nouvelle étape `WorkflowStep.MERGE` (le merge n'est plus enregistré comme
+  MOSAIC) ; `is_success()` compte le merge parmi les étapes critiques
+- **B6** : `scripts/merge_dataset.py` résout `config/paths.json` depuis son emplacement
+  (`__file__`) et non le répertoire courant
+- **B7** : `detection_manager._load_prices` importait `load_prices_from_excel`
+  (inexistant) → les prix ne se chargeaient jamais en détection ; charge désormais
+  la base YAML via `load_prices()`
+- **B8** : `card_mapping.py` cherchait `card_name_to_id.json` à la racine au lieu de
+  `models/` (chemin désormais lu depuis `config/paths.json`)
+- **Albumentations** : `A.SomeOf(..., n=(3, 6))` plantait à l'init (l'API n'accepte
+  qu'un entier) → tirage aléatoire de n∈[3,6] par image via des SomeOf pré-construits ;
+  `A.RandomContrast` (supprimé en 2.x) remplacé par son équivalent
+  `RandomBrightnessContrast(brightness_limit=0)` ; requirements épinglés
+  `albumentations>=1.3.0,<2.0`
+- Pattern d'extraction de numéro de carte : support des suffixes `_holoN`
+
+#### GUI : thread-safety (R1)
+- `log()` est désormais thread-safe : les messages passent par une `queue.Queue`
+  drainée depuis le thread principal (`root.after`) — les threads workers ne touchent
+  plus jamais aux widgets Tkinter (source de freezes/crashs aléatoires)
+- Nouveaux wrappers `show_info/show_error/show_warning` (popups différées via
+  `root.after`) ; les 126 appels `messagebox.*` des workers migrés
+- `end_operation`, `update_stats`, `update_all_statistics` se replanifient sur le
+  thread principal s'ils sont appelés depuis un worker
+
+#### Tests
+- `tests/test_refactoring.py` : le test « NumPy < 2.0 (requis imgaug) » était obsolète
+  depuis la migration Albumentations → remplacé par « NumPy >= 1.24 » (5/5 tests OK)
+
+---
+
 ## [3.4.1] - 2025-11-28
 
 ### 🤖 Jetson Orin AGX 32GB Support

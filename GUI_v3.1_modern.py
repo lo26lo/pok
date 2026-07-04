@@ -11,6 +11,7 @@ import sys
 import os
 import json
 import threading
+import queue
 import time
 import multiprocessing
 from pathlib import Path
@@ -22,1655 +23,15 @@ from core.training_manager import TrainingManager, TrainingConfig
 from core.detection_manager import DetectionManager, DetectionConfig
 from core.utils import load_paths, load_ui_messages, get_message, PATHS, UI_MESSAGES
 
+# Modules GUI extraits (refactoring Phase 4)
+from gui.theme import COLORS
+from gui.task_runner import TaskRunner, TaskError
+from gui.settings_dialog import SettingsDialog
+from gui.config import GuiConfig
+from gui.logging_setup import setup_logging
 
-class SettingsDialog:
-    """Dialog de configuration des paramètres globaux"""
-    
-    def __init__(self, parent, app):
-        self.parent = parent
-        self.app = app
-        self.dialog = tk.Toplevel(parent)
-        self.dialog.title("⚙️ Settings")
-        self.dialog.geometry("800x700")
-        self.dialog.configure(bg='#1e1e2e')
-        self.dialog.transient(parent)
-        self.dialog.grab_set()
-        
-        # Centrer la fenêtre
-        self.dialog.update_idletasks()
-        x = (self.dialog.winfo_screenwidth() // 2) - (800 // 2)
-        y = (self.dialog.winfo_screenheight() // 2) - (700 // 2)
-        self.dialog.geometry(f"800x700+{x}+{y}")
-        
-        # Variables de configuration
-        self.load_settings()
-        
-        try:
-            self.create_ui()
-            print("✅ Settings dialog created successfully")
-        except Exception as e:
-            print(f"❌ Error creating Settings dialog: {e}")
-            import traceback
-            traceback.print_exc()
-    
-    def load_settings(self):
-        """Charger les paramètres depuis gui_config.json"""
-        try:
-            if Path("gui_config.json").exists():
-                with open("gui_config.json", "r") as f:
-                    config = json.load(f)
-            else:
-                config = {}
-        except Exception:
-            config = {}
-        
-        # Paramètres par défaut (from paths.json)
-        self.default_images_dir = tk.StringVar(value=config.get("default_images_dir", PATHS['directories']['images']))
-        self.default_output_dir = tk.StringVar(value=config.get("default_output_dir", PATHS['directories']['output_base']))
-        self.default_augmented_dir = tk.StringVar(value=config.get("default_augmented_dir", PATHS['directories']['output_augmented']))
-        self.default_mosaic_dir = tk.StringVar(value=config.get("default_mosaic_dir", PATHS['directories']['output_mosaics']))
-        self.default_dataset_dir = tk.StringVar(value=config.get("default_dataset_dir", PATHS['directories']['output_dataset']))
-        self.default_fakeimg_dir = tk.StringVar(value=config.get("default_fakeimg_dir", PATHS['directories']['output_backgrounds']))
-        self.default_holographic_dir = tk.StringVar(value=config.get("default_holographic_dir", PATHS['directories']['output_holographic']))
-        
-        self.default_augmentations = tk.IntVar(value=config.get("default_augmentations", 50))
-        self.holographic_intensity = tk.DoubleVar(value=config.get("holographic_intensity", 0.7))
-        self.holographic_variations = tk.IntVar(value=config.get("holographic_variations", 3))
-        self.default_mosaic_mode = tk.StringVar(value=config.get("default_mosaic_mode", "standard"))
-        self.default_mosaic_layout = tk.IntVar(value=config.get("default_mosaic_layout", 1))
-        self.default_mosaic_background = tk.IntVar(value=config.get("default_mosaic_background", 1))
-        self.default_mosaic_transform = tk.IntVar(value=config.get("default_mosaic_transform", 0))
-        self.default_model = tk.StringVar(value=config.get("default_model", "yolov8n.pt"))
-        self.default_epochs = tk.IntVar(value=config.get("default_epochs", 50))
-        self.default_batch = tk.IntVar(value=config.get("default_batch", 16))
-        self.default_device = tk.StringVar(value=config.get("default_device", "0"))
-        self.tcgdex_api_key = tk.StringVar(value=config.get("tcgdex_api_key", ""))
-        self.auto_save_logs = tk.BooleanVar(value=config.get("auto_save_logs", True))
-        self.enable_notifications = tk.BooleanVar(value=config.get("enable_notifications", True))
-        
-        # Fake image generation settings (random erasing) - from paths.json
-        self.fakeimg_input_dir = tk.StringVar(value=config.get("fakeimg_input_dir", PATHS['directories']['backgrounds_original']))
-        self.fakeimg_output_dir = tk.StringVar(value=config.get("fakeimg_output_dir", PATHS['directories']['output_backgrounds']))
-        self.fakeimg_p = tk.DoubleVar(value=config.get("fakeimg_p", 0.5))
-        self.fakeimg_sl = tk.DoubleVar(value=config.get("fakeimg_sl", 0.02))
-        self.fakeimg_sh = tk.DoubleVar(value=config.get("fakeimg_sh", 0.4))
-        self.fakeimg_r1 = tk.DoubleVar(value=config.get("fakeimg_r1", 0.3))
-        self.fakeimg_r2 = tk.DoubleVar(value=config.get("fakeimg_r2", 3.3))
-        
-        # Image download settings - from paths.json
-        self.default_download_dir = tk.StringVar(value=config.get("default_download_dir", PATHS['directories']['images']))
-        self.default_download_lang = tk.StringVar(value=config.get("default_download_lang", "English"))
-        self.default_download_quality = tk.StringVar(value=config.get("default_download_quality", "high"))
-        self.default_download_format = tk.StringVar(value=config.get("default_download_format", "png"))
-        self.default_download_workers = tk.IntVar(value=config.get("default_download_workers", 8))
-        
-        # Debug settings
-        self.debug_device = tk.StringVar(value=config.get("debug_device", "auto"))  # auto, cpu, gpu, 0, 1, etc.
-        self.debug_workers = tk.IntVar(value=config.get("debug_workers", multiprocessing.cpu_count()))
-        self.debug_log_level = tk.StringVar(value=config.get("debug_log_level", "INFO"))  # ERROR, WARNING, INFO, DEBUG, TRACE
-        self.debug_cache_mode = tk.StringVar(value=config.get("debug_cache_mode", "ram"))  # ram, disk, disabled
-        self.debug_profiling = tk.BooleanVar(value=config.get("debug_profiling", False))
-        self.debug_benchmark = tk.BooleanVar(value=config.get("debug_benchmark", False))
-        self.debug_save_logs = tk.BooleanVar(value=config.get("debug_save_logs", False))
-        self.debug_multiprocessing = tk.BooleanVar(value=config.get("debug_multiprocessing", False))
-        self.debug_memory_profiling = tk.BooleanVar(value=config.get("debug_memory_profiling", False))
-    
-    def create_ui(self):
-        """Créer l'interface du dialog"""
-        colors = self.app.colors
-        
-        # Header
-        header = tk.Frame(self.dialog, bg=colors['bg_sidebar'], height=60)
-        header.pack(fill='x', side='top')
-        header.pack_propagate(False)
-        
-        # Container pour titre + bouton save
-        header_content = tk.Frame(header, bg=colors['bg_sidebar'])
-        header_content.pack(fill='both', expand=True, padx=20)
-        
-        title = tk.Label(
-            header_content,
-            text="⚙️ Configuration",
-            font=('Segoe UI', 18, 'bold'),
-            bg=colors['bg_sidebar'],
-            fg=colors['text']
-        )
-        title.pack(side='left', pady=15)
-        
-        # Bouton Save dans le header (à droite)
-        save_header_btn = tk.Button(
-            header_content,
-            text="💾 Save",
-            command=self.save_settings,
-            bg=colors['success'],
-            fg='#000000',
-            font=('Segoe UI', 10, 'bold'),
-            relief='flat',
-            padx=20,
-            pady=8,
-            cursor='hand2'
-        )
-        save_header_btn.pack(side='right', pady=15)
-        
-        # Notebook avec catégories
-        notebook = ttk.Notebook(self.dialog)
-        notebook.pack(fill='both', expand=True, padx=20, pady=10)
-        
-        # Onglet Général
-        general_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(general_frame, text=f"  {UI_MESSAGES['gui']['tabs']['general']}  ")
-        self.create_general_tab(general_frame)
-        
-        # Onglet Augmentation
-        aug_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(aug_frame, text=f"  {UI_MESSAGES['gui']['tabs']['augmentation']}  ")
-        self.create_augmentation_tab(aug_frame)
-        
-        # Onglet Mosaic
-        mosaic_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(mosaic_frame, text=f"  {UI_MESSAGES['gui']['tabs']['mosaic']}  ")
-        self.create_mosaic_tab(mosaic_frame)
-        
-        # Onglet Fake Images
-        fake_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(fake_frame, text=f"  {UI_MESSAGES['gui']['tabs']['fake_images']}  ")
-        self.create_fakebackgrounds_tab(fake_frame)
-        
-        # Onglet Image Download
-        download_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(download_frame, text=f"  {UI_MESSAGES['gui']['tabs']['download']}  ")
-        self.create_download_tab(download_frame)
-        
-        # Onglet Training
-        train_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(train_frame, text=f"  {UI_MESSAGES['gui']['tabs']['training']}  ")
-        self.create_training_tab(train_frame)
-        
-        # Onglet Advanced
-        advanced_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(advanced_frame, text=f"  {UI_MESSAGES['gui']['tabs']['advanced']}  ")
-        self.create_advanced_tab(advanced_frame)
-        
-        # Onglet Debug
-        debug_frame = tk.Frame(notebook, bg=colors['bg_dark'])
-        notebook.add(debug_frame, text="  🐛 Debug  ")
-        self.create_debug_tab(debug_frame)
-        
-        # Footer avec boutons
-        footer = tk.Frame(self.dialog, bg=colors['bg_sidebar'], height=70)
-        footer.pack(fill='x', side='bottom')
-        footer.pack_propagate(False)
-        
-        btn_frame = tk.Frame(footer, bg=colors['bg_sidebar'])
-        btn_frame.pack(expand=True)
-        
-        # Bouton Save
-        save_btn = tk.Button(
-            btn_frame,
-            text="💾 Save",
-            command=self.save_settings,
-            bg=colors['success'],
-            fg='#000000',
-            font=('Segoe UI', 11, 'bold'),
-            relief='flat',
-            padx=30,
-            pady=10,
-            cursor='hand2'
-        )
-        save_btn.pack(side='left', padx=5)
-        
-        # Bouton Cancel
-        cancel_btn = tk.Button(
-            btn_frame,
-            text="❌ Cancel",
-            command=self.dialog.destroy,
-            bg=colors['bg_card'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            relief='flat',
-            padx=30,
-            pady=10,
-            cursor='hand2'
-        )
-        cancel_btn.pack(side='left', padx=5)
-    
-    def create_general_tab(self, parent):
-        """Onglet paramètres généraux"""
-        colors = self.app.colors
-        
-        container = tk.Frame(parent, bg=colors['bg_dark'])
-        container.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Images directory
-        tk.Label(
-            container,
-            text="📁 Default Images Directory:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
-        
-        frame1 = tk.Frame(container, bg=colors['bg_dark'])
-        frame1.grid(row=1, column=0, sticky='ew', pady=(0, 20))
-        
-        tk.Entry(
-            frame1,
-            textvariable=self.default_images_dir,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2
-        ).pack(side='left', fill='x', expand=True, ipady=8)
-        
-        tk.Button(
-            frame1,
-            text="📂",
-            command=lambda: self.browse_dir(self.default_images_dir),
-            bg=colors['accent'],
-            fg='#000000',
-            font=self.app.FONT_TEXT,
-            relief='flat',
-            padx=15,
-            cursor='hand2'
-        ).pack(side='right', padx=(5, 0))
-        
-        # Output directory
-        tk.Label(
-            container,
-            text="📤 Default Output Directory:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=2, column=0, sticky='w', pady=(0, 5))
-        
-        frame2 = tk.Frame(container, bg=colors['bg_dark'])
-        frame2.grid(row=3, column=0, sticky='ew', pady=(0, 20))
-        
-        tk.Entry(
-            frame2,
-            textvariable=self.default_output_dir,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2
-        ).pack(side='left', fill='x', expand=True, ipady=8)
-        
-        tk.Button(
-            frame2,
-            text="📂",
-            command=lambda: self.browse_dir(self.default_output_dir),
-            bg=colors['accent'],
-            fg='#000000',
-            font=self.app.FONT_TEXT,
-            relief='flat',
-            padx=15,
-            cursor='hand2'
-        ).pack(side='right', padx=(5, 0))
-        
-        # Augmented directory
-        tk.Label(
-            container,
-            text="🎨 Augmented Output Directory:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=4, column=0, sticky='w', pady=(0, 5))
-        
-        frame3 = tk.Frame(container, bg=colors['bg_dark'])
-        frame3.grid(row=5, column=0, sticky='ew', pady=(0, 15))
-        
-        tk.Entry(
-            frame3,
-            textvariable=self.default_augmented_dir,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2
-        ).pack(side='left', fill='x', expand=True, ipady=8)
-        
-        tk.Button(
-            frame3,
-            text="📂",
-            command=lambda: self.browse_dir(self.default_augmented_dir),
-            bg=colors['accent'],
-            fg='#000000',
-            font=self.app.FONT_TEXT,
-            relief='flat',
-            padx=15,
-            cursor='hand2'
-        ).pack(side='right', padx=(5, 0))
-        
-        # Mosaic directory
-        tk.Label(
-            container,
-            text="🧩 Mosaic Output Directory:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=6, column=0, sticky='w', pady=(0, 5))
-        
-        frame4 = tk.Frame(container, bg=colors['bg_dark'])
-        frame4.grid(row=7, column=0, sticky='ew', pady=(0, 15))
-        
-        tk.Entry(
-            frame4,
-            textvariable=self.default_mosaic_dir,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2
-        ).pack(side='left', fill='x', expand=True, ipady=8)
-        
-        tk.Button(
-            frame4,
-            text="📂",
-            command=lambda: self.browse_dir(self.default_mosaic_dir),
-            bg=colors['accent'],
-            fg='#000000',
-            font=self.app.FONT_TEXT,
-            relief='flat',
-            padx=15,
-            cursor='hand2'
-        ).pack(side='right', padx=(5, 0))
-        
-        # Fake images output directory
-        tk.Label(
-            container,
-            text="🎲 Fake Images Output Directory:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=8, column=0, sticky='w', pady=(0, 5))
-        
-        frame5 = tk.Frame(container, bg=colors['bg_dark'])
-        frame5.grid(row=9, column=0, sticky='ew', pady=(0, 15))
-        
-        tk.Entry(
-            frame5,
-            textvariable=self.default_fakeimg_dir,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2
-        ).pack(side='left', fill='x', expand=True, ipady=8)
-        
-        tk.Button(
-            frame5,
-            text="📂",
-            command=lambda: self.browse_dir(self.default_fakeimg_dir),
-            bg=colors['accent'],
-            fg='#000000',
-            font=self.app.FONT_TEXT,
-            relief='flat',
-            padx=15,
-            cursor='hand2'
-        ).pack(side='right', padx=(5, 0))
-        
-        # Holographic directory
-        tk.Label(
-            container,
-            text="✨ Holographic Output Directory:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=10, column=0, sticky='w', pady=(0, 5))
-        
-        frame6 = tk.Frame(container, bg=colors['bg_dark'])
-        frame6.grid(row=11, column=0, sticky='ew', pady=(0, 20))
-        
-        tk.Entry(
-            frame6,
-            textvariable=self.default_holographic_dir,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2
-        ).pack(side='left', fill='x', expand=True, ipady=8)
-        
-        tk.Button(
-            frame6,
-            text="📂",
-            command=lambda: self.browse_dir(self.default_holographic_dir),
-            bg=colors['accent'],
-            fg='#000000',
-            font=self.app.FONT_TEXT,
-            relief='flat',
-            padx=15,
-            cursor='hand2'
-        ).pack(side='right', padx=(5, 0))
-        
-        # Auto-save logs
-        tk.Checkbutton(
-            container,
-            text="💾 Auto-save logs to file",
-            variable=self.auto_save_logs,
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text']
-        ).grid(row=12, column=0, sticky='w', pady=10)
-        
-        # Enable notifications
-        tk.Checkbutton(
-            container,
-            text="🔔 Enable notifications",
-            variable=self.enable_notifications,
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text']
-        ).grid(row=13, column=0, sticky='w', pady=10)
-        
-        container.grid_columnconfigure(0, weight=1)
-    
-    def create_augmentation_tab(self, parent):
-        """Onglet paramètres d'augmentation"""
-        colors = self.app.colors
-        
-        container = tk.Frame(parent, bg=colors['bg_dark'])
-        container.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Info message
-        tk.Label(
-            container,
-            text="ℹ️ Configuration du Pipeline Augmentation Unifié",
-            bg=colors['bg_dark'],
-            fg=colors['accent'],
-            font=('Segoe UI', 12, 'bold')
-        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="Ces paramètres définissent les valeurs par défaut du pipeline 'Holographic → Augmentation'.",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=1, column=0, sticky='w', pady=(0, 20))
-        
-        # Séparateur
-        tk.Frame(container, bg=colors['border'], height=1).grid(row=2, column=0, sticky='ew', pady=(0, 20))
-        
-        # Section 1: Holographic
-        tk.Label(
-            container,
-            text="🌟 Holographic Generation Defaults:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=3, column=0, sticky='w', pady=(0, 10))
-        
-        holo_frame = tk.Frame(container, bg=colors['bg_dark'])
-        holo_frame.grid(row=4, column=0, sticky='w', pady=(0, 10))
-        
-        tk.Label(
-            holo_frame,
-            text="Number of variations:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            width=20,
-            anchor='w'
-        ).pack(side=tk.LEFT)
-        
-        tk.Spinbox(
-            holo_frame,
-            from_=0,
-            to=10,
-            textvariable=self.holographic_variations,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=10
-        ).pack(side=tk.LEFT, padx=10)
-        
-        tk.Label(
-            holo_frame,
-            text="(0 = skip holographic)",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9)
-        ).pack(side=tk.LEFT, padx=5)
-        
-        # Intensity
-        intensity_frame = tk.Frame(container, bg=colors['bg_dark'])
-        intensity_frame.grid(row=5, column=0, sticky='w', pady=(0, 20))
-        
-        tk.Label(
-            intensity_frame,
-            text="Effect intensity:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            width=20,
-            anchor='w'
-        ).pack(side=tk.LEFT)
-        
-        intensity_scale = ttk.Scale(
-            intensity_frame,
-            from_=0.1,
-            to=1.0,
-            variable=self.holographic_intensity,
-            orient='horizontal',
-            length=200
-        )
-        intensity_scale.pack(side=tk.LEFT, padx=10)
-        
-        tk.Label(
-            intensity_frame,
-            textvariable=self.holographic_intensity,
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=('Segoe UI', 9, 'bold'),
-            width=5
-        ).pack(side=tk.LEFT)
-        
-        # Séparateur
-        tk.Frame(container, bg=colors['border'], height=1).grid(row=6, column=0, sticky='ew', pady=(0, 20))
-        
-        # Section 2: Augmentation
-        tk.Label(
-            container,
-            text="🎨 Augmentation Defaults:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=7, column=0, sticky='w', pady=(0, 10))
-        
-        aug_frame = tk.Frame(container, bg=colors['bg_dark'])
-        aug_frame.grid(row=8, column=0, sticky='w', pady=(0, 10))
-        
-        tk.Label(
-            aug_frame,
-            text="Augmentations per image:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            width=20,
-            anchor='w'
-        ).pack(side=tk.LEFT)
-        
-        tk.Spinbox(
-            aug_frame,
-            from_=0,
-            to=100,
-            textvariable=self.default_augmentations,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=10
-        ).pack(side=tk.LEFT, padx=10)
-        
-        tk.Label(
-            aug_frame,
-            text="(0 = skip augmentation)",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9)
-        ).pack(side=tk.LEFT, padx=5)
-        
-        # Info résultat attendu
-        tk.Label(
-            container,
-            text="💡 Résultat attendu avec 8 cartes sources:",
-            bg=colors['bg_dark'],
-            fg=colors['accent'],
-            font=('Segoe UI', 10, 'bold')
-        ).grid(row=9, column=0, sticky='w', pady=(20, 5))
-        
-        result_text = tk.Text(
-            container,
-            height=4,
-            bg=colors['bg_card'],
-            fg=colors['text'],
-            font=('Consolas', 9),
-            relief='flat',
-            bd=0,
-            wrap='word'
-        )
-        result_text.grid(row=10, column=0, sticky='ew', pady=(0, 10))
-        
-        result_info = f"""• Holographic: 8 cartes × {self.holographic_variations.get()} = {8 * self.holographic_variations.get()} images
-• Augmentation: {8 * self.holographic_variations.get()} × {self.default_augmentations.get()} = {8 * self.holographic_variations.get() * self.default_augmentations.get()} images
-• Mosaics possibles: {8 * self.holographic_variations.get() * self.default_augmentations.get()} ÷ 8 = {(8 * self.holographic_variations.get() * self.default_augmentations.get()) // 8} groupes"""
-        
-        result_text.insert('1.0', result_info)
-        result_text.config(state='disabled')
-        
-        container.grid_columnconfigure(0, weight=1)
-    
-    def create_mosaic_tab(self, parent):
-        """Onglet paramètres de mosaïque"""
-        colors = self.app.colors
-        
-        container = tk.Frame(parent, bg=colors['bg_dark'])
-        container.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Default mosaic mode
-        tk.Label(
-            container,
-            text="🧩 Default Mosaic Generation Mode:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
-        
-        mosaic_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_mosaic_mode,
-            values=["quick", "standard", "complete"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=18
-        )
-        mosaic_combo.grid(row=1, column=0, sticky='w', pady=(0, 5))
-        
-        # Info text
-        tk.Label(
-            container,
-            text="• Quick: 200 mosaics  • Standard: 500 mosaics  • Complete: All combinations",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9),
-            justify='left'
-        ).grid(row=2, column=0, sticky='w', pady=(0, 20))
-        
-        # Layout mode
-        tk.Label(
-            container,
-            text="📐 Card Layout Mode:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=3, column=0, sticky='w', pady=(0, 5))
-        
-        layout_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_mosaic_layout,
-            values=["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=30
-        )
-        layout_combo.grid(row=4, column=0, sticky='w', pady=(0, 5))
-        layout_combo.current(0)
-        
-        tk.Label(
-            container,
-            text="Controls how cards are arranged on the mosaic",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=5, column=0, sticky='w', pady=(0, 20))
-        
-        # Background mode
-        tk.Label(
-            container,
-            text="🎨 Background Mode:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=6, column=0, sticky='w', pady=(0, 5))
-        
-        bg_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_mosaic_background,
-            values=["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)", "2 - Web Image (Lorem Picsum)"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=40
-        )
-        bg_combo.grid(row=7, column=0, sticky='w', pady=(0, 5))
-        bg_combo.current(0)
-        
-        tk.Label(
-            container,
-            text="Type of background to use for mosaics",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=8, column=0, sticky='w', pady=(0, 20))
-        
-        # Transform mode
-        tk.Label(
-            container,
-            text="🔄 Transform Mode:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=9, column=0, sticky='w', pady=(0, 5))
-        
-        transform_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_mosaic_transform,
-            values=["0 - 2D Rotation", "1 - 3D Perspective Projection"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=40
-        )
-        transform_combo.grid(row=10, column=0, sticky='w', pady=(0, 5))
-        transform_combo.current(0)
-        
-        tk.Label(
-            container,
-            text="Controls rotation intensity for cards",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=11, column=0, sticky='w', pady=(0, 10))
-        
-        container.grid_columnconfigure(0, weight=1)
-    
-    def create_fakebackgrounds_tab(self, parent):
-        """Onglet paramètres fake images (random erasing)"""
-        colors = self.app.colors
-        
-        container = tk.Frame(parent, bg=colors['bg_dark'])
-        container.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Input/Output directories
-        tk.Label(
-            container,
-            text="� Input Directory (source backgrounds):",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Entry(
-            container,
-            textvariable=self.fakeimg_input_dir,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=30
-        ).grid(row=1, column=0, sticky='w', pady=(0, 15))
-        
-        tk.Label(
-            container,
-            text="📁 Output Directory (augmented images):",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=2, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Entry(
-            container,
-            textvariable=self.fakeimg_output_dir,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=30
-        ).grid(row=3, column=0, sticky='w', pady=(0, 20))
-        
-        # Random Erasing Parameters
-        tk.Label(
-            container,
-            text="🎛️ Random Erasing Parameters:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=4, column=0, sticky='w', pady=(0, 10))
-        
-        # Probability (p)
-        p_frame = tk.Frame(container, bg=colors['bg_dark'])
-        p_frame.grid(row=5, column=0, sticky='w', pady=(0, 10))
-        
-        tk.Label(
-            p_frame,
-            text="Probability (p):",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            width=15,
-            anchor='w'
-        ).pack(side=tk.LEFT)
-        
-        tk.Spinbox(
-            p_frame,
-            from_=0.0,
-            to=1.0,
-            increment=0.1,
-            textvariable=self.fakeimg_p,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=8
-        ).pack(side=tk.LEFT, padx=5)
-        
-        # Area range (sl, sh)
-        sl_frame = tk.Frame(container, bg=colors['bg_dark'])
-        sl_frame.grid(row=6, column=0, sticky='w', pady=(0, 10))
-        
-        tk.Label(
-            sl_frame,
-            text="Min Area (sl):",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            width=15,
-            anchor='w'
-        ).pack(side=tk.LEFT)
-        
-        tk.Spinbox(
-            sl_frame,
-            from_=0.01,
-            to=1.0,
-            increment=0.01,
-            textvariable=self.fakeimg_sl,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=8
-        ).pack(side=tk.LEFT, padx=5)
-        
-        sh_frame = tk.Frame(container, bg=colors['bg_dark'])
-        sh_frame.grid(row=7, column=0, sticky='w', pady=(0, 10))
-        
-        tk.Label(
-            sh_frame,
-            text="Max Area (sh):",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            width=15,
-            anchor='w'
-        ).pack(side=tk.LEFT)
-        
-        tk.Spinbox(
-            sh_frame,
-            from_=0.01,
-            to=1.0,
-            increment=0.01,
-            textvariable=self.fakeimg_sh,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=8
-        ).pack(side=tk.LEFT, padx=5)
-        
-        # Aspect ratio range (r1, r2)
-        r1_frame = tk.Frame(container, bg=colors['bg_dark'])
-        r1_frame.grid(row=8, column=0, sticky='w', pady=(0, 10))
-        
-        tk.Label(
-            r1_frame,
-            text="Min Aspect (r1):",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            width=15,
-            anchor='w'
-        ).pack(side=tk.LEFT)
-        
-        tk.Spinbox(
-            r1_frame,
-            from_=0.1,
-            to=5.0,
-            increment=0.1,
-            textvariable=self.fakeimg_r1,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=8
-        ).pack(side=tk.LEFT, padx=5)
-        
-        r2_frame = tk.Frame(container, bg=colors['bg_dark'])
-        r2_frame.grid(row=9, column=0, sticky='w', pady=(0, 20))
-        
-        tk.Label(
-            r2_frame,
-            text="Max Aspect (r2):",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_TEXT,
-            width=15,
-            anchor='w'
-        ).pack(side=tk.LEFT)
-        
-        tk.Spinbox(
-            r2_frame,
-            from_=0.1,
-            to=10.0,
-            increment=0.1,
-            textvariable=self.fakeimg_r2,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=8
-        ).pack(side=tk.LEFT, padx=5)
-        
-        # Info text
-        tk.Label(
-            container,
-            text="💡 Lower values (20-40) create subtle textures\n   Higher values (60-80) create more varied patterns",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9),
-            justify='left'
-        ).grid(row=5, column=0, sticky='w', pady=(0, 10))
-        
-        container.grid_columnconfigure(0, weight=1)
-    
-    def create_training_tab(self, parent):
-        """Onglet paramètres d'entraînement"""
-        colors = self.app.colors
-        
-        container = tk.Frame(parent, bg=colors['bg_dark'])
-        container.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Default model
-        tk.Label(
-            container,
-            text="🤖 Default YOLO Model:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
-        
-        model_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_model,
-            values=["yolov8n.pt", "yolov8s.pt", "yolov8m.pt", "yolov8l.pt", "yolov8x.pt"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=18
-        )
-        model_combo.grid(row=1, column=0, sticky='w', pady=(0, 20))
-        
-        # Default epochs
-        tk.Label(
-            container,
-            text="📊 Default Epochs:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=2, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Spinbox(
-            container,
-            from_=1,
-            to=1000,
-            textvariable=self.default_epochs,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=10
-        ).grid(row=3, column=0, sticky='w', pady=(0, 20))
-        
-        # Default batch size
-        tk.Label(
-            container,
-            text="📦 Default Batch Size:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=4, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Spinbox(
-            container,
-            from_=1,
-            to=128,
-            textvariable=self.default_batch,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=10
-        ).grid(row=5, column=0, sticky='w', pady=(0, 20))
-        
-        # Default device
-        tk.Label(
-            container,
-            text="💻 Default Device:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=6, column=0, sticky='w', pady=(0, 5))
-        
-        device_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_device,
-            values=["0", "cpu", "0,1", "0,1,2,3"],
-            font=self.app.FONT_TEXT,
-            width=18
-        )
-        device_combo.grid(row=7, column=0, sticky='w', pady=(0, 20))
-        
-        container.grid_columnconfigure(0, weight=1)
-    
-    def create_advanced_tab(self, parent):
-        """Onglet paramètres avancés"""
-        colors = self.app.colors
-        
-        container = tk.Frame(parent, bg=colors['bg_dark'])
-        container.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # TCGdex API Key
-        tk.Label(
-            container,
-            text="🔑 TCGdex API Key (optional):",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Entry(
-            container,
-            textvariable=self.tcgdex_api_key,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            show='*'
-        ).grid(row=1, column=0, sticky='ew', pady=(0, 20), ipady=8)
-        
-        tk.Label(
-            container,
-            text="ℹ️ Optional: for enhanced TCG API features",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=2, column=0, sticky='w', pady=(0, 20))
-        
-        container.grid_columnconfigure(0, weight=1)
-    
-    def create_debug_tab(self, parent):
-        """Onglet paramètres Debug"""
-        colors = self.app.colors
-        
-        # Container avec scrollbar
-        canvas = tk.Canvas(parent, bg=colors['bg_dark'], highlightthickness=0)
-        scrollbar = tk.Scrollbar(parent, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg=colors['bg_dark'])
-        
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        container = tk.Frame(scrollable_frame, bg=colors['bg_dark'])
-        container.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Section: Device Configuration
-        tk.Label(
-            container,
-            text="🎮 Device Configuration",
-            bg=colors['bg_dark'],
-            fg=colors['accent'],
-            font=('Segoe UI', 12, 'bold')
-        ).grid(row=0, column=0, columnspan=2, sticky='w', pady=(0, 15))
-        
-        tk.Label(
-            container,
-            text="Device:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=1, column=0, sticky='w', pady=(0, 5))
-        
-        device_frame = tk.Frame(container, bg=colors['bg_dark'])
-        device_frame.grid(row=2, column=0, columnspan=2, sticky='w', pady=(0, 5))
-        
-        # Radio buttons pour device
-        tk.Radiobutton(
-            device_frame,
-            text="Auto (recommended)",
-            variable=self.debug_device,
-            value="auto",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text'],
-            font=self.app.FONT_TEXT
-        ).pack(anchor='w', pady=2)
-        
-        tk.Radiobutton(
-            device_frame,
-            text="CPU Only",
-            variable=self.debug_device,
-            value="cpu",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text'],
-            font=self.app.FONT_TEXT
-        ).pack(anchor='w', pady=2)
-        
-        tk.Radiobutton(
-            device_frame,
-            text="GPU 0 (Primary)",
-            variable=self.debug_device,
-            value="0",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text'],
-            font=self.app.FONT_TEXT
-        ).pack(anchor='w', pady=2)
-        
-        tk.Radiobutton(
-            device_frame,
-            text="GPU 1 (Secondary)",
-            variable=self.debug_device,
-            value="1",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text'],
-            font=self.app.FONT_TEXT
-        ).pack(anchor='w', pady=2)
-        
-        tk.Label(
-            container,
-            text="ℹ️ Auto: Detects best device (GPU if available, else CPU)",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=3, column=0, columnspan=2, sticky='w', pady=(0, 20))
-        
-        # Section: Performance
-        tk.Label(
-            container,
-            text="⚡ Performance Settings",
-            bg=colors['bg_dark'],
-            fg=colors['accent'],
-            font=('Segoe UI', 12, 'bold')
-        ).grid(row=4, column=0, columnspan=2, sticky='w', pady=(0, 15))
-        
-        tk.Label(
-            container,
-            text="Worker Processes:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=5, column=0, sticky='w', pady=(0, 5))
-        
-        workers_spinbox = tk.Spinbox(
-            container,
-            from_=1,
-            to=32,
-            textvariable=self.debug_workers,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=10
-        )
-        workers_spinbox.grid(row=6, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text=f"ℹ️ CPU cores detected: {multiprocessing.cpu_count()} (recommended: {max(1, multiprocessing.cpu_count() // 2)})",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=7, column=0, columnspan=2, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="⚠️ More workers = faster processing but higher RAM usage",
-            bg=colors['bg_dark'],
-            fg=colors['warning'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=8, column=0, columnspan=2, sticky='w', pady=(0, 20))
-        
-        # Cache mode
-        tk.Label(
-            container,
-            text="Cache Mode:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=9, column=0, sticky='w', pady=(0, 5))
-        
-        cache_combo = ttk.Combobox(
-            container,
-            textvariable=self.debug_cache_mode,
-            values=["ram", "disk", "disabled"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=15
-        )
-        cache_combo.grid(row=10, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="ℹ️ RAM: Fastest but uses more memory | Disk: Slower but saves RAM | Disabled: No caching",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=11, column=0, columnspan=2, sticky='w', pady=(0, 20))
-        
-        # Section: Logging
-        tk.Label(
-            container,
-            text="📋 Logging Configuration",
-            bg=colors['bg_dark'],
-            fg=colors['accent'],
-            font=('Segoe UI', 12, 'bold')
-        ).grid(row=12, column=0, columnspan=2, sticky='w', pady=(0, 15))
-        
-        tk.Label(
-            container,
-            text="Log Level:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=13, column=0, sticky='w', pady=(0, 5))
-        
-        log_combo = ttk.Combobox(
-            container,
-            textvariable=self.debug_log_level,
-            values=["ERROR", "WARNING", "INFO", "DEBUG", "TRACE"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=15
-        )
-        log_combo.grid(row=14, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="ERROR: Critical errors only | WARNING: Warnings + errors | INFO: General info (recommended)",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=15, column=0, columnspan=2, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="DEBUG: Detailed debugging | TRACE: Maximum verbosity (very detailed)",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=16, column=0, columnspan=2, sticky='w', pady=(0, 15))
-        
-        # Save logs to file
-        tk.Checkbutton(
-            container,
-            text="💾 Save debug logs to file",
-            variable=self.debug_save_logs,
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text'],
-            font=self.app.FONT_TEXT
-        ).grid(row=17, column=0, columnspan=2, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="ℹ️ Logs saved to: debug_logs/<timestamp>.log",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=18, column=0, columnspan=2, sticky='w', pady=(0, 20))
-        
-        # Section: Advanced Debug
-        tk.Label(
-            container,
-            text="🔧 Advanced Debug Options",
-            bg=colors['bg_dark'],
-            fg=colors['accent'],
-            font=('Segoe UI', 12, 'bold')
-        ).grid(row=19, column=0, columnspan=2, sticky='w', pady=(0, 15))
-        
-        # Profiling
-        tk.Checkbutton(
-            container,
-            text="📊 Enable performance profiling",
-            variable=self.debug_profiling,
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text'],
-            font=self.app.FONT_TEXT
-        ).grid(row=20, column=0, columnspan=2, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="ℹ️ Measures execution time of functions (slight performance impact)",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=21, column=0, columnspan=2, sticky='w', pady=(0, 10))
-        
-        # Benchmark
-        tk.Checkbutton(
-            container,
-            text="⏱️ Enable benchmark logging",
-            variable=self.debug_benchmark,
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text'],
-            font=self.app.FONT_TEXT
-        ).grid(row=22, column=0, columnspan=2, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="ℹ️ Logs detailed performance metrics for benchmarking",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=23, column=0, columnspan=2, sticky='w', pady=(0, 10))
-        
-        # Multiprocessing debug
-        tk.Checkbutton(
-            container,
-            text="🔍 Multiprocessing debug mode",
-            variable=self.debug_multiprocessing,
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text'],
-            font=self.app.FONT_TEXT
-        ).grid(row=24, column=0, columnspan=2, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="ℹ️ Enables detailed logging for parallel processing (useful for debugging crashes)",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=25, column=0, columnspan=2, sticky='w', pady=(0, 10))
-        
-        # Memory profiling
-        tk.Checkbutton(
-            container,
-            text="🧠 Memory profiling",
-            variable=self.debug_memory_profiling,
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            selectcolor=colors['bg_card'],
-            activebackground=colors['bg_dark'],
-            activeforeground=colors['text'],
-            font=self.app.FONT_TEXT
-        ).grid(row=26, column=0, columnspan=2, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="ℹ️ Tracks memory usage (significant performance impact, use only when debugging memory issues)",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=27, column=0, columnspan=2, sticky='w', pady=(0, 10))
-        
-        # Warning banner
-        warning_frame = tk.Frame(container, bg=colors['warning'], relief='solid', bd=1)
-        warning_frame.grid(row=28, column=0, columnspan=2, sticky='ew', pady=(10, 0))
-        
-        tk.Label(
-            warning_frame,
-            text="⚠️ WARNING: Advanced debug options may impact performance. Enable only when debugging.",
-            bg=colors['warning'],
-            fg='#000000',
-            font=('Segoe UI', 9, 'bold'),
-            wraplength=550,
-            justify='left'
-        ).pack(padx=10, pady=10)
-        
-        container.grid_columnconfigure(0, weight=1)
-    
-    def create_download_tab(self, parent):
-        """Onglet paramètres Image Download"""
-        colors = self.app.colors
-        
-        container = tk.Frame(parent, bg=colors['bg_dark'])
-        container.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Default output directory
-        tk.Label(
-            container,
-            text="💾 Default Output Directory:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=0, column=0, sticky='w', pady=(0, 5))
-        
-        dir_frame = tk.Frame(container, bg=colors['bg_dark'])
-        dir_frame.grid(row=1, column=0, sticky='ew', pady=(0, 20))
-        
-        download_dir_entry = tk.Entry(
-            dir_frame,
-            textvariable=self.default_download_dir,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2
-        )
-        download_dir_entry.pack(side=tk.LEFT, fill='x', expand=True, ipady=8)
-        
-        tk.Button(
-            dir_frame,
-            text="📁",
-            command=lambda: self.browse_dir(self.default_download_dir),
-            bg=colors['accent'],
-            fg='#000000',
-            font=self.app.FONT_BUTTON,
-            relief='flat',
-            padx=10,
-            cursor='hand2'
-        ).pack(side=tk.LEFT, padx=(5, 0))
-        
-        # Default language
-        tk.Label(
-            container,
-            text="🌍 Default Language:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=2, column=0, sticky='w', pady=(0, 5))
-        
-        try:
-            from core.image_downloader import LANGUAGES
-            lang_choices = list(LANGUAGES.keys())
-        except:
-            lang_choices = ["English", "Français", "Deutsch", "Italiano", "Español"]
-        
-        lang_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_download_lang,
-            values=lang_choices,
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=20
-        )
-        lang_combo.grid(row=3, column=0, sticky='w', pady=(0, 20))
-        
-        # Default quality
-        tk.Label(
-            container,
-            text="🎨 Default Quality:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=4, column=0, sticky='w', pady=(0, 5))
-        
-        quality_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_download_quality,
-            values=["high", "low"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=15
-        )
-        quality_combo.grid(row=5, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="High quality recommended for training datasets",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=6, column=0, sticky='w', pady=(0, 20))
-        
-        # Default format
-        tk.Label(
-            container,
-            text="📁 Default Format:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=7, column=0, sticky='w', pady=(0, 5))
-        
-        format_combo = ttk.Combobox(
-            container,
-            textvariable=self.default_download_format,
-            values=["png", "jpg", "jpeg", "webp"],
-            state='readonly',
-            font=self.app.FONT_TEXT,
-            width=18
-        )
-        format_combo.grid(row=8, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="PNG recommended for lossless quality",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=9, column=0, sticky='w', pady=(0, 20))
-        
-        # Default workers
-        tk.Label(
-            container,
-            text="⚡ Default Parallel Workers:",
-            bg=colors['bg_dark'],
-            fg=colors['text'],
-            font=self.app.FONT_BUTTON
-        ).grid(row=10, column=0, sticky='w', pady=(0, 5))
-        
-        workers_spinbox = tk.Spinbox(
-            container,
-            from_=1,
-            to=16,
-            textvariable=self.default_download_workers,
-            font=self.app.FONT_TEXT,
-            bg='#FFFFFF',
-            fg='#1a1a1a',
-            relief='flat',
-            bd=2,
-            width=10
-        )
-        workers_spinbox.grid(row=11, column=0, sticky='w', pady=(0, 5))
-        
-        tk.Label(
-            container,
-            text="More workers = faster download (4-8 recommended)",
-            bg=colors['bg_dark'],
-            fg=colors['text_dim'],
-            font=('Segoe UI', 9, 'italic')
-        ).grid(row=12, column=0, sticky='w', pady=(0, 10))
-        
-        container.grid_columnconfigure(0, weight=1)
-    
-    def browse_dir(self, var):
-        """Parcourir pour choisir un dossier"""
-        directory = filedialog.askdirectory(title="Select Directory")
-        if directory:
-            var.set(directory)
-    
-    def save_settings(self):
-        """Sauvegarder les paramètres"""
-        config = {
-            "default_images_dir": self.default_images_dir.get(),
-            "default_output_dir": self.default_output_dir.get(),
-            "default_augmented_dir": self.default_augmented_dir.get(),
-            "default_mosaic_dir": self.default_mosaic_dir.get(),
-            "default_fakeimg_dir": self.default_fakeimg_dir.get(),
-            "default_holographic_dir": self.default_holographic_dir.get(),
-            "default_augmentations": self.default_augmentations.get(),
-            "holographic_intensity": self.holographic_intensity.get(),
-            "holographic_variations": self.holographic_variations.get(),
-            "default_mosaic_mode": self.default_mosaic_mode.get(),
-            "default_mosaic_layout": self.default_mosaic_layout.get(),
-            "default_mosaic_background": self.default_mosaic_background.get(),
-            "default_mosaic_transform": self.default_mosaic_transform.get(),
-            "default_model": self.default_model.get(),
-            "default_epochs": self.default_epochs.get(),
-            "default_batch": self.default_batch.get(),
-            "default_device": self.default_device.get(),
-            "tcgdex_api_key": self.tcgdex_api_key.get(),
-            "auto_save_logs": self.auto_save_logs.get(),
-            "enable_notifications": self.enable_notifications.get(),
-            "fakeimg_input_dir": self.fakeimg_input_dir.get(),
-            "fakeimg_output_dir": self.fakeimg_output_dir.get(),
-            "fakeimg_p": self.fakeimg_p.get(),
-            "fakeimg_sl": self.fakeimg_sl.get(),
-            "fakeimg_sh": self.fakeimg_sh.get(),
-            "fakeimg_r1": self.fakeimg_r1.get(),
-            "fakeimg_r2": self.fakeimg_r2.get(),
-            "default_download_dir": self.default_download_dir.get(),
-            "default_download_lang": self.default_download_lang.get(),
-            "default_download_quality": self.default_download_quality.get(),
-            "default_download_format": self.default_download_format.get(),
-            "default_download_workers": self.default_download_workers.get(),
-            "debug_device": self.debug_device.get(),
-            "debug_workers": self.debug_workers.get(),
-            "debug_log_level": self.debug_log_level.get(),
-            "debug_cache_mode": self.debug_cache_mode.get(),
-            "debug_profiling": self.debug_profiling.get(),
-            "debug_benchmark": self.debug_benchmark.get(),
-            "debug_save_logs": self.debug_save_logs.get(),
-            "debug_multiprocessing": self.debug_multiprocessing.get(),
-            "debug_memory_profiling": self.debug_memory_profiling.get()
-        }
-        
-        try:
-            with open("gui_config.json", "w") as f:
-                json.dump(config, f, indent=4)
-            
-            messagebox.showinfo("Success", "✅ Settings saved successfully!")
-            self.dialog.destroy()
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to save settings:\n{e}")
+import logging
+gui_logger = logging.getLogger("gui")
 
 
 class ModernPokemonGUI:
@@ -1694,6 +55,26 @@ class ModernPokemonGUI:
         self.is_running = False
         self.operation_stopped = False  # Flag pour arrêt volontaire
         self.current_view = "home"
+
+        # File de logs thread-safe: les threads workers ne touchent JAMAIS
+        # aux widgets Tkinter directement (Tkinter n'est pas thread-safe).
+        # log() enfile les messages, _drain_log_queue() les affiche depuis
+        # le thread principal via root.after().
+        self._log_queue = queue.Queue()
+
+        # File de callbacks UI: même principe que les logs — les workers
+        # déposent des callables, le poller les exécute sur le thread
+        # principal. Aucun appel Tk (même root.after) depuis un worker.
+        self._ui_queue = queue.Queue()
+
+        # Exécuteur centralisé des opérations longues (Phase 4 / R2):
+        # remplace les blocs subprocess copiés-collés des méthodes start_*
+        self.tasks = TaskRunner(
+            log=self.log,
+            ui_dispatch=self._dispatch_ui,
+            on_start=self.start_operation,
+            on_end=self.end_operation,
+        )
         
         # V3.1: État responsive
         self.is_compact_mode = False
@@ -1716,16 +97,7 @@ class ModernPokemonGUI:
         self.train_epochs_var = None
         self.train_batch_var = None
         # Holographic augmentation settings (loaded from gui_config.json if present)
-        try:
-            # load config file if available
-            if Path(self.config_file).exists():
-                with open(self.config_file, 'r', encoding='utf-8') as cf:
-                    _cfg = json.load(cf)
-            else:
-                _cfg = {}
-        except Exception:
-            _cfg = {}
-
+        _cfg = GuiConfig(self.config_file)
         self.holographic_intensity = tk.DoubleVar(value=_cfg.get("holographic_intensity", 0.7))
         self.holographic_variations = tk.IntVar(value=_cfg.get("holographic_variations", 3))
         self.train_device_var = None
@@ -1767,21 +139,8 @@ class ModernPokemonGUI:
         # Chargement config
         self.load_config()
         
-        # Palette de couleurs moderne (Catppuccin Mocha inspired)
-        self.colors = {
-            'bg_dark': '#1e1e2e',       # Background principal
-            'bg_sidebar': '#181825',     # Sidebar
-            'bg_card': '#313244',        # Cartes/Panels
-            'bg_hover': '#45475a',       # Hover
-            'accent': '#89b4fa',         # Bleu accent
-            'accent_hover': '#74c7ec',   # Bleu hover
-            'success': '#a6e3a1',        # Vert success
-            'warning': '#f9e2af',        # Jaune warning
-            'error': '#f38ba8',          # Rouge error
-            'text': '#cdd6f4',           # Texte principal
-            'text_dim': '#9399b2',       # Texte secondaire
-            'border': '#45475a'          # Bordures
-        }
+        # Palette de couleurs moderne (source unique: gui/theme.py)
+        self.colors = dict(COLORS)
         
         # Constantes d'harmonisation V3.1
         self.PADDING_VIEW = 20           # Padding externe des vues
@@ -1804,7 +163,10 @@ class ModernPokemonGUI:
         
         # Charger la vue Home par défaut
         self.show_view('home')
-        
+
+        # Démarrer le poller de logs (thread principal)
+        self.root.after(100, self._drain_log_queue)
+
         self.log("✅ Interface initialisée - Mode Professionnel")
     
     def setup_modern_style(self):
@@ -2214,7 +576,10 @@ class ModernPokemonGUI:
         ).pack(fill=tk.X, padx=10, pady=(0, 8))
     
     def update_all_statistics(self):
-        """Mettre à jour toutes les statistiques au démarrage"""
+        """Mettre à jour toutes les statistiques (thread-safe)"""
+        if threading.current_thread() is not threading.main_thread():
+            self._dispatch_ui(self.update_all_statistics)
+            return
         try:
             # Images téléchargées
             images_dir = PATHS['directories']['images']
@@ -2379,7 +744,7 @@ class ModernPokemonGUI:
         """Obtenir le nombre de lignes de logs"""
         try:
             return int(self.log_text.index('end-1c').split('.')[0]) - 1
-        except:
+        except Exception:
             return 0
     
     def show_view(self, view_id):
@@ -2987,7 +1352,7 @@ class ModernPokemonGUI:
                 self.dashboard_cards['activity_speed'] = speed_label
             else:
                 tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
-        except:
+        except Exception:
             tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
     
     def create_recommendations_card(self, parent, row, col):
@@ -3184,7 +1549,7 @@ class ModernPokemonGUI:
             )
             ratio_label.pack(anchor='w', padx=12, pady=(0, 8))
             self.dashboard_cards['progress_ratio'] = ratio_label
-        except:
+        except Exception:
             tk.Frame(card, bg=self.colors['bg_card'], height=8).pack()
     
     def create_system_card(self, parent, row, col):
@@ -3254,7 +1619,7 @@ class ModernPokemonGUI:
                 self.dashboard_cards['system_performance'] = perf_label
             else:
                 tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
-        except:
+        except Exception:
             tk.Frame(card, bg=self.colors['bg_card'], height=15).pack()
     
     def create_preview_card(self, parent, row, col):
@@ -3376,7 +1741,7 @@ class ModernPokemonGUI:
                         bg=self.colors['bg_card'],
                         fg=self.colors['text']
                     ).pack(anchor='w', padx=12, pady=2)
-            except:
+            except Exception:
                 tk.Label(card,
                     text="📄 Rapport disponible",
                     font=('Segoe UI', 7),
@@ -3418,7 +1783,7 @@ class ModernPokemonGUI:
                     bg=self.colors['bg_card'],
                     fg=self.colors['text_dim']
                 ).pack(anchor='w', padx=12, pady=(0, 5))
-            except:
+            except Exception:
                 tk.Frame(card, bg=self.colors['bg_card'], height=8).pack()
         else:
             # Pas de rapport
@@ -3733,7 +2098,7 @@ class ModernPokemonGUI:
             try:
                 from core.image_downloader import POPULAR_SETS
                 set_choices = [f"{name} ({sid})" for name, sid in POPULAR_SETS]
-            except:
+            except Exception:
                 set_choices = ["Surging Sparks (sv08)", "Stellar Crown (sv07)"]
         
         self.download_set_var = ttk.Combobox(set_frame,
@@ -3755,7 +2120,7 @@ class ModernPokemonGUI:
         try:
             from core.image_downloader import LANGUAGES
             lang_choices = list(LANGUAGES.keys())
-        except:
+        except Exception:
             lang_choices = ["English", "Français", "Deutsch", "Italiano", "Español"]
         
         self.download_lang_var = ttk.Combobox(lang_frame,
@@ -3867,7 +2232,7 @@ class ModernPokemonGUI:
                 stats_text += f" | Total: {total_generated} ({ratio:.1f}x)"
             
             return stats_text
-        except:
+        except Exception:
             return "📊 Unable to read statistics"
     
     def refresh_augmentation_stats(self):
@@ -3880,7 +2245,7 @@ class ModernPokemonGUI:
                         new_stats = self.get_augmentation_stats()
                         child.config(text=new_stats)
                         break
-            except:
+            except Exception:
                 pass
             # Programmer le prochain rafraîchissement
             self.root.after(2000, self.refresh_augmentation_stats)
@@ -4023,7 +2388,7 @@ class ModernPokemonGUI:
                 stats_text = f"📊 Current: {count} fake images generated"
             else:
                 stats_text = "📊 No fake images generated yet"
-        except:
+        except Exception:
             stats_text = "📊 Unable to read statistics"
         
         self.create_info_tooltip(container,
@@ -5302,7 +3667,7 @@ class ModernPokemonGUI:
                 yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
             
             self.log("✅ Fichier cards_database.yaml créé avec succès!")
-            messagebox.showinfo(
+            self.show_info(
                 "Succès",
                 "Fichier cards_database.yaml créé!\n\n"
                 "Un fichier exemple a été créé avec 5 cartes.\n"
@@ -5319,7 +3684,7 @@ class ModernPokemonGUI:
             
         except Exception as e:
             self.log(f"❌ Erreur création YAML: {e}")
-            messagebox.showerror("Erreur", f"Impossible de créer le fichier:\n{e}")
+            self.show_error("Erreur", f"Impossible de créer le fichier:\n{e}")
             return False
     
     def _generate_yaml_from_manifest(self, manifest_path: str, set_id: str, set_name: str):
@@ -5447,7 +3812,7 @@ class ModernPokemonGUI:
                     install_script = Path("install_env.bat")
                     if not install_script.exists():
                         self.log("❌ Script install_env.bat non trouvé!")
-                        messagebox.showerror("Erreur", "Script d'installation non trouvé!")
+                        self.show_error("Erreur", "Script d'installation non trouvé!")
                         return False
                     
                     process = subprocess.Popen(
@@ -5474,16 +3839,16 @@ class ModernPokemonGUI:
                 
                 if process.returncode == 0 and self.check_venv():
                     self.log("✅ Environnement virtuel installé avec succès!")
-                    messagebox.showinfo("Succès", "Environnement installé!\n\nVous pouvez maintenant utiliser toutes les fonctionnalités.")
+                    self.show_info("Succès", "Environnement installé!\n\nVous pouvez maintenant utiliser toutes les fonctionnalités.")
                     return True
                 else:
                     self.log("❌ Installation échouée")
-                    messagebox.showerror("Erreur", "Installation échouée.\nVérifiez les logs pour plus de détails.")
+                    self.show_error("Erreur", "Installation échouée.\nVérifiez les logs pour plus de détails.")
                     return False
                     
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur lors de l'installation:\n{e}")
+                self.show_error("Erreur", f"Erreur lors de l'installation:\n{e}")
                 return False
             finally:
                 self.end_operation()
@@ -5492,23 +3857,8 @@ class ModernPokemonGUI:
         return False  # Retourner False car l'installation est en cours
     
     def load_config(self):
-        """Charger la configuration"""
-        default_config = {
-            "paths": {
-                "images_source": "images",
-                "fakeimg": "fakeimg",
-                "output": "output"
-            },
-            "last_used": {
-                "num_aug": 15
-            }
-        }
-        
-        if os.path.exists(self.config_file):
-            with open(self.config_file, 'r') as f:
-                self.config = json.load(f)
-        else:
-            self.config = default_config
+        """Charger la configuration (via GuiConfig, défauts inclus)"""
+        self.config = GuiConfig(self.config_file).data
     
     def get_real_stats(self):
         """Calculer les statistiques réelles du projet"""
@@ -5589,7 +3939,7 @@ class ModernPokemonGUI:
                 else:
                     return f"{speed*60:.1f} img/h"
             return None
-        except:
+        except Exception:
             return None
     
     def get_detailed_ratio(self):
@@ -5608,7 +3958,7 @@ class ModernPokemonGUI:
             mosaic_ratio = mosaics / source if source > 0 else 0
             
             return f"📊 Ratio: 1:{aug_ratio:.1f}:{mosaic_ratio:.1f} (Orig:Aug:Mos)"
-        except:
+        except Exception:
             return "📊 Ratio: N/A"
     
     def get_performance_info(self):
@@ -5622,14 +3972,14 @@ class ModernPokemonGUI:
                     gpu_name = torch.cuda.get_device_name(0)
                     gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3
                     return f"⚡ {gpu_name[:15]}... ({gpu_memory:.0f}GB)"
-            except:
+            except Exception:
                 pass
             
             # Si pas de GPU, info CPU
             import multiprocessing
             cpu_count = multiprocessing.cpu_count()
             return f"⚡ CPU: {cpu_count} cores"
-        except:
+        except Exception:
             return None
     
     def get_last_activity(self):
@@ -5908,30 +4258,88 @@ class ModernPokemonGUI:
             }
     
     def log(self, message):
-        """Ajouter un message aux logs"""
+        """
+        Ajouter un message aux logs — THREAD-SAFE.
+
+        Peut être appelé depuis n'importe quel thread : le message est enfilé
+        et affiché dans le widget par _drain_log_queue() (thread principal).
+        """
         timestamp = datetime.now().strftime("%H:%M:%S")
-        
-        # Gérer les emojis pour éviter les erreurs d'encodage Windows
-        try:
-            # Essayer d'afficher le message tel quel
-            log_message = f"[{timestamp}] {message}\n"
-            self.log_text.insert(tk.END, log_message)
-        except Exception:
-            # Si erreur d'encodage, remplacer les emojis problématiques
-            safe_message = message.encode('ascii', 'ignore').decode('ascii')
-            log_message = f"[{timestamp}] {safe_message}\n"
-            self.log_text.insert(tk.END, log_message)
-        
-        self.log_text.see(tk.END)
-        self.log_text.update()
-        
-        # Afficher aussi dans stdout (console) avec gestion d'encodage
+        log_message = f"[{timestamp}] {message}\n"
+
+        # Fichier de log global (logs/pokemon_gui.log)
+        gui_logger.info(message)
+
+        # Afficher dans stdout (console) avec gestion d'encodage Windows
         try:
             print(log_message.strip())
         except UnicodeEncodeError:
-            # Fallback pour console Windows avec encodage limité
             safe_log = log_message.encode('ascii', 'ignore').decode('ascii')
             print(safe_log.strip())
+
+        self._log_queue.put(log_message)
+
+    def _dispatch_ui(self, fn):
+        """
+        Planifie un callable sur le thread principal — utilisable depuis
+        n'importe quel thread (simple queue.put, aucun appel Tk).
+        """
+        self._ui_queue.put(fn)
+
+    def _drain_log_queue(self):
+        """Vide les files de logs et de callbacks UI (thread principal)"""
+        drained = False
+        while True:
+            try:
+                log_message = self._log_queue.get_nowait()
+            except queue.Empty:
+                break
+            try:
+                self.log_text.insert(tk.END, log_message)
+            except Exception:
+                # Erreur d'encodage: retirer emojis/caractères non-ASCII
+                safe_message = log_message.encode('ascii', 'ignore').decode('ascii')
+                try:
+                    self.log_text.insert(tk.END, safe_message)
+                except Exception:
+                    pass  # Widget détruit (fermeture app)
+            drained = True
+
+        if drained:
+            try:
+                self.log_text.see(tk.END)
+            except Exception:
+                pass
+
+        # Callbacks UI déposés par les threads workers
+        while True:
+            try:
+                callback = self._ui_queue.get_nowait()
+            except queue.Empty:
+                break
+            try:
+                callback()
+            except Exception as e:
+                self.log(f"⚠️ Erreur callback UI: {e}")
+
+        self.root.after(100, self._drain_log_queue)
+
+    # ---- Popups thread-safe -------------------------------------------------
+    # Les messagebox Tkinter ne doivent être créées que depuis le thread
+    # principal. Ces wrappers passent par la file de callbacks UI, ce qui
+    # les rend utilisables depuis n'importe quel thread.
+
+    def show_info(self, title, message):
+        """messagebox.showinfo thread-safe (non bloquant depuis un worker)"""
+        self._dispatch_ui(lambda: messagebox.showinfo(title, message))
+
+    def show_error(self, title, message):
+        """messagebox.showerror thread-safe (non bloquant depuis un worker)"""
+        self._dispatch_ui(lambda: messagebox.showerror(title, message))
+
+    def show_warning(self, title, message):
+        """messagebox.showwarning thread-safe (non bloquant depuis un worker)"""
+        self._dispatch_ui(lambda: messagebox.showwarning(title, message))
     
     def start_operation(self, operation_name):
         """Démarrer une opération"""
@@ -5947,7 +4355,10 @@ class ModernPokemonGUI:
         self.update_footer_stats()
     
     def end_operation(self):
-        """Terminer une opération"""
+        """Terminer une opération (thread-safe: se replanifie sur le thread principal)"""
+        if threading.current_thread() is not threading.main_thread():
+            self._dispatch_ui(self.end_operation)
+            return
         # V3.2: Enregistrer dernière activité AVANT de reset
         if self.current_operation_name:
             self.last_operation_name = self.current_operation_name
@@ -5964,7 +4375,10 @@ class ModernPokemonGUI:
         self.update_footer_stats()
     
     def update_stats(self):
-        """Mettre à jour les statistiques du dashboard (V3.2 - nouvelles cartes)"""
+        """Mettre à jour les statistiques du dashboard (thread-safe)"""
+        if threading.current_thread() is not threading.main_thread():
+            self._dispatch_ui(self.update_stats)
+            return
         try:
             # V3.2: Mettre à jour les nouvelles cartes du Dashboard si actif
             if hasattr(self, 'dashboard_cards') and self.current_view == 'home':
@@ -6024,6 +4438,13 @@ class ModernPokemonGUI:
     
     def stop_operation(self):
         """Arrêter l'opération en cours"""
+        # Tâches gérées par le TaskRunner (Phase 4)
+        if self.tasks.is_running:
+            self.operation_stopped = True
+            self.tasks.stop()
+            return
+
+        # Héritage: opérations pas encore migrées vers TaskRunner
         if self.current_process and self.current_process.poll() is None:
             try:
                 self.operation_stopped = True  # Marquer comme arrêt volontaire
@@ -6044,14 +4465,14 @@ class ModernPokemonGUI:
     def start_image_download(self):
         """Démarrer le téléchargement d'images"""
         if self.is_running:
-            messagebox.showwarning("Warning", "Une opération est déjà en cours!")
+            self.show_warning("Warning", "Une opération est déjà en cours!")
             return
         
         # Récupérer les paramètres
         try:
             set_value = self.download_set_var.get().strip()
             if not set_value:
-                messagebox.showerror("Error", "Veuillez sélectionner ou saisir un set Pokemon!")
+                self.show_error("Error", "Veuillez sélectionner ou saisir un set Pokemon!")
                 return
             
             # Extract set ID if in format "Name (id)"
@@ -6073,7 +4494,7 @@ class ModernPokemonGUI:
                 output_dir = "images"
             
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         # Confirmation
@@ -6110,7 +4531,7 @@ Lancer le téléchargement ?"""
                 set_info = downloader.resolve_set(set_query, lang=lang_code)
                 if not set_info:
                     self.log(f"❌ Set non trouvé: {set_query}")
-                    messagebox.showerror("Error", f"Set non trouvé: {set_query}\n\nVérifiez le nom ou l'ID du set.")
+                    self.show_error("Error", f"Set non trouvé: {set_query}\n\nVérifiez le nom ou l'ID du set.")
                     return
                 
                 set_id = set_info.get('id', set_query)
@@ -6156,12 +4577,12 @@ Lancer le téléchargement ?"""
                         self.log(get_message('console.yaml_error', error=yaml_err))
                 
                 if fail == 0:
-                    messagebox.showinfo("✅ Succès", 
+                    self.show_info("✅ Succès", 
                         f"Téléchargement terminé !\n\n"
                         f"✅ {ok} cartes téléchargées\n"
                         f"💾 Dossier: {output_dir}/{set_id}/")
                 else:
-                    messagebox.showwarning("⚠️ Terminé avec erreurs",
+                    self.show_warning("⚠️ Terminé avec erreurs",
                         f"Téléchargement terminé avec des erreurs.\n\n"
                         f"✅ Succès: {ok}/{total}\n"
                         f"❌ Échecs: {fail}/{total}")
@@ -6173,7 +4594,7 @@ Lancer le téléchargement ?"""
                 self.log(f"❌ ERREUR: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"Erreur lors du téléchargement:\n{e}")
+                self.show_error("Error", f"Erreur lors du téléchargement:\n{e}")
             finally:
                 self.stop_operation()
         
@@ -6182,7 +4603,7 @@ Lancer le téléchargement ?"""
     def start_workflow(self):
         """Démarrer le workflow automatique avec WorkflowManager"""
         if self.is_running:
-            messagebox.showwarning("Warning", "Une opération est déjà en cours!")
+            self.show_warning("Warning", "Une opération est déjà en cours!")
             return
         
         # Vérifier l'environnement virtuel
@@ -6197,7 +4618,7 @@ Lancer le téléchargement ?"""
             do_balance = self.workflow_balance_var.get()
             do_train = self.workflow_train_var.get()
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         # Confirmation
@@ -6241,18 +4662,18 @@ Continuer ?"""
                     self.log("\n" + "="*50)
                     self.log("🎉 WORKFLOW TERMINÉ AVEC SUCCÈS!")
                     self.log("="*50)
-                    messagebox.showinfo("Succès", 
+                    self.show_info("Succès", 
                         f"✅ Workflow terminé!\n\n{manager.get_summary()}")
                 else:
                     self.log("\n⚠️ Workflow terminé avec des erreurs")
-                    messagebox.showwarning("Attention",
+                    self.show_warning("Attention",
                         f"Workflow terminé avec erreurs:\n\n{manager.get_summary()}")
                 
             except Exception as e:
                 self.log(f"\n❌ ERREUR WORKFLOW: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Erreur", f"Erreur workflow:\n{e}")
+                self.show_error("Erreur", f"Erreur workflow:\n{e}")
             finally:
                 self.end_operation()
         
@@ -6284,7 +4705,7 @@ Continuer ?"""
             # Fallback: afficher le lien
             from pathlib import Path
             help_local = Path("HELP.md").absolute()
-            messagebox.showinfo(
+            self.show_info(
                 "Help Documentation",
                 f"📖 Online:\n{github_url}\n\n"
                 f"📁 Local:\n{help_local}\n\n"
@@ -6296,7 +4717,7 @@ Continuer ?"""
     def start_training(self):
         """Démarrer l'entraînement avec TrainingManager"""
         if self.is_running:
-            messagebox.showwarning("Warning", "Une opération est déjà en cours!")
+            self.show_warning("Warning", "Une opération est déjà en cours!")
             return
         
         # Vérifier l'environnement virtuel
@@ -6319,13 +4740,13 @@ Continuer ?"""
             patience = int(self.train_patience_var.get())
                 
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         # Vérifier data.yaml
         data_yaml = Path(PATHS['files']['dataset_data_yaml'])
         if not data_yaml.exists():
-            messagebox.showerror("Error",
+            self.show_error("Error",
                 f"Fichier data.yaml non trouvé!\n{data_yaml}\n\n"
                 "Générez d'abord le dataset (Augmentation + Mosaics + Merge).")
             return
@@ -6367,13 +4788,13 @@ Continuer ?"""
                     if metrics:
                         msg += f"\n\nmAP50: {metrics.get('mAP50', 0):.3f}"
                         msg += f"\nmAP50-95: {metrics.get('mAP50-95', 0):.3f}"
-                    messagebox.showinfo("Succès", msg)
+                    self.show_info("Succès", msg)
                 else:
-                    messagebox.showerror("Erreur", "Entraînement échoué!")
+                    self.show_error("Erreur", "Entraînement échoué!")
                 
             except ImportError:
                 self.log("❌ Package ultralytics non installé!")
-                messagebox.showerror("Erreur",
+                self.show_error("Erreur",
                     "Package ultralytics non installé!\n\n"
                     "Ce package est requis pour l'entraînement YOLO.\n"
                     "Il nécessite PyTorch et un GPU compatible (recommandé).\n\n"
@@ -6385,7 +4806,7 @@ Continuer ?"""
                 self.log(f"❌ Erreur: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.show_error("Erreur", f"Erreur:\n{e}")
             finally:
                 self.end_operation()
         
@@ -6396,7 +4817,7 @@ Continuer ?"""
         try:
             from ultralytics import YOLO
         except ImportError:
-            messagebox.showerror("Erreur", 
+            self.show_error("Erreur", 
                 "Package ultralytics non installé!\n\n"
                 "Installation: pip install ultralytics")
             return
@@ -6546,13 +4967,13 @@ Continuer ?"""
                     self.log(f"   3. model = YOLO('{Path(export_path).name}')")
                     self.log("   4. results = model.predict(source=0)  # Webcam")
                     
-                    messagebox.showinfo("Export réussi",
+                    self.show_info("Export réussi",
                         f"Modèle exporté:\n{export_path}\n\n"
                         "Copiez ce fichier sur votre Jetson Orin AGX.")
                     
                 except Exception as e:
                     self.log(f"❌ Erreur export: {e}")
-                    messagebox.showerror("Erreur", f"Export échoué:\n{e}")
+                    self.show_error("Erreur", f"Export échoué:\n{e}")
                 finally:
                     self.end_operation()
             
@@ -6577,7 +4998,7 @@ Continuer ?"""
         results_png = plots_dir / "results.png"
         
         if not results_png.exists():
-            messagebox.showwarning("Attention",
+            self.show_warning("Attention",
                 f"Graphiques non trouvés!\n\n{results_png}\n\n"
                 "Entraînez d'abord un modèle.")
             return
@@ -6589,7 +5010,7 @@ Continuer ?"""
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         except Exception as e:
-            messagebox.showerror("Erreur", f"Impossible d'afficher:\n{e}")
+            self.show_error("Erreur", f"Impossible d'afficher:\n{e}")
     
     # ==================== DETECTION METHODS ====================
     
@@ -6611,11 +5032,11 @@ Continuer ?"""
             conf = self.detect_conf_var.get()
             camera_id = int(self.detect_camera_var.get())
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         if not model_path.exists():
-            messagebox.showerror("Error",
+            self.show_error("Error",
                 f"Modèle non trouvé!\n{model_path}\n\n"
                 "Entraînez d'abord un modèle.")
             return
@@ -6643,13 +5064,13 @@ Continuer ?"""
                 
             except ImportError:
                 self.log("❌ Packages manquants (ultralytics ou opencv)!")
-                messagebox.showerror("Erreur",
+                self.show_error("Erreur",
                     "Packages manquants!\n\n"
                     "Installation:\n"
                     "pip install ultralytics opencv-python")
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur webcam:\n{e}")
+                self.show_error("Erreur", f"Erreur webcam:\n{e}")
         
         threading.Thread(target=task, daemon=True).start()
     
@@ -6659,11 +5080,11 @@ Continuer ?"""
             model_path = Path(self.detect_model_var.get())
             conf = self.detect_conf_var.get()
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         if not model_path.exists():
-            messagebox.showerror("Error", "Modèle non trouvé!")
+            self.show_error("Error", "Modèle non trouvé!")
             return
         
         # Choisir image
@@ -6693,7 +5114,7 @@ Continuer ?"""
                 
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.show_error("Erreur", f"Erreur:\n{e}")
         
         threading.Thread(target=task, daemon=True).start()
     
@@ -6703,11 +5124,11 @@ Continuer ?"""
             model_path = Path(self.detect_model_var.get())
             conf = self.detect_conf_var.get()
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         if not model_path.exists():
-            messagebox.showerror("Error", "Modèle non trouvé!")
+            self.show_error("Error", "Modèle non trouvé!")
             return
         
         # Choisir dossier
@@ -6736,7 +5157,7 @@ Continuer ?"""
                 total = sum(len(dets) for dets in results.values())
                 self.log(f"✅ {total} détection(s) sur {len(results)} images")
                 
-                messagebox.showinfo("Succès",
+                self.show_info("Succès",
                     f"✅ Détection terminée!\n\n"
                     f"{len(results)} images traitées\n"
                     f"{total} détections totales\n\n"
@@ -6744,7 +5165,7 @@ Continuer ?"""
                 
             except Exception as e:
                 self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
+                self.show_error("Erreur", f"Erreur:\n{e}")
             finally:
                 self.end_operation()
         
@@ -6782,7 +5203,7 @@ Continuer ?"""
             
         except Exception as e:
             self.log(f"❌ Error opening folder: {e}")
-            messagebox.showerror("Error", f"Cannot open folder:\n{e}")
+            self.show_error("Error", f"Cannot open folder:\n{e}")
     
     def open_validation_report(self):
         """Ouvrir le rapport de validation HTML dans le navigateur"""
@@ -6795,12 +5216,12 @@ Continuer ?"""
                 self.log("🌐 Rapport de validation ouvert dans le navigateur")
             else:
                 self.log("⚠️ Aucun rapport de validation trouvé")
-                messagebox.showwarning("Rapport introuvable", 
+                self.show_warning("Rapport introuvable", 
                     "Aucun rapport de validation n'a été généré.\n\n"
                     "Allez dans 'Validation' pour générer un rapport.")
         except Exception as e:
             self.log(f"❌ Erreur ouverture rapport: {e}")
-            messagebox.showerror("Erreur", f"Impossible d'ouvrir le rapport:\n{e}")
+            self.show_error("Erreur", f"Impossible d'ouvrir le rapport:\n{e}")
     
     def apply_training_preset(self, preset_name: str):
         """Appliquer un preset de training et naviguer vers la vue Training"""
@@ -6874,12 +5295,12 @@ Continuer ?"""
             num_holo = int(self.aug_holo_var.get())
             num_aug = int(self.aug_num_var.get())
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         # Vérifier qu'au moins une opération est demandée
         if num_holo == 0 and num_aug == 0:
-            messagebox.showwarning("Warning", "Au moins une opération doit être > 0 !\n\nHolographic = 0 ET Augmentation = 0")
+            self.show_warning("Warning", "Au moins une opération doit être > 0 !\n\nHolographic = 0 ET Augmentation = 0")
             return
         
         # Message de confirmation
@@ -6895,95 +5316,53 @@ Continuer ?"""
             return
         
         self.log("🚀 Démarrage du pipeline de génération...")
-        self.start_operation("Generation Pipeline")
-        
-        def task():
-            try:
-                source_dir = PATHS['directories']['images']
-                
-                # ÉTAPE 1: Holographic (optionnel)
-                if num_holo > 0:
-                    self.log(f"\n🌟 ÉTAPE 1/2: Génération holographique ({num_holo} variations)...")
-                    
-                    cmd = [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
-                           source_dir,
-                           PATHS['directories']['output_holographic'],
-                           "--variations", str(num_holo)]
-                    
-                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                              stderr=subprocess.STDOUT, text=True,
-                                              encoding='utf-8', errors='replace', bufsize=1)
-                    
-                    for line in iter(self.current_process.stdout.readline, ''):
-                        if line and self.current_process:
-                            self.log(line.strip())
-                    
-                    if self.current_process:
-                        self.current_process.wait()
-                        if self.current_process.returncode != 0:
-                            self.log("❌ Holographic génération échouée!")
-                            messagebox.showerror("Error", "Holographic génération échouée!")
-                            return
-                        else:
-                            self.log("✅ Holographic terminé!")
-                            # NOTE: On garde source_dir = "images" car l'augmentation doit partir des images ORIGINALES
-                
-                # ÉTAPE 2: Augmentation (optionnel) - TOUJOURS depuis images originales
-                if num_aug > 0:
-                    step_num = "2/2" if num_holo > 0 else "1/1"
-                    self.log(f"\n🎨 ÉTAPE {step_num}: Augmentation ({num_aug} variations par image)...")
-                    
-                    # IMPORTANT: Toujours augmenter depuis les images ORIGINALES, pas depuis holographic
-                    cmd = [sys.executable, "-u", "core/augmentation_albumentations.py",
-                          "--num_aug", str(num_aug),
-                          "--source", "images",  # Toujours "images", jamais "holographic"
-                          "--target", "augmented"]
-                    
-                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                              stderr=subprocess.STDOUT, text=True,
-                                              encoding='utf-8', errors='replace', bufsize=1)
-                    
-                    for line in iter(self.current_process.stdout.readline, ''):
-                        if line and self.current_process:
-                            self.log(line.strip())
-                    
-                    if self.current_process:
-                        self.current_process.wait()
-                        if self.current_process.returncode != 0:
-                            self.log("❌ Augmentation échouée!")
-                            messagebox.showerror("Error", "Augmentation échouée!")
-                            return
-                        else:
-                            self.log("✅ Augmentation terminée!")
-                
-                # Succès final
-                self.log("\n" + "="*50)
-                self.log("🎉 PIPELINE TERMINÉ AVEC SUCCÈS!")
-                self.log("="*50)
-                
-                summary = "Pipeline terminé!\n\n"
-                if num_holo > 0:
-                    summary += f"✅ Holographic: {num_holo} variations générées\n"
-                if num_aug > 0:
-                    summary += f"✅ Augmentation: {num_aug} variations par image\n"
-                summary += f"\n📂 Output: output/augmented/"
-                
-                messagebox.showinfo("Succès", summary)
-                self.update_stats()
-                
-                # Mettre à jour les statistiques (V3.2)
-                self.update_all_statistics()
-                
-            except Exception as e:
-                self.log(f"❌ Erreur pipeline: {e}")
-                import traceback
-                self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"Erreur pipeline:\n{e}")
-            finally:
-                self.end_operation()
-        
-        threading.Thread(target=task, daemon=True).start()
-    
+
+        def work(runner):
+            source_dir = PATHS['directories']['images']
+
+            # ÉTAPE 1: Holographic (optionnel)
+            if num_holo > 0:
+                runner.log(f"\n🌟 ÉTAPE 1/2: Génération holographique ({num_holo} variations)...")
+                runner.stream_or_fail(
+                    [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
+                     source_dir,
+                     PATHS['directories']['output_holographic'],
+                     "--variations", str(num_holo)],
+                    "Holographic génération échouée!")
+                runner.log("✅ Holographic terminé!")
+                # NOTE: source_dir reste "images", l'augmentation part des originales
+
+            # ÉTAPE 2: Augmentation (optionnel) - TOUJOURS depuis images originales
+            if num_aug > 0:
+                step_num = "2/2" if num_holo > 0 else "1/1"
+                runner.log(f"\n🎨 ÉTAPE {step_num}: Augmentation ({num_aug} variations par image)...")
+                runner.stream_or_fail(
+                    [sys.executable, "-u", "core/augmentation_albumentations.py",
+                     "--num_aug", str(num_aug),
+                     "--source", "images",  # Toujours "images", jamais "holographic"
+                     "--target", "augmented"],
+                    "Augmentation échouée!")
+                runner.log("✅ Augmentation terminée!")
+
+            runner.log("\n" + "="*50)
+            runner.log("🎉 PIPELINE TERMINÉ AVEC SUCCÈS!")
+            runner.log("="*50)
+
+        def on_success():
+            summary = "Pipeline terminé!\n\n"
+            if num_holo > 0:
+                summary += f"✅ Holographic: {num_holo} variations générées\n"
+            if num_aug > 0:
+                summary += f"✅ Augmentation: {num_aug} variations par image\n"
+            summary += "\n📂 Output: output/augmented/"
+            self.show_info("Succès", summary)
+            self.update_stats()
+            self.update_all_statistics()
+
+        self.tasks.run("Generation Pipeline", work,
+                       on_success=on_success,
+                       on_error=lambda msg: self.show_error("Error", msg))
+
     def start_augmentation(self):
         """Lancer l'augmentation d'images"""
         # Vérifier l'environnement virtuel
@@ -6995,82 +5374,50 @@ Continuer ?"""
             target = self.aug_output_var.get()
             aug_type = self.aug_type_var.get()  # Standard / Holographic / Both
         except Exception as e:
-            messagebox.showerror("Error", f"Configuration invalide:\n{e}")
+            self.show_error("Error", f"Configuration invalide:\n{e}")
             return
         
         self.log(f"🎨 Augmentation ({aug_type}): {num_aug} variations → {target}/")
-        self.start_operation("Augmentation")
-        
-        def task():
-            try:
-                # Standard augmentation
-                if aug_type in ["Standard", "Both"]:
-                    self.log("🎨 Running standard augmentation (Albumentations)...")
-                    cmd = [sys.executable, "-u", "core/augmentation_albumentations.py",
-                          "--num_aug", str(num_aug),
-                          "--target", target]
-                    
-                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                              stderr=subprocess.STDOUT, text=True,
-                                              encoding='utf-8', errors='replace', bufsize=1)
-                    
-                    for line in iter(self.current_process.stdout.readline, ''):
-                        if line and self.current_process:
-                            self.log(line.strip())
-                    
-                    if self.current_process:
-                        self.current_process.wait()
-                        if self.current_process.returncode != 0:
-                            self.log("❌ Standard augmentation failed!")
-                            if aug_type == "Standard":
-                                messagebox.showerror("Error", "Augmentation failed!")
-                                return
-                        else:
-                            self.log("✅ Standard augmentation completed!")
-                
-                # Holographic augmentation
-                if aug_type in ["Holographic", "Both"]:
-                    self.log("✨ Running holographic augmentation (OPTIMIZED - GPU/CPU hybrid)...")
-                    output_dir = target + "_holographic" if aug_type == "Both" else target
-                    
-                    # Get holographic parameters from settings
-                    variations = self.holographic_variations.get()
-                    
-                    # Use optimized version with GPU support and multi-threading
-                    cmd = [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
-                           "images",  # positional: input directory
-                           output_dir,  # positional: output directory
-                           "--variations", str(variations)]
-                    
-                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                              stderr=subprocess.STDOUT, text=True,
-                                              encoding='utf-8', errors='replace', bufsize=1)
-                    
-                    for line in iter(self.current_process.stdout.readline, ''):
-                        if line and self.current_process:
-                            self.log(line.strip())
-                    
-                    if self.current_process:
-                        self.current_process.wait()
-                        if self.current_process.returncode != 0:
-                            self.log("❌ Holographic augmentation failed!")
-                            messagebox.showerror("Error", "Holographic augmentation failed!")
-                            return
-                        else:
-                            self.log("✅ Holographic augmentation completed!")
-                
-                # Success message
-                self.log("✅ All augmentations completed successfully!")
-                messagebox.showinfo("Success", "Augmentation completed successfully!")
-                self.update_stats()
-                    
-            except Exception as e:
-                self.log(f"❌ Error: {e}")
-                messagebox.showerror("Error", f"Error:\n{e}")
-            finally:
-                self.end_operation()
-        
-        threading.Thread(target=task, daemon=True).start()
+
+        # Lu sur le thread principal (variable Tkinter)
+        holo_variations = self.holographic_variations.get()
+
+        def work(runner):
+            # Standard augmentation
+            if aug_type in ["Standard", "Both"]:
+                runner.log("🎨 Running standard augmentation (Albumentations)...")
+                returncode = runner.stream(
+                    [sys.executable, "-u", "core/augmentation_albumentations.py",
+                     "--num_aug", str(num_aug),
+                     "--target", target])
+                if returncode != 0:
+                    runner.log("❌ Standard augmentation failed!")
+                    if aug_type == "Standard":
+                        raise TaskError("Augmentation failed!")
+                else:
+                    runner.log("✅ Standard augmentation completed!")
+
+            # Holographic augmentation
+            if aug_type in ["Holographic", "Both"]:
+                runner.log("✨ Running holographic augmentation (OPTIMIZED - GPU/CPU hybrid)...")
+                output_dir = target + "_holographic" if aug_type == "Both" else target
+                runner.stream_or_fail(
+                    [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
+                     "images",  # positional: input directory
+                     output_dir,  # positional: output directory
+                     "--variations", str(holo_variations)],
+                    "Holographic augmentation failed!")
+                runner.log("✅ Holographic augmentation completed!")
+
+            runner.log("✅ All augmentations completed successfully!")
+
+        def on_success():
+            self.show_info("Success", "Augmentation completed successfully!")
+            self.update_stats()
+
+        self.tasks.run("Augmentation", work,
+                       on_success=on_success,
+                       on_error=lambda msg: self.show_error("Error", msg))
     
     # ==================== MOSAIC METHODS ====================
     
@@ -7083,7 +5430,7 @@ Continuer ?"""
             layout_val = int(self.mosaic_layout_var.get().split(' - ')[0])
             background_val = int(self.mosaic_background_var.get().split(' - ')[0])
             transform_val = int(self.mosaic_transform_var.get().split(' - ')[0])
-        except:
+        except Exception:
             layout_val = 1
             background_val = 0  # Fixed: Default to mode 0 (Fake Cards Mosaic)
             transform_val = 0
@@ -7100,46 +5447,23 @@ Continuer ?"""
         self.log(f"   Layout: {layout_val}, Background: {background_val}, Transform: {transform_val}")
         if max_groups:
             self.log(f"   Max groups: {max_groups}")
-        self.start_operation("Mosaic Generation")
-        
-        def task():
-            try:
-                # Utilisation de la version OPTIMISÉE par défaut
-                # Pass layout, background, transform parameters avec argparse moderne
-                cmd = [sys.executable, "-u", "core/mosaic_optimized.py", 
-                       str(layout_val), str(background_val), str(transform_val)]
-                if max_groups:
-                    cmd.extend(["--max-groups", str(max_groups)])
-                
-                self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                          stderr=subprocess.STDOUT, text=True,
-                                          encoding='utf-8', errors='replace', bufsize=1)
-                
-                for line in iter(self.current_process.stdout.readline, ''):
-                    if line and self.current_process:
-                        self.log(line.strip())
-                
-                if self.current_process:
-                    self.current_process.wait()
-                    
-                    if self.current_process.returncode == 0:
-                        self.log("✅ Mosaïques générées!")
-                        messagebox.showinfo("Succès", "Mosaïques générées avec succès!")
-                        self.update_stats()
-                        
-                        # Mettre à jour les statistiques (V3.2)
-                        self.update_all_statistics()
-                    elif self.current_process.returncode is not None:
-                        self.log("❌ Génération échouée")
-                        messagebox.showerror("Erreur", "Génération échouée!")
-                    
-            except Exception as e:
-                self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
-            finally:
-                self.end_operation()
-        
-        threading.Thread(target=task, daemon=True).start()
+        def work(runner):
+            # Utilisation de la version OPTIMISÉE par défaut
+            cmd = [sys.executable, "-u", "core/mosaic_optimized.py",
+                   str(layout_val), str(background_val), str(transform_val)]
+            if max_groups:
+                cmd.extend(["--max-groups", str(max_groups)])
+            runner.stream_or_fail(cmd, "Génération échouée!")
+            runner.log("✅ Mosaïques générées!")
+
+        def on_success():
+            self.show_info("Succès", "Mosaïques générées avec succès!")
+            self.update_stats()
+            self.update_all_statistics()
+
+        self.tasks.run("Mosaic Generation", work,
+                       on_success=on_success,
+                       on_error=lambda msg: self.show_error("Erreur", msg))
     
     # ==================== VALIDATION METHODS ====================
     
@@ -7156,50 +5480,40 @@ Continuer ?"""
     def start_merge_dataset(self):
         """Fusionner augmented + mosaics dans dataset final"""
         self.log("🔀 Fusion du dataset (augmented + mosaics)...")
-        self.start_operation("Merge Dataset")
-        
-        def task():
-            try:
-                # Ajouter scripts/ au path pour import
-                import sys
-                from pathlib import Path
-                scripts_dir = Path(__file__).parent / "scripts"
-                if str(scripts_dir) not in sys.path:
-                    sys.path.insert(0, str(scripts_dir))
-                
-                # Importer et exécuter merge_dataset
-                import merge_dataset
-                
-                # Rediriger stdout pour capturer les prints
-                import io
-                from contextlib import redirect_stdout
-                
-                output = io.StringIO()
-                with redirect_stdout(output):
-                    merge_dataset.merge_dataset()
-                
-                # Afficher la sortie dans le log
-                for line in output.getvalue().split('\n'):
-                    if line.strip():
-                        self.log(line)
-                
-                self.log("✅ Dataset fusionné avec succès!")
-                messagebox.showinfo("Succès", 
-                    f"Dataset fusionné!\n\n"
-                    f"📂 Emplacement: {PATHS['directories']['output_dataset']}\n"
-                    "✓ train.txt et val.txt créés\n"
-                    "✓ data.yaml copié\n\n"
-                    "Prêt pour l'entraînement!")
-                
-            except Exception as e:
-                self.log(f"❌ Erreur lors du merge: {e}")
-                import traceback
-                self.log(traceback.format_exc())
-                messagebox.showerror("Erreur", f"Erreur lors du merge:\n{e}")
-            finally:
-                self.end_operation()
-        
-        threading.Thread(target=task, daemon=True).start()
+
+        def work(runner):
+            # Ajouter scripts/ au path pour import
+            scripts_dir = Path(__file__).parent / "scripts"
+            if str(scripts_dir) not in sys.path:
+                sys.path.insert(0, str(scripts_dir))
+
+            import merge_dataset
+
+            # Rediriger stdout pour capturer les prints
+            import io
+            from contextlib import redirect_stdout
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                merge_dataset.merge_dataset()
+
+            for line in output.getvalue().split('\n'):
+                if line.strip():
+                    runner.log(line)
+
+            runner.log("✅ Dataset fusionné avec succès!")
+
+        def on_success():
+            self.show_info("Succès",
+                f"Dataset fusionné!\n\n"
+                f"📂 Emplacement: {PATHS['directories']['output_dataset']}\n"
+                "✓ train.txt et val.txt créés\n"
+                "✓ data.yaml copié\n\n"
+                "Prêt pour l'entraînement!")
+
+        self.tasks.run("Merge Dataset", work,
+                       on_success=on_success,
+                       on_error=lambda msg: self.show_error("Erreur", f"Erreur lors du merge:\n{msg}"))
     
     def start_validation(self):
         """Lancer validation du dataset"""
@@ -7207,45 +5521,24 @@ Continuer ?"""
         html = self.valid_html_var.get()
         
         if not os.path.exists(dataset_path):
-            messagebox.showerror("Error", f"Dataset non trouvé:\n{dataset_path}")
+            self.show_error("Error", f"Dataset non trouvé:\n{dataset_path}")
             return
         
         self.log(f"✅ Validation: {dataset_path}")
-        self.start_operation("Validation")
-        
-        def task():
-            try:
-                cmd = [sys.executable, "-u", "core/dataset_validator.py", dataset_path]
-                if html:
-                    cmd.append("--html")
-                
-                self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                          stderr=subprocess.STDOUT, text=True,
-                                          encoding='utf-8', errors='replace', bufsize=1)
-                
-                for line in iter(self.current_process.stdout.readline, ''):
-                    if line and self.current_process:
-                        self.log(line.strip())
-                
-                if self.current_process:
-                    self.current_process.wait()
-                    
-                    if self.current_process.returncode == 0:
-                        self.log("✅ Validation terminée!")
-                        if html:
-                            self.log("📄 Rapport: validation_report.html")
-                        messagebox.showinfo("Succès", "Validation terminée!\nVoir validation_report.html")
-                    elif self.current_process.returncode is not None:
-                        self.log("❌ Validation échouée")
-                        messagebox.showerror("Erreur", "Validation échouée!")
-                    
-            except Exception as e:
-                self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
-            finally:
-                self.end_operation()
-        
-        threading.Thread(target=task, daemon=True).start()
+
+        def work(runner):
+            cmd = [sys.executable, "-u", "core/dataset_validator.py", dataset_path]
+            if html:
+                cmd.append("--html")
+            runner.stream_or_fail(cmd, "Validation échouée!")
+            runner.log("✅ Validation terminée!")
+            if html:
+                runner.log("📄 Rapport: validation_report.html")
+
+        self.tasks.run("Validation", work,
+                       on_success=lambda: self.show_info(
+                           "Succès", "Validation terminée!\nVoir validation_report.html"),
+                       on_error=lambda msg: self.show_error("Erreur", msg))
     
     def open_validation_report(self):
         """Ouvrir le rapport HTML"""
@@ -7254,7 +5547,7 @@ Continuer ?"""
             import webbrowser
             webbrowser.open(str(report_path.absolute()))
         else:
-            messagebox.showwarning("Attention", "Rapport non trouvé!\nValidez d'abord le dataset.")
+            self.show_warning("Attention", "Rapport non trouvé!\nValidez d'abord le dataset.")
     
     # ==================== EXPORT METHODS ====================
     
@@ -7271,86 +5564,43 @@ Continuer ?"""
             formats.append("roboflow")
         
         if not formats:
-            messagebox.showwarning("Attention", "Sélectionnez au moins un format!")
+            self.show_warning("Attention", "Sélectionnez au moins un format!")
             return
         
         self.log(f"📦 Export: {', '.join(formats)}")
-        self.start_operation("Export")
-        
-        def task():
-            try:
-                for fmt in formats:
-                    self.log(f"\n📦 Export format: {fmt}")
-                    cmd = [sys.executable, "-u", "core/dataset_exporter.py",
-                          PATHS['directories']['output_dataset'], "--format", fmt]
-                    
-                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                              stderr=subprocess.STDOUT, text=True,
-                                              encoding='utf-8', errors='replace', bufsize=1)
-                    
-                    for line in iter(self.current_process.stdout.readline, ''):
-                        if line and self.current_process:
-                            self.log(line.strip())
-                    
-                    if self.current_process:
-                        self.current_process.wait()
-                        
-                        if self.current_process.returncode != 0:
-                            self.log(f"❌ Export {fmt} échoué")
-                
-                self.log("\n✅ Export terminé!")
-                messagebox.showinfo("Succès", f"Export terminé!\n\nFormats: {', '.join(formats)}")
-                
-            except Exception as e:
-                self.log(f"❌ Erreur: {e}")
-                messagebox.showerror("Erreur", f"Erreur:\n{e}")
-            finally:
-                self.end_operation()
-        
-        threading.Thread(target=task, daemon=True).start()
+
+        def work(runner):
+            for fmt in formats:
+                runner.log(f"\n📦 Export format: {fmt}")
+                returncode = runner.stream(
+                    [sys.executable, "-u", "core/dataset_exporter.py",
+                     PATHS['directories']['output_dataset'], "--format", fmt])
+                if returncode != 0:
+                    runner.log(f"❌ Export {fmt} échoué")
+            runner.log("\n✅ Export terminé!")
+
+        self.tasks.run("Export", work,
+                       on_success=lambda: self.show_info(
+                           "Succès", f"Export terminé!\n\nFormats: {', '.join(formats)}"),
+                       on_error=lambda msg: self.show_error("Erreur", msg))
     
     # ==================== TOOLS METHODS ====================
     
     def start_balancing(self):
         """Lancer auto-balancing (VERSION OPTIMISÉE)"""
         self.log("⚖️ Auto-balancing des classes (optimisé)...")
-        self.start_operation("Balancing")
-        
-        def task():
-            try:
-                # Utilisation de la version OPTIMISÉE
-                cmd = [sys.executable, "-u", "core/auto_balancer_optimized.py", PATHS['directories']['output_dataset'],
-                      "--strategy", "augment", "--target", "50"]
-                
-                self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                          stderr=subprocess.STDOUT, text=True,
-                                          encoding='utf-8', errors='replace', bufsize=1)
-                
-                for line in iter(self.current_process.stdout.readline, ''):
-                    if line and self.current_process:
-                        self.log(line.strip())
-                
-                if self.current_process:
-                    self.current_process.wait()
-                    
-                    # Vérifier si c'est un arrêt volontaire
-                    if self.operation_stopped:
-                        pass  # Déjà logué dans stop_operation()
-                    elif self.current_process.returncode == 0:
-                        self.log("✅ Balancing terminé!")
-                        messagebox.showinfo("Succès", "Classes équilibrées!")
-                    elif self.current_process.returncode is not None:
-                        self.log("❌ Balancing échoué!")
-                        messagebox.showerror("Erreur", "Balancing échoué!")
-                    
-            except Exception as e:
-                if not self.operation_stopped:
-                    self.log(f"❌ Erreur: {e}")
-                    messagebox.showerror("Erreur", f"Erreur:\n{e}")
-            finally:
-                self.end_operation()
-        
-        threading.Thread(target=task, daemon=True).start()
+
+        def work(runner):
+            runner.stream_or_fail(
+                [sys.executable, "-u", "core/auto_balancer_optimized.py",
+                 PATHS['directories']['output_dataset'],
+                 "--strategy", "augment", "--target", "50"],
+                "Balancing échoué!")
+            runner.log("✅ Balancing terminé!")
+
+        self.tasks.run("Balancing", work,
+                       on_success=lambda: self.show_info("Succès", "Classes équilibrées!"),
+                       on_error=lambda msg: self.show_error("Erreur", msg))
     
     def start_holographic(self):
         """Lancer augmentation holographique"""
@@ -7443,46 +5693,21 @@ Continuer ?"""
         btn_frame.pack(pady=20)
         
         def run_holographic():
+            variations = variations_var.get()  # Lu avant destruction du dialog
+            intensity = intensity_var.get()
             dialog.destroy()
-            self.log(f"✨ Holographic augmentation: intensity={intensity_var.get()}, variations={variations_var.get()}")
-            self.start_operation("Holographic Augmentation")
-            
-            def task():
-                try:
-                    output_dir = "images_holographic"
-                    # -u pour unbuffered output (logs en temps réel)
-                    cmd = [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
-                          "images", output_dir, "--variations", str(variations_var.get())]
-                    
-                    self.current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                              stderr=subprocess.STDOUT, text=True, 
-                                              encoding='utf-8', errors='replace', bufsize=1)
-                    
-                    for line in iter(self.current_process.stdout.readline, ''):
-                        if line and self.current_process:
-                            self.log(line.strip())
-                    
-                    if self.current_process:
-                        self.current_process.wait()
-                        
-                        # Vérifier si c'est un arrêt volontaire
-                        if self.operation_stopped:
-                            pass  # Déjà logué dans stop_operation()
-                        elif self.current_process.returncode == 0:
-                            self.log("✅ Holographic augmentation terminée!")
-                            messagebox.showinfo("Succès", "Effets holographiques appliqués!")
-                        elif self.current_process.returncode is not None:
-                            self.log("❌ Augmentation holographique échouée!")
-                            messagebox.showerror("Erreur", "Augmentation holographique échouée!")
-                        
-                except Exception as e:
-                    if not self.operation_stopped:
-                        self.log(f"❌ Erreur: {e}")
-                        messagebox.showerror("Erreur", f"Erreur:\n{e}")
-                finally:
-                    self.end_operation()
-            
-            threading.Thread(target=task, daemon=True).start()
+            self.log(f"✨ Holographic augmentation: intensity={intensity}, variations={variations}")
+
+            def work(runner):
+                runner.stream_or_fail(
+                    [sys.executable, "-u", "core/holographic_augmenter_optimized.py",
+                     "images", "images_holographic", "--variations", str(variations)],
+                    "Augmentation holographique échouée!")
+                runner.log("✅ Holographic augmentation terminée!")
+
+            self.tasks.run("Holographic Augmentation", work,
+                           on_success=lambda: self.show_info("Succès", "Effets holographiques appliqués!"),
+                           on_error=lambda msg: self.show_error("Erreur", msg))
         
         tk.Button(
             btn_frame,
@@ -7521,76 +5746,52 @@ Continuer ?"""
             r1 = float(self.fakeimg_r1_var.get())
             r2 = float(self.fakeimg_r2_var.get())
         except Exception as e:
-            messagebox.showerror("Error", f"Invalid configuration:\n{e}")
+            self.show_error("Error", f"Invalid configuration:\n{e}")
             return
         
         if not os.path.exists(input_dir):
-            messagebox.showerror("Error", f"Input directory '{input_dir}' does not exist!\nDownload card images first from the Image Download view.")
+            self.show_error("Error", f"Input directory '{input_dir}' does not exist!\nDownload card images first from the Image Download view.")
             return
         
         if sl >= sh:
-            messagebox.showerror("Error", "Min area (sl) must be less than max area (sh)!")
+            self.show_error("Error", "Min area (sl) must be less than max area (sh)!")
             return
         
         if r1 >= r2:
-            messagebox.showerror("Error", "Min aspect (r1) must be less than max aspect (r2)!")
+            self.show_error("Error", "Min aspect (r1) must be less than max aspect (r2)!")
             return
         
         self.log(f"🎲 Applying random erasing: {input_dir} → {output_dir}")
-        self.start_operation("Fake Image Generation")
-        
-        def task():
-            try:
-                cmd = [sys.executable, "-u", "core/random_erasing.py",
-                       "--input_dir", input_dir,
-                       "--output_dir", output_dir,
-                       "--p", str(p),
-                       "--sl", str(sl),
-                       "--sh", str(sh),
-                       "--r1", str(r1),
-                       "--r2", str(r2)]
-                
-                process = subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                    bufsize=1,
-                    universal_newlines=True
-                )
-                
-                for line in process.stdout:
-                    line = line.strip()
-                    if line:
-                        self.log(line)
-                
-                process.wait()
-                
-                if process.returncode == 0:
-                    # Count generated files
-                    if os.path.exists(output_dir):
-                        count = len([f for f in os.listdir(output_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
-                        self.log(f"✅ {count} fake images generated in {output_dir}/")
-                        messagebox.showinfo("Success", f"Generated {count} fake images!")
-                    else:
-                        self.log(f"✅ Fake images generated in {output_dir}/")
-                        messagebox.showinfo("Success", "Fake images generated successfully!")
-                    
-                    self.update_stats()
-                    # Refresh view if still on fakeimg
-                    if self.current_view == 'fakeimg':
-                        self.show_view('fakeimg')
-                else:
-                    self.log(f"❌ Fake generation failed (exit code: {process.returncode})")
-                    messagebox.showerror("Error", "Fake generation failed!")
-            
-            except Exception as e:
-                self.log(f"❌ Error: {e}")
-                messagebox.showerror("Error", f"Error:\n{e}")
-            finally:
-                self.end_operation()
-        
-        threading.Thread(target=task, daemon=True).start()
+
+        def work(runner):
+            runner.stream_or_fail(
+                [sys.executable, "-u", "core/random_erasing.py",
+                 "--input_dir", input_dir,
+                 "--output_dir", output_dir,
+                 "--p", str(p),
+                 "--sl", str(sl),
+                 "--sh", str(sh),
+                 "--r1", str(r1),
+                 "--r2", str(r2)],
+                "Fake generation failed!")
+
+        def on_success():
+            if os.path.exists(output_dir):
+                count = len([f for f in os.listdir(output_dir)
+                             if f.endswith(('.png', '.jpg', '.jpeg'))])
+                self.log(f"✅ {count} fake images generated in {output_dir}/")
+                self.show_info("Success", f"Generated {count} fake images!")
+            else:
+                self.log(f"✅ Fake images generated in {output_dir}/")
+                self.show_info("Success", "Fake images generated successfully!")
+            self.update_stats()
+            # Refresh view if still on fakeimg
+            if self.current_view == 'fakeimg':
+                self.show_view('fakeimg')
+
+        self.tasks.run("Fake Image Generation", work,
+                       on_success=on_success,
+                       on_error=lambda msg: self.show_error("Error", msg))
     
     def start_fake_generator(self):
         """Générer des fausses images de background"""
@@ -7704,53 +5905,32 @@ Continuer ?"""
         btn_frame.pack(pady=20)
         
         def run_fake_generator():
+            # Lire les variables Tkinter AVANT de détruire le dialog
+            count = count_var.get()
+            output_dir = output_var.get()
+            min_noise = min_noise_var.get()
+            max_noise = max_noise_var.get()
             dialog.destroy()
-            self.log(f"📋 Generating {count_var.get()} fake backgrounds...")
-            self.start_operation("Fake Background Generation")
-            
-            def task():
-                try:
-                    output_dir = output_var.get()
-                    cmd = [sys.executable, "-u", "tools/generate_fake_backgrounds.py",
-                           "--count", str(count_var.get()),
-                           "--output", output_dir,
-                           "--min-noise", str(min_noise_var.get()),
-                           "--max-noise", str(max_noise_var.get())]
-                    
-                    process = subprocess.Popen(
-                        cmd,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT,
-                        text=True,
-                        bufsize=1,
-                        universal_newlines=True
-                    )
-                    
-                    for line in process.stdout:
-                        line = line.strip()
-                        if line:
-                            self.log(line)
-                    
-                    process.wait()
-                    
-                    if process.returncode == 0:
-                        self.log(f"✅ {count_var.get()} fake backgrounds generated in {output_dir}/")
-                        messagebox.showinfo("Success", f"Generated {count_var.get()} fake backgrounds!")
-                        self.update_stats()
-                        
-                        # Mettre à jour les statistiques (V3.2)
-                        self.update_all_statistics()
-                    else:
-                        self.log(f"❌ Fake generation failed (exit code: {process.returncode})")
-                        messagebox.showerror("Error", "Fake generation failed!")
-                
-                except Exception as e:
-                    self.log(f"❌ Error: {e}")
-                    messagebox.showerror("Error", f"Error:\n{e}")
-                finally:
-                    self.end_operation()
-            
-            threading.Thread(target=task, daemon=True).start()
+            self.log(f"📋 Generating {count} fake backgrounds...")
+
+            def work(runner):
+                runner.stream_or_fail(
+                    [sys.executable, "-u", "tools/generate_fake_backgrounds.py",
+                     "--count", str(count),
+                     "--output", output_dir,
+                     "--min-noise", str(min_noise),
+                     "--max-noise", str(max_noise)],
+                    "Fake generation failed!")
+                runner.log(f"✅ {count} fake backgrounds generated in {output_dir}/")
+
+            def on_success():
+                self.show_info("Success", f"Generated {count} fake backgrounds!")
+                self.update_stats()
+                self.update_all_statistics()
+
+            self.tasks.run("Fake Background Generation", work,
+                           on_success=on_success,
+                           on_error=lambda msg: self.show_error("Error", msg))
         
         tk.Button(
             btn_frame,
@@ -7833,7 +6013,7 @@ Continuer ?"""
         def search_card():
             query = search_var.get().strip()
             if not query:
-                messagebox.showwarning("Attention", "Entrez un nom de carte!")
+                self.show_warning("Attention", "Entrez un nom de carte!")
                 return
             
             results_text.delete('1.0', tk.END)
@@ -7928,9 +6108,9 @@ Continuer ?"""
 
 Total: {images_count + aug_count + mosaic_count} images"""
             
-            messagebox.showinfo("Statistics", msg)
+            self.show_info("Statistics", msg)
         except Exception as e:
-            messagebox.showerror("Error", f"Erreur stats:\n{e}")
+            self.show_error("Error", f"Erreur stats:\n{e}")
     
     def open_yaml_tools(self):
         """Ouvrir dialog YAML & Prices avec TCGdex API"""
@@ -8228,11 +6408,11 @@ Total: {images_count + aug_count + mosaic_count} images"""
         output = output.strip()
         
         if not extension:
-            messagebox.showerror("Error", "Please enter a set name!")
+            self.show_error("Error", "Please enter a set name!")
             return
         
         if not output:
-            messagebox.showerror("Error", "Please enter an output filename!")
+            self.show_error("Error", "Please enter an output filename!")
             return
         
         self.log(f"📋 Generating card list for: {extension}")
@@ -8252,7 +6432,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 try:
                     with open('api_config.json', 'r') as f:
                         api_config = json.load(f)
-                except:
+                except Exception:
                     api_config = {"tcgdex": {"language": "en"}}
                 
                 tcgdex_config = api_config.get("tcgdex", {})
@@ -8289,7 +6469,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                         if not found_sets:
                             self.log(f"❌ Set '{extension}' not found")
                             self.log(f"💡 Try with an ID (e.g., sv08, sv07, base1, etc.)")
-                            messagebox.showerror("Error", f"Set '{extension}' not found.\nTry with the set ID (e.g., sv08, sv07, etc.)")
+                            self.show_error("Error", f"Set '{extension}' not found.\nTry with the set ID (e.g., sv08, sv07, etc.)")
                             return
                         
                         best_match = found_sets[0]
@@ -8300,7 +6480,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                         
                     except Exception as e:
                         self.log(f"❌ Error searching set: {e}")
-                        messagebox.showerror("Error", f"Cannot find set.\nTry with ID (e.g., sv08)")
+                        self.show_error("Error", f"Cannot find set.\nTry with ID (e.g., sv08)")
                         return
                 
                 # Récupérer toutes les cartes du set
@@ -8326,7 +6506,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                     
                     if not cards_list:
                         self.log(f"❌ No cards found in set")
-                        messagebox.showwarning("Warning", f"No cards found for '{set_name}'")
+                        self.show_warning("Warning", f"No cards found for '{set_name}'")
                         return
                     
                     self.log(f"✅ {len(cards_list)} cards fetched")
@@ -8334,14 +6514,14 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 except requests.exceptions.HTTPError as e:
                     if e.response.status_code == 404:
                         self.log(f"❌ Set '{set_id}' not found (404)")
-                        messagebox.showerror("Error", f"Set '{set_id}' not found.\nCheck the set ID.")
+                        self.show_error("Error", f"Set '{set_id}' not found.\nCheck the set ID.")
                     else:
                         self.log(f"❌ HTTP Error: {e}")
-                        messagebox.showerror("Error", f"Error fetching: {e}")
+                        self.show_error("Error", f"Error fetching: {e}")
                     return
                 except Exception as e:
                     self.log(f"❌ Error: {e}")
-                    messagebox.showerror("Error", f"Error: {e}")
+                    self.show_error("Error", f"Error: {e}")
                     return
                 
                 # Créer la structure YAML
@@ -8409,13 +6589,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 self.log(f"💡 Format: YAML (human-readable)")
                 self.log(f"{'='*60}")
                 
-                messagebox.showinfo("Success", f"File generated successfully!\n\n{len(cards_list)} cards from '{set_name}'\n\nFormat: YAML\nSource: TCGdex (free)")
+                self.show_info("Success", f"File generated successfully!\n\n{len(cards_list)} cards from '{set_name}'\n\nFormat: YAML\nSource: TCGdex (free)")
                 
             except Exception as e:
                 self.log(f"❌ Error: {str(e)}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"An error occurred:\n{str(e)}")
+                self.show_error("Error", f"An error occurred:\n{str(e)}")
             finally:
                 self.end_operation()
         
@@ -8427,18 +6607,18 @@ Total: {images_count + aug_count + mosaic_count} images"""
         output_file = output_file.strip()
         
         if not input_file or not os.path.exists(input_file):
-            messagebox.showerror("Error", f"Input file '{input_file}' doesn't exist!")
+            self.show_error("Error", f"Input file '{input_file}' doesn't exist!")
             return
         
         if not output_file:
-            messagebox.showerror("Error", "Please enter an output filename!")
+            self.show_error("Error", "Please enter an output filename!")
             return
         
         # Charger la config API
         try:
             with open('api_config.json', 'r') as f:
                 api_config = json.load(f)
-        except:
+        except Exception:
             api_config = {"tcgdex": {"language": "en"}}
         
         self.log(f"💰 Updating prices from: {input_file}")
@@ -8467,7 +6647,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 
                 if 'cards' not in data:
                     self.log("❌ Invalid YAML structure (missing 'cards' section)")
-                    messagebox.showerror("Error", "Invalid YAML file structure!")
+                    self.show_error("Error", "Invalid YAML file structure!")
                     return
                 
                 cards_dict = data['cards']
@@ -8556,13 +6736,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
                     for c, num, e in failed[:5]:
                         self.log(f"   • {c} #{num}: {e[:50]}")
                 
-                messagebox.showinfo("Complete", f"Prices updated!\n{success_count}/{total} cards with prices")
+                self.show_info("Complete", f"Prices updated!\n{success_count}/{total} cards with prices")
                 
             except Exception as e:
                 self.log(f"❌ Error: {str(e)}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"Error:\n{str(e)}")
+                self.show_error("Error", f"Error:\n{str(e)}")
             finally:
                 self.end_operation()
         
@@ -8574,7 +6754,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
         card_set = card_set.strip() if card_set else None
         
         if not card_name:
-            messagebox.showerror("Error", "Please enter a card name!")
+            self.show_error("Error", "Please enter a card name!")
             return
         
         self.log(f"🔍 Searching price for: {card_name}")
@@ -8591,7 +6771,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 try:
                     with open('api_config.json', 'r') as f:
                         api_config = json.load(f)
-                except:
+                except Exception:
                     api_config = {"tcgdex": {"language": "en"}}
                 
                 tcgdex_config = api_config.get("tcgdex", {})
@@ -8629,16 +6809,16 @@ Total: {images_count + aug_count + mosaic_count} images"""
                         result += "⚠️ No prices available"
                     
                     self.log(f"✅ Card found: {name}")
-                    messagebox.showinfo("Card Prices", result)
+                    self.show_info("Card Prices", result)
                 else:
                     self.log(f"❌ Card not found: {card_name}")
-                    messagebox.showwarning("Not Found", f"Card '{card_name}' not found.\n\nTry with a different spelling or set name.")
+                    self.show_warning("Not Found", f"Card '{card_name}' not found.\n\nTry with a different spelling or set name.")
                 
             except Exception as e:
                 self.log(f"❌ Error: {e}")
                 import traceback
                 self.log(traceback.format_exc())
-                messagebox.showerror("Error", f"Error:\n{e}")
+                self.show_error("Error", f"Error:\n{e}")
             finally:
                 self.end_operation()
         
@@ -8668,13 +6848,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
             if output_path.exists():
                 shutil.rmtree(output_path)
                 self.log("✅ Output folder deleted")
-                messagebox.showinfo("Success", "Output folder cleaned successfully!")
+                self.show_info("Success", "Output folder cleaned successfully!")
             else:
                 self.log("⚠️ Output folder not found")
-                messagebox.showwarning("Warning", "Output folder not found!")
+                self.show_warning("Warning", "Output folder not found!")
         except Exception as e:
             self.log(f"❌ Error cleaning output: {e}")
-            messagebox.showerror("Error", f"Failed to clean output:\n{e}")
+            self.show_error("Error", f"Failed to clean output:\n{e}")
     
     def clean_augmented(self):
         """Nettoyer output/augmented/"""
@@ -8695,12 +6875,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
             if aug_path.exists():
                 shutil.rmtree(aug_path)
                 self.log("✅ Augmented folder deleted")
-                messagebox.showinfo("Success", "Augmented folder cleaned!")
+                self.show_info("Success", "Augmented folder cleaned!")
             else:
                 self.log("⚠️ Augmented folder not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_mosaics(self):
         """Nettoyer output/mosaics/ et output/dataset/"""
@@ -8730,10 +6910,10 @@ Total: {images_count + aug_count + mosaic_count} images"""
                 shutil.rmtree(dataset_path)
                 self.log("✅ Dataset folder deleted")
             
-            messagebox.showinfo("Success", "Mosaics and Dataset folders cleaned!")
+            self.show_info("Success", "Mosaics and Dataset folders cleaned!")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_training(self):
         """Nettoyer runs/ (résultats d'entraînement)"""
@@ -8757,12 +6937,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
             if runs_path.exists():
                 shutil.rmtree(runs_path)
                 self.log("✅ Training results deleted")
-                messagebox.showinfo("Success", "Training results cleaned!")
+                self.show_info("Success", "Training results cleaned!")
             else:
                 self.log("⚠️ Training results not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_holographic(self):
         """Nettoyer images_holographic/"""
@@ -8783,12 +6963,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
             if holo_path.exists():
                 shutil.rmtree(holo_path)
                 self.log("✅ Holographic folder deleted")
-                messagebox.showinfo("Success", "Holographic folder cleaned!")
+                self.show_info("Success", "Holographic folder cleaned!")
             else:
                 self.log("⚠️ Holographic folder not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_fakeimg(self):
         """Nettoyer fakeimg_augmented/"""
@@ -8816,12 +6996,12 @@ Total: {images_count + aug_count + mosaic_count} images"""
             
             if deleted:
                 self.log(f"✅ Deleted: {', '.join(deleted)}")
-                messagebox.showinfo("Success", f"Cleaned: {', '.join(deleted)}")
+                self.show_info("Success", f"Cleaned: {', '.join(deleted)}")
             else:
                 self.log("⚠️ Fake image folder not found")
         except Exception as e:
             self.log(f"❌ Error: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def clean_all(self):
         """Nettoyer TOUS les dossiers générés"""
@@ -8891,13 +7071,13 @@ Total: {images_count + aug_count + mosaic_count} images"""
                     message += f"\n\n⚠️ Errors ({len(errors)}):\n"
                     message += "\n".join(f"• {e}" for e in errors)
                 
-                messagebox.showinfo("Clean Complete", message)
+                self.show_info("Clean Complete", message)
             else:
-                messagebox.showinfo("Clean Complete", "No folders found to clean.")
+                self.show_info("Clean Complete", "No folders found to clean.")
                 
         except Exception as e:
             self.log(f"❌ Error during clean all: {e}")
-            messagebox.showerror("Error", f"Failed to clean:\n{e}")
+            self.show_error("Error", f"Failed to clean:\n{e}")
     
     def open_output_folder(self):
         """Ouvrir dossier output"""
@@ -8906,7 +7086,7 @@ Total: {images_count + aug_count + mosaic_count} images"""
             import subprocess
             subprocess.run(["explorer", str(output_path)])
         else:
-            messagebox.showwarning("Attention", "Dossier output/ non trouvé!")
+            self.show_warning("Attention", "Dossier output/ non trouvé!")
     
     def open_folder(self, folder_name):
         """Ouvrir un dossier spécifique"""
@@ -8915,9 +7095,10 @@ Total: {images_count + aug_count + mosaic_count} images"""
             import subprocess
             subprocess.run(["explorer", str(folder_path)])
         else:
-            messagebox.showwarning("Warning", f"Folder {folder_name}/ not found!")
+            self.show_warning("Warning", f"Folder {folder_name}/ not found!")
 
 def main():
+    setup_logging()  # logs/pokemon_gui.log (rotation 1 Mo x3)
     root = tk.Tk()
     app = ModernPokemonGUI(root)
     root.mainloop()

@@ -30,11 +30,13 @@ warnings.filterwarnings('ignore', category=UserWarning)
 
 import albumentations as A
 
-# Import utils for paths
+# Import utils for paths + mapping de classes centralisé (source unique de vérité)
 try:
-    from .utils import load_paths, PATHS, safe_print
+    from .utils import (load_paths, PATHS, safe_print, load_card_data,
+                        extract_card_number, build_class_names_list)
 except ImportError:
-    from utils import load_paths, PATHS, safe_print
+    from utils import (load_paths, PATHS, safe_print, load_card_data,
+                       extract_card_number, build_class_names_list)
 
 # Détection GPU optionnelle pour resize
 try:
@@ -50,12 +52,6 @@ except ImportError:
     CUDA_AVAILABLE = False
     DEVICE = None
     safe_print("ℹ️  PyTorch non installé, utilisation CPU optimisé")
-
-# Compiled regex patterns for card number extraction
-_PATTERN_NEW_FORMAT = re.compile(r'_([A-Za-z0-9]+)_[a-z]{2}(?:_holo\d+)?(?:_aug_\d+)?$')
-_PATTERN_OLD_FORMAT = re.compile(r'_(?:en_)?(\d{3})_', re.IGNORECASE)
-_PATTERN_FALLBACK_1 = re.compile(r'_(\w+)_')
-_PATTERN_FALLBACK_2 = re.compile(r'(\d{3})')
 
 # Configuration par défaut
 DEFAULT_NUM_AUG = 30
@@ -96,7 +92,7 @@ class AugmentationAlbumentations:
         
         # Pipeline d'augmentation Albumentations (3 à 6 transformations aléatoires)
         # SomeOf applique N transformations aléatoires parmi la liste
-        self.transform = A.SomeOf([
+        transform_pool = [
             
             # ═══════════════════════════════════════════════════════════════
             # 1. LUMINOSITÉ & CONTRASTE (5 augmentations)
@@ -124,9 +120,11 @@ class AugmentationAlbumentations:
                 p=1.0
             ),
             
-            # Contraste linéaire
-            A.RandomContrast(
-                limit=0.3,                  # ±30%
+            # Contraste linéaire (RandomContrast supprimé en Albumentations 2.x,
+            # RandomBrightnessContrast avec brightness=0 est l'équivalent exact)
+            A.RandomBrightnessContrast(
+                brightness_limit=0.0,
+                contrast_limit=0.3,         # ±30%
                 p=1.0
             ),
             
@@ -307,8 +305,18 @@ class AugmentationAlbumentations:
                 p=1.0
             ),
             
-        ], n=(3, 6), p=1.0)  # Applique 3 à 6 augmentations par image
-        
+        ]
+
+        # SomeOf n'accepte qu'un entier pour n (un tuple plante en 1.4+).
+        # Pour appliquer "3 à 6" transformations, on pré-construit un SomeOf
+        # par valeur de n et on tire n au hasard pour chaque image.
+        self._n_range = (3, 6)
+        self._transforms_by_n = {
+            n: A.SomeOf(transform_pool, n=n, p=1.0)
+            for n in range(self._n_range[0], self._n_range[1] + 1)
+        }
+
+
         safe_print(f"🚀 Augmenteur Albumentations initialisé:")
         safe_print(f"   GPU: {'✅ Activé' if self.use_gpu else '❌ Désactivé'}")
         safe_print(f"   Workers: {self.num_workers} threads")
@@ -373,13 +381,14 @@ class AugmentationAlbumentations:
         return resized_images
     
     def augment_image(self, image: np.ndarray) -> np.ndarray:
-        """Applique les augmentations à une image"""
+        """Applique 3 à 6 augmentations aléatoires à une image"""
         # Albumentations attend RGB, OpenCV utilise BGR
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
-        # Appliquer transformations
-        augmented = self.transform(image=image_rgb)
-        
+
+        # Tirer le nombre de transformations pour cette image
+        n = random.randint(self._n_range[0], self._n_range[1])
+        augmented = self._transforms_by_n[n](image=image_rgb)
+
         # Reconvertir en BGR pour OpenCV
         return cv2.cvtColor(augmented['image'], cv2.COLOR_RGB2BGR)
     
@@ -471,17 +480,30 @@ class AugmentationAlbumentations:
         
         # Associer class_id à chaque image
         images_data = []
+        skipped = []
         for img, path in resized_images:
             filename = os.path.basename(path)
             card_number = extract_card_number(filename)
-            
+
             if card_number and card_number in class_map:
                 class_id = class_map[card_number]
+                images_data.append((img, path, class_id))
             else:
-                # Fallback: utiliser hash du nom
-                class_id = hash(filename) % 1000
-            
-            images_data.append((img, path, class_id))
+                # Carte absente du mapping: on ignore l'image plutôt que de
+                # générer un class_id arbitraire (dataset corrompu silencieusement)
+                skipped.append(filename)
+
+        if skipped:
+            safe_print(f"⚠️  {len(skipped)} image(s) ignorée(s) — carte absente du mapping "
+                       f"({os.path.basename(str(card_data_path))}):")
+            for name in skipped[:10]:
+                safe_print(f"   - {name}")
+            if len(skipped) > 10:
+                safe_print(f"   ... et {len(skipped) - 10} autres")
+
+        if not images_data:
+            safe_print("❌ Aucune image avec mapping de classe valide, abandon")
+            return 0
         
         # Augmenter
         safe_print("🎨 Augmentation en cours...\n")
@@ -492,80 +514,33 @@ class AugmentationAlbumentations:
         )
         
         elapsed = time.time() - start_time
-        
+
         safe_print(f"\n✅ Augmentation terminée!")
         safe_print(f"   Images générées: {total_generated}")
         safe_print(f"   Temps: {elapsed:.1f}s ({total_generated/elapsed:.1f} img/s)")
-        
+
+        # Écrire data.yaml (noms de classes) — requis par merge_dataset pour
+        # produire un dataset final avec de vrais noms au lieu de "class_N"
+        self._write_data_yaml(output_dir, card_dict, class_map)
+
         return total_generated
 
-
-def load_card_data(source_path):
-    """Charge les données de cartes depuis YAML ou Excel"""
-    card_dict = {}
-    class_map = {}
-    
-    if source_path.endswith('.yaml') or source_path.endswith('.yml'):
+    def _write_data_yaml(self, output_dir: str, card_dict: dict, class_map: dict) -> None:
+        """Écrit le data.yaml du dossier augmenté (names ordonnés par class_id)"""
         import yaml
-        
-        with open(source_path, 'r', encoding='utf-8') as f:
-            data = yaml.safe_load(f)
-        
-        class_id = 0  # YOLO utilise 0-indexed
-        for card_id, card_info in data.get('cards', {}).items():
-            # Format complet (ex: sv08_019)
-            name = card_info.get('name', '').replace(" ", "_")
-            
-            if card_id not in card_dict:
-                card_dict[card_id] = name
-                class_map[card_id] = class_id
-            
-            # Aussi mapper le numéro court (ex: "019")
-            number_short = card_id.split('_')[-1] if '_' in card_id else card_id
-            if number_short not in card_dict:
-                card_dict[number_short] = name
-                class_map[number_short] = class_id
-                
-            class_id += 1
-    else:
-        # Excel (legacy)
-        import pandas as pd
-        df = pd.read_excel(source_path, usecols=["Set #", "Name"])
-        class_id = 0
-        for _, row in df.iterrows():
-            number = str(row["Set #"]).split('/')[0].zfill(3)
-            name = str(row["Name"]).replace(" ", "_")
-            if number not in card_dict:
-                card_dict[number] = name
-                class_map[number] = class_id
-                class_id += 1
-    
-    return card_dict, class_map
 
-
-def extract_card_number(filename):
-    """Extrait le numéro de carte depuis le nom de fichier"""
-    # Format nouveau: {set}_{number}_{lang}
-    match = _PATTERN_NEW_FORMAT.search(filename)
-    if match:
-        num = match.group(1)
-        return num.zfill(3) if num.isdigit() else num
-    
-    # Format ancien
-    match = _PATTERN_OLD_FORMAT.search(filename)
-    if match:
-        return match.group(1)
-    
-    # Fallbacks
-    match = _PATTERN_FALLBACK_1.search(filename)
-    if match and re.match(r'\d{3}', match.group(1)):
-        return match.group(1)
-    
-    match = _PATTERN_FALLBACK_2.search(filename)
-    if match:
-        return match.group(1)
-    
-    return None
+        names = build_class_names_list(card_dict, class_map)
+        data = {
+            'path': str(Path(output_dir).absolute()),
+            'train': 'images',
+            'val': 'images',
+            'nc': len(names),
+            'names': names,
+        }
+        yaml_path = os.path.join(output_dir, "data.yaml")
+        with open(yaml_path, 'w', encoding='utf-8') as f:
+            yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+        safe_print(f"📝 data.yaml écrit: {yaml_path} ({len(names)} classes)")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
