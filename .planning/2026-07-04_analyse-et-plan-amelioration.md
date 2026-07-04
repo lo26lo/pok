@@ -151,16 +151,20 @@ obsolete/           → anciens fichiers conservés dans le repo
 ---
 
 ### Phase 3 : Tests & CI
-**Statut** : ⏳ À faire — **Effort : ~1 journée**
+**Statut** : ✅ Terminé (2026-07-04)
 
 **Actions** :
-- [ ] Convertir les tests critiques en pytest : `extract_card_number`, `load_card_data`, génération labels YOLO, merge/split
-- [ ] Ajouter `tests/conftest.py` + fixtures (mini-dataset de 3 cartes)
-- [ ] GitHub Actions : lint (ruff) + pytest sur push/PR (Ubuntu + Windows)
-- [ ] Créer `pyproject.toml` (dépendances regroupées, extras `[training]`, `[dev]`)
+- [x] 43 nouveaux tests pytest : `test_core_utils` (mapping, régressions B2/B3), `test_augmentation_pipeline` (E2E labels YOLO), `test_merge_dataset` (unitaires + fusion complète), `test_workflow_manager` (config, MERGE critique/B5)
+- [x] `tests/conftest.py` : fixtures mini-dataset 3 cartes + images générées, exclusion des benchmarks manuels/GPU
+- [x] `test_yaml_loading.py` réparé (fixture inter-classes cassée + pytest récursif)
+- [x] GitHub Actions : lint ruff + pytest sur Ubuntu/Windows × Python 3.11/3.12
+- [x] `pyproject.toml` : paquet installable, extras `[training]`/`[excel]`/`[dev]`, config pytest+ruff centralisée
 
 **Validation** :
-- [ ] `pytest` vert en local et en CI
+- [x] `pytest` local : 71 passés, 1 skip, 0 échec (~3 s)
+- [x] `ruff check .` : 0 erreur sur tout le dépôt
+- [x] `pip install -e .` : métadonnées OK (v3.4.3→3.5.0)
+- [ ] CI verte sur GitHub (à confirmer après le push)
 
 ---
 

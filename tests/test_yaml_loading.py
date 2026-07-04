@@ -16,13 +16,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from core.utils import load_prices_from_yaml, load_prices
 
 
-class TestYAMLLoading:
-    """Tests pour le chargement YAML"""
-    
-    @pytest.fixture
-    def sample_yaml_data(self):
-        """Données YAML de test"""
-        return {
+# Fixtures au niveau module: partagées par toutes les classes de test
+@pytest.fixture
+def sample_yaml_data():
+    """Données YAML de test"""
+    return {
             'metadata': {
                 'version': '1.0',
                 'total_cards': 3,
@@ -65,14 +63,18 @@ class TestYAMLLoading:
             }
         }
     
-    @pytest.fixture
-    def temp_yaml_file(self, sample_yaml_data, tmp_path):
-        """Créer un fichier YAML temporaire"""
-        yaml_file = tmp_path / "test_cards.yaml"
-        with open(yaml_file, 'w', encoding='utf-8') as f:
-            yaml.dump(sample_yaml_data, f, allow_unicode=True, sort_keys=False)
-        return yaml_file
-    
+@pytest.fixture
+def temp_yaml_file(sample_yaml_data, tmp_path):
+    """Créer un fichier YAML temporaire"""
+    yaml_file = tmp_path / "test_cards.yaml"
+    with open(yaml_file, 'w', encoding='utf-8') as f:
+        yaml.dump(sample_yaml_data, f, allow_unicode=True, sort_keys=False)
+    return yaml_file
+
+
+class TestYAMLLoading:
+    """Tests pour le chargement YAML"""
+
     def test_load_prices_from_yaml_success(self, temp_yaml_file):
         """Test chargement YAML réussi"""
         prices = load_prices_from_yaml(str(temp_yaml_file))
@@ -201,10 +203,5 @@ class TestYAMLPerformance:
         assert yaml_time < 5.0  # Moins de 5 secondes pour 100 chargements
 
 
-def test_main():
-    """Point d'entrée pour pytest"""
-    pytest.main([__file__, "-v", "-s"])
-
-
 if __name__ == "__main__":
-    test_main()
+    pytest.main([__file__, "-v", "-s"])

@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.0] - 2026-07-04
+
+### 🧪 Phase 3 : Tests automatisés, CI et packaging
+
+#### Suite pytest (43 nouveaux tests)
+- `tests/conftest.py` : fixtures partagées (mini base de 3 cartes + images
+  générées) et exclusion des benchmarks manuels/GPU de la collecte
+- `tests/test_core_utils.py` : verrouille les garanties du mapping v3.4.2
+  (0-indexé, double clé, cohérence utils/mosaïque/augmentation, régression B2)
+- `tests/test_augmentation_pipeline.py` : E2E augmentation sur mini-dataset
+  (class_id corrects, exclusion des cartes inconnues, data.yaml ordonné)
+- `tests/test_merge_dataset.py` : copy_files, split train/val, extraction de
+  classes, data.yaml, fusion complète en arborescence temporaire
+- `tests/test_workflow_manager.py` : validation de config, étape MERGE
+  critique (régression B5), comptage d'étapes, résumé
+- `tests/test_yaml_loading.py` réparé : fixtures hissées au niveau module
+  (une classe utilisait la fixture d'une autre) + suppression du `test_main`
+  qui relançait pytest récursivement
+- **Bilan : 71 tests passent, 1 skip, 0 échec (~3 s)**
+
+#### CI GitHub Actions (`.github/workflows/ci.yml`)
+- Job lint : ruff (garde-fou syntaxe + noms non définis) sur tout le dépôt
+- Job tests : matrice Ubuntu + Windows × Python 3.11/3.12, cache pip
+- Déclenchement sur push, pull request et manuel
+
+#### Packaging (`pyproject.toml`)
+- Projet installable (`pip install .`), dépendances regroupées
+- Extras : `[training]` (ultralytics), `[excel]` (pandas/openpyxl legacy),
+  `[dev]` (pytest, ruff)
+- Configuration pytest et ruff centralisée dans pyproject.toml
+
+---
+
 ## [3.4.3] - 2026-07-04
 
 ### 🧹 Phase 2 : Nettoyage — code mort, doc consolidée, scripts fusionnés
