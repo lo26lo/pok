@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-<<<<<<< HEAD
 ## [Unreleased]
 
 ### ✨ Backlog F05 : mains plus réalistes dans les mosaïques
