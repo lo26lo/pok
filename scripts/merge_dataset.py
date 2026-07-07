@@ -10,9 +10,10 @@ from typing import List, Tuple
 import random
 import yaml
 
-# Charger paths depuis config
+# Charger paths depuis config (résolu depuis l'emplacement du script,
+# pas depuis le CWD, pour fonctionner quel que soit le contexte d'exécution)
 def load_paths():
-    config_path = Path("config/paths.json")
+    config_path = Path(__file__).resolve().parent.parent / "config" / "paths.json"
     with open(config_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 

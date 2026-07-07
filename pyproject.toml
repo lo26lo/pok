@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pokemon-dataset-generator"
+version = "3.6.0"
+description = "Pipeline YOLO complet pour cartes Pokémon : génération de dataset, entraînement et détection avec prix"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24.0",
+    "opencv-python>=4.8.0",
+    "scipy>=1.11.0",
+    "scikit-image>=0.21.0",
+    "albumentations>=1.3.0,<2.0",
+    "pyyaml>=6.0",
+    "pillow>=10.0.0",
+    "requests>=2.31.0",
+    "imagecorruptions>=1.1.0",
+]
+
+[project.optional-dependencies]
+# Entraînement / détection YOLO (lourd: torch est tiré par ultralytics)
+training = [
+    "ultralytics>=8.0.0",
+]
+# Scripts de migration Excel legacy
+excel = [
+    "pandas>=2.0.0",
+    "openpyxl>=3.1.0",
+]
+# Outils de développement
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "pandas>=2.0.0",
+    "openpyxl>=3.1.0",
+]
+
+[tool.setuptools]
+packages = ["core", "gui"]
+
+# ============================================================================
+# pytest
+# ============================================================================
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Les benchmarks manuels et tests GPU sont exclus via tests/conftest.py
+addopts = "-q"
+
+# ============================================================================
+# ruff — garde-fou minimal (erreurs de syntaxe, noms non définis)
+# Le style complet sera activé progressivement (voir plan Phase 4)
+# ============================================================================
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+extend-exclude = ["docs", "examples", "bbox_visualization", "output"]
+
+[tool.ruff.lint]
+select = [
+    "E9",   # erreurs de syntaxe / indentation
+    "F63",  # comparaisons invalides
+    "F7",   # erreurs de syntaxe logique (return hors fonction, etc.)
+    "F82",  # noms non définis
+]

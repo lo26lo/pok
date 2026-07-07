@@ -22,8 +22,10 @@ from dataclasses import dataclass
 # Import safe_print - gère import relatif ET absolu
 try:
     from .utils import safe_print, get_message
+    from .base_manager import BaseManager
 except ImportError:
     from utils import safe_print, get_message
+    from base_manager import BaseManager
 from enum import Enum
 import logging
 
@@ -35,6 +37,7 @@ class WorkflowStep(Enum):
     """Énumération des étapes du workflow"""
     AUGMENTATION = "augmentation"
     MOSAIC = "mosaic"
+    MERGE = "merge"
     VALIDATION = "validation"
     BALANCING = "balancing"
     TRAINING = "training"
@@ -100,10 +103,12 @@ class StepResult:
     error: Optional[Exception] = None
 
 
-class WorkflowManager:
+class WorkflowManager(BaseManager):
     """
     Gestionnaire de workflow automatique
-    
+
+    Les callbacks de log/progression viennent de BaseManager (R3).
+
     Exemple:
         >>> config = WorkflowConfig(num_augmentations=20, enable_validation=True)
         >>> manager = WorkflowManager(config)
@@ -112,50 +117,19 @@ class WorkflowManager:
         >>> if manager.is_success():
         ...     print("Workflow réussi!")
     """
-    
+
     def __init__(self, config: WorkflowConfig):
         """
         Initialise le gestionnaire de workflow
-        
+
         Args:
             config: Configuration du workflow
         """
+        super().__init__()
         self.config = config
         self.results: List[StepResult] = []
-        self._log_callback: Optional[Callable[[str], None]] = None
-        self._progress_callback: Optional[Callable[[int, int, str], None]] = None
         self._is_running = False
-        
-    def set_log_callback(self, callback: Callable[[str], None]) -> None:
-        """
-        Définit la fonction callback pour les logs
-        
-        Args:
-            callback: Fonction prenant un message string en paramètre
-        """
-        self._log_callback = callback
-    
-    def set_progress_callback(self, 
-                             callback: Callable[[int, int, str], None]) -> None:
-        """
-        Définit la fonction callback pour la progression
-        
-        Args:
-            callback: Fonction (current_step, total_steps, message)
-        """
-        self._progress_callback = callback
-    
-    def _log(self, message: str) -> None:
-        """Log un message via callback ou logger"""
-        logger.info(message)
-        if self._log_callback:
-            self._log_callback(message)
-    
-    def _update_progress(self, current: int, total: int, message: str) -> None:
-        """Met à jour la progression via callback"""
-        if self._progress_callback:
-            self._progress_callback(current, total, message)
-    
+
     def run(self) -> List[StepResult]:
         """
         Exécute le workflow complet
@@ -347,39 +321,43 @@ class WorkflowManager:
         self._update_progress(current, total, "Fusion augmented + mosaics...")
         
         try:
-            # Importer et exécuter merge_dataset
+            # merge_dataset vit dans scripts/ : rendre l'import indépendant
+            # du contexte d'exécution (GUI, CLI, autre CWD)
+            scripts_dir = Path(__file__).resolve().parent.parent / "scripts"
+            if str(scripts_dir) not in sys.path:
+                sys.path.insert(0, str(scripts_dir))
             import merge_dataset
-            
+
             # Rediriger stdout pour capturer les prints
             import io
             from contextlib import redirect_stdout
-            
+
             output = io.StringIO()
             with redirect_stdout(output):
                 merge_dataset.merge_dataset()
-            
+
             # Afficher la sortie dans le log
             for line in output.getvalue().split('\n'):
                 if line.strip():
                     self._log(line)
-            
+
             duration = time.time() - start_time
             self._log(f"✅ Dataset fusionné ({duration:.1f}s)")
-            
+
             return StepResult(
-                step=WorkflowStep.MOSAIC,  # Pas de WorkflowStep.MERGE défini, on utilise MOSAIC
+                step=WorkflowStep.MERGE,
                 status=StepStatus.SUCCESS,
                 duration=duration,
                 message="Dataset fusionné avec succès"
             )
-            
+
         except Exception as e:
             duration = time.time() - start_time
             self._log(f"❌ Erreur merge: {e}")
             import traceback
             self._log(traceback.format_exc())
             return StepResult(
-                step=WorkflowStep.MOSAIC,
+                step=WorkflowStep.MERGE,
                 status=StepStatus.FAILED,
                 duration=duration,
                 message=str(e),
@@ -567,11 +545,12 @@ class WorkflowManager:
         """
         if not self.results:
             return False
-        
-        # Les 2 premières étapes (augmentation + mosaic) sont critiques
-        critical_steps = [r for r in self.results 
-                         if r.step in [WorkflowStep.AUGMENTATION, WorkflowStep.MOSAIC]]
-        
+
+        # Les 3 premières étapes (augmentation + mosaic + merge) sont critiques
+        critical_steps = [r for r in self.results
+                         if r.step in [WorkflowStep.AUGMENTATION, WorkflowStep.MOSAIC,
+                                       WorkflowStep.MERGE]]
+
         return all(r.status == StepStatus.SUCCESS for r in critical_steps)
     
     def get_summary(self) -> str:

@@ -5,17 +5,22 @@ Ce fichier permet de faire le lien entre data.yaml (noms) et Excel (IDs)
 import json
 from pathlib import Path
 
+try:
+    from .utils import PATHS
+except ImportError:
+    from utils import PATHS
+
 # Cache pour le mapping
 _mapping_cache = None
 
 def load_mapping():
-    """Charge le mapping depuis le fichier JSON"""
+    """Charge le mapping depuis le fichier JSON (models/card_name_to_id.json)"""
     global _mapping_cache
-    
+
     if _mapping_cache is not None:
         return _mapping_cache
-    
-    mapping_file = Path("card_name_to_id.json")
+
+    mapping_file = Path(PATHS['files']['card_name_to_id_json'])
     
     if mapping_file.exists():
         with open(mapping_file, 'r', encoding='utf-8') as f:

@@ -30,6 +30,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+try:
+    from .base_manager import BaseManager
+except ImportError:
+    from base_manager import BaseManager
+
 
 @dataclass
 class TrainingConfig:
@@ -85,7 +90,7 @@ class TrainingConfig:
             raise FileNotFoundError(f"data.yaml non trouvé: {self.data_yaml}")
 
 
-class TrainingManager:
+class TrainingManager(BaseManager):
     """
     Gestionnaire d'entraînement YOLO
     
@@ -106,26 +111,12 @@ class TrainingManager:
         Args:
             config: Configuration d'entraînement
         """
+        super().__init__()
         self.config = config
-        self._log_callback: Optional[Callable[[str], None]] = None
         self._model = None
         self._results = None
-        
-    def set_log_callback(self, callback: Callable[[str], None]) -> None:
-        """
-        Définit la fonction callback pour les logs
-        
-        Args:
-            callback: Fonction prenant un message string
-        """
-        self._log_callback = callback
-    
-    def _log(self, message: str) -> None:
-        """Log un message"""
-        logger.info(message)
-        if self._log_callback:
-            self._log_callback(message)
-    
+
+
     def train(self) -> bool:
         """
         Lance l'entraînement du modèle

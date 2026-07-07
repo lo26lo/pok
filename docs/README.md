@@ -12,52 +12,52 @@
 
 | Fichier | Description | Lignes | Audience |
 |---------|-------------|--------|----------|
-| **[USER_GUIDE.md](new/USER_GUIDE.md)** | Guide utilisateur complet | 2636 | 👤 Utilisateurs |
-| **[INSTALLATION.md](new/INSTALLATION.md)** | Installation détaillée | 378 | 🚀 Débutants |
-| **[FAQ.md](new/FAQ.md)** | 60 questions/réponses | 993 | ❓ Tous |
+| **[USER_GUIDE.md](USER_GUIDE.md)** | Guide utilisateur complet | 2636 | 👤 Utilisateurs |
+| **[INSTALLATION.md](INSTALLATION.md)** | Installation détaillée | 378 | 🚀 Débutants |
+| **[FAQ.md](FAQ.md)** | 60 questions/réponses | 993 | ❓ Tous |
 
 ### 🔧 Documentation Technique
 
 | Fichier | Description | Lignes | Audience |
 |---------|-------------|--------|----------|
-| **[TECHNICAL_GUIDE.md](new/TECHNICAL_GUIDE.md)** | Architecture & modules | 1803 | 💻 Développeurs |
-| **[API_REFERENCE.md](new/API_REFERENCE.md)** | Documentation API complète | 1626 | 🔬 Développeurs |
-| **[ADVANCED.md](new/ADVANCED.md)** | Optimisations avancées | 1289 | 🚀 Experts |
+| **[TECHNICAL_GUIDE.md](TECHNICAL_GUIDE.md)** | Architecture & modules | 1803 | 💻 Développeurs |
+| **[API_REFERENCE.md](API_REFERENCE.md)** | Documentation API complète | 1626 | 🔬 Développeurs |
+| **[ADVANCED.md](ADVANCED.md)** | Optimisations avancées | 1289 | 🚀 Experts |
 
 ### 📋 Références
 
 | Fichier | Description | Lignes | Audience |
 |---------|-------------|--------|----------|
-| **[FEATURES.md](new/FEATURES.md)** | Liste des fonctionnalités | 398 | 📊 Tous |
-| **[CHANGELOG.md](new/CHANGELOG.md)** | Historique des versions | 248 | 📜 Tous |
+| **[FEATURES.md](FEATURES.md)** | Liste des fonctionnalités | 398 | 📊 Tous |
+| **[CHANGELOG.md](CHANGELOG.md)** | Historique des versions | 248 | 📜 Tous |
 
 ---
 
 ## 🎯 Par Cas d'Usage
 
 ### "Je débute avec le projet"
-1. 📥 **[INSTALLATION.md](new/INSTALLATION.md)** - Installation pas à pas
-2. 📖 **[USER_GUIDE.md](new/USER_GUIDE.md)** - Sections 1-5 : Introduction, Installation, Démarrage, Interface
-3. ❓ **[FAQ.md](new/FAQ.md)** - Section "Installation"
+1. 📥 **[INSTALLATION.md](INSTALLATION.md)** - Installation pas à pas
+2. 📖 **[USER_GUIDE.md](USER_GUIDE.md)** - Sections 1-5 : Introduction, Installation, Démarrage, Interface
+3. ❓ **[FAQ.md](FAQ.md)** - Section "Installation"
 
 ### "Je veux créer mon premier dataset"
-1. 📖 **[USER_GUIDE.md](new/USER_GUIDE.md)** - Sections 6-9 : Download, Mosaic, Detection, Training
-2. ❓ **[FAQ.md](new/FAQ.md)** - Sections "Dataset", "Augmentation", "Mosaïques"
+1. 📖 **[USER_GUIDE.md](USER_GUIDE.md)** - Sections 6-9 : Download, Mosaic, Detection, Training
+2. ❓ **[FAQ.md](FAQ.md)** - Sections "Dataset", "Augmentation", "Mosaïques"
 
 ### "Je veux optimiser les performances"
-1. 🚀 **[ADVANCED.md](new/ADVANCED.md)** - Section "Optimisations GPU"
-2. ❓ **[FAQ.md](new/FAQ.md)** - Section "GPU"
-3. 📊 **[FEATURES.md](new/FEATURES.md)** - Tableaux de performances
+1. 🚀 **[ADVANCED.md](ADVANCED.md)** - Section "Optimisations GPU"
+2. ❓ **[FAQ.md](FAQ.md)** - Section "GPU"
+3. 📊 **[FEATURES.md](FEATURES.md)** - Tableaux de performances
 
 ### "Je veux développer/contribuer"
-1. 💻 **[TECHNICAL_GUIDE.md](new/TECHNICAL_GUIDE.md)** - Architecture complète
-2. 🔬 **[API_REFERENCE.md](new/API_REFERENCE.md)** - API des 16 modules
-3. 🚀 **[ADVANCED.md](new/ADVANCED.md)** - Pipelines custom
+1. 💻 **[TECHNICAL_GUIDE.md](TECHNICAL_GUIDE.md)** - Architecture complète
+2. 🔬 **[API_REFERENCE.md](API_REFERENCE.md)** - API des 16 modules
+3. 🚀 **[ADVANCED.md](ADVANCED.md)** - Pipelines custom
 
 ### "Je cherche une info précise"
-- ❓ **[FAQ.md](new/FAQ.md)** - 60 questions/réponses (10 catégories)
-- 📊 **[FEATURES.md](new/FEATURES.md)** - Liste complète des features
-- 📜 **[CHANGELOG.md](new/CHANGELOG.md)** - Historique des changements
+- ❓ **[FAQ.md](FAQ.md)** - 60 questions/réponses (10 catégories)
+- 📊 **[FEATURES.md](FEATURES.md)** - Liste complète des features
+- 📜 **[CHANGELOG.md](CHANGELOG.md)** - Historique des changements
 
 ---
 
@@ -132,26 +132,26 @@ docs/
 
 ### Contact Rapide
 
-1. **FAQ** → [FAQ.md](new/FAQ.md) - 60 réponses immédiates
-2. **Installation** → [INSTALLATION.md](new/INSTALLATION.md) - Troubleshooting
-3. **Guide utilisateur** → [USER_GUIDE.md](new/USER_GUIDE.md) - Tutoriels
+1. **FAQ** → [FAQ.md](FAQ.md) - 60 réponses immédiates
+2. **Installation** → [INSTALLATION.md](INSTALLATION.md) - Troubleshooting
+3. **Guide utilisateur** → [USER_GUIDE.md](USER_GUIDE.md) - Tutoriels
 
 ### Problèmes Courants
 
 | Problème | Solution |
 |----------|----------|
-| Erreur installation | [INSTALLATION.md](new/INSTALLATION.md) section "Troubleshooting" |
-| GPU pas détecté | [FAQ.md](new/FAQ.md) section "GPU" |
-| Dataset invalide | [FAQ.md](new/FAQ.md) section "Dataset" |
-| Performances lentes | [ADVANCED.md](new/ADVANCED.md) section "Optimisations GPU" |
-| Erreur YOLO | [FAQ.md](new/FAQ.md) section "Entraînement" |
+| Erreur installation | [INSTALLATION.md](INSTALLATION.md) section "Troubleshooting" |
+| GPU pas détecté | [FAQ.md](FAQ.md) section "GPU" |
+| Dataset invalide | [FAQ.md](FAQ.md) section "Dataset" |
+| Performances lentes | [ADVANCED.md](ADVANCED.md) section "Optimisations GPU" |
+| Erreur YOLO | [FAQ.md](FAQ.md) section "Entraînement" |
 
 ---
 
 ## 📝 Contribuer à la Documentation
 
 **Améliorer un fichier** :
-1. Éditer le fichier dans `docs/new/`
+1. Éditer le fichier dans `docs/`
 2. Respecter le format Markdown
 3. Mettre à jour `CHANGELOG.md`
 4. Commit : `docs: improve [section]`

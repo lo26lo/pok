@@ -66,7 +66,7 @@ class DatasetBalancerOptimized:
                         parts = line.strip().split()
                         if len(parts) >= 5:
                             class_ids.append(int(parts[0]))
-            except:
+            except Exception:
                 pass
             return label_path.stem, class_ids
         

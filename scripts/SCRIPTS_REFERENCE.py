@@ -13,6 +13,11 @@ IMPORTANT: Lors de modifications de scripts:
 
 CHANGELOG:
 ----------
+2026-07-04: Nettoyage Phase 2 — suppression des scripts one-shot obsolètes
+            (init_prices_real/simple, fix_class_mapping*, create_real_mapping),
+            update_prices_yaml_fast devient update_prices_yaml,
+            create_card_mapping réécrit (générique, depuis cards_database.yaml),
+            utilitaires debug/visualize/verify déplacés vers tools/diagnostics/
 2025-11-14: Ajout de create_public_release.ps1/.bat pour publication publique sans historique
 2025-11-11: Ajout de visualize_mosaic_bbox.py pour visualiser les bounding boxes
 2025-11-10: Création du fichier référence centralisé
@@ -29,6 +34,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 TESTS_DIR = PROJECT_ROOT / "tests"
 CORE_DIR = PROJECT_ROOT / "core"
+DIAG_DIR = PROJECT_ROOT / "tools" / "diagnostics"
 
 # ============================================================================
 # CATALOGUE DES SCRIPTS - À MAINTENIR À JOUR
@@ -38,55 +44,35 @@ SCRIPTS_CATALOG = {
     # --- Scripts de configuration et initialisation ---
     "init_prices": {
         "path": SCRIPTS_DIR / "init_prices.py",
-        "description": "Initialise les prix des cartes depuis data.yaml vers Excel",
+        "description": "Initialise models/cards_database.yaml depuis data.yaml + prix TCGdex",
         "category": "Configuration",
-        "dependencies": ["pandas", "openpyxl", "PyYAML"],
+        "dependencies": ["PyYAML", "requests"],
         "arguments": [],
         "requires_venv": True,
         "called_by": ["Utilisateur (manuel)", "workflow après téléchargement images"],
-        "last_modified": "2025-11-10"
+        "last_modified": "2026-07-04"
     },
-    "init_prices_real": {
-        "path": SCRIPTS_DIR / "init_prices_real.py",
-        "description": "Initialise les prix réels depuis TCGdex API",
+    "update_prices_yaml": {
+        "path": SCRIPTS_DIR / "update_prices_yaml.py",
+        "description": "Met à jour les prix de cards_database.yaml depuis TCGdex (requêtes parallèles)",
         "category": "Configuration",
-        "dependencies": ["pandas", "openpyxl", "requests"],
+        "dependencies": ["PyYAML", "requests"],
         "arguments": [],
         "requires_venv": True,
         "called_by": ["Utilisateur (manuel)"],
-        "last_modified": "2025-11-10"
+        "last_modified": "2026-07-04"
     },
-    "init_prices_simple": {
-        "path": SCRIPTS_DIR / "init_prices_simple.py",
-        "description": "Version simplifiée d'initialisation des prix",
-        "category": "Configuration",
-        "dependencies": ["pandas", "openpyxl"],
-        "arguments": [],
-        "requires_venv": True,
-        "called_by": ["Utilisateur (manuel)"],
-        "last_modified": "2025-11-10"
-    },
-    
+
     # --- Scripts de mapping et données ---
     "create_card_mapping": {
         "path": SCRIPTS_DIR / "create_card_mapping.py",
-        "description": "Crée le mapping entre noms de classes YOLO et IDs TCGdex",
+        "description": "Génère models/card_name_to_id.json depuis cards_database.yaml (nom de classe → card_id)",
         "category": "Data Processing",
         "dependencies": ["PyYAML"],
         "arguments": [],
         "requires_venv": True,
         "called_by": ["Utilisateur (manuel)", "workflow après création dataset"],
-        "last_modified": "2025-11-10"
-    },
-    "create_real_mapping": {
-        "path": SCRIPTS_DIR / "create_real_mapping.py",
-        "description": "Crée un mapping réel à partir des données disponibles",
-        "category": "Data Processing",
-        "dependencies": ["PyYAML"],
-        "arguments": [],
-        "requires_venv": True,
-        "called_by": ["Utilisateur (manuel)"],
-        "last_modified": "2025-11-10"
+        "last_modified": "2026-07-04"
     },
     "read_excel_mapping": {
         "path": SCRIPTS_DIR / "read_excel_mapping.py",
@@ -100,26 +86,8 @@ SCRIPTS_CATALOG = {
     },
     
     # --- Scripts de correction et debugging ---
-    "fix_class_mapping": {
-        "path": SCRIPTS_DIR / "fix_class_mapping.py",
-        "description": "Corrige les problèmes de mapping de classes",
-        "category": "Debug",
-        "dependencies": ["PyYAML"],
-        "arguments": [],
-        "requires_venv": True,
-        "called_by": ["Utilisateur (manuel)"],
-        "last_modified": "2025-11-10"
-    },
-    "fix_class_mapping_correct": {
-        "path": SCRIPTS_DIR / "fix_class_mapping_correct.py",
-        "description": "Version corrigée du script de mapping",
-        "category": "Debug",
-        "dependencies": ["PyYAML"],
-        "arguments": [],
-        "requires_venv": True,
-        "called_by": ["Utilisateur (manuel)"],
-        "last_modified": "2025-11-10"
-    },
+    # Note: fix_class_mapping*.py supprimés en Phase 2 (2026-07-04) — le mapping
+    # de classes est désormais garanti cohérent par core.utils.load_card_data
     "debug_excel_keys": {
         "path": SCRIPTS_DIR / "debug_excel_keys.py",
         "description": "Debug les clés dans les fichiers Excel",
@@ -234,15 +202,6 @@ TESTS_CATALOG = {
         "called_by": ["run_test.bat", "run_all_tests.bat"],
         "last_modified": "2025-11-10"
     },
-    "test_detection_prices": {
-        "path": TESTS_DIR / "test_detection_prices.py",
-        "description": "Teste la détection avec affichage des prix",
-        "category": "Features",
-        "dependencies": ["ultralytics", "opencv-python", "pandas"],
-        "requires_venv": True,
-        "called_by": ["run_test.bat", "run_all_tests.bat", "test_detection_with_prices.bat"],
-        "last_modified": "2025-11-10"
-    },
     "test_full_chain": {
         "path": TESTS_DIR / "test_full_chain.py",
         "description": "Teste la chaîne complète de traitement",
@@ -289,7 +248,7 @@ TESTS_CATALOG = {
         "last_modified": "2025-11-10"
     },
     "test_mapping_debug": {
-        "path": TESTS_DIR / "test_mapping_debug.py",
+        "path": DIAG_DIR / "test_mapping_debug.py",
         "description": "Debug le système de mapping",
         "category": "Debug",
         "dependencies": [],
@@ -298,7 +257,7 @@ TESTS_CATALOG = {
         "last_modified": "2025-11-10"
     },
     "verify_data_yaml": {
-        "path": TESTS_DIR / "verify_data_yaml.py",
+        "path": DIAG_DIR / "verify_data_yaml.py",
         "description": "Vérifie la validité du fichier data.yaml",
         "category": "Validation",
         "dependencies": ["PyYAML"],
@@ -307,7 +266,7 @@ TESTS_CATALOG = {
         "last_modified": "2025-11-10"
     },
     "verify_detailed": {
-        "path": TESTS_DIR / "verify_detailed.py",
+        "path": DIAG_DIR / "verify_detailed.py",
         "description": "Vérification détaillée du dataset",
         "category": "Validation",
         "dependencies": [],
@@ -326,7 +285,7 @@ TESTS_CATALOG = {
         "last_modified": "2025-11-11"
     },
     "check_corrupted_images": {
-        "path": TESTS_DIR / "check_corrupted_images.py",
+        "path": DIAG_DIR / "check_corrupted_images.py",
         "description": "Vérifie les images corrompues",
         "category": "Validation",
         "dependencies": ["opencv-python", "PIL"],
@@ -344,7 +303,7 @@ TESTS_CATALOG = {
         "last_modified": "2025-11-10"
     },
     "visualize_annotations": {
-        "path": TESTS_DIR / "visualize_annotations.py",
+        "path": DIAG_DIR / "visualize_annotations.py",
         "description": "Visualise les annotations sur les images",
         "category": "Visualization",
         "dependencies": ["opencv-python"],
@@ -353,7 +312,7 @@ TESTS_CATALOG = {
         "last_modified": "2025-11-10"
     },
     "visualize_bbox": {
-        "path": TESTS_DIR / "visualize_bbox.py",
+        "path": DIAG_DIR / "visualize_bbox.py",
         "description": "Visualise les bounding boxes",
         "category": "Visualization",
         "dependencies": ["opencv-python"],

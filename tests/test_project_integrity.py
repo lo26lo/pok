@@ -23,15 +23,14 @@ def test_core_imports():
     """Test que tous les modules core peuvent être importés"""
     print("\n🧪 Test des imports core...")
     try:
-        import core.augmentation  # Module sans classe exportée
+        from core.augmentation_albumentations import AugmentationAlbumentations
         from core.mosaic_optimized import MosaicGeneratorOptimized
         from core.tcgdex_api import TCGdexAPI
         from core.card_mapping import get_card_id_from_class_name
-        from core.detection_with_prices import PriceDetector
         from core.workflow_manager import WorkflowManager
         from core.training_manager import TrainingManager
         from core.detection_manager import DetectionManager
-        from core.utils import safe_print, load_prices
+        from core.utils import safe_print, load_prices, load_card_data
         print("   ✅ Tous les imports core OK")
         return True
     except ImportError as e:
@@ -45,7 +44,8 @@ def test_directory_structure():
         "core",
         "tests",
         "scripts",
-        "docs/migration",
+        "docs",
+        "tools/diagnostics",
         "images",
         "output",
         "excel"
@@ -67,9 +67,9 @@ def test_scripts_exist():
     print("\n📜 Test de l'existence des scripts...")
     scripts = [
         "scripts/init_prices.py",
-        "scripts/init_prices_simple.py",
-        "scripts/init_prices_real.py",
+        "scripts/update_prices_yaml.py",
         "scripts/create_card_mapping.py",
+        "scripts/merge_dataset.py",
         "scripts/workflow_optimized.py"
     ]
     
@@ -89,11 +89,10 @@ def test_tests_exist():
     print("\n🧪 Test de l'existence des tests...")
     tests = [
         "tests/test_annotations.py",
-        "tests/test_detection_prices.py",
         "tests/test_full_chain.py",
-        "tests/test_mapping_debug.py",
-        "tests/verify_data_yaml.py",
-        "tests/check_corrupted_images.py"
+        "tests/test_refactoring.py",
+        "tools/diagnostics/verify_data_yaml.py",
+        "tools/diagnostics/check_corrupted_images.py"
     ]
     
     all_ok = True
@@ -112,10 +111,11 @@ def test_documentation():
     print("\n📚 Test de la documentation...")
     docs = [
         "README.md",
+        "docs/README.md",
         "docs/CHANGELOG.md",
-        "docs/HELP.md",
         "docs/FEATURES.md",
-        "docs/INTEGRATION_TCGDEX.md"
+        "docs/USER_GUIDE.md",
+        "docs/INSTALLATION.md"
     ]
     
     all_ok = True
