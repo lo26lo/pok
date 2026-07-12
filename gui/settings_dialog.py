@@ -713,7 +713,7 @@ class SettingsDialog:
         bg_combo = ttk.Combobox(
             container,
             textvariable=self.default_mosaic_background,
-            values=["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)", "2 - Web Image (Lorem Picsum)"],
+            values=["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)", "2 - Web Image (Lorem Picsum)", "3 - Realistic (Procedural)"],
             state='readonly',
             font=self.app.FONT_TEXT,
             width=40

@@ -27,9 +27,13 @@ import multiprocessing as mp
 try:
     from .utils import (safe_print, load_prices, load_paths, PATHS,
                         load_card_data as load_card_data_unified)
+    from .background_generator import (generate_realistic_background,
+                                       add_drop_shadow, apply_camera_effects)
 except ImportError:
     from utils import (safe_print, load_prices, load_paths, PATHS,
                        load_card_data as load_card_data_unified)
+    from background_generator import (generate_realistic_background,
+                                      add_drop_shadow, apply_camera_effects)
 
 # Détection GPU optionnelle
 try:
@@ -273,9 +277,13 @@ class MosaicGeneratorOptimized:
         
         return canvas
     
-    def get_background_optimized(self, canvas_width: int, canvas_height: int, 
+    def get_background_optimized(self, canvas_width: int, canvas_height: int,
                                 background_mode: int, fake_images: List[Tuple]) -> np.ndarray:
-        """Génération de fond optimisée"""
+        """Génération de fond optimisée (0=fake cards, 1=local, 2=web, 3=réaliste)"""
+        if background_mode == 3:
+            # Fond réaliste procédural (bois, tapis, classeur, tissu, bureau)
+            return generate_realistic_background(canvas_width, canvas_height)
+
         if background_mode == 0:
             canvas = np.ones((canvas_height, canvas_width, 3), dtype=np.uint8) * 255
             canvas = self.create_mosaic_background_optimized(canvas, fake_images)
@@ -456,6 +464,15 @@ class MosaicGeneratorOptimized:
                     pos_x = cell_x
                     pos_y = cell_y
                 
+                # Ombre portée douce sous la carte (fonds réalistes uniquement)
+                if background_mode == 3:
+                    layout = add_drop_shadow(
+                        layout, rotated_card, pos_x, pos_y,
+                        offset=(random.randint(4, 12), random.randint(6, 16)),
+                        blur=random.choice([15, 21, 27]),
+                        strength=random.uniform(0.30, 0.55),
+                    )
+
                 # Overlay
                 layout = self.overlay_on_canvas_vectorized(layout, rotated_card, pos_x, pos_y)
                 
@@ -491,6 +508,10 @@ class MosaicGeneratorOptimized:
                     annotation_line = f"{new_class_id} {bbox_cx:.6f} {bbox_cy:.6f} {bbox_w:.6f} {bbox_h:.6f}"
                     annotations.append(annotation_line)
             
+            # Effets caméra globaux (photométriques : annotations inchangées)
+            if background_mode == 3:
+                layout = apply_camera_effects(layout)
+
             # Sauvegarder l'image PNG avec compression ultra-rapide
             output_file = os.path.join(MOSAIC_IMAGES_DIR, f"{prefix}layout_{group_index:03d}.png")
             # PNG compression 0 = pas de compression (plus rapide, évite corruptions)
@@ -557,7 +578,8 @@ def main():
     
     parser = argparse.ArgumentParser(description="Génération de mosaïques optimisée")
     parser.add_argument("layout_mode", nargs='?', default="1", help="Mode de layout (1/2/3 ou 'all')")
-    parser.add_argument("background_mode", nargs='?', type=int, default=0, help="Mode de fond (0/1/2)")
+    parser.add_argument("background_mode", nargs='?', type=int, default=0,
+                        help="Mode de fond (0=fake cards, 1=local, 2=web, 3=réaliste procédural)")
     parser.add_argument("transform_mode", nargs='?', type=int, default=0, help="Mode de transformation (0/1)")
     parser.add_argument("--max-groups", type=int, default=None, help="Limite de groupes")
     parser.add_argument("--no-gpu", action="store_true", help="Désactiver le GPU")

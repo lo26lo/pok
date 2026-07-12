@@ -29,6 +29,7 @@ Create rich and diverse datasets with a suite of powerful tools. The process is 
 -   **Advanced Augmentation**: Apply over 22 types of transformations to create unique image variations.
 -   **Holographic Effects**: Add 5+ styles of realistic shiny effects to help the model generalize.
 -   **Mosaic Generator**: Combine multiple cards into complex scenes with automatic polygon annotations, generated up to 60x faster with parallel processing.
+-   **Realistic Backgrounds**: Procedural background generator (wood table, playmat, binder pages, fabric, desk) with soft drop shadows under cards and photo-like camera effects (color temperature, vignette) — background mode 3, fully offline and license-free.
 -   **Auto-Balancer**: Automatically balance the class distribution in your dataset to prevent model bias.
 
 > **➡️ [Learn more in the detailed Dataset Generation guide](./features/2_DATASET_GENERATION.md)**

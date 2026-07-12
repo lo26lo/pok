@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### ✨ F04 : Fonds réalistes procéduraux pour les mosaïques
+
+- `core/background_generator.py` : générateur procédural de fonds
+  (5 catégories : table en bois, tapis de jeu, page de classeur, tissu,
+  bureau) — 100 % NumPy/OpenCV, hors-ligne, sans problème de licence,
+  reproductible via seed
+- Ombres portées douces sous les cartes (`add_drop_shadow`, masque alpha
+  flouté + décalage aléatoire) et effets caméra photométriques
+  (`apply_camera_effects` : température de couleur, exposition, éclairage
+  directionnel, vignettage) — les annotations restent valides
+- `core/mosaic_optimized.py` : nouveau **background_mode 3** (fond réaliste
+  généré à la volée, ombres + effets caméra automatiques)
+- GUI : option « 3 - Realistic (Procedural) » dans Settings → Mosaic
+- `tools/generate_realistic_backgrounds.py` : pré-génération sur disque et
+  galerie de contrôle visuel (`--gallery`)
+- 17 nouveaux tests (`tests/test_background_generator.py`) —
+  suite complète : 96 passés, 0 échec
+- Suivi : `docs/JOURNAL_FEATURES.md` (journal des features F01–F10)
+
 ## [3.6.0] - 2026-07-04
 
 ### 🏗️ Phase 4 : Refactoring GUI — package gui/, TaskRunner, BaseManager

@@ -22,7 +22,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 | F01 | Identification fine de la carte (embeddings + FAISS) | Détection | ⭐ Haute | ⬜ | 0 % |
 | F02 | Estimation de l'état de la carte (grading) | Détection | Basse | ⬜ | 0 % |
 | F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | ⬜ | 0 % |
-| F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | ⬜ | 0 % |
+| F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | 🟡 | 90 % |
 | F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | ⬜ | 0 % |
 | F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | ⬜ | 0 % |
 | F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | ⬜ | 0 % |
@@ -47,11 +47,14 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
-- **Dernière session** : 2026-07-12
-- **Feature en cours** : aucune (journal initialisé, aucun développement démarré)
-- **Prochaine étape concrète** : démarrer **F04 (Backgrounds réalistes)** — commencer par le design : inventorier les sources de textures possibles, décider téléchargement vs génération procédurale, lire `tools/generate_fake_backgrounds.py` et `core/mosaic_optimized.py` pour voir comment les backgrounds sont consommés.
+- **Dernière session** : 2026-07-12 (session 2)
+- **Feature en cours** : F04 terminée côté code (90 %) — il ne reste que la validation quantitative sur photos réelles, qui dépend de F08.
+- **Prochaine étape concrète** : démarrer **F05 (Occlusions réalistes)** — design de la taxonomie (éventail, chevauchement, sleeve, doigts) puis placement en éventail avec bboxes tronquées correctes dans `core/mosaic_optimized.py`. Réutiliser `add_drop_shadow` de `core/background_generator.py` pour les ombres entre cartes qui se chevauchent.
 - **En attente de décision utilisateur** : rien
-- **Pièges / notes connues** : —
+- **Pièges / notes connues** :
+  - `core/mosaic_optimized.py` : `_process_single_group` tourne dans des sous-processus (`ProcessPoolExecutor`) — tout nouvel état doit être picklable et passé via le tuple `args`.
+  - Le combobox « Background Mode » de la GUI (`gui/settings_dialog.py`) stocke des chaînes `"3 - Realistic (Procedural)"` dans un `IntVar` — comportement hérité, ne pas « corriger » isolément.
+  - Les effets caméra sont appliqués UNIQUEMENT en mode 3, après compositing (sinon double vignettage si on les mettait aussi dans le fond).
 
 ---
 
@@ -135,18 +138,20 @@ Levier n°1 attendu pour réduire l'écart sim-to-real.
 
 **Fichiers/Modules concernés** : `tools/generate_fake_backgrounds.py`, `core/mosaic_optimized.py`, `backgrounds/`
 
-- [ ] Design : sources de textures (téléchargement libre de droits vs génération procédurale améliorée) — attention aux licences
-- [ ] Pipeline d'acquisition/génération des fonds (catégories : tapis, bois, classeur, tissu, main)
-- [ ] Ombres portées sous les cartes (soft shadow paramétrable)
-- [ ] Perspective/homographie légère lors du placement
-- [ ] Variations d'éclairage globales (température, vignettage)
-- [ ] Intégration au pipeline mosaïque + option dans la GUI/config
-- [ ] Tests visuels (galerie d'échantillons) + tests unitaires du placement
-- [ ] Docs + CHANGELOG
+- [x] Design : **génération procédurale** retenue (vs téléchargement) — pas de problème de licence, pas de réseau, variété infinie, reproductible via seed
+- [x] Pipeline de génération des fonds : `core/background_generator.py`, 5 catégories (`wood`, `playmat`, `binder`, `fabric`, `desk`) — la catégorie « main » est reportée sur F05 (overlays de doigts)
+- [x] Ombres portées sous les cartes : `add_drop_shadow()` (masque alpha flouté, offset/blur/strength aléatoires par carte)
+- [x] Perspective : déjà couverte par `transform_mode 1` (`rotate_image_3d`) — rien à ajouter
+- [x] Variations d'éclairage globales : `apply_camera_effects()` (température, exposition, éclairage directionnel, vignettage)
+- [x] Intégration pipeline : **background_mode 3** dans `core/mosaic_optimized.py` (fond à la volée + ombres + effets caméra) ; option « 3 - Realistic (Procedural) » dans la GUI
+- [x] Tests visuels : galerie via `tools/generate_realistic_backgrounds.py --gallery` ; 17 tests unitaires (`tests/test_background_generator.py`)
+- [x] Docs (`FEATURES.md`) + CHANGELOG (`[Unreleased]`)
+- [ ] Amélioration mesurable sur le set réel → **bloqué par F08** (le set réel n'existe pas encore)
 
-**Critères d'acceptation** : galerie d'échantillons jugée « crédible » ; annotations toujours valides après perspective ; amélioration mesurable sur le set réel (cf. F08).
+**Critères d'acceptation** : galerie d'échantillons jugée « crédible » ✅ ; annotations toujours valides après perspective ✅ (effets purement photométriques) ; amélioration mesurable sur le set réel (cf. F08) ⏳.
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète. Le mode 3 génère les fonds à la volée dans chaque sous-processus (aucun fichier requis). `tools/generate_realistic_backgrounds.py` sert à l'inspection visuelle et à la pré-génération optionnelle. Suite de tests : 96 passés, 0 échec.
 
 ---
 
@@ -274,6 +279,22 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 2) — F04 implémentée
+- **Features** : F04
+- **Fait** :
+  - `core/background_generator.py` : générateur procédural (5 catégories), `add_drop_shadow`, `apply_camera_effects`.
+  - `core/mosaic_optimized.py` : background_mode 3 (fond réaliste + ombres portées + effets caméra).
+  - GUI : nouvelle valeur « 3 - Realistic (Procedural) » dans Settings → Mosaic.
+  - `tools/generate_realistic_backgrounds.py` : pré-génération + galerie de contrôle (`--gallery`).
+  - 17 tests (`tests/test_background_generator.py`) ; suite complète 96 passés / 0 échec.
+  - Docs : FEATURES.md, CHANGELOG `[Unreleased]`.
+- **Décisions** :
+  - Génération **procédurale** plutôt que téléchargement de textures (licences, hors-ligne, variété infinie, seed).
+  - La perspective n'est pas re-implémentée : `transform_mode 1` (rotation 3D) la couvre déjà.
+  - Les effets caméra sont appliqués sur l'image composée finale, uniquement en mode 3.
+  - Catégorie « mains » reportée sur F05 (overlays de doigts, même mécanique d'occlusion).
+- **Prochaine étape** : F05 (occlusions réalistes).
 
 ### 2026-07-12 — Initialisation
 - **Features** : toutes (F01–F10)
