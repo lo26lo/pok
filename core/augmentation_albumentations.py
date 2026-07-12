@@ -66,10 +66,156 @@ AUG_IMAGES_DIR = PATHS['directories']['output_augmented_images']
 AUG_LABELS_DIR = PATHS['directories']['output_augmented_labels']
 
 
+# Catégories d'augmentations (clés stables pour build_transform_pool/preview)
+AUGMENTATION_CATEGORIES = ("brightness", "color", "blur", "noise",
+                           "environment", "geometry")
+
+
+def _odd(value: float) -> int:
+    """Arrondit à l'entier impair >= 3 le plus proche (kernels OpenCV)."""
+    v = max(3, int(round(value)))
+    return v if v % 2 == 1 else v + 1
+
+
+def build_transform_pool(intensity: float = 1.0,
+                         categories: Optional[List[str]] = None) -> List:
+    """
+    Construit le pool de 25 transformations Albumentations, groupé en
+    6 catégories, avec une intensité globale réglable (F06 - preview live).
+
+    Args:
+        intensity: multiplicateur global des amplitudes (0.1 à 2.0) ;
+                   1.0 reproduit EXACTEMENT le pipeline de production
+        categories: sous-ensemble de AUGMENTATION_CATEGORIES à inclure
+                    (None = toutes)
+
+    Returns:
+        Liste plate de transformations (à utiliser avec A.SomeOf)
+    """
+    i = float(np.clip(intensity, 0.1, 2.0))
+
+    pools = {
+        # 1. LUMINOSITÉ & CONTRASTE — conditions d'éclairage
+        "brightness": [
+            A.RandomBrightnessContrast(brightness_limit=0.15 * i,
+                                       contrast_limit=0.15 * i, p=1.0),
+            A.RandomGamma(gamma_limit=(int(100 - 30 * i), int(100 + 30 * i)), p=1.0),
+            A.CLAHE(clip_limit=max(1.0, 2.0 * i), tile_grid_size=(8, 8), p=1.0),
+            A.RandomBrightnessContrast(brightness_limit=0.0,
+                                       contrast_limit=0.3 * i, p=1.0),
+            A.RandomToneCurve(scale=0.1 * i, p=1.0),
+        ],
+        # 2. COULEURS — température, saturation
+        "color": [
+            A.HueSaturationValue(hue_shift_limit=int(20 * i),
+                                 sat_shift_limit=int(25 * i),
+                                 val_shift_limit=int(20 * i), p=1.0),
+            A.ColorJitter(brightness=0.1 * i, contrast=0.1 * i,
+                          saturation=0.15 * i, hue=0.05 * i, p=1.0),
+            A.RGBShift(r_shift_limit=int(15 * i), g_shift_limit=int(15 * i),
+                       b_shift_limit=int(15 * i), p=1.0),
+            A.FancyPCA(alpha=0.1 * i, p=1.0),
+        ],
+        # 3. FLOU & NETTETÉ — mise au point, bougé
+        "blur": [
+            A.GaussianBlur(blur_limit=(3, _odd(3 + 4 * i)), p=1.0),
+            A.MotionBlur(blur_limit=_odd(3 + 4 * i), p=1.0),
+            A.Defocus(radius=(3, max(3, int(round(5 * i)))),
+                      alias_blur=(0.1, 0.3), p=1.0),
+            A.Sharpen(alpha=(0.1, min(1.0, 0.4 * i)), lightness=(0.8, 1.2), p=1.0),
+        ],
+        # 4. BRUIT — capteur, compression
+        "noise": [
+            A.GaussNoise(var_limit=(10.0, 40.0 * i), p=1.0),
+            A.ISONoise(color_shift=(0.01, 0.03),
+                       intensity=(0.1, max(0.1, 0.3 * i)), p=1.0),
+            A.ImageCompression(quality_lower=60, quality_upper=95, p=1.0),
+        ],
+        # 5. EFFETS ENVIRONNEMENT — prise de vue réaliste
+        "environment": [
+            A.RandomShadow(shadow_roi=(0, 0, 1, 1), num_shadows_limit=(1, 2),
+                           shadow_dimension=5, p=1.0),
+            A.RandomSunFlare(flare_roi=(0, 0, 1, 0.5), angle_lower=0,
+                             angle_upper=1, num_flare_circles_lower=3,
+                             num_flare_circles_upper=6, src_radius=100,
+                             src_color=(255, 255, 255), p=1.0),
+            A.RandomFog(fog_coef_lower=0.1, fog_coef_upper=max(0.1, 0.3 * i),
+                        alpha_coef=0.1, p=1.0),
+            A.Posterize(num_bits=5, p=1.0),
+        ],
+        # 6. DISTORSIONS GÉOMÉTRIQUES — angle de vue, surface
+        "geometry": [
+            A.Perspective(scale=(0.02, max(0.02, 0.08 * i)), keep_size=True, p=1.0),
+            A.OpticalDistortion(distort_limit=0.1 * i, shift_limit=0.05, p=1.0),
+            A.GridDistortion(num_steps=5, distort_limit=0.1 * i, p=1.0),
+            A.ElasticTransform(alpha=15 * i, sigma=3, p=1.0),
+            A.SafeRotate(limit=10 * i, border_mode=cv2.BORDER_REFLECT_101, p=1.0),
+        ],
+    }
+
+    if categories is None:
+        selected = list(AUGMENTATION_CATEGORIES)
+    else:
+        unknown = set(categories) - set(AUGMENTATION_CATEGORIES)
+        if unknown:
+            raise ValueError(f"Catégories inconnues: {sorted(unknown)} "
+                             f"(choix: {AUGMENTATION_CATEGORIES})")
+        selected = [c for c in AUGMENTATION_CATEGORIES if c in categories]
+    if not selected:
+        raise ValueError("Au moins une catégorie d'augmentation est requise")
+
+    pool = []
+    for cat in selected:
+        pool.extend(pools[cat])
+    return pool
+
+
+def preview_augmentations(image: np.ndarray, count: int = 6,
+                          n_transforms: Optional[int] = None,
+                          intensity: float = 1.0,
+                          categories: Optional[List[str]] = None,
+                          seed: Optional[int] = None) -> List[np.ndarray]:
+    """
+    Génère `count` variantes augmentées d'une image, EN DIRECT (aucun
+    sous-processus, aucune écriture disque) — cœur de la preview GUI (F06).
+
+    Args:
+        image: image BGR uint8 (l'originale n'est jamais modifiée)
+        count: nombre de variantes à produire
+        n_transforms: nombre de transformations par variante
+                      (None = aléatoire 3-6, comme la production)
+        intensity: multiplicateur global des amplitudes (0.1 à 2.0)
+        categories: sous-ensemble de AUGMENTATION_CATEGORIES (None = toutes)
+        seed: graine pour un rendu reproductible (None = aléatoire)
+
+    Returns:
+        Liste de `count` images BGR uint8 (mêmes dimensions que l'entrée)
+    """
+    pool = build_transform_pool(intensity=intensity, categories=categories)
+    rng = random.Random(seed)
+
+    results = []
+    for k in range(count):
+        n = n_transforms if n_transforms is not None else rng.randint(3, 6)
+        n = max(1, min(int(n), len(pool)))
+        transform = A.SomeOf(pool, n=n, p=1.0)
+        if seed is not None:
+            # Albumentations 1.x tire dans random/np.random globaux ;
+            # 2.x utilise un seed par pipeline (Compose(seed=...))
+            random.seed(seed + k)
+            np.random.seed((seed + k) % (2 ** 32))
+            try:
+                transform = A.Compose([transform], seed=seed + k)
+            except TypeError:
+                pass  # albumentations 1.x : le seeding global suffit
+        results.append(transform(image=image.copy())["image"])
+    return results
+
+
 class AugmentationAlbumentations:
     """
     Augmenteur de données optimisé avec Albumentations
-    
+
     25 augmentations organisées en 6 catégories:
     - Luminosité & Contraste (5)
     - Couleurs (4)
@@ -91,221 +237,9 @@ class AugmentationAlbumentations:
         self.use_gpu = use_gpu and CUDA_AVAILABLE
         
         # Pipeline d'augmentation Albumentations (3 à 6 transformations aléatoires)
-        # SomeOf applique N transformations aléatoires parmi la liste
-        transform_pool = [
-            
-            # ═══════════════════════════════════════════════════════════════
-            # 1. LUMINOSITÉ & CONTRASTE (5 augmentations)
-            # Simule différentes conditions d'éclairage
-            # ═══════════════════════════════════════════════════════════════
-            
-            # Ajuste luminosité et contraste globaux
-            A.RandomBrightnessContrast(
-                brightness_limit=0.15,      # ±15% luminosité
-                contrast_limit=0.15,        # ±15% contraste
-                p=1.0
-            ),
-            
-            # Correction gamma (simule exposition)
-            A.RandomGamma(
-                gamma_limit=(70, 130),      # 0.7x à 1.3x
-                p=1.0
-            ),
-            
-            # CLAHE - Égalisation adaptative (EXCLUSIF Albumentations)
-            # Améliore le contraste local sans saturer
-            A.CLAHE(
-                clip_limit=2.0,
-                tile_grid_size=(8, 8),
-                p=1.0
-            ),
-            
-            # Contraste linéaire (RandomContrast supprimé en Albumentations 2.x,
-            # RandomBrightnessContrast avec brightness=0 est l'équivalent exact)
-            A.RandomBrightnessContrast(
-                brightness_limit=0.0,
-                contrast_limit=0.3,         # ±30%
-                p=1.0
-            ),
-            
-            # Ajustement tons (highlights/shadows)
-            A.RandomToneCurve(
-                scale=0.1,
-                p=1.0
-            ),
-            
-            # ═══════════════════════════════════════════════════════════════
-            # 2. COULEURS (4 augmentations)
-            # Simule variations température couleur, saturation
-            # ═══════════════════════════════════════════════════════════════
-            
-            # Décalage teinte/saturation/valeur
-            A.HueSaturationValue(
-                hue_shift_limit=20,         # ±20° teinte
-                sat_shift_limit=25,         # ±25% saturation
-                val_shift_limit=20,         # ±20% valeur
-                p=1.0
-            ),
-            
-            # Variation couleur (température, etc.)
-            A.ColorJitter(
-                brightness=0.1,
-                contrast=0.1,
-                saturation=0.15,
-                hue=0.05,
-                p=1.0
-            ),
-            
-            # Décalage par canal RGB
-            A.RGBShift(
-                r_shift_limit=15,
-                g_shift_limit=15,
-                b_shift_limit=15,
-                p=1.0
-            ),
-            
-            # FancyPCA - Augmentation style AlexNet (EXCLUSIF)
-            A.FancyPCA(
-                alpha=0.1,
-                p=1.0
-            ),
-            
-            # ═══════════════════════════════════════════════════════════════
-            # 3. FLOU & NETTETÉ (4 augmentations)
-            # Simule mise au point, bougé, qualité optique
-            # ═══════════════════════════════════════════════════════════════
-            
-            # Flou gaussien classique
-            A.GaussianBlur(
-                blur_limit=(3, 7),
-                p=1.0
-            ),
-            
-            # Flou de mouvement (EXCLUSIF - bougé main)
-            A.MotionBlur(
-                blur_limit=7,
-                p=1.0
-            ),
-            
-            # Defocus - hors focus réaliste (EXCLUSIF)
-            A.Defocus(
-                radius=(3, 5),
-                alias_blur=(0.1, 0.3),
-                p=1.0
-            ),
-            
-            # Netteté
-            A.Sharpen(
-                alpha=(0.1, 0.4),
-                lightness=(0.8, 1.2),
-                p=1.0
-            ),
-            
-            # ═══════════════════════════════════════════════════════════════
-            # 4. BRUIT (3 augmentations)
-            # Simule capteur, compression, basse lumière
-            # ═══════════════════════════════════════════════════════════════
-            
-            # Bruit gaussien
-            A.GaussNoise(
-                var_limit=(10.0, 40.0),
-                p=1.0
-            ),
-            
-            # Bruit ISO réaliste (EXCLUSIF - capteur haute sensibilité)
-            A.ISONoise(
-                color_shift=(0.01, 0.03),
-                intensity=(0.1, 0.3),
-                p=1.0
-            ),
-            
-            # Compression JPEG (artefacts)
-            A.ImageCompression(
-                quality_lower=60,
-                quality_upper=95,
-                p=1.0
-            ),
-            
-            # ═══════════════════════════════════════════════════════════════
-            # 5. EFFETS ENVIRONNEMENT (4 augmentations) - TOUS EXCLUSIFS
-            # Simule conditions de prise de vue réalistes
-            # ═══════════════════════════════════════════════════════════════
-            
-            # Ombres réalistes (EXCLUSIF - main, objets)
-            A.RandomShadow(
-                shadow_roi=(0, 0, 1, 1),
-                num_shadows_limit=(1, 2),
-                shadow_dimension=5,
-                p=1.0
-            ),
-            
-            # Reflet soleil/lumière (EXCLUSIF - éblouissement)
-            A.RandomSunFlare(
-                flare_roi=(0, 0, 1, 0.5),
-                angle_lower=0,
-                angle_upper=1,
-                num_flare_circles_lower=3,
-                num_flare_circles_upper=6,
-                src_radius=100,
-                src_color=(255, 255, 255),
-                p=1.0
-            ),
-            
-            # Brouillard léger
-            A.RandomFog(
-                fog_coef_lower=0.1,
-                fog_coef_upper=0.3,
-                alpha_coef=0.1,
-                p=1.0
-            ),
-            
-            # Réduction couleurs (posterize)
-            A.Posterize(
-                num_bits=5,
-                p=1.0
-            ),
-            
-            # ═══════════════════════════════════════════════════════════════
-            # 6. DISTORSIONS GÉOMÉTRIQUES (5 augmentations)
-            # Simule angle de vue, surface non plane, optique
-            # ═══════════════════════════════════════════════════════════════
-            
-            # Transformation perspective (EXCLUSIF - angle de vue)
-            A.Perspective(
-                scale=(0.02, 0.08),
-                keep_size=True,
-                p=1.0
-            ),
-            
-            # Distorsion optique (EXCLUSIF - fish-eye léger)
-            A.OpticalDistortion(
-                distort_limit=0.1,
-                shift_limit=0.05,
-                p=1.0
-            ),
-            
-            # Distorsion en grille (EXCLUSIF - carte ondulée)
-            A.GridDistortion(
-                num_steps=5,
-                distort_limit=0.1,
-                p=1.0
-            ),
-            
-            # Transformation élastique (légère déformation)
-            A.ElasticTransform(
-                alpha=15,
-                sigma=3,
-                p=1.0
-            ),
-            
-            # Rotation sûre (sans perte de pixels)
-            A.SafeRotate(
-                limit=10,
-                border_mode=cv2.BORDER_REFLECT_101,
-                p=1.0
-            ),
-            
-        ]
+        # Le pool est construit par build_transform_pool() (partagé avec la
+        # preview live F06) ; intensity=1.0 = valeurs de production historiques
+        transform_pool = build_transform_pool()
 
         # SomeOf n'accepte qu'un entier pour n (un tuple plante en 1.4+).
         # Pour appliquer "3 à 6" transformations, on pré-construit un SomeOf

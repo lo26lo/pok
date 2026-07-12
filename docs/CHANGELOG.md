@@ -7,6 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### ✨ F07 : Onglet « 📊 Evaluation » dans la GUI
+
+- `core/run_analyzer.py` : parsing des artefacts Ultralytics
+  (results.csv, args.yaml, courbes PNG), résumé du run au meilleur epoch,
+  comparaison A/B (deltas), historique real_mAP (F08) rattaché au run ;
+  score d'erreur par image (IoU + appariement glouton : manqués, faux
+  positifs, mauvaise classe) et planche contact annotée des pires
+  prédictions (GT en vert, prédictions en rouge)
+- `gui/evaluation_view.py` : nouvelle vue sidebar « 📊 Evaluation » —
+  sélecteur de run, métriques + hyperparamètres, boutons d'artefacts
+  (courbes, confusion, PR/F1, aperçus val), comparaison entre deux runs,
+  bouton « Pires prédictions » (rejoue le best.pt du run sur le set réel
+  F08 ou la val synthétique, en thread + file pollée)
+- Aucun recalcul : les PNG d'Ultralytics sont réutilisés tels quels
+- 19 nouveaux tests (`tests/test_run_analyzer.py`) + smoke test xvfb —
+  suite : 172 passés, 0 échec
+
+### ✨ F08 : Set de validation réel (métrique real_mAP)
+
+- `datasets/real_val/` : structure images/ + labels/ (format YOLO) avec
+  **protocole de capture reproductible** documenté (README du dossier) —
+  photos de vraies cartes, jamais utilisées à l'entraînement
+- `core/real_validation.py` : état du set (`--check`), validation des
+  labels YOLO (format, bornes, classes), **garde anti-fuite par hash MD5**
+  (l'évaluation est refusée si une image du set réel est retrouvée dans
+  les dossiers d'entraînement), évaluation `real_mAP` via Ultralytics,
+  rapport JSON avec historique (`output/real_val_report.json`) pour
+  comparer les runs avant/après F04/F05
+- `core/training_manager.py` : évaluation real_mAP automatique en fin
+  d'entraînement si le set est prêt (jamais bloquante)
+- `tools/preannotate_real_val.py` : pré-annotation assistée des photos
+  par le modèle courant (brouillon à corriger à la main)
+- 20 nouveaux tests (`tests/test_real_validation.py`) —
+  suite : 153 passés, 0 échec
+
+### ✨ F06 : Prévisualisation live des augmentations (GUI)
+
+- `core/augmentation_albumentations.py` : le pool de 25 transformations est
+  désormais construit par `build_transform_pool(intensity, categories)` —
+  intensité globale réglable (0.1×–2×) et filtrage par catégorie ;
+  **intensity=1.0 reproduit exactement le pipeline de production**
+  (aucune régression, vérifié par test dédié)
+- `preview_augmentations()` : variantes générées EN DIRECT (aucun
+  sous-processus, aucune écriture disque), reproductibles via seed
+  (compatible albumentations 1.x et 2.x)
+- `gui/augmentation_preview.py` : fenêtre « 👁 Live Preview » — sliders
+  intensité / nb de transformations, 6 cases catégories, grille
+  original + 6 variantes, debounce 350 ms, rendu en thread avec file de
+  résultats pollée par le thread principal (règle v3.6 : aucun appel Tk
+  depuis un worker) ; aperçus via PhotoImage base64 (pas de dépendance
+  Pillow) ; bouton ajouté dans la vue Augmentation
+- 17 nouveaux tests (`tests/test_augmentation_preview.py`) + smoke test
+  xvfb complet — suite : 133 passés, 0 échec
+
+### ✨ F05 : Occlusions réalistes (éventails, sleeves, doigts)
+
+- `core/occlusion_effects.py` : effets d'occlusion procéduraux —
+  `apply_sleeve` (voile plastique + reflet spéculaire, dimensions
+  inchangées), `fan_layout` (éventail sur arc de cercle autour d'un
+  pivot « poignet »), `add_fingers` (doigts procéduraux, teintes de peau
+  variées), `compute_visible_fractions` (fraction visible par carte
+  après empilement, buffer d'étiquettes sous-échantillonné)
+- `core/mosaic_optimized.py` : nouveau **layout_mode 4** (éventail/main)
+  — cartes qui se chevauchent avec ombres inter-cartes, sleeve aléatoire
+  (50 %), doigts sur certains éventails ; les cartes visibles à moins de
+  25 % ne sont **jamais** annotées ; bboxes clippées au canvas
+- GUI : option « 4 - Fan / Hand (Occlusions) » dans Settings → Mosaic
+- 15 nouveaux tests (`tests/test_occlusion_effects.py`) —
+  suite complète : 111 passés, 0 échec
+
+### ✨ F04 : Fonds réalistes procéduraux pour les mosaïques
+
+- `core/background_generator.py` : générateur procédural de fonds
+  (5 catégories : table en bois, tapis de jeu, page de classeur, tissu,
+  bureau) — 100 % NumPy/OpenCV, hors-ligne, sans problème de licence,
+  reproductible via seed
+- Ombres portées douces sous les cartes (`add_drop_shadow`, masque alpha
+  flouté + décalage aléatoire) et effets caméra photométriques
+  (`apply_camera_effects` : température de couleur, exposition, éclairage
+  directionnel, vignettage) — les annotations restent valides
+- `core/mosaic_optimized.py` : nouveau **background_mode 3** (fond réaliste
+  généré à la volée, ombres + effets caméra automatiques)
+- GUI : option « 3 - Realistic (Procedural) » dans Settings → Mosaic
+- `tools/generate_realistic_backgrounds.py` : pré-génération sur disque et
+  galerie de contrôle visuel (`--gallery`)
+- 17 nouveaux tests (`tests/test_background_generator.py`) —
+  suite complète : 96 passés, 0 échec
+- Suivi : `docs/JOURNAL_FEATURES.md` (journal des features F01–F10)
+
 ## [3.6.0] - 2026-07-04
 
 ### 🏗️ Phase 4 : Refactoring GUI — package gui/, TaskRunner, BaseManager

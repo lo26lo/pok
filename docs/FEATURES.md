@@ -27,8 +27,11 @@ Create rich and diverse datasets with a suite of powerful tools. The process is 
 
 -   **Image Downloader**: Fetch high-quality card images from the TCGdex API with parallel downloads.
 -   **Advanced Augmentation**: Apply over 22 types of transformations to create unique image variations.
+-   **Live Augmentation Preview**: Tune intensity, transform count and categories with instant visual feedback on a sample card — no generation run needed.
 -   **Holographic Effects**: Add 5+ styles of realistic shiny effects to help the model generalize.
 -   **Mosaic Generator**: Combine multiple cards into complex scenes with automatic polygon annotations, generated up to 60x faster with parallel processing.
+-   **Realistic Backgrounds**: Procedural background generator (wood table, playmat, binder pages, fabric, desk) with soft drop shadows under cards and photo-like camera effects (color temperature, vignette) — background mode 3, fully offline and license-free.
+-   **Realistic Occlusions**: Fan/hand layout mode with overlapping cards, plastic sleeve effects, procedural fingers and inter-card shadows; cards hidden below 25% visibility are never annotated (layout mode 4).
 -   **Auto-Balancer**: Automatically balance the class distribution in your dataset to prevent model bias.
 
 > **➡️ [Learn more in the detailed Dataset Generation guide](./features/2_DATASET_GENERATION.md)**
@@ -38,6 +41,9 @@ Create rich and diverse datasets with a suite of powerful tools. The process is 
 ## 3. 🎓 Training and Detection
 
 Train a powerful YOLOv8 model on your custom dataset and use it for live detection, all within the same application.
+
+-   **Real-World Validation Set**: Dedicated `real_mAP` metric on hand-annotated photos of real cards (never used in training, MD5 leakage guard), evaluated automatically after each training run.
+-   **Evaluation Tab**: Browse training runs, view Ultralytics curves and confusion matrices, compare two runs side by side, and inspect the worst predictions (missed cards, false positives, wrong classes) on real or synthetic validation images.
 
 -   **One-Click Training**: Configure and launch training for YOLOv8 or YOLOv11 models with a single click.
 -   **Real-time Metrics**: Monitor training progress with live charts for mAP, precision, recall, and loss.

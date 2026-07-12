@@ -27,9 +27,19 @@ import multiprocessing as mp
 try:
     from .utils import (safe_print, load_prices, load_paths, PATHS,
                         load_card_data as load_card_data_unified)
+    from .background_generator import (generate_realistic_background,
+                                       add_drop_shadow, apply_camera_effects)
+    from .occlusion_effects import (apply_sleeve, fan_layout, add_fingers,
+                                    compute_visible_fractions, split_into_fans,
+                                    MIN_VISIBLE_FRACTION)
 except ImportError:
     from utils import (safe_print, load_prices, load_paths, PATHS,
                        load_card_data as load_card_data_unified)
+    from background_generator import (generate_realistic_background,
+                                      add_drop_shadow, apply_camera_effects)
+    from occlusion_effects import (apply_sleeve, fan_layout, add_fingers,
+                                   compute_visible_fractions, split_into_fans,
+                                   MIN_VISIBLE_FRACTION)
 
 # Détection GPU optionnelle
 try:
@@ -273,9 +283,13 @@ class MosaicGeneratorOptimized:
         
         return canvas
     
-    def get_background_optimized(self, canvas_width: int, canvas_height: int, 
+    def get_background_optimized(self, canvas_width: int, canvas_height: int,
                                 background_mode: int, fake_images: List[Tuple]) -> np.ndarray:
-        """Génération de fond optimisée"""
+        """Génération de fond optimisée (0=fake cards, 1=local, 2=web, 3=réaliste)"""
+        if background_mode == 3:
+            # Fond réaliste procédural (bois, tapis, classeur, tissu, bureau)
+            return generate_realistic_background(canvas_width, canvas_height)
+
         if background_mode == 0:
             canvas = np.ones((canvas_height, canvas_width, 3), dtype=np.uint8) * 255
             canvas = self.create_mosaic_background_optimized(canvas, fake_images)
@@ -372,6 +386,88 @@ class MosaicGeneratorOptimized:
         
         return warped, H, projected_adjusted
     
+    def _compose_fan_group(self, layout: np.ndarray, group: List[Tuple],
+                           card_dict: Dict, class_map: Dict,
+                           canvas_width: int, canvas_height: int,
+                           annotations: List[str], used_classes: Dict) -> np.ndarray:
+        """
+        Layout 4 (F05) : compose les cartes en éventails qui se chevauchent,
+        comme tenues en main — sleeves plastiques, ombres inter-cartes et
+        doigts procéduraux. Les cartes visibles à moins de
+        MIN_VISIBLE_FRACTION ne sont pas annotées (jamais de carte
+        quasi entièrement masquée dans les labels).
+        """
+        rng = np.random.default_rng()
+        fans = split_into_fans(group)
+        placements = []  # (rotated_card, pos_x, pos_y, polygon, path, fan_index)
+
+        for fan_index, fan in enumerate(fans):
+            params = fan_layout(len(fan), canvas_width, canvas_height, rng)
+            for (card, path), (theta, cx, cy) in zip(fan, params):
+                if rng.random() < 0.5:
+                    card = apply_sleeve(card, rng)
+                # Angle négatif : une carte à droite de l'éventail penche à droite
+                rotated_card, rot_matrix = self.rotate_image_vectorized(card, -theta)
+                r_h, r_w = rotated_card.shape[:2]
+                pos_x, pos_y = int(cx - r_w / 2), int(cy - r_h / 2)
+
+                orig_h, orig_w = card.shape[:2]
+                corners = np.array([[0, 0], [orig_w, 0], [orig_w, orig_h], [0, orig_h]],
+                                   dtype=np.float32)
+                transformed = cv2.transform(np.array([corners]), rot_matrix)[0] + [pos_x, pos_y]
+                polygon = [(int(px), int(py)) for px, py in transformed]
+                placements.append((rotated_card, pos_x, pos_y, polygon, path, fan_index))
+
+        # Fraction visible de chaque carte (les suivantes recouvrent les précédentes)
+        fractions = compute_visible_fractions(
+            [(p[0][:, :, 3], p[1], p[2]) for p in placements],
+            canvas_width, canvas_height)
+
+        # Composition : ombre portée puis carte, dans l'ordre d'empilement
+        for rotated_card, pos_x, pos_y, _, _, _ in placements:
+            layout = add_drop_shadow(
+                layout, rotated_card, pos_x, pos_y,
+                offset=(random.randint(3, 9), random.randint(4, 12)),
+                blur=random.choice([11, 15, 21]),
+                strength=random.uniform(0.25, 0.45),
+            )
+            layout = self.overlay_on_canvas_vectorized(layout, rotated_card, pos_x, pos_y)
+
+        # Doigts posés sur le bas de certains éventails
+        for fan_index in range(len(fans)):
+            if random.random() < 0.5:
+                pts = [pt for p in placements if p[5] == fan_index for pt in p[3]]
+                if pts:
+                    xs = [pt[0] for pt in pts]
+                    ys = [pt[1] for pt in pts]
+                    layout = add_fingers(layout, min(xs), min(ys), max(xs), max(ys), rng)
+
+        # Annotations : uniquement les cartes suffisamment visibles,
+        # bbox clippée au canvas
+        for (_, _, _, polygon, path, _), visible in zip(placements, fractions):
+            if visible < MIN_VISIBLE_FRACTION:
+                continue
+            card_number = self.extract_card_number(os.path.basename(path))
+            if card_number not in card_dict or card_number not in class_map:
+                continue
+            new_class_id = class_map[card_number]
+            used_classes[new_class_id] = card_dict[card_number]
+
+            xs = [pt[0] for pt in polygon]
+            ys = [pt[1] for pt in polygon]
+            min_x, max_x = max(0, min(xs)), min(canvas_width, max(xs))
+            min_y, max_y = max(0, min(ys)), min(canvas_height, max(ys))
+            if max_x - min_x < 8 or max_y - min_y < 8:
+                continue
+            bbox_cx = (min_x + max_x) / 2 / canvas_width
+            bbox_cy = (min_y + max_y) / 2 / canvas_height
+            bbox_w = (max_x - min_x) / canvas_width
+            bbox_h = (max_y - min_y) / canvas_height
+            annotations.append(
+                f"{new_class_id} {bbox_cx:.6f} {bbox_cy:.6f} {bbox_w:.6f} {bbox_h:.6f}")
+
+        return layout
+
     def _process_single_group(self, args: Tuple) -> int:
         """
         Traite un seul groupe de cartes (COPIE EXACTE de create_layout_group)
@@ -396,7 +492,15 @@ class MosaicGeneratorOptimized:
                 cell_height = (canvas_height - (rows+1)*margin) // rows
             else:
                 cell_width, cell_height = 0, 0
-            
+
+            # Layout 4 (F05) : éventails avec occlusions — cartes et
+            # annotations entièrement gérées par _compose_fan_group
+            if layout_mode == 4:
+                layout = self._compose_fan_group(
+                    layout, group, card_dict, class_map,
+                    canvas_width, canvas_height, annotations, used_classes)
+                group = []
+
             # Traitement de chaque carte (COPIE EXACTE de l'original)
             for i, (card, path) in enumerate(group):
                 if layout_mode in [1, 2]:
@@ -456,6 +560,15 @@ class MosaicGeneratorOptimized:
                     pos_x = cell_x
                     pos_y = cell_y
                 
+                # Ombre portée douce sous la carte (fonds réalistes uniquement)
+                if background_mode == 3:
+                    layout = add_drop_shadow(
+                        layout, rotated_card, pos_x, pos_y,
+                        offset=(random.randint(4, 12), random.randint(6, 16)),
+                        blur=random.choice([15, 21, 27]),
+                        strength=random.uniform(0.30, 0.55),
+                    )
+
                 # Overlay
                 layout = self.overlay_on_canvas_vectorized(layout, rotated_card, pos_x, pos_y)
                 
@@ -491,6 +604,10 @@ class MosaicGeneratorOptimized:
                     annotation_line = f"{new_class_id} {bbox_cx:.6f} {bbox_cy:.6f} {bbox_w:.6f} {bbox_h:.6f}"
                     annotations.append(annotation_line)
             
+            # Effets caméra globaux (photométriques : annotations inchangées)
+            if background_mode == 3:
+                layout = apply_camera_effects(layout)
+
             # Sauvegarder l'image PNG avec compression ultra-rapide
             output_file = os.path.join(MOSAIC_IMAGES_DIR, f"{prefix}layout_{group_index:03d}.png")
             # PNG compression 0 = pas de compression (plus rapide, évite corruptions)
@@ -556,8 +673,10 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Génération de mosaïques optimisée")
-    parser.add_argument("layout_mode", nargs='?', default="1", help="Mode de layout (1/2/3 ou 'all')")
-    parser.add_argument("background_mode", nargs='?', type=int, default=0, help="Mode de fond (0/1/2)")
+    parser.add_argument("layout_mode", nargs='?', default="1",
+                        help="Mode de layout (1=grille, 2=grille+rotation, 3=aléatoire, 4=éventail/occlusions, ou 'all')")
+    parser.add_argument("background_mode", nargs='?', type=int, default=0,
+                        help="Mode de fond (0=fake cards, 1=local, 2=web, 3=réaliste procédural)")
     parser.add_argument("transform_mode", nargs='?', type=int, default=0, help="Mode de transformation (0/1)")
     parser.add_argument("--max-groups", type=int, default=None, help="Limite de groupes")
     parser.add_argument("--no-gpu", action="store_true", help="Désactiver le GPU")

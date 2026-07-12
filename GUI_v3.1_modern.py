@@ -421,6 +421,7 @@ class ModernPokemonGUI:
         self.create_nav_section(sidebar, "PROCESSING")
         self.create_nav_button(sidebar, "validation", "✅ Validation", self.colors['text'])
         self.create_nav_button(sidebar, "training", "🎓 Training", self.colors['text'])
+        self.create_nav_button(sidebar, "evaluation", "📊 Evaluation", self.colors['text'])
         self.create_nav_button(sidebar, "detection", "📹 Detection", self.colors['text'])
         self.create_nav_button(sidebar, "export", "📦 Export", self.colors['text'])
         
@@ -813,6 +814,8 @@ class ModernPokemonGUI:
             self.create_validation_view()
         elif view_id == 'training':
             self.create_training_view()
+        elif view_id == 'evaluation':
+            self.create_evaluation_view()
         elif view_id == 'detection':
             self.create_detection_view()
         elif view_id == 'export':
@@ -2366,11 +2369,34 @@ class ModernPokemonGUI:
                   style='Accent.TButton',
                   command=self.start_augmentation_pipeline,
                   width=30).pack(side=tk.LEFT, padx=5, pady=5)
-        
+
+        ttk.Button(btn_frame, text="👁 Live Preview",
+                  command=self.open_augmentation_preview,
+                  width=20).pack(side=tk.LEFT, padx=5, pady=5)
+
         ttk.Button(btn_frame, text="📂 Open Folder",
                   command=lambda: self.open_folder(PATHS['directories']['output_augmented']),
                   width=20).pack(side=tk.LEFT, padx=5, pady=5)
-    
+
+    def create_evaluation_view(self):
+        """Vue Évaluation des runs (F07) — déléguée à gui/evaluation_view.py"""
+        try:
+            from gui.evaluation_view import EvaluationView
+            EvaluationView(self.view_container, self).pack(fill=tk.BOTH, expand=True)
+        except Exception as e:
+            tk.Label(self.view_container,
+                     text=f"⚠️ Vue Evaluation indisponible: {e}",
+                     bg=self.colors['bg_dark'], fg=self.colors['error'],
+                     font=self.FONT_TEXT).pack(pady=40)
+
+    def open_augmentation_preview(self):
+        """Ouvre la prévisualisation live des augmentations (F06)"""
+        try:
+            from gui.augmentation_preview import AugmentationPreviewDialog
+            AugmentationPreviewDialog(self.root, self.colors)
+        except Exception as e:
+            messagebox.showerror("Preview", f"Impossible d'ouvrir la preview:\n{e}")
+
     def create_fakeimg_view(self):
         """Vue génération de fake images (random erasing) - HARMONISÉE V3.1 sans scroll"""
         container = tk.Frame(self.view_container, bg=self.colors['bg_dark'])
