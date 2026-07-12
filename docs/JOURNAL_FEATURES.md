@@ -1,0 +1,288 @@
+# 📓 Journal des Features — Suivi & Reprise
+
+> **But de ce document** : suivre l'avancement des 10 nouvelles features validées le 2026-07-12,
+> et permettre à n'importe qui (humain ou session Claude) de **reprendre le travail exactement là où il s'est arrêté**.
+>
+> **Branche de développement** : `claude/new-feature-proposals-v4x2m3`
+>
+> **Règles de tenue du journal** :
+> 1. Chaque session de travail ajoute une entrée datée dans le [Journal de bord](#-journal-de-bord) (la plus récente en haut).
+> 2. À chaque avancée, mettre à jour le statut dans le [Tableau de suivi](#-tableau-de-suivi) et la checklist de la feature concernée.
+> 3. Avant de terminer une session : remplir la section [🔄 Point de reprise](#-point-de-reprise) (ce qui est en cours, prochaine étape concrète, pièges connus).
+> 4. Un commit par étape logique, préfixé par l'ID de la feature : `feat(F01): ...`, `test(F04): ...`, etc.
+
+---
+
+## 📊 Tableau de suivi
+
+Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · ⏸️ En pause · ❌ Abandonné
+
+| ID | Feature | Catégorie | Priorité | Statut | Avancement |
+|:---|:--------|:----------|:--------:|:------:|:----------:|
+| F01 | Identification fine de la carte (embeddings + FAISS) | Détection | ⭐ Haute | ⬜ | 0 % |
+| F02 | Estimation de l'état de la carte (grading) | Détection | Basse | ⬜ | 0 % |
+| F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | ⬜ | 0 % |
+| F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | ⬜ | 0 % |
+| F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | ⬜ | 0 % |
+| F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | ⬜ | 0 % |
+| F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | ⬜ | 0 % |
+| F08 | Set de validation « réel » annoté + métrique dédiée | Training | Moyenne | ⬜ | 0 % |
+| F09 | Historique et alertes de prix (SQLite + sparklines) | Prix | Basse | ⬜ | 0 % |
+| F10 | Cache API hors-ligne (snapshot des prix) | Prix | Basse | ⬜ | 0 % |
+
+### Ordre de réalisation prévu
+
+Les features sont regroupées en vagues pour maximiser la réutilisation :
+
+1. **Vague 1 — Qualité du modèle** : F04 → F05 → F06 (la géné de dataset est le socle de tout le reste)
+2. **Vague 2 — Mesure** : F08 → F07 (savoir si la vague 1 a réellement amélioré le transfert au réel)
+3. **Vague 3 — Valeur produit** : F01 → F03 (identification exacte, puis inventaire qui s'appuie dessus)
+4. **Vague 4 — Confort** : F10 → F09 → F02
+
+> Cet ordre est indicatif : il peut être modifié, mais noter la raison dans le journal de bord.
+
+---
+
+## 🔄 Point de reprise
+
+> **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
+
+- **Dernière session** : 2026-07-12
+- **Feature en cours** : aucune (journal initialisé, aucun développement démarré)
+- **Prochaine étape concrète** : démarrer **F04 (Backgrounds réalistes)** — commencer par le design : inventorier les sources de textures possibles, décider téléchargement vs génération procédurale, lire `tools/generate_fake_backgrounds.py` et `core/mosaic_optimized.py` pour voir comment les backgrounds sont consommés.
+- **En attente de décision utilisateur** : rien
+- **Pièges / notes connues** : —
+
+---
+
+## 📋 Fiches features
+
+Chaque fiche contient le périmètre, les fichiers concernés, la checklist d'implémentation et les critères d'acceptation.
+Cocher les cases au fur et à mesure ; ajouter des sous-tâches si besoin.
+
+---
+
+### F01 — Identification fine de la carte (2ᵉ étage de pipeline)
+
+**Objectif** : après la localisation YOLO, identifier *quelle* carte exacte est détectée (set + numéro),
+même hors des classes entraînées, via un index d'embeddings construit sur les images TCGdex déjà téléchargées.
+
+**Approche pressentie** : crop de la bbox → embedding (CLIP ou petit CNN) → recherche k-NN dans un index FAISS
+construit à partir de `images/` (base TCGdex). Plus besoin de réentraîner YOLO pour chaque nouveau set.
+
+**Fichiers/Modules concernés** : `core/detection_manager.py`, `core/tcgdex_api.py`, `core/card_mapping.py`, nouveau `core/card_identifier.py`
+
+- [ ] Design : choix du modèle d'embedding (CLIP vs CNN léger), benchmark rapide sur 50 cartes
+- [ ] Script de construction de l'index FAISS depuis `images/`
+- [ ] `core/card_identifier.py` : API `identify(crop) -> (card_id, score, top_k)`
+- [ ] Intégration dans `DetectionManager` (option activable, seuil de confiance)
+- [ ] Affichage GUI : nom exact + set + numéro dans l'overlay de détection
+- [ ] Tests : précision top-1/top-5 sur un échantillon, tests unitaires de l'index
+- [ ] Docs : section dans `docs/FEATURES.md` + entrée CHANGELOG
+
+**Critères d'acceptation** : top-1 ≥ 90 % sur cartes bien cadrées ; latence < 50 ms par carte sur CPU ; fonctionne sur un set jamais vu par YOLO.
+
+**Notes de session** : —
+
+---
+
+### F02 — Estimation de l'état de la carte (grading)
+
+**Objectif** : estimer l'état (centrage, coins, rayures de surface) depuis la webcam et pondérer le prix affiché (Near Mint vs Played).
+
+**Fichiers/Modules concernés** : `core/detection_manager.py`, nouveau `core/card_grader.py`
+
+- [ ] Design : quelles métriques sont réalistes avec une webcam (centrage = faisable ; rayures = difficile, à valider)
+- [ ] Détection du centrage (bords intérieurs/extérieurs, ratio)
+- [ ] Détection de coins abîmés (heuristique contours ou petit classifieur)
+- [ ] Pondération du prix selon l'état estimé
+- [ ] Affichage GUI (badge d'état sur l'overlay)
+- [ ] Tests + docs
+
+**Critères d'acceptation** : centrage mesuré à ±5 % vs mesure manuelle ; l'estimation ne bloque jamais la détection (best effort).
+
+**Notes de session** : —
+
+---
+
+### F03 — Mode « scan de collection »
+
+**Objectif** : session de détection continue qui déduplique les cartes vues, construit un inventaire
+(CSV/Excel — réutiliser `excel/`) avec valeur totale de la collection en fin de session.
+
+**Dépend de** : F01 (identification exacte) fortement recommandé ; possible en mode dégradé (classes YOLO seules) avant.
+
+**Fichiers/Modules concernés** : `core/detection_manager.py`, `excel/`, nouveau `core/collection_scanner.py`, GUI (nouvelle vue ou mode dans la vue Détection)
+
+- [ ] Design : logique de déduplication (tracking + identification stable sur N frames)
+- [ ] `core/collection_scanner.py` : accumulation, dédup, agrégats (nb cartes, valeur totale)
+- [ ] Récupération des prix par carte (réutiliser l'intégration Cardmarket/TCGPlayer existante)
+- [ ] Export CSV + Excel de l'inventaire
+- [ ] GUI : bouton « Démarrer un scan », compteur live, écran récap de fin de session
+- [ ] Tests + docs
+
+**Critères d'acceptation** : une même carte présentée 10 s n'apparaît qu'une fois ; export Excel ouvrable avec totaux corrects.
+
+**Notes de session** : —
+
+---
+
+### F04 — Backgrounds réalistes automatiques
+
+**Objectif** : remplacer/compléter `tools/generate_fake_backgrounds.py` par des fonds réalistes
+(tapis de jeu, bois, classeurs, mains) + placement avec ombres portées et perspective.
+Levier n°1 attendu pour réduire l'écart sim-to-real.
+
+**Fichiers/Modules concernés** : `tools/generate_fake_backgrounds.py`, `core/mosaic_optimized.py`, `backgrounds/`
+
+- [ ] Design : sources de textures (téléchargement libre de droits vs génération procédurale améliorée) — attention aux licences
+- [ ] Pipeline d'acquisition/génération des fonds (catégories : tapis, bois, classeur, tissu, main)
+- [ ] Ombres portées sous les cartes (soft shadow paramétrable)
+- [ ] Perspective/homographie légère lors du placement
+- [ ] Variations d'éclairage globales (température, vignettage)
+- [ ] Intégration au pipeline mosaïque + option dans la GUI/config
+- [ ] Tests visuels (galerie d'échantillons) + tests unitaires du placement
+- [ ] Docs + CHANGELOG
+
+**Critères d'acceptation** : galerie d'échantillons jugée « crédible » ; annotations toujours valides après perspective ; amélioration mesurable sur le set réel (cf. F08).
+
+**Notes de session** : —
+
+---
+
+### F05 — Occlusions réalistes
+
+**Objectif** : générer des cartes en éventail, partiellement recouvertes, sous sleeves/toploaders (reflets plastiques),
+pour que le modèle gère les mains de cartes réelles.
+
+**Dépend de** : F04 (partage le même pipeline de placement).
+
+**Fichiers/Modules concernés** : `core/mosaic_optimized.py`, `core/holographic_augmenter_optimized.py` (reflets)
+
+- [ ] Design : taxonomie des occlusions (éventail, chevauchement, sleeve mat/brillant, doigts)
+- [ ] Placement en éventail avec chevauchement contrôlé + annotations tronquées correctes
+- [ ] Effet sleeve/toploader (reflet plastique semi-transparent)
+- [ ] Overlays de doigts/mains (assets PNG détourés)
+- [ ] Paramètres exposés dans la config de génération
+- [ ] Tests (validité des bboxes tronquées) + docs
+
+**Critères d'acceptation** : bboxes des cartes partiellement visibles correctes (IoU annotation/visible ≥ attendu) ; pas de carte 100 % masquée annotée.
+
+**Notes de session** : —
+
+---
+
+### F06 — Prévisualisation live des augmentations (GUI)
+
+**Objectif** : un onglet GUI qui applique le pipeline Albumentations à une carte échantillon en temps réel
+quand on modifie les paramètres, sans lancer une génération complète.
+
+**Fichiers/Modules concernés** : `core/augmentation_albumentations.py`, `gui/` (nouvelle vue), `GUI_v3.1_modern.py`
+
+- [ ] Design : quels paramètres exposer en sliders ; échantillonnage (1 carte, N variantes)
+- [ ] Refactor léger : exposer une fonction `preview(image, params) -> image` dans le module d'augmentation
+- [ ] Vue GUI : choix de la carte, grille de N aperçus, bouton « regénérer », debounce sur les sliders
+- [ ] Application des paramètres validés vers la config de génération
+- [ ] Tests (la preview n'altère pas la config globale) + docs
+
+**Critères d'acceptation** : rafraîchissement < 500 ms pour 6 aperçus ; aucun sous-processus lancé ; paramètres reportables en un clic dans la config.
+
+**Notes de session** : —
+
+---
+
+### F07 — Onglet « Évaluation »
+
+**Objectif** : courbes PR, matrice de confusion, galerie des pires prédictions dans la GUI,
+avec comparaison entre deux runs d'entraînement.
+
+**Fichiers/Modules concernés** : `core/training_manager.py`, `gui/` (nouvelle vue), sorties Ultralytics dans `output/`/`runs/`
+
+- [ ] Design : réutiliser les artefacts Ultralytics (results.csv, confusion_matrix.png) vs recalcul custom
+- [ ] Parsing des runs disponibles + sélection dans la GUI
+- [ ] Affichage courbes PR / F1 / loss (matplotlib embarqué dans Tkinter)
+- [ ] Galerie « pires prédictions » (images val triées par erreur)
+- [ ] Comparaison côte à côte de deux runs
+- [ ] Tests + docs
+
+**Critères d'acceptation** : tout run existant est visualisable sans relancer d'entraînement ; comparaison A/B lisible.
+
+**Notes de session** : —
+
+---
+
+### F08 — Set de validation « réel » annoté
+
+**Objectif** : un mini-set de photos de vraies cartes, annoté, séparé du dataset synthétique,
+avec une métrique dédiée pour mesurer le vrai transfert au monde réel.
+
+**Fichiers/Modules concernés** : `core/training_manager.py`, `core/dataset_validator.py`, nouveau dossier `datasets/real_val/` (ou équivalent)
+
+- [ ] Design : protocole de capture (nb de photos, conditions d'éclairage, appareils)
+- [ ] Structure du set réel + convention d'annotation (format YOLO)
+- [ ] Outil d'annotation assisté (pré-annotation avec le modèle courant + correction manuelle) — optionnel
+- [ ] Script d'évaluation `real_mAP` séparé de la val synthétique
+- [ ] Intégration au rapport de fin d'entraînement + onglet Évaluation (F07)
+- [ ] Docs (protocole de capture reproductible)
+
+**Critères d'acceptation** : `real_mAP` calculé et affiché après chaque entraînement ; le set réel n'entre JAMAIS dans le train.
+
+**Notes de session** : —
+
+---
+
+### F09 — Historique et alertes de prix
+
+**Objectif** : stocker les prix relevés en SQLite, afficher des sparklines d'évolution,
+notifier quand une carte de l'inventaire dépasse un seuil.
+
+**Dépend de** : F10 (même couche de persistance des prix) ; F03 pour la notion d'inventaire.
+
+**Fichiers/Modules concernés** : nouveau `core/price_store.py`, `core/detection_manager.py`, GUI
+
+- [ ] Design : schéma SQLite (carte, source, prix, devise, timestamp), fréquence de relevé
+- [ ] `core/price_store.py` : écriture à chaque relevé, requêtes d'historique
+- [ ] Sparklines dans la GUI (inventaire et/ou overlay)
+- [ ] Alertes de seuil (notification GUI ; extension possible : mail/webhook)
+- [ ] Tests + docs
+
+**Critères d'acceptation** : historique persistant entre sessions ; alerte déclenchée de façon fiable au franchissement de seuil.
+
+**Notes de session** : —
+
+---
+
+### F10 — Cache API hors-ligne
+
+**Objectif** : snapshot local des prix pour utiliser la détection sans réseau.
+
+**Fichiers/Modules concernés** : `core/tcgdex_api.py`, intégrations prix existantes, nouveau cache (fichier ou SQLite partagé avec F09)
+
+- [ ] Design : stratégie de cache (TTL, invalidation, taille), format (SQLite recommandé pour préparer F09)
+- [ ] Couche cache transparente devant les appels API prix
+- [ ] Commande/bouton « Précharger les prix » pour un set ou l'inventaire
+- [ ] Mode hors-ligne explicite (indicateur GUI « prix du JJ/MM »)
+- [ ] Tests (hit/miss/expiration, mode avion) + docs
+
+**Critères d'acceptation** : détection + affichage prix 100 % fonctionnels sans réseau après préchargement ; date du snapshot visible.
+
+**Notes de session** : —
+
+---
+
+## 📆 Journal de bord
+
+> Entrées antéchronologiques (la plus récente en haut).
+> Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 — Initialisation
+- **Features** : toutes (F01–F10)
+- **Fait** :
+  - Proposition des 10 features, toutes validées par l'utilisateur.
+  - Création de ce journal de suivi (`docs/JOURNAL_FEATURES.md`).
+  - Définition de l'ordre de réalisation en 4 vagues (qualité modèle → mesure → valeur produit → confort).
+- **Décisions** :
+  - Branche de travail : `claude/new-feature-proposals-v4x2m3`.
+  - Commits préfixés par l'ID de feature (`feat(F04): ...`).
+  - F08 (set réel) placé avant F07 dans la vague 2 pour pouvoir mesurer l'impact de la vague 1 au plus tôt.
+- **Prochaine étape** : design de F04 (cf. Point de reprise).
