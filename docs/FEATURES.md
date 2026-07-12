@@ -64,6 +64,7 @@ Integrate real-time market prices directly into the detection process, providing
 -   **Automatic Mapping**: Links the detected card name to its official database ID.
 -   **Local Price Database**: Fetches and caches prices from Cardmarket and TCGPlayer into a local Excel file to minimize API calls.
 -   **Live Price Overlay**: Displays the card's market price directly on the bounding box during detection.
+-   **Offline Price Snapshot**: Preload prices into a local SQLite cache (`python tools/preload_prices.py --set sv08`, `--database`, or `--inventory <scan.csv>`; also the "⬇ Preload Prices" button in the Detection view) — detection and collection scans then display prices with **no network at all**. The snapshot date is always visible ("💾 152 prix, snapshot du 2026-07-12"), a freshness TTL (24h) controls when prices are re-fetched, and every fetch is kept as a timestamped history row (ready for price-history sparklines and alerts).
 
 > **➡️ [Learn more in the detailed Price System guide](./features/4_PRICE_SYSTEM.md)**
 

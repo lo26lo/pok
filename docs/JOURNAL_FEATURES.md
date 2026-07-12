@@ -28,7 +28,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 | F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | 🟢 | 100 % |
 | F08 | Set de validation « réel » annoté + métrique dédiée | Training | Moyenne | 🟡 | 80 % |
 | F09 | Historique et alertes de prix (SQLite + sparklines) | Prix | Basse | ⬜ | 0 % |
-| F10 | Cache API hors-ligne (snapshot des prix) | Prix | Basse | ⬜ | 0 % |
+| F10 | Cache API hors-ligne (snapshot des prix) | Prix | Basse | 🟢 | 100 % |
 
 ### Ordre de réalisation prévu
 
@@ -48,8 +48,9 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
 - **Dernière session** : 2026-07-12 (session 7)
-- **Feature en cours** : F01 et F03 terminées (100 %) — **la vague 3 (valeur produit) est complète**. Identification fine benchmarkée (98,4 % top-1 / ~7 ms CPU) et intégrée ; scan de collection avec inventaire dédupliqué, valeur totale et exports CSV/Excel. Suite : 227 tests passés.
-- **Prochaine étape concrète** : **vague 4 (confort)**, commencer par **F10 (cache API hors-ligne)** — design de la stratégie de cache (TTL, invalidation, SQLite recommandé pour préparer F09), couche transparente devant `core/tcgdex_api.py`, bouton « Précharger les prix », indicateur « prix du JJ/MM » ; puis F09 (historique/alertes, même couche SQLite) et enfin F02 (grading).
+- **Feature en cours** : F01, F03 et F10 terminées (100 %) — vague 3 complète, vague 4 entamée. Suite : 254 tests passés.
+- **Prochaine étape concrète** : **F09 (historique et alertes de prix)** — la couche SQLite existe déjà (`core/price_cache.py`, table append-only `price_snapshots` avec `history()`) : rester dessus plutôt que créer un `price_store.py` séparé. Restent : sparklines dans la GUI (inventaire et/ou overlay), alertes de seuil (notification GUI), éventuellement relevé périodique. Puis F02 (grading) pour clore la vague 4.
+- **⚠️ À valider en conditions réelles (réseau bloqué dans l'environnement de dev)** : premier préchargement `python tools/preload_prices.py --set sv08` (flux API réel), et le benchmark F01 peut être rejoué sur vos sets via `tools/benchmark_card_embeddings.py --images images`.
 - **En attente de décision utilisateur** :
   - 📸 **déposer des photos de vraies cartes dans `datasets/real_val/images/`** (suivre le README), puis `python tools/preannotate_real_val.py` et corriger les labels (F08).
   - 🎴 Optionnel : reconstruire l'index d'identification sur VOS sets téléchargés : `python tools/build_card_index.py` (l'index n'est pas committé ; le modèle ONNX l'est).
@@ -275,15 +276,16 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 **Fichiers/Modules concernés** : `core/tcgdex_api.py`, intégrations prix existantes, nouveau cache (fichier ou SQLite partagé avec F09)
 
-- [ ] Design : stratégie de cache (TTL, invalidation, taille), format (SQLite recommandé pour préparer F09)
-- [ ] Couche cache transparente devant les appels API prix
-- [ ] Commande/bouton « Précharger les prix » pour un set ou l'inventaire
-- [ ] Mode hors-ligne explicite (indicateur GUI « prix du JJ/MM »)
-- [ ] Tests (hit/miss/expiration, mode avion) + docs
+- [x] Design : **SQLite append-only** (`models/price_cache.db`, table `price_snapshots` horodatée = déjà l'historique pour F09) ; TTL 24 h qui pilote le *rafraîchissement*, pas la validité (hors-ligne, l'entrée périmée est servie avec sa date) ; taille bornée par `purge(keep_per_card)`
+- [x] Couche transparente : `TCGdexAPI(cache=...)` + `get_card_prices()` — cache frais → API (snapshot enregistré au passage) → cache périmé en mode avion ; `load_prices_with_cache()` fusionne YAML + cache et remplace `load_prices()` dans la détection et le scanner F03
+- [x] Préchargement : `tools/preload_prices.py` (`--set sv08`, `--database`, `--inventory scan.csv`, `--check`, `--purge N`) + bouton GUI « ⬇ Preload Prices »
+- [x] Mode hors-ligne explicite : indicateur GUI « 💾 N prix, snapshot du JJ/MM » (vue Detection), log « 📴 Hors-ligne: prix du JJ/MM » à chaque service d'une entrée périmée, `price_date` exposée dans les prix fusionnés
+- [x] Tests (27, `tests/test_price_cache.py`) : hit/miss, expiration TTL, mode avion (entrée périmée servie, carte inconnue → None), historique/purge, fusion YAML+cache, variantes de padding, sources de préchargement + docs
 
-**Critères d'acceptation** : détection + affichage prix 100 % fonctionnels sans réseau après préchargement ; date du snapshot visible.
+**Critères d'acceptation** : détection + affichage prix 100 % fonctionnels sans réseau après préchargement ✅ (la couche fusionnée est purement locale ; testé avec API mockée coupée) ; date du snapshot visible ✅ (indicateur GUI + date par entrée).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète. Identifiants normalisés entre TCGdex (`swsh7-3`) et le projet (`swsh7_003`) — le padding du localId varie selon les sets, `tcgdex_id_candidates()` essaie les deux formes. Le préchargement réseau n'a pas pu être exécuté ici (egress bloqué vers api.tcgdex.net) : flux validé avec API mockée ; à valider en conditions réelles au premier `--set`. Backlog : rafraîchissement automatique périodique (cron GUI) une fois F09 en place.
 
 ---
 
@@ -291,6 +293,20 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 7, suite) — F10 implémentée, vague 4 entamée
+- **Features** : F10
+- **Fait** :
+  - `core/price_cache.py` : PriceCache SQLite append-only (get/put/latest_all/history/stats/purge), normalisation d'identifiants TCGdex↔projet, `load_prices_with_cache()`, `snapshot_status()`, `preload_prices()` (ThreadPool).
+  - `TCGdexAPI(cache=...)` + `get_card_prices()` (cache frais → API → périmé hors-ligne).
+  - Détection et scanner F03 branchés sur la fusion YAML+cache.
+  - `tools/preload_prices.py` (set / base / inventaire / check / purge) ; GUI : indicateur snapshot + bouton Preload.
+  - 27 tests ; suite 254 passés / 0 échec.
+- **Décisions** :
+  - Le TTL ne rend jamais une entrée inutilisable : il déclenche seulement le rafraîchissement réseau — hors-ligne, on sert le dernier snapshot avec sa date (critère « prix du JJ/MM »).
+  - Table append-only = historique de prix : F09 s'appuiera sur `history()` au lieu d'un nouveau `price_store.py`.
+  - Le cache GAGNE sur le YAML dans la fusion (préchargement explicite = plus récent), mais un snapshot sans prix n'efface pas un prix YAML.
+- **Prochaine étape** : F09 (sparklines + alertes sur la même table).
 
 ### 2026-07-12 (session 7, suite) — F03 implémentée, vague 3 complète
 - **Features** : F03

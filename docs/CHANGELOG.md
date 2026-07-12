@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ F10 : Cache API hors-ligne (snapshot des prix)
+
+- `core/price_cache.py` : snapshots de prix **append-only** en SQLite
+  (`models/price_cache.db`) — chaque relevé est horodaté, la table sert
+  aussi d'historique (socle de F09) ; TTL de fraîcheur 24 h (pilote le
+  rafraîchissement : hors-ligne, une entrée périmée est toujours servie
+  avec sa date) ; purge pour borner l'historique par carte
+- `TCGdexAPI(cache=...)` + `get_card_prices()` : couche transparente —
+  cache frais → API (enregistrée au passage) → cache périmé en mode avion
+  (« 📴 prix du JJ/MM ») ; variantes de padding du localId gérées
+  (sv08-019 vs swsh7-3)
+- `load_prices_with_cache()` : base YAML recouverte par les snapshots —
+  **détection et scan de collection 100 % fonctionnels sans réseau**
+  après préchargement
+- `tools/preload_prices.py` : préchargement d'un set (`--set sv08`),
+  de la base (`--database`) ou d'un inventaire de scan F03
+  (`--inventory scan.csv`) ; `--check` et `--purge N`
+- GUI : indicateur « 💾 N prix, snapshot du JJ/MM » + bouton
+  « ⬇ Preload Prices » dans la vue Detection
+- 27 nouveaux tests (`tests/test_price_cache.py`) —
+  suite : 254 passés, 0 échec
+
 ### ✨ F03 : Mode « scan de collection »
 
 - `core/collection_scanner.py` : session de détection continue qui
