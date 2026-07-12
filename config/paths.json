@@ -45,6 +45,7 @@
     "cards_database_yaml": "models/cards_database.yaml",
     "cards_with_prices_yaml": "models/cards_with_prices.yaml",
     "card_name_to_id_json": "models/card_name_to_id.json",
+    "price_cache_db": "models/price_cache.db",
     "yolo11n_model": "models/yolo11n.pt",
     "yolov8n_model": "models/yolov8n.pt",
     "embedding_model_onnx": "models/mobilenetv2_embeddings.onnx",

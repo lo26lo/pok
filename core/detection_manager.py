@@ -170,19 +170,21 @@ class DetectionManager(BaseManager):
 
 
     def _load_prices(self) -> None:
-        """Charge les prix depuis la base YAML (models/cards_database.yaml)"""
+        """Charge les prix : base YAML recouverte par le cache F10 (snapshot)"""
         try:
-            from .utils import load_prices, PATHS
             from .card_mapping import get_card_id_from_class_name
+            from .price_cache import load_prices_with_cache, snapshot_status
 
-            yaml_path = PATHS['files']['cards_database_yaml']
-            self._prices = load_prices(yaml_path)
+            self._prices = load_prices_with_cache()
             self._get_card_id = get_card_id_from_class_name  # Stocker la fonction de mapping
 
             if self._prices:
-                self._log(f"💰 {len(self._prices)} prix chargés depuis {yaml_path}")
+                status = snapshot_status()
+                extra = f" ({status})" if status else ""
+                self._log(f"💰 {len(self._prices)} prix chargés{extra}")
             else:
-                self._log(f"⚠️ Aucun prix trouvé dans {yaml_path}")
+                self._log("⚠️ Aucun prix trouvé (YAML et cache vides) — "
+                          "préchargez avec tools/preload_prices.py")
         except Exception as e:
             self._log(f"⚠️ Impossible de charger les prix: {e}")
             self._prices = {}

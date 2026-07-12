@@ -26,15 +26,18 @@ class TCGdexAPI:
     - Images haute qualité
     """
     
-    def __init__(self, language='en'):
+    def __init__(self, language='en', cache=None):
         """
         Initialise le client TCGdex
-        
+
         Args:
             language: Code langue (en, fr, es, it, pt, de, ja, zh, id, th)
+            cache: PriceCache (F10) optionnel — les prix récupérés y sont
+                   enregistrés et servis hors-ligne (voir get_card_prices)
         """
         self.base_url = f"https://api.tcgdex.net/v2/{language}"
         self.language = language
+        self.cache = cache
         
         # Mapping des noms de sets vers codes TCGdex (les plus récents et courants)
         self.set_mapping = {
@@ -179,6 +182,62 @@ class TCGdexAPI:
         
         return None, None, None
     
+    def get_card_prices(self, card_id: str):
+        """
+        Prix d'une carte AVEC cache transparent (F10).
+
+        Stratégie :
+        1. cache frais (TTL) -> aucun appel réseau
+        2. API -> prix extraits et enregistrés dans le cache
+        3. échec réseau -> entrée périmée du cache (mode hors-ligne),
+           signalée par is_stale et sa date
+
+        Args:
+            card_id: clé canonique ("swsh7_003") ou identifiant TCGdex
+                     ("swsh7-3")
+
+        Returns:
+            PriceEntry (price/price_max/source/fetched_at/is_stale),
+            ou None si la carte est introuvable et absente du cache.
+        """
+        try:
+            from .price_cache import normalize_card_id, tcgdex_id_candidates
+        except ImportError:
+            from price_cache import normalize_card_id, tcgdex_id_candidates
+        key = normalize_card_id(card_id)
+
+        # 1. Cache frais
+        if self.cache is not None:
+            entry = self.cache.get(key)
+            if entry is not None and not entry.is_stale:
+                return entry
+
+        # 2. API (le padding du localId dépend du set : tester les variantes)
+        card = None
+        for tcgdex_id in tcgdex_id_candidates(card_id):
+            card = self.get_card(tcgdex_id)
+            if card is not None:
+                break
+
+        if card is not None:
+            price, price_max, source = self.extract_prices(card)
+            if self.cache is not None:
+                return self.cache.put(key, price, price_max, source)
+            try:
+                from .price_cache import PriceEntry
+            except ImportError:
+                from price_cache import PriceEntry
+            import time
+            return PriceEntry(key, price, price_max, source, 'EUR', time.time())
+
+        # 3. Hors-ligne : entrée périmée acceptée
+        if self.cache is not None:
+            entry = self.cache.get(key)
+            if entry is not None:
+                safe_print(f"📴 Hors-ligne: prix de {key} du {entry.date_str} (cache)")
+                return entry
+        return None
+
     def search_card_with_prices(
         self, 
         card_name: str, 

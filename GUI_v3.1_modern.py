@@ -3315,6 +3315,19 @@ class ModernPokemonGUI:
                 bg=self.colors['bg_card'], fg='#888888',
                 font=('Segoe UI', 9)).pack(anchor='w', padx=20)
 
+        # Snapshot de prix hors-ligne (F10) : indicateur + préchargement
+        snapshot_frame = tk.Frame(prices_frame, bg=self.colors['bg_card'])
+        snapshot_frame.pack(anchor='w', padx=20, pady=(4, 0), fill=tk.X)
+
+        self.price_snapshot_label = tk.Label(snapshot_frame,
+                text=self._price_snapshot_text(),
+                bg=self.colors['bg_card'], fg='#6aa6ff',
+                font=('Segoe UI', 9))
+        self.price_snapshot_label.pack(side=tk.LEFT)
+
+        ttk.Button(snapshot_frame, text="⬇ Preload Prices",
+                  command=self.preload_prices_snapshot).pack(side=tk.LEFT, padx=15)
+
         # Identify Cards checkbox (F01)
         identify_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
         identify_frame.pack(fill=tk.X, pady=10)
@@ -5117,6 +5130,50 @@ Continuer ?"""
                 self.log(f"❌ Erreur: {e}")
                 self.show_error("Erreur", f"Erreur webcam:\n{e}")
         
+        threading.Thread(target=task, daemon=True).start()
+
+    def _price_snapshot_text(self) -> str:
+        """Libellé de l'indicateur de snapshot de prix hors-ligne (F10)"""
+        try:
+            from core.price_cache import snapshot_status
+            status = snapshot_status()
+        except Exception:
+            status = None
+        return f"💾 {status}" if status else "💾 No offline price snapshot yet"
+
+    def preload_prices_snapshot(self):
+        """Précharge le snapshot de prix hors-ligne (F10)"""
+        self.log("⬇️ Préchargement des prix (cartes de la base locale)...")
+
+        def task():
+            try:
+                from core.price_cache import database_card_ids, preload_prices
+
+                card_ids = database_card_ids()
+                if not card_ids:
+                    self.log("❌ models/cards_database.yaml vide — rien à précharger")
+                    self.show_warning("Preload Prices",
+                        "La base de cartes est vide.\n"
+                        "Générez-la d'abord (vue Excel/Prices) ou utilisez\n"
+                        "python tools/preload_prices.py --set <id>")
+                    return
+
+                result = preload_prices(
+                    card_ids=card_ids,
+                    progress_callback=lambda msg, cur, tot: self.log(msg))
+
+                # Rafraîchir l'indicateur depuis le thread principal
+                self.root.after(0, lambda: self.price_snapshot_label.config(
+                    text=self._price_snapshot_text()))
+
+                if result["failed"] and not result["fetched"]:
+                    self.show_error("Preload Prices",
+                        "Préchargement impossible (réseau ?).\n"
+                        "Le snapshot existant reste utilisable hors-ligne.")
+            except Exception as e:
+                self.log(f"❌ Erreur préchargement: {e}")
+                self.show_error("Erreur", f"Erreur préchargement:\n{e}")
+
         threading.Thread(target=task, daemon=True).start()
 
     def start_collection_scan(self):

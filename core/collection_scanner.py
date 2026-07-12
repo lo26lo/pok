@@ -36,9 +36,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 try:
-    from .utils import PATHS, load_prices, safe_print
+    from .utils import PATHS, safe_print
 except ImportError:
-    from utils import PATHS, load_prices, safe_print
+    from utils import PATHS, safe_print
 
 DEFAULT_OUTPUT_DIR = PATHS.get('directories', {}).get('output_collection_scans',
                                                       'output/collection_scans')
@@ -104,7 +104,11 @@ class CollectionScanner:
         self.min_hits = min_hits
         if prices is None:
             try:
-                prices = load_prices()
+                try:
+                    from .price_cache import load_prices_with_cache
+                except ImportError:
+                    from price_cache import load_prices_with_cache
+                prices = load_prices_with_cache()
             except Exception as e:
                 safe_print(f"⚠️ Prix indisponibles: {e}")
                 prices = {}
