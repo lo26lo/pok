@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ F06 : Prévisualisation live des augmentations (GUI)
+
+- `core/augmentation_albumentations.py` : le pool de 25 transformations est
+  désormais construit par `build_transform_pool(intensity, categories)` —
+  intensité globale réglable (0.1×–2×) et filtrage par catégorie ;
+  **intensity=1.0 reproduit exactement le pipeline de production**
+  (aucune régression, vérifié par test dédié)
+- `preview_augmentations()` : variantes générées EN DIRECT (aucun
+  sous-processus, aucune écriture disque), reproductibles via seed
+  (compatible albumentations 1.x et 2.x)
+- `gui/augmentation_preview.py` : fenêtre « 👁 Live Preview » — sliders
+  intensité / nb de transformations, 6 cases catégories, grille
+  original + 6 variantes, debounce 350 ms, rendu en thread avec file de
+  résultats pollée par le thread principal (règle v3.6 : aucun appel Tk
+  depuis un worker) ; aperçus via PhotoImage base64 (pas de dépendance
+  Pillow) ; bouton ajouté dans la vue Augmentation
+- 17 nouveaux tests (`tests/test_augmentation_preview.py`) + smoke test
+  xvfb complet — suite : 133 passés, 0 échec
+
 ### ✨ F05 : Occlusions réalistes (éventails, sleeves, doigts)
 
 - `core/occlusion_effects.py` : effets d'occlusion procéduraux —

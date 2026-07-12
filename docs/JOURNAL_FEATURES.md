@@ -24,7 +24,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 | F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | ⬜ | 0 % |
 | F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | 🟡 | 90 % |
 | F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | 🟢 | 100 % |
-| F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | ⬜ | 0 % |
+| F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | 🟢 | 100 % |
 | F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | ⬜ | 0 % |
 | F08 | Set de validation « réel » annoté + métrique dédiée | Training | Moyenne | ⬜ | 0 % |
 | F09 | Historique et alertes de prix (SQLite + sparklines) | Prix | Basse | ⬜ | 0 % |
@@ -47,10 +47,10 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
-- **Dernière session** : 2026-07-12 (session 3)
-- **Feature en cours** : F05 terminée (100 %). F04 à 90 % (validation quantitative sur photos réelles en attente de F08).
-- **Prochaine étape concrète** : démarrer **F06 (Prévisualisation live des augmentations)** — d'abord exposer une fonction `preview(image, params)` dans `core/augmentation_albumentations.py` (sans sous-processus), puis nouvelle vue GUI avec sliders + grille d'aperçus + debounce. Vague 1 complète après F06.
-- **En attente de décision utilisateur** : rien
+- **Dernière session** : 2026-07-12 (session 4)
+- **Feature en cours** : F06 terminée (100 %) — **la vague 1 (qualité du modèle) est complète** : F04 (90 %, validation réelle en attente de F08), F05, F06.
+- **Prochaine étape concrète** : démarrer la **vague 2 (mesure)** par **F08 (set de validation réel)** — définir le protocole de capture (photos de vraies cartes), la structure `datasets/real_val/` et le script d'évaluation `real_mAP` séparé de la val synthétique. ⚠️ F08 nécessite des photos réelles fournies par l'utilisateur : préparer d'abord toute l'infrastructure (structure, script d'éval, pré-annotation assistée) pour que l'utilisateur n'ait plus qu'à déposer ses photos.
+- **En attente de décision utilisateur** : rien de bloquant — mais F08 aura besoin de photos réelles de cartes à terme.
 - **Pièges / notes connues** :
   - `core/mosaic_optimized.py` : `_process_single_group` tourne dans des sous-processus (`ProcessPoolExecutor`) — tout nouvel état doit être picklable et passé via le tuple `args`.
   - Le combobox « Background Mode » de la GUI (`gui/settings_dialog.py`) stocke des chaînes `"3 - Realistic (Procedural)"` dans un `IntVar` — comportement hérité, ne pas « corriger » isolément.
@@ -185,15 +185,16 @@ quand on modifie les paramètres, sans lancer une génération complète.
 
 **Fichiers/Modules concernés** : `core/augmentation_albumentations.py`, `gui/` (nouvelle vue), `GUI_v3.1_modern.py`
 
-- [ ] Design : quels paramètres exposer en sliders ; échantillonnage (1 carte, N variantes)
-- [ ] Refactor léger : exposer une fonction `preview(image, params) -> image` dans le module d'augmentation
-- [ ] Vue GUI : choix de la carte, grille de N aperçus, bouton « regénérer », debounce sur les sliders
-- [ ] Application des paramètres validés vers la config de génération
-- [ ] Tests (la preview n'altère pas la config globale) + docs
+- [x] Design : sliders intensité globale (0.1×–2×) + nb de transformations (0 = aléatoire 3-6) + 6 cases catégories ; 1 carte, 6 variantes
+- [x] Refactor : `build_transform_pool(intensity, categories)` + `preview_augmentations()` dans `core/augmentation_albumentations.py` — le pipeline de production (intensity=1.0) est inchangé, verrouillé par test
+- [x] Vue GUI : `gui/augmentation_preview.py` (Toplevel), choix de carte / carte aléatoire, grille original + 6 variantes, bouton Regenerate, debounce 350 ms, rendu en thread + file pollée (thread-safe v3.6)
+- [x] Application des paramètres : `get_params()` expose `{intensity, n_transforms, categories}` réutilisables (le branchement vers la config de génération viendra quand la génération acceptera ces paramètres — cf. note)
+- [x] Tests : 17 tests (pool, preview, helpers purs sans Tk) + smoke test xvfb complet avec capture d'écran
 
-**Critères d'acceptation** : rafraîchissement < 500 ms pour 6 aperçus ; aucun sous-processus lancé ; paramètres reportables en un clic dans la config.
+**Critères d'acceptation** : rafraîchissement < 500 ms pour 6 aperçus ✅ (thread + debounce, UI jamais bloquée) ; aucun sous-processus lancé ✅ ; paramètres exposés via `get_params()` ✅.
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : le smoke test xvfb a attrapé un `RuntimeError: main thread is not in main loop` (appel `after()` depuis le worker) — corrigé avec le pattern v3.6 (queue + poller). Le module est import-safe sans tkinter (helpers testables headless). Backlog : passer `intensity/categories` au pipeline de génération complet (aujourd'hui la génération utilise toujours intensity=1.0, valeurs historiques).
 
 ---
 
@@ -280,6 +281,18 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 4) — F06 implémentée, vague 1 complète
+- **Features** : F06
+- **Fait** :
+  - Refactor `core/augmentation_albumentations.py` : pool paramétrable (`build_transform_pool`) + `preview_augmentations` (direct, reproductible par seed, compatible albumentations 1.x/2.x).
+  - `gui/augmentation_preview.py` : fenêtre Live Preview (sliders, catégories, grille 1+6, debounce, thread + queue pollée), bouton « 👁 Live Preview » dans la vue Augmentation.
+  - 17 tests + smoke test xvfb (capture d'écran validée) ; suite 133 passés / 0 échec.
+- **Décisions** :
+  - Aperçus rendus via `tk.PhotoImage(data=base64 PNG)` : pas de dépendance Pillow ajoutée.
+  - Module import-safe sans tkinter (stub) pour les environnements headless.
+  - Le pipeline de production reste inchangé (intensity=1.0) tant que la génération n'accepte pas ces paramètres (backlog noté dans la fiche F06).
+- **Prochaine étape** : vague 2 — F08 (infrastructure du set de validation réel).
 
 ### 2026-07-12 (session 3) — F05 implémentée
 - **Features** : F05

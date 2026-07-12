@@ -27,6 +27,7 @@ Create rich and diverse datasets with a suite of powerful tools. The process is 
 
 -   **Image Downloader**: Fetch high-quality card images from the TCGdex API with parallel downloads.
 -   **Advanced Augmentation**: Apply over 22 types of transformations to create unique image variations.
+-   **Live Augmentation Preview**: Tune intensity, transform count and categories with instant visual feedback on a sample card — no generation run needed.
 -   **Holographic Effects**: Add 5+ styles of realistic shiny effects to help the model generalize.
 -   **Mosaic Generator**: Combine multiple cards into complex scenes with automatic polygon annotations, generated up to 60x faster with parallel processing.
 -   **Realistic Backgrounds**: Procedural background generator (wood table, playmat, binder pages, fabric, desk) with soft drop shadows under cards and photo-like camera effects (color temperature, vignette) — background mode 3, fully offline and license-free.
