@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ F05 : Occlusions réalistes (éventails, sleeves, doigts)
+
+- `core/occlusion_effects.py` : effets d'occlusion procéduraux —
+  `apply_sleeve` (voile plastique + reflet spéculaire, dimensions
+  inchangées), `fan_layout` (éventail sur arc de cercle autour d'un
+  pivot « poignet »), `add_fingers` (doigts procéduraux, teintes de peau
+  variées), `compute_visible_fractions` (fraction visible par carte
+  après empilement, buffer d'étiquettes sous-échantillonné)
+- `core/mosaic_optimized.py` : nouveau **layout_mode 4** (éventail/main)
+  — cartes qui se chevauchent avec ombres inter-cartes, sleeve aléatoire
+  (50 %), doigts sur certains éventails ; les cartes visibles à moins de
+  25 % ne sont **jamais** annotées ; bboxes clippées au canvas
+- GUI : option « 4 - Fan / Hand (Occlusions) » dans Settings → Mosaic
+- 15 nouveaux tests (`tests/test_occlusion_effects.py`) —
+  suite complète : 111 passés, 0 échec
+
 ### ✨ F04 : Fonds réalistes procéduraux pour les mosaïques
 
 - `core/background_generator.py` : générateur procédural de fonds

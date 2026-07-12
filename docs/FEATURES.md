@@ -30,6 +30,7 @@ Create rich and diverse datasets with a suite of powerful tools. The process is 
 -   **Holographic Effects**: Add 5+ styles of realistic shiny effects to help the model generalize.
 -   **Mosaic Generator**: Combine multiple cards into complex scenes with automatic polygon annotations, generated up to 60x faster with parallel processing.
 -   **Realistic Backgrounds**: Procedural background generator (wood table, playmat, binder pages, fabric, desk) with soft drop shadows under cards and photo-like camera effects (color temperature, vignette) — background mode 3, fully offline and license-free.
+-   **Realistic Occlusions**: Fan/hand layout mode with overlapping cards, plastic sleeve effects, procedural fingers and inter-card shadows; cards hidden below 25% visibility are never annotated (layout mode 4).
 -   **Auto-Balancer**: Automatically balance the class distribution in your dataset to prevent model bias.
 
 > **➡️ [Learn more in the detailed Dataset Generation guide](./features/2_DATASET_GENERATION.md)**

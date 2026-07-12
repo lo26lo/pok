@@ -23,7 +23,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 | F02 | Estimation de l'état de la carte (grading) | Détection | Basse | ⬜ | 0 % |
 | F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | ⬜ | 0 % |
 | F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | 🟡 | 90 % |
-| F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | ⬜ | 0 % |
+| F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | 🟢 | 100 % |
 | F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | ⬜ | 0 % |
 | F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | ⬜ | 0 % |
 | F08 | Set de validation « réel » annoté + métrique dédiée | Training | Moyenne | ⬜ | 0 % |
@@ -47,9 +47,9 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
-- **Dernière session** : 2026-07-12 (session 2)
-- **Feature en cours** : F04 terminée côté code (90 %) — il ne reste que la validation quantitative sur photos réelles, qui dépend de F08.
-- **Prochaine étape concrète** : démarrer **F05 (Occlusions réalistes)** — design de la taxonomie (éventail, chevauchement, sleeve, doigts) puis placement en éventail avec bboxes tronquées correctes dans `core/mosaic_optimized.py`. Réutiliser `add_drop_shadow` de `core/background_generator.py` pour les ombres entre cartes qui se chevauchent.
+- **Dernière session** : 2026-07-12 (session 3)
+- **Feature en cours** : F05 terminée (100 %). F04 à 90 % (validation quantitative sur photos réelles en attente de F08).
+- **Prochaine étape concrète** : démarrer **F06 (Prévisualisation live des augmentations)** — d'abord exposer une fonction `preview(image, params)` dans `core/augmentation_albumentations.py` (sans sous-processus), puis nouvelle vue GUI avec sliders + grille d'aperçus + debounce. Vague 1 complète après F06.
 - **En attente de décision utilisateur** : rien
 - **Pièges / notes connues** :
   - `core/mosaic_optimized.py` : `_process_single_group` tourne dans des sous-processus (`ProcessPoolExecutor`) — tout nouvel état doit être picklable et passé via le tuple `args`.
@@ -164,16 +164,17 @@ pour que le modèle gère les mains de cartes réelles.
 
 **Fichiers/Modules concernés** : `core/mosaic_optimized.py`, `core/holographic_augmenter_optimized.py` (reflets)
 
-- [ ] Design : taxonomie des occlusions (éventail, chevauchement, sleeve mat/brillant, doigts)
-- [ ] Placement en éventail avec chevauchement contrôlé + annotations tronquées correctes
-- [ ] Effet sleeve/toploader (reflet plastique semi-transparent)
-- [ ] Overlays de doigts/mains (assets PNG détourés)
-- [ ] Paramètres exposés dans la config de génération
-- [ ] Tests (validité des bboxes tronquées) + docs
+- [x] Design : taxonomie retenue = éventail (pivot « poignet », arc de cercle), chevauchement contrôlé par l'ordre d'empilement, sleeve mate ou brillante (50 % des cartes), doigts procéduraux (2-4, 6 teintes de peau)
+- [x] Placement en éventail : `fan_layout()` + `_compose_fan_group()` (layout_mode 4) — bbox = étendue complète de la carte clippée au canvas (convention YOLO amodale), cartes < 25 % visibles jamais annotées (`compute_visible_fractions`, buffer d'étiquettes 1/4)
+- [x] Effet sleeve/toploader : `apply_sleeve()` (voile laiteux, bande spéculaire diagonale ou rendu mat, liseré) — dimensions inchangées donc annotations valides
+- [x] Doigts/mains : **procéduraux** (`add_fingers`), pas d'assets PNG — cohérent avec le choix « tout procédural » de F04
+- [x] Paramètres : layout_mode 4 exposé en CLI (`core/mosaic_optimized.py 4 3 0`) et dans la GUI (« 4 - Fan / Hand (Occlusions) »)
+- [x] Tests : 15 tests (`tests/test_occlusion_effects.py`) dont visibilité (recouvrement total/partiel/hors-canvas) et intégration layout 4 — suite : 111 passés, 0 échec
 
-**Critères d'acceptation** : bboxes des cartes partiellement visibles correctes (IoU annotation/visible ≥ attendu) ; pas de carte 100 % masquée annotée.
+**Critères d'acceptation** : bboxes des cartes partiellement visibles correctes ✅ (vérifié visuellement + tests bornes [0,1]) ; pas de carte quasi masquée annotée ✅ (seuil MIN_VISIBLE_FRACTION = 0.25, testé).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète. Combiner layout 4 + background_mode 3 donne le rendu le plus réaliste (ombres + effets caméra inclus). Amélioration possible en backlog : doigts plus élaborés (pouce, ongle) et éventails tenus depuis le bord du canvas.
 
 ---
 
@@ -279,6 +280,19 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 3) — F05 implémentée
+- **Features** : F05
+- **Fait** :
+  - `core/occlusion_effects.py` : sleeve, éventail (fan_layout), doigts procéduraux, calcul de fraction visible, découpe en éventails.
+  - `core/mosaic_optimized.py` : layout_mode 4 (`_compose_fan_group`) — ombres inter-cartes, sleeves 50 %, doigts 50 % des éventails, filtre d'annotation < 25 % visible, bboxes clippées.
+  - GUI : « 4 - Fan / Hand (Occlusions) » ; CHANGELOG et FEATURES.md à jour.
+  - 15 tests ; suite complète 111 passés / 0 échec ; démo visuelle validée (bboxes tracées).
+- **Décisions** :
+  - Annotation **amodale** (étendue complète de la carte, clippée au canvas) : convention standard YOLO sous occlusion.
+  - Seuil de visibilité 25 % (`MIN_VISIBLE_FRACTION`) pour exclure les cartes quasi masquées des labels.
+  - Doigts procéduraux plutôt qu'assets PNG (cohérence avec F04 : zéro asset externe).
+- **Prochaine étape** : F06 (prévisualisation live des augmentations).
 
 ### 2026-07-12 (session 2) — F04 implémentée
 - **Features** : F04

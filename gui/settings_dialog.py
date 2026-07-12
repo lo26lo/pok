@@ -685,7 +685,7 @@ class SettingsDialog:
         layout_combo = ttk.Combobox(
             container,
             textvariable=self.default_mosaic_layout,
-            values=["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement"],
+            values=["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement", "4 - Fan / Hand (Occlusions)"],
             state='readonly',
             font=self.app.FONT_TEXT,
             width=30
