@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ F03 : Mode « scan de collection »
+
+- `core/collection_scanner.py` : session de détection continue qui
+  **déduplique** les cartes vues et construit un inventaire — une carte
+  est confirmée après 3 frames d'identification (une même carte présentée
+  10 s n'apparaît qu'une fois), deux exemplaires côte à côte comptent
+  pour une quantité de 2 (max de détections simultanées)
+- Prix par card_id depuis la base locale (models/cards_database.yaml,
+  intégration Cardmarket/TCGPlayer existante) — agrégats : cartes uniques,
+  exemplaires, valeur totale min-max, durée de session
+- Export **CSV + Excel** (openpyxl optionnel) dans
+  `output/collection_scans/`, avec ligne de totaux
+- Webcam : compteur live sur l'overlay (« Scan: 3 cartes (4 ex.) |
+  12.50 EUR »), confirmations loggées en direct ;
+  CLI `python core/detection_manager.py <model> --webcam --scan`
+- GUI : bouton « 🧺 START COLLECTION SCAN » (vue Detection) avec récap de
+  fin de session ; **mode dégradé** par classe YOLO si l'index F01 manque
+- 22 nouveaux tests (`tests/test_collection_scanner.py`) —
+  suite : 227 passés, 0 échec
+
 ### ✨ F01 : Identification fine de la carte (embeddings + index)
 
 - `core/card_identifier.py` : 2ᵉ étage de pipeline — après la localisation

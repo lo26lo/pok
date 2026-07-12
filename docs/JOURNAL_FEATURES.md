@@ -21,7 +21,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 |:---|:--------|:----------|:--------:|:------:|:----------:|
 | F01 | Identification fine de la carte (embeddings + FAISS) | Détection | ⭐ Haute | 🟢 | 100 % |
 | F02 | Estimation de l'état de la carte (grading) | Détection | Basse | ⬜ | 0 % |
-| F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | ⬜ | 0 % |
+| F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | 🟢 | 100 % |
 | F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | 🟡 | 90 % |
 | F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | 🟢 | 100 % |
 | F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | 🟢 | 100 % |
@@ -48,8 +48,8 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
 - **Dernière session** : 2026-07-12 (session 7)
-- **Feature en cours** : F01 terminée (100 %) — la vague 3 (valeur produit) est entamée. L'identification fine (embeddings MobileNetV2 via cv2.dnn + index FAISS/numpy) est benchmarkée (98,4 % top-1 / 100 % top-5 / ~7 ms CPU sur 245 cartes réelles), intégrée à la détection (GUI + CLI) et testée (33 tests, suite à 205).
-- **Prochaine étape concrète** : **F03 (mode « scan de collection »)** — design de la déduplication (tracking + identification stable sur N frames, en s'appuyant sur `CardIdentifier` de F01), puis `core/collection_scanner.py` (accumulation, dédup, agrégats), export CSV/Excel (réutiliser `excel/`), enfin GUI (bouton « Démarrer un scan », compteur live, récap fin de session).
+- **Feature en cours** : F01 et F03 terminées (100 %) — **la vague 3 (valeur produit) est complète**. Identification fine benchmarkée (98,4 % top-1 / ~7 ms CPU) et intégrée ; scan de collection avec inventaire dédupliqué, valeur totale et exports CSV/Excel. Suite : 227 tests passés.
+- **Prochaine étape concrète** : **vague 4 (confort)**, commencer par **F10 (cache API hors-ligne)** — design de la stratégie de cache (TTL, invalidation, SQLite recommandé pour préparer F09), couche transparente devant `core/tcgdex_api.py`, bouton « Précharger les prix », indicateur « prix du JJ/MM » ; puis F09 (historique/alertes, même couche SQLite) et enfin F02 (grading).
 - **En attente de décision utilisateur** :
   - 📸 **déposer des photos de vraies cartes dans `datasets/real_val/images/`** (suivre le README), puis `python tools/preannotate_real_val.py` et corriger les labels (F08).
   - 🎴 Optionnel : reconstruire l'index d'identification sur VOS sets téléchargés : `python tools/build_card_index.py` (l'index n'est pas committé ; le modèle ONNX l'est).
@@ -123,16 +123,17 @@ construit à partir de `images/` (base TCGdex). Plus besoin de réentraîner YOL
 
 **Fichiers/Modules concernés** : `core/detection_manager.py`, `excel/`, nouveau `core/collection_scanner.py`, GUI (nouvelle vue ou mode dans la vue Détection)
 
-- [ ] Design : logique de déduplication (tracking + identification stable sur N frames)
-- [ ] `core/collection_scanner.py` : accumulation, dédup, agrégats (nb cartes, valeur totale)
-- [ ] Récupération des prix par carte (réutiliser l'intégration Cardmarket/TCGPlayer existante)
-- [ ] Export CSV + Excel de l'inventaire
-- [ ] GUI : bouton « Démarrer un scan », compteur live, écran récap de fin de session
-- [ ] Tests + docs
+- [x] Design : confirmation après **min_hits frames** (défaut 3, pas forcément consécutives) puis déduplication par clé pour toute la session — clé = `card_id` F01, ou `yolo:<classe>` en mode dégradé ; quantité = max de détections simultanées de la même clé dans une frame
+- [x] `core/collection_scanner.py` : `observe_frame(detections)` (duck-typé sur `Detection`), inventaire trié par première apparition, `summary()` (cartes uniques, exemplaires, valeur min-max, cartes sans prix, durée), `reset()`
+- [x] Prix par carte : base locale `models/cards_database.yaml` via `load_prices()` (aucun appel réseau) ; en mode dégradé, mapping classe→card_id réutilisé
+- [x] Export CSV + Excel : `output/collection_scans/scan_<timestamp>.{csv,xlsx}`, Excel avec ligne de totaux en gras (openpyxl optionnel, CSV toujours disponible)
+- [x] GUI : bouton « 🧺 START COLLECTION SCAN » (vue Detection, identification F01 forcée), compteur live sur l'overlay webcam, récap de fin (cartes, valeur, durée, chemins) ; CLI `--scan`
+- [x] Tests (22, `tests/test_collection_scanner.py`) + docs (FEATURES.md, CHANGELOG)
 
-**Critères d'acceptation** : une même carte présentée 10 s n'apparaît qu'une fois ; export Excel ouvrable avec totaux corrects.
+**Critères d'acceptation** : une même carte présentée 10 s n'apparaît qu'une fois ✅ (testé sur 300 frames, y compris départ/retour de la carte) ; export Excel ouvrable avec totaux corrects ✅ (relu par openpyxl dans les tests, totaux quantité/valeur vérifiés).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète, dans la même session que F01 (le scanner s'appuie sur `CardIdentifier`). Le scanner est découplé de la caméra (API `observe_frame`) : testable sans webcam et réutilisable pour un futur scan vidéo/dossier. Backlog : bouton « ouvrir le dossier des scans » dans la GUI, détection de doublons inter-sessions (F09 pourra s'appuyer sur l'inventaire).
 
 ---
 
@@ -290,6 +291,19 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 7, suite) — F03 implémentée, vague 3 complète
+- **Features** : F03
+- **Fait** :
+  - `core/collection_scanner.py` : confirmation après min_hits frames, dédup par card_id (ou classe YOLO en dégradé), quantité par détections simultanées, prix locaux, agrégats, exports CSV/Excel avec totaux.
+  - `DetectionManager.detect_webcam(scanner=...)` : détections par frame vers le scanner, compteur live sur l'overlay, log des confirmations, CLI `--scan`.
+  - GUI : bouton « 🧺 START COLLECTION SCAN » + récap de fin de session.
+  - 22 tests ; suite 227 passés / 0 échec.
+- **Décisions** :
+  - Scanner découplé de la caméra (`observe_frame`) : testable sans webcam, réutilisable hors GUI.
+  - Les hits de confirmation n'ont pas besoin d'être consécutifs (robuste aux frames ratées) ; une carte confirmée reste dédupliquée même si elle sort du champ et revient.
+  - Prix uniquement depuis la base locale (pas d'appel API pendant le scan — F10 apportera le préchargement).
+- **Prochaine étape** : vague 4 — F10 (cache API hors-ligne).
 
 ### 2026-07-12 (session 7) — F01 implémentée, vague 3 entamée
 - **Features** : F01
