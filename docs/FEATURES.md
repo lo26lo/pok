@@ -42,6 +42,8 @@ Create rich and diverse datasets with a suite of powerful tools. The process is 
 
 Train a powerful YOLOv8 model on your custom dataset and use it for live detection, all within the same application.
 
+-   **Real-World Validation Set**: Dedicated `real_mAP` metric on hand-annotated photos of real cards (never used in training, MD5 leakage guard), evaluated automatically after each training run.
+
 -   **One-Click Training**: Configure and launch training for YOLOv8 or YOLOv11 models with a single click.
 -   **Real-time Metrics**: Monitor training progress with live charts for mAP, precision, recall, and loss.
 -   **Live Detection**: Use your trained model for real-time detection via webcam, video file, or static images.

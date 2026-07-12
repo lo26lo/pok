@@ -26,7 +26,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 | F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | 🟢 | 100 % |
 | F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | 🟢 | 100 % |
 | F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | ⬜ | 0 % |
-| F08 | Set de validation « réel » annoté + métrique dédiée | Training | Moyenne | ⬜ | 0 % |
+| F08 | Set de validation « réel » annoté + métrique dédiée | Training | Moyenne | 🟡 | 80 % |
 | F09 | Historique et alertes de prix (SQLite + sparklines) | Prix | Basse | ⬜ | 0 % |
 | F10 | Cache API hors-ligne (snapshot des prix) | Prix | Basse | ⬜ | 0 % |
 
@@ -47,10 +47,10 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
-- **Dernière session** : 2026-07-12 (session 4)
-- **Feature en cours** : F06 terminée (100 %) — **la vague 1 (qualité du modèle) est complète** : F04 (90 %, validation réelle en attente de F08), F05, F06.
-- **Prochaine étape concrète** : démarrer la **vague 2 (mesure)** par **F08 (set de validation réel)** — définir le protocole de capture (photos de vraies cartes), la structure `datasets/real_val/` et le script d'évaluation `real_mAP` séparé de la val synthétique. ⚠️ F08 nécessite des photos réelles fournies par l'utilisateur : préparer d'abord toute l'infrastructure (structure, script d'éval, pré-annotation assistée) pour que l'utilisateur n'ait plus qu'à déposer ses photos.
-- **En attente de décision utilisateur** : rien de bloquant — mais F08 aura besoin de photos réelles de cartes à terme.
+- **Dernière session** : 2026-07-12 (session 5)
+- **Feature en cours** : F08 à 80 % — toute l'infrastructure est prête (structure, garde anti-fuite, pré-annotation, évaluation auto en fin de train). **Il ne manque que les photos réelles de l'utilisateur** (protocole : `datasets/real_val/README.md`).
+- **Prochaine étape concrète** : démarrer **F07 (onglet Évaluation GUI)** — parser les runs de `runs/train/` (results.csv, confusion_matrix.png d'Ultralytics), afficher courbes PR/loss + galerie des pires prédictions + comparaison A/B, et intégrer le rapport real_mAP de F08 (`output/real_val_report.json`).
+- **En attente de décision utilisateur** : 📸 **déposer des photos de vraies cartes dans `datasets/real_val/images/`** (suivre le README), puis `python tools/preannotate_real_val.py` et corriger les labels.
 - **Pièges / notes connues** :
   - `core/mosaic_optimized.py` : `_process_single_group` tourne dans des sous-processus (`ProcessPoolExecutor`) — tout nouvel état doit être picklable et passé via le tuple `args`.
   - Le combobox « Background Mode » de la GUI (`gui/settings_dialog.py`) stocke des chaînes `"3 - Realistic (Procedural)"` dans un `IntVar` — comportement hérité, ne pas « corriger » isolément.
@@ -225,16 +225,18 @@ avec une métrique dédiée pour mesurer le vrai transfert au monde réel.
 
 **Fichiers/Modules concernés** : `core/training_manager.py`, `core/dataset_validator.py`, nouveau dossier `datasets/real_val/` (ou équivalent)
 
-- [ ] Design : protocole de capture (nb de photos, conditions d'éclairage, appareils)
-- [ ] Structure du set réel + convention d'annotation (format YOLO)
-- [ ] Outil d'annotation assisté (pré-annotation avec le modèle courant + correction manuelle) — optionnel
-- [ ] Script d'évaluation `real_mAP` séparé de la val synthétique
-- [ ] Intégration au rapport de fin d'entraînement + onglet Évaluation (F07)
-- [ ] Docs (protocole de capture reproductible)
+- [x] Design : protocole de capture reproductible (30-100 photos, 2+ appareils dont la webcam de détection, 3 éclairages, 4 surfaces, dispositions à plat/éventail/sleeve, angles 0-45°) — `datasets/real_val/README.md`
+- [x] Structure : `datasets/real_val/{images,labels}` (format YOLO, fichier vide = négatif), `check_real_val_set()` + CLI `python core/real_validation.py --check`
+- [x] Pré-annotation assistée : `tools/preannotate_real_val.py` (prédictions du modèle courant comme brouillon, correction manuelle obligatoire)
+- [x] Script d'évaluation : `evaluate_real_map()` → real_mAP50 / real_mAP50-95 / precision / recall, rapport JSON avec historique (`output/real_val_report.json`)
+- [x] **Garde anti-fuite** : hash MD5 du set réel contre les 4 dossiers d'entraînement — évaluation refusée si leak
+- [x] Intégration fin d'entraînement : `auto_evaluate_if_available()` dans `TrainingManager.train()` (jamais bloquant) ; l'onglet Évaluation viendra avec F07
+- [ ] **Photos réelles à fournir par l'utilisateur** (le set est vide : infrastructure prête, métrique inerte tant qu'il n'y a pas de photos annotées)
 
-**Critères d'acceptation** : `real_mAP` calculé et affiché après chaque entraînement ; le set réel n'entre JAMAIS dans le train.
+**Critères d'acceptation** : `real_mAP` calculé et affiché après chaque entraînement ✅ (dès que le set est peuplé) ; le set réel n'entre JAMAIS dans le train ✅ (garde MD5 testée).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : infrastructure complète et testée (20 tests). Reste 20 % : peupler le set (action utilisateur — suivre le protocole du README, puis `tools/preannotate_real_val.py` et correction manuelle). Une fois peuplé, relancer un entraînement affichera real_mAP automatiquement.
 
 ---
 
@@ -281,6 +283,21 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 5) — F08 : infrastructure du set réel
+- **Features** : F08 (80 %)
+- **Fait** :
+  - `datasets/real_val/` + README (protocole de capture reproductible).
+  - `core/real_validation.py` : check du set, validation des labels YOLO, garde anti-fuite MD5, `evaluate_real_map()` (Ultralytics), rapport JSON avec historique, CLI `--check`.
+  - Hook automatique en fin de `TrainingManager.train()` (non bloquant).
+  - `tools/preannotate_real_val.py` : pré-annotation par le modèle courant.
+  - 20 tests ; suite 153 passés / 0 échec.
+- **Décisions** :
+  - Garde anti-fuite par hash MD5 (copie exacte) — suffisant pour la règle « jamais dans le train » ; la détection de quasi-doublons (recadrages) est hors périmètre.
+  - Le data.yaml d'évaluation est généré depuis les classes du MODÈLE (pas du dataset) : on peut évaluer n'importe quel .pt.
+  - `real_mAP` historisé en JSON pour mesurer l'impact des vagues de génération (F04/F05).
+- **Bloqué par l'utilisateur** : photos réelles à déposer (cf. point de reprise).
+- **Prochaine étape** : F07 (onglet Évaluation, qui affichera aussi real_mAP).
 
 ### 2026-07-12 (session 4) — F06 implémentée, vague 1 complète
 - **Features** : F06

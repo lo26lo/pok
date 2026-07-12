@@ -191,7 +191,17 @@ class TrainingManager(BaseManager):
                 self._log(f"   mAP50-95: {metrics.get('mAP50-95', 0):.3f}")
                 self._log(f"   Precision: {metrics.get('precision', 0):.3f}")
                 self._log(f"   Recall: {metrics.get('recall', 0):.3f}")
-            
+
+            # F08 : évaluation automatique sur le set de validation RÉEL
+            # (photos de vraies cartes) si datasets/real_val/ est prêt —
+            # ne fait jamais échouer l'entraînement
+            try:
+                from .real_validation import auto_evaluate_if_available
+            except ImportError:
+                from real_validation import auto_evaluate_if_available
+            auto_evaluate_if_available(best_path, log=self._log,
+                                       device=self.config.device)
+
             return True
             
         except ImportError:

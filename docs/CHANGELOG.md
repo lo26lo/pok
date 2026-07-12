@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ F08 : Set de validation réel (métrique real_mAP)
+
+- `datasets/real_val/` : structure images/ + labels/ (format YOLO) avec
+  **protocole de capture reproductible** documenté (README du dossier) —
+  photos de vraies cartes, jamais utilisées à l'entraînement
+- `core/real_validation.py` : état du set (`--check`), validation des
+  labels YOLO (format, bornes, classes), **garde anti-fuite par hash MD5**
+  (l'évaluation est refusée si une image du set réel est retrouvée dans
+  les dossiers d'entraînement), évaluation `real_mAP` via Ultralytics,
+  rapport JSON avec historique (`output/real_val_report.json`) pour
+  comparer les runs avant/après F04/F05
+- `core/training_manager.py` : évaluation real_mAP automatique en fin
+  d'entraînement si le set est prêt (jamais bloquante)
+- `tools/preannotate_real_val.py` : pré-annotation assistée des photos
+  par le modèle courant (brouillon à corriger à la main)
+- 20 nouveaux tests (`tests/test_real_validation.py`) —
+  suite : 153 passés, 0 échec
+
 ### ✨ F06 : Prévisualisation live des augmentations (GUI)
 
 - `core/augmentation_albumentations.py` : le pool de 25 transformations est
