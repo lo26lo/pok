@@ -273,6 +273,27 @@ class DetectionManager(BaseManager):
                                                         cls_id, conf, ident)
         return annotated
 
+    def _boxes_to_detections(self, result, frame) -> List[Detection]:
+        """
+        Convertit les boxes d'un résultat YOLO en Detection (avec
+        identification F01 si active) — utilisé par le scan de collection.
+        """
+        detections = []
+        names = result.names
+        for box in result.boxes:
+            cls_id = int(box.cls[0])
+            x1, y1, x2, y2 = box.xyxy[0].tolist()
+            det = Detection(class_id=cls_id, class_name=names[cls_id],
+                            confidence=float(box.conf[0]),
+                            bbox=(x1, y1, x2, y2))
+            ident = self._identify_crop(frame, (x1, y1, x2, y2))
+            if ident:
+                det.card_id = ident.card_id
+                det.exact_name = ident.display_name
+                det.identify_score = ident.score
+            detections.append(det)
+        return detections
+
     @property
     def _custom_overlay(self) -> bool:
         """Vrai si l'annotation personnalisée remplace le plot() Ultralytics"""
@@ -464,14 +485,17 @@ class DetectionManager(BaseManager):
     def detect_webcam(self,
                       quit_key: str = 'q',
                       save_video: bool = False,
-                      output_path: Optional[str | Path] = None) -> None:
+                      output_path: Optional[str | Path] = None,
+                      scanner=None) -> None:
         """
         Détection en temps réel sur webcam
-        
+
         Args:
             quit_key: Touche pour quitter
             save_video: Enregistrer la vidéo
             output_path: Chemin de sauvegarde vidéo
+            scanner: CollectionScanner (F03) optionnel — reçoit les
+                     détections de chaque frame et affiche un compteur live
         """
         self._load_model()
         
@@ -526,6 +550,14 @@ class DetectionManager(BaseManager):
                     verbose=False
                 )
                 
+                # Scan de collection (F03) : accumuler les détections
+                if scanner is not None:
+                    detections = self._boxes_to_detections(results[0], frame)
+                    for card in scanner.observe_frame(detections):
+                        label = card.name if card.card_id is None \
+                            else f"{card.name} ({card.card_id})"
+                        self._log(f"🧺 Carte ajoutée à l'inventaire: {label}")
+
                 # Annoter
                 if self._custom_overlay:
                     # Dessiner avec prix/identification personnalisés
@@ -544,6 +576,15 @@ class DetectionManager(BaseManager):
                     fps = frame_count / elapsed if elapsed > 0 else 0
                     cv2.putText(annotated, f"FPS: {fps:.1f}", (10, 30),
                                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+                # Compteur live du scan de collection (F03)
+                if scanner is not None:
+                    s = scanner.summary()
+                    counter = (f"Scan: {s['unique_cards']} cartes "
+                               f"({s['total_quantity']} ex.) | "
+                               f"{s['total_value']:.2f} EUR")
+                    cv2.putText(annotated, counter, (10, 65),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 200, 255), 2)
                 
                 # Afficher
                 cv2.imshow('Pokemon Card Detector', annotated)
@@ -676,6 +717,9 @@ def main():
     parser.add_argument("--identify", action="store_true",
                         help="Identification fine F01 (nécessite l'index — "
                              "cf. tools/build_card_index.py)")
+    parser.add_argument("--scan", action="store_true",
+                        help="Scan de collection F03 en mode webcam "
+                             "(inventaire + export CSV/Excel, implique --identify)")
 
     args = parser.parse_args()
 
@@ -684,7 +728,7 @@ def main():
         model_path=Path(args.model),
         confidence=args.conf,
         camera_id=args.camera,
-        identify_cards=args.identify
+        identify_cards=args.identify or args.scan
     )
     
     # Manager
@@ -693,7 +737,23 @@ def main():
     
     try:
         if args.webcam:
-            manager.detect_webcam()
+            scanner = None
+            if args.scan:
+                try:
+                    from .collection_scanner import CollectionScanner
+                except ImportError:
+                    from collection_scanner import CollectionScanner
+                scanner = CollectionScanner()
+            manager.detect_webcam(scanner=scanner)
+            if scanner is not None:
+                s = scanner.summary()
+                csv_path = scanner.export_csv()
+                xlsx_path = scanner.export_excel()
+                print(f"\n🧺 Scan terminé: {s['unique_cards']} cartes uniques, "
+                      f"{s['total_quantity']} exemplaires, "
+                      f"valeur {s['total_value']:.2f}-{s['total_value_max']:.2f} EUR")
+                print(f"   Inventaire: {csv_path}"
+                      + (f" et {xlsx_path}" if xlsx_path else ""))
         elif args.image:
             detections = manager.detect_image(args.image, save_path=args.output)
             print(f"\n✅ {len(detections)} détection(s)")

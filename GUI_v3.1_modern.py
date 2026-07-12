@@ -3337,7 +3337,11 @@ class ModernPokemonGUI:
                   style='Accent.TButton',
                   command=self.start_webcam_detection,
                   width=30).pack(pady=5)
-        
+
+        ttk.Button(btn_frame, text="🧺 START COLLECTION SCAN",
+                  command=self.start_collection_scan,
+                  width=30).pack(pady=5)
+
         ttk.Button(btn_frame, text="🖼️ Detect Single Image",
                   command=self.detect_single_image,
                   width=30).pack(pady=5)
@@ -5114,7 +5118,80 @@ Continuer ?"""
                 self.show_error("Erreur", f"Erreur webcam:\n{e}")
         
         threading.Thread(target=task, daemon=True).start()
-    
+
+    def start_collection_scan(self):
+        """Scan de collection (F03) : webcam + inventaire dédupliqué + export"""
+        try:
+            model_path = Path(self.detect_model_var.get())
+            conf = self.detect_conf_var.get()
+            camera_id = int(self.detect_camera_var.get())
+        except Exception as e:
+            self.show_error("Error", f"Configuration invalide:\n{e}")
+            return
+
+        if not model_path.exists():
+            self.show_error("Error",
+                f"Modèle non trouvé!\n{model_path}\n\n"
+                "Entraînez d'abord un modèle.")
+            return
+
+        self.log("🧺 Démarrage du scan de collection...")
+        self.log("   Présentez vos cartes à la caméra ('q' pour terminer)")
+
+        def task():
+            try:
+                from core.collection_scanner import CollectionScanner
+
+                config = DetectionConfig(
+                    model_path=model_path,
+                    confidence=conf,
+                    camera_id=camera_id,
+                    show_prices=self.detect_show_prices_var.get(),
+                    identify_cards=True  # identification exacte recommandée
+                )
+
+                manager = DetectionManager(config)
+                manager.set_log_callback(self.log)
+                scanner = CollectionScanner()
+
+                manager.detect_webcam(scanner=scanner)
+
+                # Récap de fin de session + exports
+                s = scanner.summary()
+                csv_path = scanner.export_csv()
+                xlsx_path = scanner.export_excel()
+
+                self.log(f"🧺 Scan terminé: {s['unique_cards']} cartes uniques, "
+                         f"{s['total_quantity']} exemplaires, "
+                         f"valeur {s['total_value']:.2f}-{s['total_value_max']:.2f}€")
+                self.log(f"   💾 Inventaire: {csv_path}")
+                if xlsx_path:
+                    self.log(f"   💾 Excel: {xlsx_path}")
+
+                unpriced = (f"\nCartes sans prix: {s['unpriced_cards']}"
+                            if s['unpriced_cards'] else "")
+                exports = f"CSV: {csv_path}" + (f"\nExcel: {xlsx_path}"
+                                                if xlsx_path else "")
+                self.show_info("Scan de collection terminé",
+                    f"🧺 {s['unique_cards']} cartes uniques "
+                    f"({s['total_quantity']} exemplaires)\n"
+                    f"💰 Valeur estimée: {s['total_value']:.2f}€ "
+                    f"à {s['total_value_max']:.2f}€\n"
+                    f"⏱️ Durée: {s['duration_s']:.0f}s"
+                    f"{unpriced}\n\n{exports}")
+
+            except ImportError:
+                self.log("❌ Packages manquants (ultralytics ou opencv)!")
+                self.show_error("Erreur",
+                    "Packages manquants!\n\n"
+                    "Installation:\n"
+                    "pip install ultralytics opencv-python")
+            except Exception as e:
+                self.log(f"❌ Erreur: {e}")
+                self.show_error("Erreur", f"Erreur scan:\n{e}")
+
+        threading.Thread(target=task, daemon=True).start()
+
     def detect_single_image(self):
         """Détecter cartes dans une image"""
         try:

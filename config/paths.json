@@ -28,6 +28,7 @@
     "output_dataset_images": "output/dataset/images",
     "output_dataset_labels": "output/dataset/labels",
     "output_dataset_merged": "output/dataset_merged",
+    "output_collection_scans": "output/collection_scans",
     
     "runs": "runs",
     "runs_train": "runs/train",
