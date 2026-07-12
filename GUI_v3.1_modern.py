@@ -3328,6 +3328,9 @@ class ModernPokemonGUI:
         ttk.Button(snapshot_frame, text="⬇ Preload Prices",
                   command=self.preload_prices_snapshot).pack(side=tk.LEFT, padx=15)
 
+        ttk.Button(snapshot_frame, text="💹 Price History",
+                  command=self.open_price_history).pack(side=tk.LEFT)
+
         # Identify Cards checkbox (F01)
         identify_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
         identify_frame.pack(fill=tk.X, pady=10)
@@ -5166,6 +5169,14 @@ Continuer ?"""
                 self.root.after(0, lambda: self.price_snapshot_label.config(
                     text=self._price_snapshot_text()))
 
+                # F09 : notifier les alertes de seuil franchies par ce relevé
+                for t in result.get("alerts", []):
+                    self.log(f"🔔 ALERTE PRIX: {t.describe()}")
+                if result.get("alerts"):
+                    lines = "\n".join(f"• {t.describe()}"
+                                      for t in result["alerts"])
+                    self.show_info("🔔 Alertes de prix", lines)
+
                 if result["failed"] and not result["fetched"]:
                     self.show_error("Preload Prices",
                         "Préchargement impossible (réseau ?).\n"
@@ -5175,6 +5186,15 @@ Continuer ?"""
                 self.show_error("Erreur", f"Erreur préchargement:\n{e}")
 
         threading.Thread(target=task, daemon=True).start()
+
+    def open_price_history(self):
+        """Ouvre l'historique des prix et la gestion des alertes (F09)"""
+        try:
+            from gui.price_history_view import PriceHistoryDialog
+            PriceHistoryDialog(self.root, self.colors)
+        except Exception as e:
+            messagebox.showerror("Price History",
+                                 f"Impossible d'ouvrir l'historique:\n{e}")
 
     def start_collection_scan(self):
         """Scan de collection (F03) : webcam + inventaire dédupliqué + export"""

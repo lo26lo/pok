@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ F09 : Historique et alertes de prix
+
+- L'historique s'appuie sur la table append-only de F10 (chaque relevé de
+  préchargement est conservé, persistant entre sessions) — pas de couche
+  de persistance supplémentaire
+- Alertes de seuil persistantes (`price_alerts` en SQLite) : notifier
+  quand une carte **dépasse** (`above`) ou **passe sous** (`below`) un
+  prix ; cycle fiable sans spam — l'alerte se désarme au déclenchement et
+  se réarme quand la condition redevient fausse
+- Alertes évaluées à chaque relevé (fin de préchargement CLI et GUI) :
+  log « 🔔 ALERTE PRIX » + notification GUI
+- `gui/price_history_view.py` : fenêtre « 💹 Price History » — sparkline
+  de l'évolution (canvas Tk pur, zéro dépendance graphique), synthèse
+  (actuel/min/max/tendance), création/suppression d'alertes, bouton
+  « Check alerts »
+- 23 nouveaux tests (`tests/test_price_alerts.py`) —
+  suite : 277 passés, 0 échec
+
 ### ✨ F10 : Cache API hors-ligne (snapshot des prix)
 
 - `core/price_cache.py` : snapshots de prix **append-only** en SQLite

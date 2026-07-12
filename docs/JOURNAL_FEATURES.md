@@ -27,7 +27,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 | F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | 🟢 | 100 % |
 | F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | 🟢 | 100 % |
 | F08 | Set de validation « réel » annoté + métrique dédiée | Training | Moyenne | 🟡 | 80 % |
-| F09 | Historique et alertes de prix (SQLite + sparklines) | Prix | Basse | ⬜ | 0 % |
+| F09 | Historique et alertes de prix (SQLite + sparklines) | Prix | Basse | 🟢 | 100 % |
 | F10 | Cache API hors-ligne (snapshot des prix) | Prix | Basse | 🟢 | 100 % |
 
 ### Ordre de réalisation prévu
@@ -256,17 +256,18 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 **Dépend de** : F10 (même couche de persistance des prix) ; F03 pour la notion d'inventaire.
 
-**Fichiers/Modules concernés** : nouveau `core/price_store.py`, `core/detection_manager.py`, GUI
+**Fichiers/Modules concernés** : `core/price_cache.py` (couche F10 réutilisée — pas de `price_store.py` séparé), `gui/price_history_view.py`, GUI
 
-- [ ] Design : schéma SQLite (carte, source, prix, devise, timestamp), fréquence de relevé
-- [ ] `core/price_store.py` : écriture à chaque relevé, requêtes d'historique
-- [ ] Sparklines dans la GUI (inventaire et/ou overlay)
-- [ ] Alertes de seuil (notification GUI ; extension possible : mail/webhook)
-- [ ] Tests + docs
+- [x] Design : schéma = table `price_snapshots` de F10 (carte, source, prix, devise, timestamp — append-only) + table `price_alerts` (seuil, direction, armement) ; fréquence de relevé = chaque préchargement (explicite, pas de démon)
+- [x] Écriture à chaque relevé + requêtes d'historique : déjà en place depuis F10 (`put()` append-only, `history()` antichronologique)
+- [x] Sparklines dans la GUI : fenêtre « 💹 Price History » (canvas Tk pur — cohérent avec la décision F07 « pas de matplotlib »), sélecteur de carte, synthèse actuel/min/max/tendance
+- [x] Alertes de seuil : `set_alert/remove_alert/list_alerts/check_alerts` — déclenchement fiable sans spam (désarmée au déclenchement, réarmée quand la condition redevient fausse) ; notification GUI + log après chaque préchargement ; mail/webhook laissé en extension
+- [x] Tests (23, `tests/test_price_alerts.py`) + docs
 
-**Critères d'acceptation** : historique persistant entre sessions ; alerte déclenchée de façon fiable au franchissement de seuil.
+**Critères d'acceptation** : historique persistant entre sessions ✅ (SQLite, testé sur réouverture) ; alerte déclenchée de façon fiable au franchissement ✅ (cycle armée→déclenchée→désarmée→réarmée testé dans les deux directions).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète sur la couche F10 comme prévu au point de reprise. Pas de smoke test xvfb possible dans cet environnement (python3.11-tk intéléchargeable, dépôt apt bloqué) : la fenêtre suit le pattern F06 (import-safe, helpers purs testés headless) — à vérifier visuellement à la première ouverture. Backlog : alertes mail/webhook, relevé périodique automatique.
 
 ---
 

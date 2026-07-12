@@ -57,6 +57,19 @@ CREATE TABLE IF NOT EXISTS price_snapshots (
 );
 CREATE INDEX IF NOT EXISTS idx_snapshots_card
     ON price_snapshots (card_id, fetched_at DESC);
+
+-- F09 : alertes de seuil. 'armed' évite les répétitions : l'alerte se
+-- déclenche quand la condition devient vraie, se désarme, et se réarme
+-- automatiquement quand la condition redevient fausse.
+CREATE TABLE IF NOT EXISTS price_alerts (
+    card_id      TEXT NOT NULL,
+    threshold    REAL NOT NULL,
+    direction    TEXT NOT NULL CHECK (direction IN ('above', 'below')),
+    armed        INTEGER NOT NULL DEFAULT 1,
+    created_at   REAL NOT NULL,
+    triggered_at REAL,                 -- dernier déclenchement
+    PRIMARY KEY (card_id, direction)
+);
 """
 
 
@@ -95,6 +108,36 @@ def tcgdex_id_candidates(card_id: str) -> List[str]:
         stripped = num.lstrip('0') or '0'
         candidates.append(f"{set_part}-{stripped}")
     return candidates
+
+
+@dataclass
+class PriceAlert:
+    """Une alerte de seuil (F09)."""
+    card_id: str
+    threshold: float
+    direction: str                  # 'above' ou 'below'
+    armed: bool
+    created_at: float
+    triggered_at: Optional[float] = None
+
+    def describe(self) -> str:
+        arrow = "≥" if self.direction == 'above' else "≤"
+        return f"{self.card_id} {arrow} {self.threshold:.2f}€"
+
+
+@dataclass
+class TriggeredAlert:
+    """Résultat d'un franchissement de seuil (pour la notification GUI)."""
+    alert: PriceAlert
+    price: float
+    name: Optional[str] = None
+
+    def describe(self) -> str:
+        label = self.name or self.alert.card_id
+        verb = ("dépasse" if self.alert.direction == 'above'
+                else "passe sous")
+        return (f"{label} : {self.price:.2f}€ {verb} le seuil "
+                f"de {self.alert.threshold:.2f}€")
 
 
 @dataclass
@@ -220,6 +263,85 @@ class PriceCache:
         return {"cards": cards, "snapshots": snapshots,
                 "newest": fmt(newest), "oldest": fmt(oldest)}
 
+    # ---------- Alertes de seuil (F09) ----------
+
+    def set_alert(self, card_id: str, threshold: float,
+                  direction: str = 'above') -> PriceAlert:
+        """
+        Crée ou remplace une alerte : notifier quand le prix de la carte
+        dépasse (``above``) ou passe sous (``below``) le seuil.
+        """
+        if direction not in ('above', 'below'):
+            raise ValueError("direction doit être 'above' ou 'below'")
+        if threshold <= 0:
+            raise ValueError("threshold doit être > 0")
+        key = normalize_card_id(card_id)
+        now = time.time()
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO price_alerts "
+                "(card_id, threshold, direction, armed, created_at) "
+                "VALUES (?, ?, ?, 1, ?)", (key, threshold, direction, now))
+        return PriceAlert(key, threshold, direction, True, now)
+
+    def remove_alert(self, card_id: str, direction: str = None) -> int:
+        """Supprime les alertes d'une carte (une direction ou toutes)."""
+        key = normalize_card_id(card_id)
+        with self._connect() as conn:
+            if direction:
+                cur = conn.execute(
+                    "DELETE FROM price_alerts WHERE card_id = ? "
+                    "AND direction = ?", (key, direction))
+            else:
+                cur = conn.execute(
+                    "DELETE FROM price_alerts WHERE card_id = ?", (key,))
+            return cur.rowcount
+
+    def list_alerts(self) -> List[PriceAlert]:
+        """Toutes les alertes configurées."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT card_id, threshold, direction, armed, created_at, "
+                "       triggered_at FROM price_alerts "
+                "ORDER BY card_id, direction").fetchall()
+        return [PriceAlert(r[0], r[1], r[2], bool(r[3]), r[4], r[5])
+                for r in rows]
+
+    def check_alerts(self) -> List[TriggeredAlert]:
+        """
+        Évalue toutes les alertes contre les derniers snapshots (à appeler
+        après chaque relevé, ex. fin de préchargement).
+
+        Une alerte armée dont la condition est vraie se déclenche puis se
+        désarme ; une alerte désarmée se réarme dès que la condition
+        redevient fausse. Retourne les alertes déclenchées maintenant.
+        """
+        latest = self.latest_all()
+        triggered: List[TriggeredAlert] = []
+        now = time.time()
+        with self._connect() as conn:
+            for alert in self.list_alerts():
+                entry = latest.get(alert.card_id)
+                if entry is None or entry.price is None:
+                    continue
+                condition = (entry.price >= alert.threshold
+                             if alert.direction == 'above'
+                             else entry.price <= alert.threshold)
+                if condition and alert.armed:
+                    conn.execute(
+                        "UPDATE price_alerts SET armed = 0, triggered_at = ? "
+                        "WHERE card_id = ? AND direction = ?",
+                        (now, alert.card_id, alert.direction))
+                    alert.armed = False
+                    alert.triggered_at = now
+                    triggered.append(TriggeredAlert(alert, entry.price))
+                elif not condition and not alert.armed:
+                    conn.execute(
+                        "UPDATE price_alerts SET armed = 1 "
+                        "WHERE card_id = ? AND direction = ?",
+                        (alert.card_id, alert.direction))
+        return triggered
+
     # ---------- Entretien ----------
 
     def purge(self, keep_per_card: int = 30) -> int:
@@ -332,7 +454,8 @@ def preload_prices(card_ids: Iterable[str] = None,
         targets = list(card_ids or [])
     if not targets:
         log("⚠️ Aucune carte à précharger")
-        return {"requested": 0, "fetched": 0, "priced": 0, "failed": 0}
+        return {"requested": 0, "fetched": 0, "priced": 0, "failed": 0,
+                "alerts": []}
 
     log(f"⬇️  Préchargement des prix de {len(targets)} cartes "
         f"({workers} workers)...", 0, len(targets))
@@ -356,8 +479,14 @@ def preload_prices(card_ids: Iterable[str] = None,
     log(f"✅ Préchargement terminé: {priced} cartes avec prix, "
         f"{failed} échecs — cache: {stats['cards']} cartes "
         f"(snapshot du {stats['newest']})")
+
+    # F09 : évaluer les alertes de seuil sur les nouveaux relevés
+    triggered = cache.check_alerts()
+    for t in triggered:
+        log(f"🔔 ALERTE PRIX: {t.describe()}")
+
     return {"requested": len(targets), "fetched": fetched,
-            "priced": priced, "failed": failed}
+            "priced": priced, "failed": failed, "alerts": triggered}
 
 
 def database_card_ids(yaml_path: str = None) -> List[str]:
