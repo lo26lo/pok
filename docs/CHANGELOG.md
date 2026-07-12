@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ F07 : Onglet « 📊 Evaluation » dans la GUI
+
+- `core/run_analyzer.py` : parsing des artefacts Ultralytics
+  (results.csv, args.yaml, courbes PNG), résumé du run au meilleur epoch,
+  comparaison A/B (deltas), historique real_mAP (F08) rattaché au run ;
+  score d'erreur par image (IoU + appariement glouton : manqués, faux
+  positifs, mauvaise classe) et planche contact annotée des pires
+  prédictions (GT en vert, prédictions en rouge)
+- `gui/evaluation_view.py` : nouvelle vue sidebar « 📊 Evaluation » —
+  sélecteur de run, métriques + hyperparamètres, boutons d'artefacts
+  (courbes, confusion, PR/F1, aperçus val), comparaison entre deux runs,
+  bouton « Pires prédictions » (rejoue le best.pt du run sur le set réel
+  F08 ou la val synthétique, en thread + file pollée)
+- Aucun recalcul : les PNG d'Ultralytics sont réutilisés tels quels
+- 19 nouveaux tests (`tests/test_run_analyzer.py`) + smoke test xvfb —
+  suite : 172 passés, 0 échec
+
 ### ✨ F08 : Set de validation réel (métrique real_mAP)
 
 - `datasets/real_val/` : structure images/ + labels/ (format YOLO) avec

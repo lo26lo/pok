@@ -25,7 +25,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 | F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | 🟡 | 90 % |
 | F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | 🟢 | 100 % |
 | F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | 🟢 | 100 % |
-| F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | ⬜ | 0 % |
+| F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | 🟢 | 100 % |
 | F08 | Set de validation « réel » annoté + métrique dédiée | Training | Moyenne | 🟡 | 80 % |
 | F09 | Historique et alertes de prix (SQLite + sparklines) | Prix | Basse | ⬜ | 0 % |
 | F10 | Cache API hors-ligne (snapshot des prix) | Prix | Basse | ⬜ | 0 % |
@@ -47,9 +47,9 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
-- **Dernière session** : 2026-07-12 (session 5)
-- **Feature en cours** : F08 à 80 % — toute l'infrastructure est prête (structure, garde anti-fuite, pré-annotation, évaluation auto en fin de train). **Il ne manque que les photos réelles de l'utilisateur** (protocole : `datasets/real_val/README.md`).
-- **Prochaine étape concrète** : démarrer **F07 (onglet Évaluation GUI)** — parser les runs de `runs/train/` (results.csv, confusion_matrix.png d'Ultralytics), afficher courbes PR/loss + galerie des pires prédictions + comparaison A/B, et intégrer le rapport real_mAP de F08 (`output/real_val_report.json`).
+- **Dernière session** : 2026-07-12 (session 6)
+- **Feature en cours** : F07 terminée (100 %) — **la vague 2 (mesure) est complète** : F08 à 80 % (infrastructure prête, photos utilisateur attendues), F07 à 100 %.
+- **Prochaine étape concrète** : démarrer la **vague 3 (valeur produit)** par **F01 (identification fine de la carte)** — benchmark rapide du modèle d'embedding (CLIP vs CNN léger type MobileNet/ResNet tronqué) sur ~50 cartes, puis script de construction d'index FAISS depuis `images/`, puis `core/card_identifier.py` avec API `identify(crop)`. Attention : nouvelles dépendances potentielles (faiss-cpu, éventuellement open_clip/torchvision) — les garder optionnelles comme ultralytics.
 - **En attente de décision utilisateur** : 📸 **déposer des photos de vraies cartes dans `datasets/real_val/images/`** (suivre le README), puis `python tools/preannotate_real_val.py` et corriger les labels.
 - **Pièges / notes connues** :
   - `core/mosaic_optimized.py` : `_process_single_group` tourne dans des sous-processus (`ProcessPoolExecutor`) — tout nouvel état doit être picklable et passé via le tuple `args`.
@@ -205,16 +205,17 @@ avec comparaison entre deux runs d'entraînement.
 
 **Fichiers/Modules concernés** : `core/training_manager.py`, `gui/` (nouvelle vue), sorties Ultralytics dans `output/`/`runs/`
 
-- [ ] Design : réutiliser les artefacts Ultralytics (results.csv, confusion_matrix.png) vs recalcul custom
-- [ ] Parsing des runs disponibles + sélection dans la GUI
-- [ ] Affichage courbes PR / F1 / loss (matplotlib embarqué dans Tkinter)
-- [ ] Galerie « pires prédictions » (images val triées par erreur)
-- [ ] Comparaison côte à côte de deux runs
-- [ ] Tests + docs
+- [x] Design : **réutilisation des artefacts Ultralytics** (results.csv parsé, PNGs affichés tels quels) — pas de matplotlib embarqué, zéro dépendance ajoutée
+- [x] Parsing des runs : `core/run_analyzer.py` (list_runs, run_summary au meilleur epoch mAP50-95, args.yaml, real_mAP F08 rattaché au best.pt du run)
+- [x] Affichage courbes : boutons d'artefacts (results, confusion, confusion norm., PR/F1/P/R, labels, val_batch*_pred) avec redimensionnement à la volée
+- [x] Galerie « pires prédictions » : score d'erreur par image (IoU 0.5, appariement glouton — manqués / faux positifs / mauvaise classe), planche contact annotée (GT vert, préd. rouge) ; source = set réel F08 si prêt, sinon val synthétique (val.txt du dataset fusionné)
+- [x] Comparaison A/B : deltas des métriques communes avec flèches ▲▼
+- [x] Tests : 19 tests (parsing, scoring IoU/appariement, helpers de vue) + smoke test xvfb avec capture
 
-**Critères d'acceptation** : tout run existant est visualisable sans relancer d'entraînement ; comparaison A/B lisible.
+**Critères d'acceptation** : tout run existant visualisable sans relancer d'entraînement ✅ ; comparaison A/B lisible ✅ (validée visuellement).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : vue déléguée à `gui/evaluation_view.py` (le monolithe ne gagne que ~15 lignes : bouton sidebar + dispatch + fallback). L'inférence des pires prédictions tourne en thread avec la file pollée (pattern v3.6). La galerie affichera automatiquement le set réel dès que F08 sera peuplé.
 
 ---
 
@@ -283,6 +284,19 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 6) — F07 implémentée, vague 2 complète
+- **Features** : F07
+- **Fait** :
+  - `core/run_analyzer.py` : parsing runs Ultralytics, résumé au meilleur epoch, comparaison A/B, scoring des pires prédictions (IoU + appariement glouton), planche contact annotée, résolution de source (set réel F08 > val synthétique).
+  - `gui/evaluation_view.py` : vue « 📊 Evaluation » (sidebar PROCESSING) — sélecteur de runs, artefacts, comparaison, pires prédictions en thread.
+  - Monolithe : +15 lignes seulement (nav + dispatch + fallback d'erreur).
+  - 19 tests ; suite 172 passés / 0 échec ; smoke test xvfb validé (capture).
+- **Décisions** :
+  - Pas de matplotlib embarqué : les PNGs d'Ultralytics sont réutilisés tels quels (zéro dépendance, zéro recalcul).
+  - Le real_mAP (F08) est rattaché au run via le chemin absolu de son best.pt dans l'historique JSON.
+  - Score « pire prédiction » = manqués + faux positifs + mauvaises classes (IoU ≥ 0.5, appariement glouton par IoU décroissante).
+- **Prochaine étape** : vague 3 — F01 (identification fine par embeddings).
 
 ### 2026-07-12 (session 5) — F08 : infrastructure du set réel
 - **Features** : F08 (80 %)

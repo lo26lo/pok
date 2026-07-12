@@ -421,6 +421,7 @@ class ModernPokemonGUI:
         self.create_nav_section(sidebar, "PROCESSING")
         self.create_nav_button(sidebar, "validation", "✅ Validation", self.colors['text'])
         self.create_nav_button(sidebar, "training", "🎓 Training", self.colors['text'])
+        self.create_nav_button(sidebar, "evaluation", "📊 Evaluation", self.colors['text'])
         self.create_nav_button(sidebar, "detection", "📹 Detection", self.colors['text'])
         self.create_nav_button(sidebar, "export", "📦 Export", self.colors['text'])
         
@@ -813,6 +814,8 @@ class ModernPokemonGUI:
             self.create_validation_view()
         elif view_id == 'training':
             self.create_training_view()
+        elif view_id == 'evaluation':
+            self.create_evaluation_view()
         elif view_id == 'detection':
             self.create_detection_view()
         elif view_id == 'export':
@@ -2374,6 +2377,17 @@ class ModernPokemonGUI:
         ttk.Button(btn_frame, text="📂 Open Folder",
                   command=lambda: self.open_folder(PATHS['directories']['output_augmented']),
                   width=20).pack(side=tk.LEFT, padx=5, pady=5)
+
+    def create_evaluation_view(self):
+        """Vue Évaluation des runs (F07) — déléguée à gui/evaluation_view.py"""
+        try:
+            from gui.evaluation_view import EvaluationView
+            EvaluationView(self.view_container, self).pack(fill=tk.BOTH, expand=True)
+        except Exception as e:
+            tk.Label(self.view_container,
+                     text=f"⚠️ Vue Evaluation indisponible: {e}",
+                     bg=self.colors['bg_dark'], fg=self.colors['error'],
+                     font=self.FONT_TEXT).pack(pady=40)
 
     def open_augmentation_preview(self):
         """Ouvre la prévisualisation live des augmentations (F06)"""
