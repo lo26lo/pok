@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ F01 : Identification fine de la carte (embeddings + index)
+
+- `core/card_identifier.py` : 2ᵉ étage de pipeline — après la localisation
+  YOLO, le crop de chaque bbox est identifié (set + numéro) par recherche
+  du plus proche voisin cosinus dans un index d'embeddings construit sur
+  les images TCGdex téléchargées ; **fonctionne sur des sets jamais vus
+  par YOLO**, sans réentraînement
+- Embedder par défaut : features MobileNetV2 1280-d via cv2.dnn
+  (`models/mobilenetv2_embeddings.onnx`, 9 Mo, tronqué à la couche
+  global-pool — aucune dépendance Python ajoutée) ; fallback « classic »
+  (grille Lab + gradients, pur OpenCV) si l'ONNX est absent
+- Recherche : FAISS (`faiss-cpu`, optionnel) avec fallback numpy
+  automatique ; références indexées en moyenne de 3 vues (native, 300 px,
+  300 px floutée) pour rapprocher l'index du domaine webcam
+- **Benchmark sur 245 cartes réelles** (requêtes dégradées type webcam :
+  perspective, éclairage, flou, bruit, JPEG, basse résolution) :
+  98,4 % top-1, 100 % top-5, ~7 ms par carte sur CPU
+  (`tools/benchmark_card_embeddings.py`) — critères F01 (≥ 90 %, < 50 ms)
+  dépassés
+- `tools/build_card_index.py` : construction de l'index depuis `images/`
+  (`--check` pour l'état, `--download-model` pour récupérer l'ONNX)
+- Détection : option `identify_cards` (GUI : case « 🎴 Identify Cards »,
+  CLI : `--identify`) — l'overlay affiche le nom exact + set + numéro
+  (« Skiploom [swsh7 003] ») et le prix est cherché directement par
+  card_id ; jamais bloquant si l'index manque
+- 33 nouveaux tests (`tests/test_card_identifier.py`) —
+  suite : 205 passés, 0 échec
+
 ### ✨ F07 : Onglet « 📊 Evaluation » dans la GUI
 
 - `core/run_analyzer.py` : parsing des artefacts Ultralytics

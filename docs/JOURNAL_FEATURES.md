@@ -19,7 +19,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 
 | ID | Feature | Catégorie | Priorité | Statut | Avancement |
 |:---|:--------|:----------|:--------:|:------:|:----------:|
-| F01 | Identification fine de la carte (embeddings + FAISS) | Détection | ⭐ Haute | ⬜ | 0 % |
+| F01 | Identification fine de la carte (embeddings + FAISS) | Détection | ⭐ Haute | 🟢 | 100 % |
 | F02 | Estimation de l'état de la carte (grading) | Détection | Basse | ⬜ | 0 % |
 | F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | ⬜ | 0 % |
 | F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | 🟡 | 90 % |
@@ -47,14 +47,19 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
-- **Dernière session** : 2026-07-12 (session 6)
-- **Feature en cours** : F07 terminée (100 %) — **la vague 2 (mesure) est complète** : F08 à 80 % (infrastructure prête, photos utilisateur attendues), F07 à 100 %.
-- **Prochaine étape concrète** : démarrer la **vague 3 (valeur produit)** par **F01 (identification fine de la carte)** — benchmark rapide du modèle d'embedding (CLIP vs CNN léger type MobileNet/ResNet tronqué) sur ~50 cartes, puis script de construction d'index FAISS depuis `images/`, puis `core/card_identifier.py` avec API `identify(crop)`. Attention : nouvelles dépendances potentielles (faiss-cpu, éventuellement open_clip/torchvision) — les garder optionnelles comme ultralytics.
-- **En attente de décision utilisateur** : 📸 **déposer des photos de vraies cartes dans `datasets/real_val/images/`** (suivre le README), puis `python tools/preannotate_real_val.py` et corriger les labels.
+- **Dernière session** : 2026-07-12 (session 7)
+- **Feature en cours** : F01 terminée (100 %) — la vague 3 (valeur produit) est entamée. L'identification fine (embeddings MobileNetV2 via cv2.dnn + index FAISS/numpy) est benchmarkée (98,4 % top-1 / 100 % top-5 / ~7 ms CPU sur 245 cartes réelles), intégrée à la détection (GUI + CLI) et testée (33 tests, suite à 205).
+- **Prochaine étape concrète** : **F03 (mode « scan de collection »)** — design de la déduplication (tracking + identification stable sur N frames, en s'appuyant sur `CardIdentifier` de F01), puis `core/collection_scanner.py` (accumulation, dédup, agrégats), export CSV/Excel (réutiliser `excel/`), enfin GUI (bouton « Démarrer un scan », compteur live, récap fin de session).
+- **En attente de décision utilisateur** :
+  - 📸 **déposer des photos de vraies cartes dans `datasets/real_val/images/`** (suivre le README), puis `python tools/preannotate_real_val.py` et corriger les labels (F08).
+  - 🎴 Optionnel : reconstruire l'index d'identification sur VOS sets téléchargés : `python tools/build_card_index.py` (l'index n'est pas committé ; le modèle ONNX l'est).
 - **Pièges / notes connues** :
   - `core/mosaic_optimized.py` : `_process_single_group` tourne dans des sous-processus (`ProcessPoolExecutor`) — tout nouvel état doit être picklable et passé via le tuple `args`.
   - Le combobox « Background Mode » de la GUI (`gui/settings_dialog.py`) stocke des chaînes `"3 - Realistic (Procedural)"` dans un `IntVar` — comportement hérité, ne pas « corriger » isolément.
   - Les effets caméra sont appliqués UNIQUEMENT en mode 3, après compositing (sinon double vignettage si on les mettait aussi dans le fond).
+  - `cv2.dnn` (OpenCV 5) **ignore le nom de couche passé à `forward()`** pour ce graphe ONNX : impossible d'extraire la couche pool du modèle complet — d'où le modèle TRONQUÉ livré dans `models/mobilenetv2_embeddings.onnx` (la troncature est refaite par `--download-model` si le package `onnx` est installé ; sinon logits 1000-d, ~91 % top-1 au lieu de 98 %).
+  - L'index et les requêtes doivent partager le même embedder : `CardIdentifier` lit la méthode dans `meta.json` de l'index ; si l'ONNX change, reconstruire l'index.
+  - `backgrounds/original/` contient 245 vraies cartes TCGdex (swsh7 + sv08) committées — utilisées par le benchmark et les tests de précision F01.
 
 ---
 
@@ -75,17 +80,18 @@ construit à partir de `images/` (base TCGdex). Plus besoin de réentraîner YOL
 
 **Fichiers/Modules concernés** : `core/detection_manager.py`, `core/tcgdex_api.py`, `core/card_mapping.py`, nouveau `core/card_identifier.py`
 
-- [ ] Design : choix du modèle d'embedding (CLIP vs CNN léger), benchmark rapide sur 50 cartes
-- [ ] Script de construction de l'index FAISS depuis `images/`
-- [ ] `core/card_identifier.py` : API `identify(crop) -> (card_id, score, top_k)`
-- [ ] Intégration dans `DetectionManager` (option activable, seuil de confiance)
-- [ ] Affichage GUI : nom exact + set + numéro dans l'overlay de détection
-- [ ] Tests : précision top-1/top-5 sur un échantillon, tests unitaires de l'index
-- [ ] Docs : section dans `docs/FEATURES.md` + entrée CHANGELOG
+- [x] Design : **CNN léger retenu** — MobileNetV2 (features global-pool 1280-d) via `cv2.dnn`, zéro dépendance Python ajoutée ; benchmark sur les 245 cartes réelles du dépôt (requêtes webcam simulées) : **dnn 98,4 % top-1 / 100 % top-5 / 6,6 ms** vs classic (descripteur Lab+gradients) 74,2 % / 1,5 ms. CLIP non retenu (poids intéléchargeables dans cet environnement, latence CPU défavorable, inutile pour du quasi-doublon)
+- [x] Script de construction de l'index : `tools/build_card_index.py` (scan `images/`, dédoublonnage multi-langues, `--check`, `--download-model`) → `models/card_index/` (embeddings.npy + cards.json + meta.json)
+- [x] `core/card_identifier.py` : API `identify(crop) -> IdentificationResult` (card_id, score, top_k) ; FAISS optionnel avec fallback numpy ; références moyennées sur 3 vues (natif/300px/300px flou : +11 pts de top-1)
+- [x] Intégration `DetectionManager` : `identify_cards` + `identify_min_score` dans la config, chargement best-effort (jamais bloquant), champs `card_id`/`exact_name`/`identify_score` sur `Detection`, CLI `--identify`
+- [x] Affichage GUI : case « 🎴 Identify Cards » (vue Detection) ; overlay « Skiploom [swsh7 003] » ; prix cherché directement par card_id (plus fiable que le mapping par nom de classe)
+- [x] Tests : 33 tests (`tests/test_card_identifier.py`) dont précision top-1 ≥ 90 % / top-5 ≥ 95 % sur 40 cartes réelles perturbées — suite : 205 passés, 0 échec
+- [x] Docs : section dans `docs/FEATURES.md` + entrée CHANGELOG
 
-**Critères d'acceptation** : top-1 ≥ 90 % sur cartes bien cadrées ; latence < 50 ms par carte sur CPU ; fonctionne sur un set jamais vu par YOLO.
+**Critères d'acceptation** : top-1 ≥ 90 % sur cartes bien cadrées ✅ (98,4 % mesuré sur requêtes dégradées) ; latence < 50 ms par carte sur CPU ✅ (~7 ms embed + <0,1 ms recherche) ; fonctionne sur un set jamais vu par YOLO ✅ (l'index est indépendant des classes YOLO — testé avec un YOLO nu sur l'index swsh7).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète. Le modèle ONNX **tronqué à la couche pool** est committé (`models/mobilenetv2_embeddings.onnx`, 9 Mo, Apache-2.0) car `cv2.dnn` (OpenCV 5) ne permet pas d'extraire une couche intermédiaire du modèle complet (les logits 1000-d donnent 91 % au lieu de 98 %). L'index n'est PAS committé : `python tools/build_card_index.py` le construit en ~30 s pour 245 cartes. Backlog : cache d'identification par tracking inter-frames (utile pour F03), seuil `identify_min_score` réglable dans la GUI.
 
 ---
 
@@ -284,6 +290,21 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 7) — F01 implémentée, vague 3 entamée
+- **Features** : F01
+- **Fait** :
+  - Benchmark d'embedding sur les 245 cartes réelles committées dans `backgrounds/original/` (requêtes webcam simulées : perspective, rotation, éclairage, flou, bruit, JPEG, 180-420 px) via `tools/benchmark_card_embeddings.py`.
+  - `core/card_identifier.py` : embedders `dnn` (MobileNetV2 pool 1280-d via cv2.dnn) et `classic` (Lab+gradients pur OpenCV), `CardIndex` (build/save/load, recherche FAISS→numpy), `CardIdentifier.identify(crop)`.
+  - `tools/build_card_index.py` (+ `--check`, `--download-model` avec troncature ONNX), `models/mobilenetv2_embeddings.onnx` committé (9 Mo).
+  - Intégration détection (config `identify_cards`/`identify_min_score`, overlay nom exact + set + numéro, prix par card_id, CLI `--identify`) et GUI (case « 🎴 Identify Cards »).
+  - 33 tests ; suite 205 passés / 0 échec ; ruff OK.
+- **Décisions** :
+  - MobileNetV2 via cv2.dnn plutôt que CLIP/torch : l'egress de l'environnement bloque api.tcgdex.net, download.pytorch.org et huggingface.co (constaté, non contourné) — et le CNN léger dépasse déjà largement les critères (98,4 % top-1). Le benchmark reste rejouable avec d'autres backends sur la machine utilisateur.
+  - Références indexées en **moyenne de 3 vues** (native, 300 px, 300 px floutée) : +11 pts de top-1 mesurés — le multicrop requête (+0,3 pt pour 2× la latence) est abandonné.
+  - Le modèle ONNX est **tronqué à la couche global-pool** et committé : cv2.dnn/OpenCV 5 ignore le nom de couche à `forward()`, impossible d'extraire les features du modèle complet (logits = 91 % seulement).
+  - Une seule langue par carte dans l'index (artwork identique, dédoublonnage au build).
+- **Prochaine étape** : F03 (mode « scan de collection », s'appuie sur F01).
 
 ### 2026-07-12 (session 6) — F07 implémentée, vague 2 complète
 - **Features** : F07

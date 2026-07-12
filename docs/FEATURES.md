@@ -44,6 +44,7 @@ Train a powerful YOLOv8 model on your custom dataset and use it for live detecti
 
 -   **Real-World Validation Set**: Dedicated `real_mAP` metric on hand-annotated photos of real cards (never used in training, MD5 leakage guard), evaluated automatically after each training run.
 -   **Evaluation Tab**: Browse training runs, view Ultralytics curves and confusion matrices, compare two runs side by side, and inspect the worst predictions (missed cards, false positives, wrong classes) on real or synthetic validation images.
+-   **Fine-Grained Card Identification**: A second pipeline stage identifies *which exact card* was detected (set + number), even for sets YOLO was never trained on. Each detected crop is embedded (MobileNetV2 features via OpenCV DNN — no extra Python dependency; pure-OpenCV descriptor as fallback) and matched against a cosine k-NN index (FAISS if installed, numpy otherwise) built from the downloaded TCGdex images with `python tools/build_card_index.py`. Enable "🎴 Identify Cards" in the Detection view to see the exact name, set and number in the overlay; prices are then looked up directly by card ID. Measured 98.4% top-1 / 100% top-5 at ~7 ms per card on CPU (245 real cards, degraded webcam-like queries — see `tools/benchmark_card_embeddings.py`).
 
 -   **One-Click Training**: Configure and launch training for YOLOv8 or YOLOv11 models with a single click.
 -   **Real-time Metrics**: Monitor training progress with live charts for mAP, precision, recall, and loss.
