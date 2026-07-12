@@ -3310,8 +3310,22 @@ class ModernPokemonGUI:
         self.detect_show_prices_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(prices_frame, text="💰 Show Prices (from models/cards_database.yaml)",
                        variable=self.detect_show_prices_var).pack(anchor='w')
-        
+
         tk.Label(prices_frame, text="Display card prices alongside names in detection overlay",
+                bg=self.colors['bg_card'], fg='#888888',
+                font=('Segoe UI', 9)).pack(anchor='w', padx=20)
+
+        # Identify Cards checkbox (F01)
+        identify_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        identify_frame.pack(fill=tk.X, pady=10)
+
+        self.detect_identify_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(identify_frame, text="🎴 Identify Cards (embeddings index)",
+                       variable=self.detect_identify_var).pack(anchor='w')
+
+        tk.Label(identify_frame,
+                text="Show exact card name, set and number in the overlay "
+                     "(build the index first: python tools/build_card_index.py)",
                 bg=self.colors['bg_card'], fg='#888888',
                 font=('Segoe UI', 9)).pack(anchor='w', padx=20)
         
@@ -5078,7 +5092,8 @@ Continuer ?"""
                     model_path=model_path,
                     confidence=conf,
                     camera_id=camera_id,
-                    show_prices=self.detect_show_prices_var.get()
+                    show_prices=self.detect_show_prices_var.get(),
+                    identify_cards=self.detect_identify_var.get()
                 )
                 
                 manager = DetectionManager(config)
@@ -5129,7 +5144,8 @@ Continuer ?"""
                 config = DetectionConfig(
                     model_path=model_path,
                     confidence=conf,
-                    show_prices=self.detect_show_prices_var.get()
+                    show_prices=self.detect_show_prices_var.get(),
+                    identify_cards=self.detect_identify_var.get()
                 )
                 
                 manager = DetectionManager(config)
@@ -5171,7 +5187,8 @@ Continuer ?"""
                 config = DetectionConfig(
                     model_path=model_path,
                     confidence=conf,
-                    show_prices=self.detect_show_prices_var.get()
+                    show_prices=self.detect_show_prices_var.get(),
+                    identify_cards=self.detect_identify_var.get()
                 )
                 
                 manager = DetectionManager(config)

@@ -52,7 +52,12 @@ class DetectionConfig:
     show_prices: bool = False
     excel_path: str = "excel/cards_info.xlsx"
     data_yaml_path: Optional[str] = None  # Auto-détecté si None
-    
+
+    # Identification fine (F01) : crop bbox -> embedding -> index k-NN
+    identify_cards: bool = False
+    identify_index_dir: Optional[str] = None   # None = models/card_index
+    identify_min_score: float = 0.5            # similarité cosinus minimale
+
     def __post_init__(self):
         """Validation"""
         if not self.model_path.exists():
@@ -61,6 +66,8 @@ class DetectionConfig:
             raise ValueError("confidence doit être entre 0 et 1")
         if not 0 <= self.iou_threshold <= 1:
             raise ValueError("iou_threshold doit être entre 0 et 1")
+        if not -1 <= self.identify_min_score <= 1:
+            raise ValueError("identify_min_score doit être entre -1 et 1")
 
 
 @dataclass
@@ -70,8 +77,16 @@ class Detection:
     class_name: str
     confidence: float
     bbox: Tuple[float, float, float, float]  # x1, y1, x2, y2
-    
+
+    # Identification fine (F01) — renseignés si identify_cards est actif
+    card_id: Optional[str] = None            # ex: "swsh7_003"
+    exact_name: Optional[str] = None         # ex: "Skiploom [swsh7 003]"
+    identify_score: Optional[float] = None   # similarité cosinus du top-1
+
     def __repr__(self) -> str:
+        if self.card_id:
+            return (f"Detection({self.class_name} -> {self.card_id}, "
+                    f"{self.confidence:.2%}, bbox={self.bbox})")
         return f"Detection({self.class_name}, {self.confidence:.2%}, bbox={self.bbox})"
 
 
@@ -102,11 +117,56 @@ class DetectionManager(BaseManager):
         self._model = None
         self._prices: Dict[str, Dict[str, Any]] = {}
         self._class_names: Dict[int, str] = {}
+        self._identifier = None
 
         # Charger les prix si demandé
         if self.config.show_prices:
             self._load_prices()
             self._load_class_names()
+
+        # Identification fine (F01) — best effort, ne bloque jamais la détection
+        if self.config.identify_cards:
+            self._load_identifier()
+
+    def _load_identifier(self) -> None:
+        """Charge l'index d'identification (F01) — best effort"""
+        try:
+            from .card_identifier import CardIdentifier
+        except ImportError:
+            from card_identifier import CardIdentifier
+        try:
+            self._identifier = CardIdentifier(self.config.identify_index_dir)
+            meta = self._identifier.index.meta
+            self._log(f"🎴 Index d'identification chargé: {meta['count']} cartes "
+                      f"(méthode '{meta['method']}', backend "
+                      f"{self._identifier.index.backend})")
+        except Exception as e:
+            self._identifier = None
+            self._log(f"⚠️ Identification désactivée: {e}")
+
+    def _identify_crop(self, frame, bbox) -> Optional[Any]:
+        """
+        Identifie la carte d'une bbox (frame PROPRE, avant annotations).
+
+        Returns:
+            IdentificationResult si le score atteint identify_min_score, sinon None
+        """
+        if self._identifier is None:
+            return None
+        try:
+            h, w = frame.shape[:2]
+            x1, y1, x2, y2 = map(int, bbox)
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(w, x2), min(h, y2)
+            if x2 - x1 < 16 or y2 - y1 < 16:
+                return None
+            result = self._identifier.identify(frame[y1:y2, x1:x2])
+            if result and result.score >= self.config.identify_min_score:
+                return result
+            return None
+        except Exception as e:
+            self._log(f"⚠️ Erreur identification: {e}")
+            return None
 
 
     def _load_prices(self) -> None:
@@ -154,52 +214,91 @@ class DetectionManager(BaseManager):
             self._log(f"⚠️ Impossible de charger data.yaml: {e}")
             self._class_names = {}
     
-    def _get_card_info(self, class_id: int) -> Tuple[str, Optional[float], Optional[float]]:
+    def _get_card_info(self, class_id: int,
+                       ident=None) -> Tuple[str, Optional[float], Optional[float]]:
         """
         Récupère les infos d'une carte (nom, prix, prix_max)
-        
+
         Args:
             class_id: ID de la classe
-            
+            ident: IdentificationResult F01 (optionnel) — si fourni, le nom
+                   exact remplace le nom de classe et le prix est cherché
+                   directement par card_id (sans passer par le mapping)
+
         Returns:
             Tuple (card_name, price, price_max)
         """
-        # Récupérer le nom de la carte
-        card_name = self._class_names.get(class_id, f"class_{class_id}")
-        
-        # Convertir le nom de classe en card_id via le mapping
-        card_id = self._get_card_id(card_name) if hasattr(self, '_get_card_id') else None
-        
+        if ident is not None:
+            card_name = ident.display_name
+            card_id = ident.card_id
+        else:
+            # Récupérer le nom de la carte
+            card_name = self._class_names.get(class_id, f"class_{class_id}")
+
+            # Convertir le nom de classe en card_id via le mapping
+            card_id = self._get_card_id(card_name) if hasattr(self, '_get_card_id') else None
+
         # Récupérer le prix si disponible (avec le card_id)
         if card_id:
             card_info = self._prices.get(card_id, {})
         else:
             card_info = {}
-            
+
         price = card_info.get('price')
         price_max = card_info.get('price_max')
-        
+
         return card_name, price, price_max
-    
-    def _draw_detection_with_price(self, frame, box, class_id: int, confidence: float):
+
+    def _annotate_frame(self, frame, boxes):
+        """
+        Annote une frame avec les labels personnalisés (prix et/ou
+        identification F01). L'identification se fait sur la frame PROPRE
+        avant tout dessin.
+
+        Args:
+            frame: Image BGR non annotée
+            boxes: Boîtes du résultat YOLO (results[0].boxes)
+
+        Returns:
+            Copie annotée de la frame
+        """
+        idents = [self._identify_crop(frame, box.xyxy[0].tolist())
+                  for box in boxes]
+        annotated = frame.copy()
+        for box, ident in zip(boxes, idents):
+            cls_id = int(box.cls[0])
+            conf = float(box.conf[0])
+            bbox = box.xyxy[0].tolist()
+            annotated = self._draw_detection_with_price(annotated, bbox,
+                                                        cls_id, conf, ident)
+        return annotated
+
+    @property
+    def _custom_overlay(self) -> bool:
+        """Vrai si l'annotation personnalisée remplace le plot() Ultralytics"""
+        return self.config.show_prices or self._identifier is not None
+
+    def _draw_detection_with_price(self, frame, box, class_id: int,
+                                   confidence: float, ident=None):
         """
         Dessine une détection avec le prix sur l'image
-        
+
         Args:
             frame: Image (numpy array)
             box: Boîte [x1, y1, x2, y2]
             class_id: ID de la classe
             confidence: Confiance de détection
-            
+            ident: IdentificationResult F01 (optionnel)
+
         Returns:
             Image annotée
         """
         import cv2
-        
+
         x1, y1, x2, y2 = map(int, box)
-        
+
         # Récupérer infos carte
-        card_name, price, price_max = self._get_card_info(class_id)
+        card_name, price, price_max = self._get_card_info(class_id, ident)
         
         # Couleur selon confiance
         if confidence >= 0.8:
@@ -292,16 +391,11 @@ class DetectionManager(BaseManager):
             
             # Sauvegarder si demandé
             if save_path:
-                if self.config.show_prices:
-                    # Dessiner avec prix personnalisés
+                if self._custom_overlay:
+                    # Dessiner avec prix/identification personnalisés
                     import cv2
-                    annotated = cv2.imread(str(image_path))
-                    boxes = results[0].boxes
-                    for box in boxes:
-                        cls_id = int(box.cls[0])
-                        conf = float(box.conf[0])
-                        bbox = box.xyxy[0].tolist()
-                        annotated = self._draw_detection_with_price(annotated, bbox, cls_id, conf)
+                    annotated = self._annotate_frame(cv2.imread(str(image_path)),
+                                                     results[0].boxes)
                 else:
                     # Utiliser l'annotation YOLO standard
                     annotated = results[0].plot(
@@ -433,15 +527,9 @@ class DetectionManager(BaseManager):
                 )
                 
                 # Annoter
-                if self.config.show_prices:
-                    # Dessiner avec prix personnalisés
-                    annotated = frame.copy()
-                    boxes = results[0].boxes
-                    for box in boxes:
-                        cls_id = int(box.cls[0])
-                        conf = float(box.conf[0])
-                        bbox = box.xyxy[0].tolist()
-                        annotated = self._draw_detection_with_price(annotated, bbox, cls_id, conf)
+                if self._custom_overlay:
+                    # Dessiner avec prix/identification personnalisés
+                    annotated = self._annotate_frame(frame, results[0].boxes)
                 else:
                     # Utiliser l'annotation YOLO standard
                     annotated = results[0].plot(
@@ -502,27 +590,40 @@ class DetectionManager(BaseManager):
             Liste de Detection
         """
         detections = []
-        
+
         boxes = result.boxes
         names = result.names
-        
+        # Frame propre pour l'identification F01 (fournie par Ultralytics)
+        orig_img = getattr(result, 'orig_img', None)
+
         for box in boxes:
             cls_id = int(box.cls[0])
             conf = float(box.conf[0])
             x1, y1, x2, y2 = box.xyxy[0].tolist()
-            
+
             detection = Detection(
                 class_id=cls_id,
                 class_name=names[cls_id],
                 confidence=conf,
                 bbox=(x1, y1, x2, y2)
             )
-            
+
+            if self._identifier is not None and orig_img is not None:
+                ident = self._identify_crop(orig_img, (x1, y1, x2, y2))
+                if ident:
+                    detection.card_id = ident.card_id
+                    detection.exact_name = ident.display_name
+                    detection.identify_score = ident.score
+
             detections.append(detection)
-            
+
             # Log détection
-            self._log(f"   • {detection.class_name} ({conf:.2%})")
-        
+            if detection.card_id:
+                self._log(f"   • {detection.class_name} -> {detection.exact_name} "
+                          f"(sim {detection.identify_score:.2f}, conf {conf:.2%})")
+            else:
+                self._log(f"   • {detection.class_name} ({conf:.2%})")
+
         return detections
     
     def show_image(self, image_path: str | Path) -> None:
@@ -544,15 +645,10 @@ class DetectionManager(BaseManager):
                 verbose=False
             )
             
-            # Annoter avec ou sans prix
-            if self.config.show_prices:
-                annotated = cv2.imread(str(image_path))
-                boxes = results[0].boxes
-                for box in boxes:
-                    cls_id = int(box.cls[0])
-                    conf = float(box.conf[0])
-                    bbox = box.xyxy[0].tolist()
-                    annotated = self._draw_detection_with_price(annotated, bbox, cls_id, conf)
+            # Annoter avec ou sans prix/identification
+            if self._custom_overlay:
+                annotated = self._annotate_frame(cv2.imread(str(image_path)),
+                                                 results[0].boxes)
             else:
                 annotated = results[0].plot()
             
@@ -577,14 +673,18 @@ def main():
     parser.add_argument("--conf", type=float, default=0.25, help="Seuil de confiance")
     parser.add_argument("--camera", type=int, default=0, help="ID caméra")
     parser.add_argument("--output", help="Dossier/fichier de sortie")
-    
+    parser.add_argument("--identify", action="store_true",
+                        help="Identification fine F01 (nécessite l'index — "
+                             "cf. tools/build_card_index.py)")
+
     args = parser.parse_args()
-    
+
     # Configuration
     config = DetectionConfig(
         model_path=Path(args.model),
         confidence=args.conf,
-        camera_id=args.camera
+        camera_id=args.camera,
+        identify_cards=args.identify
     )
     
     # Manager
