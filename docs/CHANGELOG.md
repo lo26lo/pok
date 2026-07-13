@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ F02 : Estimation de l'état de la carte (grading)
+
+- `core/card_grader.py` : estimation best effort de l'état depuis le crop
+  webcam — **centrage** mesuré par profils de gradients (premier edge
+  significatif depuis l'extérieur = transition bordure→cadre), précision
+  ±3 % mesurée (critère : ±5 %) ; **coins abîmés** détectés par
+  blanchiment (pixels clairs ET désaturés, toutes couleurs de bordure),
+  arrondi de la carte masqué, neutre sur bordure blanche ; **rayures hors
+  périmètre v1** (résolution webcam insuffisante — décision de design)
+- Barème NM/EX/GD/PL, facteur de prix 1.0/0.85/0.70/0.50, ~3 ms par carte
+- Overlay : badge d'état (« Skiploom [swsh7 003] [NM] ») et **prix
+  pondéré par l'état** ; jamais bloquant (la détection continue sans
+  grading si le crop est inexploitable)
+- Activation : case « 🔍 Grade Cards » (vue Detection) ou CLI `--grade` ;
+  champs condition/condition_score/price_factor sur `Detection`
+- 22 nouveaux tests (`tests/test_card_grader.py`) —
+  suite : 299 passés, 0 échec
+
 ### ✨ F09 : Historique et alertes de prix
 
 - L'historique s'appuie sur la table append-only de F10 (chaque relevé de

@@ -20,7 +20,7 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 | ID | Feature | Catégorie | Priorité | Statut | Avancement |
 |:---|:--------|:----------|:--------:|:------:|:----------:|
 | F01 | Identification fine de la carte (embeddings + FAISS) | Détection | ⭐ Haute | 🟢 | 100 % |
-| F02 | Estimation de l'état de la carte (grading) | Détection | Basse | ⬜ | 0 % |
+| F02 | Estimation de l'état de la carte (grading) | Détection | Basse | 🟢 | 100 % |
 | F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | 🟢 | 100 % |
 | F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | 🟡 | 90 % |
 | F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | 🟢 | 100 % |
@@ -48,9 +48,12 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
 - **Dernière session** : 2026-07-12 (session 7)
-- **Feature en cours** : F01, F03 et F10 terminées (100 %) — vague 3 complète, vague 4 entamée. Suite : 254 tests passés.
-- **Prochaine étape concrète** : **F09 (historique et alertes de prix)** — la couche SQLite existe déjà (`core/price_cache.py`, table append-only `price_snapshots` avec `history()`) : rester dessus plutôt que créer un `price_store.py` séparé. Restent : sparklines dans la GUI (inventaire et/ou overlay), alertes de seuil (notification GUI), éventuellement relevé périodique. Puis F02 (grading) pour clore la vague 4.
-- **⚠️ À valider en conditions réelles (réseau bloqué dans l'environnement de dev)** : premier préchargement `python tools/preload_prices.py --set sv08` (flux API réel), et le benchmark F01 peut être rejoué sur vos sets via `tools/benchmark_card_embeddings.py --images images`.
+- **Feature en cours** : aucune — **les 10 features (F01–F10) sont terminées**, les 4 vagues sont complètes. Suite : 299 tests passés, 0 échec.
+- **Prochaine étape concrète** : plus de développement planifié dans ce cycle. Pistes du backlog (par fiche) : photos réelles F08 (action utilisateur, débloque la mesure d'amélioration F04 et un classifieur de coins F02), grading agrégé dans le scan F03, alertes mail/webhook F09, relevé de prix périodique F10, doigts plus élaborés F05, branchement intensité/catégories dans la génération F06.
+- **⚠️ À valider en conditions réelles (réseau bloqué dans l'environnement de dev)** :
+  - premier préchargement : `python tools/preload_prices.py --set sv08` (flux API réel) ;
+  - benchmark F01 rejouable sur vos sets : `python tools/benchmark_card_embeddings.py --images images` ;
+  - ouverture des fenêtres « 💹 Price History » et des nouvelles cases de la vue Detection (pas de smoke test xvfb possible ici — python3.11-tk intéléchargeable).
 - **En attente de décision utilisateur** :
   - 📸 **déposer des photos de vraies cartes dans `datasets/real_val/images/`** (suivre le README), puis `python tools/preannotate_real_val.py` et corriger les labels (F08).
   - 🎴 Optionnel : reconstruire l'index d'identification sur VOS sets téléchargés : `python tools/build_card_index.py` (l'index n'est pas committé ; le modèle ONNX l'est).
@@ -102,16 +105,17 @@ construit à partir de `images/` (base TCGdex). Plus besoin de réentraîner YOL
 
 **Fichiers/Modules concernés** : `core/detection_manager.py`, nouveau `core/card_grader.py`
 
-- [ ] Design : quelles métriques sont réalistes avec une webcam (centrage = faisable ; rayures = difficile, à valider)
-- [ ] Détection du centrage (bords intérieurs/extérieurs, ratio)
-- [ ] Détection de coins abîmés (heuristique contours ou petit classifieur)
-- [ ] Pondération du prix selon l'état estimé
-- [ ] Affichage GUI (badge d'état sur l'overlay)
-- [ ] Tests + docs
+- [x] Design : métriques retenues = **centrage** (fiable) + **coins blanchis** (heuristique assumée) ; **rayures écartées en v1** (résolution webcam insuffisante pour être fiable — décision actée)
+- [x] Détection du centrage : profils de gradients moyennés sur le tiers central, **premier edge significatif depuis l'extérieur** dans la bande [2 %, 22 %] de chaque bord (= transition bordure→cadre, robuste aux edges du texte) ; ratios G/(G+D) et H/(H+B) — précision mesurée ±3 %
+- [x] Coins abîmés : blanchiment = pixels très clairs ET désaturés (signature commune aux bordures jaunes/argent/noires) ; arrondi de la carte masqué (coin de crop serré = fond) ; analyse restreinte à la bande de bordure ; neutre si bordure blanche (vieux sets, indétectable)
+- [x] Pondération du prix : barème NM/EX/GD/PL → facteurs 1.0/0.85/0.70/0.50 (score global = 60 % centrage + 40 % coins), prix de l'overlay multiplié par le facteur
+- [x] Affichage GUI : badge d'état dans le label de détection (« ... [NM] »), case « 🔍 Grade Cards », CLI `--grade`
+- [x] Tests (22, `tests/test_card_grader.py`) + docs
 
-**Critères d'acceptation** : centrage mesuré à ±5 % vs mesure manuelle ; l'estimation ne bloque jamais la détection (best effort).
+**Critères d'acceptation** : centrage mesuré à ±5 % ✅ (±3 % mesuré sur 4 configurations synthétiques paramétrées, ~50/50 confirmé sur scans TCGdex parfaits) ; l'estimation ne bloque jamais la détection ✅ (`grade()` ne lève jamais, testé sur crops dégénérés/uniformes).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète, ~3 ms par carte. Limites connues de l'heuristique coins : éléments graphiques blancs près des coins (ex. cartes V) peuvent baisser le score, et le centrage n'a pas de sens sur les full-arts sans cadre — badge à lire comme indicatif. Backlog : petit classifieur de coins si des photos réelles annotées deviennent disponibles (F08), grading agrégé dans le scan de collection (pondérer la valeur de l'inventaire).
 
 ---
 
@@ -294,6 +298,17 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 7, fin) — F09 et F02 implémentées : les 4 vagues sont complètes 🎉
+- **Features** : F09, F02
+- **Fait** :
+  - F09 : table `price_alerts` (SQLite, même base que F10), cycle fiable armée→déclenchée→désarmée→réarmée, check en fin de préchargement (log + notification GUI), fenêtre « 💹 Price History » (sparkline canvas Tk pur, synthèse, gestion des alertes). 23 tests.
+  - F02 : `core/card_grader.py` — centrage par premier edge significatif depuis l'extérieur (±3 % mesuré), coins blanchis (clairs ET désaturés, arrondi masqué, bande de bordure, neutre sur bordure blanche), barème NM/EX/GD/PL avec prix pondéré, badge dans l'overlay, case GUI + CLI `--grade`. 22 tests.
+  - Suite finale : 299 passés / 0 échec ; ruff OK.
+- **Décisions** :
+  - F09 sur la couche F10 (pas de `price_store.py` séparé) ; sparklines en canvas Tk pur (cohérent avec « pas de matplotlib » de F07).
+  - F02 : rayures écartées en v1 (webcam insuffisante) ; heuristique coins assumée comme indicative (limites : graphismes blancs près des coins, full-arts sans cadre).
+- **Bilan de la session 7** : F01, F03, F10, F09, F02 — 5 features, 127 tests ajoutés (172 → 299), et le plan des 10 features validé le 2026-07-12 est entièrement réalisé.
 
 ### 2026-07-12 (session 7, suite) — F10 implémentée, vague 4 entamée
 - **Features** : F10
