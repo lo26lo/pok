@@ -58,6 +58,9 @@ class DetectionConfig:
     identify_index_dir: Optional[str] = None   # None = models/card_index
     identify_min_score: float = 0.5            # similarité cosinus minimale
 
+    # Grading (F02) : estimation de l'état (centrage, coins) sur le crop
+    grade_cards: bool = False
+
     def __post_init__(self):
         """Validation"""
         if not self.model_path.exists():
@@ -82,6 +85,11 @@ class Detection:
     card_id: Optional[str] = None            # ex: "swsh7_003"
     exact_name: Optional[str] = None         # ex: "Skiploom [swsh7 003]"
     identify_score: Optional[float] = None   # similarité cosinus du top-1
+
+    # Grading (F02) — renseignés si grade_cards est actif
+    condition: Optional[str] = None          # NM / EX / GD / PL
+    condition_score: Optional[float] = None  # score global [0, 1]
+    price_factor: Optional[float] = None     # pondération du prix affiché
 
     def __repr__(self) -> str:
         if self.card_id:
@@ -128,6 +136,19 @@ class DetectionManager(BaseManager):
         if self.config.identify_cards:
             self._load_identifier()
 
+        # Grading (F02) — best effort, ne bloque jamais la détection
+        self._grader = None
+        if self.config.grade_cards:
+            try:
+                try:
+                    from .card_grader import CardGrader
+                except ImportError:
+                    from card_grader import CardGrader
+                self._grader = CardGrader()
+                self._log("🔍 Grading activé (centrage + coins, heuristique)")
+            except Exception as e:
+                self._log(f"⚠️ Grading désactivé: {e}")
+
     def _load_identifier(self) -> None:
         """Charge l'index d'identification (F01) — best effort"""
         try:
@@ -166,6 +187,26 @@ class DetectionManager(BaseManager):
             return None
         except Exception as e:
             self._log(f"⚠️ Erreur identification: {e}")
+            return None
+
+    def _grade_crop(self, frame, bbox) -> Optional[Any]:
+        """
+        Estime l'état de la carte d'une bbox (frame PROPRE) — F02.
+
+        Returns:
+            GradeResult ou None (jamais d'exception : best effort)
+        """
+        if self._grader is None:
+            return None
+        try:
+            h, w = frame.shape[:2]
+            x1, y1, x2, y2 = map(int, bbox)
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(w, x2), min(h, y2)
+            if x2 - x1 < 48 or y2 - y1 < 48:
+                return None
+            return self._grader.grade(frame[y1:y2, x1:x2])
+        except Exception:
             return None
 
 
@@ -266,13 +307,16 @@ class DetectionManager(BaseManager):
         """
         idents = [self._identify_crop(frame, box.xyxy[0].tolist())
                   for box in boxes]
+        grades = [self._grade_crop(frame, box.xyxy[0].tolist())
+                  for box in boxes]
         annotated = frame.copy()
-        for box, ident in zip(boxes, idents):
+        for box, ident, grade in zip(boxes, idents, grades):
             cls_id = int(box.cls[0])
             conf = float(box.conf[0])
             bbox = box.xyxy[0].tolist()
             annotated = self._draw_detection_with_price(annotated, bbox,
-                                                        cls_id, conf, ident)
+                                                        cls_id, conf, ident,
+                                                        grade)
         return annotated
 
     def _boxes_to_detections(self, result, frame) -> List[Detection]:
@@ -293,16 +337,22 @@ class DetectionManager(BaseManager):
                 det.card_id = ident.card_id
                 det.exact_name = ident.display_name
                 det.identify_score = ident.score
+            grade = self._grade_crop(frame, (x1, y1, x2, y2))
+            if grade:
+                det.condition = grade.label
+                det.condition_score = grade.score
+                det.price_factor = grade.price_factor
             detections.append(det)
         return detections
 
     @property
     def _custom_overlay(self) -> bool:
         """Vrai si l'annotation personnalisée remplace le plot() Ultralytics"""
-        return self.config.show_prices or self._identifier is not None
+        return (self.config.show_prices or self._identifier is not None
+                or self._grader is not None)
 
     def _draw_detection_with_price(self, frame, box, class_id: int,
-                                   confidence: float, ident=None):
+                                   confidence: float, ident=None, grade=None):
         """
         Dessine une détection avec le prix sur l'image
 
@@ -312,6 +362,7 @@ class DetectionManager(BaseManager):
             class_id: ID de la classe
             confidence: Confiance de détection
             ident: IdentificationResult F01 (optionnel)
+            grade: GradeResult F02 (optionnel) — badge d'état + prix pondéré
 
         Returns:
             Image annotée
@@ -322,6 +373,14 @@ class DetectionManager(BaseManager):
 
         # Récupérer infos carte
         card_name, price, price_max = self._get_card_info(class_id, ident)
+
+        # Grading (F02) : badge d'état et pondération du prix affiché
+        if grade is not None:
+            card_name = f"{card_name} [{grade.label}]"
+            if price is not None:
+                price = price * grade.price_factor
+            if price_max is not None:
+                price_max = price_max * grade.price_factor
         
         # Couleur selon confiance
         if confidence >= 0.8:
@@ -658,6 +717,13 @@ class DetectionManager(BaseManager):
                     detection.exact_name = ident.display_name
                     detection.identify_score = ident.score
 
+            if self._grader is not None and orig_img is not None:
+                grade = self._grade_crop(orig_img, (x1, y1, x2, y2))
+                if grade:
+                    detection.condition = grade.label
+                    detection.condition_score = grade.score
+                    detection.price_factor = grade.price_factor
+
             detections.append(detection)
 
             # Log détection
@@ -722,6 +788,9 @@ def main():
     parser.add_argument("--scan", action="store_true",
                         help="Scan de collection F03 en mode webcam "
                              "(inventaire + export CSV/Excel, implique --identify)")
+    parser.add_argument("--grade", action="store_true",
+                        help="Grading F02 : badge d'état (NM/EX/GD/PL) et "
+                             "prix pondéré sur l'overlay")
 
     args = parser.parse_args()
 
@@ -730,7 +799,8 @@ def main():
         model_path=Path(args.model),
         confidence=args.conf,
         camera_id=args.camera,
-        identify_cards=args.identify or args.scan
+        identify_cards=args.identify or args.scan,
+        grade_cards=args.grade
     )
     
     # Manager

@@ -3344,6 +3344,20 @@ class ModernPokemonGUI:
                      "(build the index first: python tools/build_card_index.py)",
                 bg=self.colors['bg_card'], fg='#888888',
                 font=('Segoe UI', 9)).pack(anchor='w', padx=20)
+
+        # Grade Cards checkbox (F02)
+        grade_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        grade_frame.pack(fill=tk.X, pady=10)
+
+        self.detect_grade_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(grade_frame, text="🔍 Grade Cards (centering / corners)",
+                       variable=self.detect_grade_var).pack(anchor='w')
+
+        tk.Label(grade_frame,
+                text="Estimate card condition (NM/EX/GD/PL badge) and weight "
+                     "the displayed price accordingly — heuristic, best effort",
+                bg=self.colors['bg_card'], fg='#888888',
+                font=('Segoe UI', 9)).pack(anchor='w', padx=20)
         
         # Buttons
         btn_frame = tk.Frame(container, bg=self.colors['bg_dark'])
@@ -5113,7 +5127,8 @@ Continuer ?"""
                     confidence=conf,
                     camera_id=camera_id,
                     show_prices=self.detect_show_prices_var.get(),
-                    identify_cards=self.detect_identify_var.get()
+                    identify_cards=self.detect_identify_var.get(),
+                    grade_cards=self.detect_grade_var.get()
                 )
                 
                 manager = DetectionManager(config)
@@ -5224,7 +5239,8 @@ Continuer ?"""
                     confidence=conf,
                     camera_id=camera_id,
                     show_prices=self.detect_show_prices_var.get(),
-                    identify_cards=True  # identification exacte recommandée
+                    identify_cards=True,  # identification exacte recommandée
+                    grade_cards=self.detect_grade_var.get()
                 )
 
                 manager = DetectionManager(config)
@@ -5299,7 +5315,8 @@ Continuer ?"""
                     model_path=model_path,
                     confidence=conf,
                     show_prices=self.detect_show_prices_var.get(),
-                    identify_cards=self.detect_identify_var.get()
+                    identify_cards=self.detect_identify_var.get(),
+                    grade_cards=self.detect_grade_var.get()
                 )
                 
                 manager = DetectionManager(config)
@@ -5342,7 +5359,8 @@ Continuer ?"""
                     model_path=model_path,
                     confidence=conf,
                     show_prices=self.detect_show_prices_var.get(),
-                    identify_cards=self.detect_identify_var.get()
+                    identify_cards=self.detect_identify_var.get(),
+                    grade_cards=self.detect_grade_var.get()
                 )
                 
                 manager = DetectionManager(config)
