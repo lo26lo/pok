@@ -3372,6 +3372,12 @@ class ModernPokemonGUI:
                   command=self.start_collection_scan,
                   width=30).pack(pady=5)
 
+        ttk.Button(btn_frame, text="📂 Open Scans Folder",
+                  command=lambda: self.open_folder(
+                      PATHS['directories'].get('output_collection_scans',
+                                               'output/collection_scans')),
+                  width=30).pack(pady=5)
+
         ttk.Button(btn_frame, text="🖼️ Detect Single Image",
                   command=self.detect_single_image,
                   width=30).pack(pady=5)

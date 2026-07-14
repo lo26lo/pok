@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ Backlog F05 : mains plus réalistes dans les mosaïques
+
+- Doigts procéduraux avec **ongles** (ellipse claire + lunule, visible
+  paume vers soi ~50 % des cas) et **pouce** au premier plan (plus large,
+  incliné, ongle toujours visible) dans ~70 % des mains
+- **Éventails tenus depuis le bord bas** du canvas (~35 % des éventails,
+  layout 4) : main de joueur au premier plan, bas des cartes coupé par le
+  cadre — bboxes clippées et filtre de visibilité < 25 % déjà en place ;
+  doigts systématiques sur ces éventails
+- GUI : bouton « 📂 Open Scans Folder » dans la vue Detection (backlog F03)
+- 5 nouveaux tests — suite : 319 passés, 0 échec
+
 ### ✨ Backlog F06 : les paramètres calibrés pilotent la génération
 
 - La génération d'augmentations accepte enfin `intensity`,

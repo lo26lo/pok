@@ -49,7 +49,7 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 - **Dernière session** : 2026-07-12 (session 8)
 - **Feature en cours** : aucune — **les 10 features (F01–F10) sont terminées** et deux items de backlog sont réalisés (paramètres d'augmentation branchés F06 + grading agrégé dans le scan F03). Suite : 314 tests passés, 0 échec.
-- **Prochaine étape concrète** : plus de développement planifié dans ce cycle. Pistes de backlog restantes : photos réelles F08 (action utilisateur, débloque la mesure d'amélioration F04 et un classifieur de coins F02), alertes mail/webhook F09, relevé de prix périodique F10, doigts plus élaborés F05, bouton « ouvrir le dossier des scans » F03.
+- **Prochaine étape concrète** : plus de développement planifié dans ce cycle. Pistes de backlog restantes : photos réelles F08 (action utilisateur, débloque la mesure d'amélioration F04 et un classifieur de coins F02), alertes mail/webhook F09, relevé de prix périodique F10.
 - **⚠️ À valider en conditions réelles (réseau bloqué dans l'environnement de dev)** :
   - premier préchargement : `python tools/preload_prices.py --set sv08` (flux API réel) ;
   - benchmark F01 rejouable sur vos sets : `python tools/benchmark_card_embeddings.py --images images` ;
@@ -188,6 +188,7 @@ pour que le modèle gère les mains de cartes réelles.
 
 **Notes de session** :
 - 2026-07-12 : implémentation complète. Combiner layout 4 + background_mode 3 donne le rendu le plus réaliste (ombres + effets caméra inclus). Amélioration possible en backlog : doigts plus élaborés (pouce, ongle) et éventails tenus depuis le bord du canvas.
+- 2026-07-12 (session 8) : **backlog réalisé** — ongles (ellipse + lunule) sur les doigts, pouce plus large au premier plan (~70 % des mains), et ~35 % des éventails tenus depuis le bord bas du canvas (`fan_layout(edge_anchor=True)` : centres à 0,82–1,02 × hauteur, bas des cartes coupé par le cadre, doigts systématiques). Rendu validé visuellement avec de vraies cartes + bboxes tracées.
 
 ---
 
@@ -307,7 +308,8 @@ notifier quand une carte de l'inventaire dépasse un seuil.
   - Génération d'augmentations paramétrable (`--intensity/--transforms/--categories`) ; calibration Live Preview persistée dans `config/augmentation_params.json` via le bouton « 💾 Use for generation », lue par défaut par GUI/workflow/CLI (drapeaux explicites prioritaires, défauts historiques sans fichier).
   - 🐛 Bug corrigé au passage : le CLI d'augmentation rejetait `--num_aug/--source/--target` envoyés par la GUI et le workflow (argparse error) — alias rétablis, `--target X` → `output/X`.
   - Scan de collection : meilleur état F02 observé retenu par carte, valeur pondérée par le facteur de condition, colonne `condition` dans les exports.
-  - 15 tests ; suite 314 passés / 0 échec.
+  - Occlusions F05 : ongles + pouce au premier plan sur les mains procédurales, ~35 % des éventails tenus depuis le bord bas (`edge_anchor`), doigts systématiques dans ce cas ; bouton « 📂 Open Scans Folder » (backlog F03).
+  - 20 tests ; suite 319 passés / 0 échec.
 - **Décisions** :
   - Un seul fichier de calibration (pas de duplication des sliders dans la vue Augmentation) — la Live Preview reste l'endroit où l'on calibre, la génération suit.
   - Grading agrégé = MEILLEUR état observé (les frames dégradées sous-estiment l'état).
