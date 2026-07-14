@@ -48,6 +48,7 @@ EXPORT_COLUMNS = [
     "card_id", "name", "set_id", "local_id", "quantity",
     "price", "price_max", "value", "value_max",
     "best_score", "hits", "first_seen", "last_seen",
+    "condition",
 ]
 
 
@@ -66,14 +67,23 @@ class ScannedCard:
     price_max: Optional[float] = None
     first_seen: float = 0.0         # time.time()
     last_seen: float = 0.0
+    # Grading F02 (si actif pendant le scan) : meilleur état observé —
+    # la valeur est pondérée par le facteur correspondant
+    condition: Optional[str] = None          # NM / EX / GD / PL
+    condition_score: Optional[float] = None
+    price_factor: Optional[float] = None
 
     @property
     def value(self) -> Optional[float]:
-        return self.price * self.quantity if self.price is not None else None
+        if self.price is None:
+            return None
+        return self.price * self.quantity * (self.price_factor or 1.0)
 
     @property
     def value_max(self) -> Optional[float]:
-        return self.price_max * self.quantity if self.price_max is not None else None
+        if self.price_max is None:
+            return None
+        return self.price_max * self.quantity * (self.price_factor or 1.0)
 
 
 @dataclass
@@ -85,6 +95,9 @@ class _Track:
     name: Optional[str] = None
     card_id: Optional[str] = None
     first_seen: float = field(default_factory=time.time)
+    condition: Optional[str] = None
+    condition_score: Optional[float] = None
+    price_factor: Optional[float] = None
 
 
 class CollectionScanner:
@@ -160,6 +173,7 @@ class CollectionScanner:
             best = max((getattr(d, 'identify_score', None) or 0.0)
                        for d in dets)
             det0 = dets[0]
+            grade = self._best_grade(dets)
 
             if key in self._inventory:
                 card = self._inventory[key]
@@ -168,6 +182,7 @@ class CollectionScanner:
                 card.quantity = max(card.quantity, len(dets))
                 if best and (card.best_score is None or best > card.best_score):
                     card.best_score = best
+                self._apply_grade(card, grade)
                 continue
 
             track = self._tracks.setdefault(key, _Track(first_seen=now))
@@ -178,12 +193,39 @@ class CollectionScanner:
             track.card_id = getattr(det0, 'card_id', None)
             track.name = (getattr(det0, 'exact_name', None)
                           or getattr(det0, 'class_name', None) or key)
+            self._apply_grade(track, grade)
 
             if track.hits >= self.min_hits:
                 card = self._confirm(key, track, now)
                 confirmed_now.append(card)
 
         return confirmed_now
+
+    @staticmethod
+    def _best_grade(dets) -> Optional[tuple]:
+        """Meilleur grading F02 d'une frame : (condition, score, facteur)."""
+        best = None
+        for d in dets:
+            score = getattr(d, 'condition_score', None)
+            if score is not None and (best is None or score > best[1]):
+                best = (getattr(d, 'condition', None), score,
+                        getattr(d, 'price_factor', None))
+        return best
+
+    @staticmethod
+    def _apply_grade(target, grade: Optional[tuple]) -> None:
+        """
+        Retient le MEILLEUR état observé sur la session (les frames floues
+        ou en biais sous-estiment l'état ; la meilleure vue est la plus
+        proche de la réalité).
+        """
+        if grade is None:
+            return
+        condition, score, factor = grade
+        if target.condition_score is None or score > target.condition_score:
+            target.condition = condition
+            target.condition_score = score
+            target.price_factor = factor
 
     def _confirm(self, key: str, track: _Track, now: float) -> ScannedCard:
         """Promeut un track en carte d'inventaire (avec prix)."""
@@ -215,6 +257,9 @@ class CollectionScanner:
             price_max=info.get('price_max'),
             first_seen=track.first_seen,
             last_seen=now,
+            condition=track.condition,
+            condition_score=track.condition_score,
+            price_factor=track.price_factor,
         )
         self._inventory[key] = card
         del self._tracks[key]
@@ -264,6 +309,7 @@ class CollectionScanner:
                 c.hits,
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(c.first_seen)),
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(c.last_seen)),
+                c.condition,
             ])
         return rows
 
@@ -316,8 +362,8 @@ class CollectionScanner:
             cell.font = bold
 
         # Largeurs de colonnes lisibles
-        for col, width in zip("ABCDEFGHIJKLM",
-                              [14, 28, 10, 9, 9, 9, 10, 9, 10, 11, 6, 20, 20]):
+        for col, width in zip("ABCDEFGHIJKLMN",
+                              [14, 28, 10, 9, 9, 9, 10, 9, 10, 11, 6, 20, 20, 10]):
             ws.column_dimensions[col].width = width
 
         wb.save(path)

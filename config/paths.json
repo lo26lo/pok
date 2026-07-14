@@ -60,6 +60,7 @@
     "last_model": "runs/train/pokemon_detector/weights/last.pt",
     
     "gui_config": "config/gui_config.json",
+    "augmentation_params": "config/augmentation_params.json",
     "paths_config": "config/paths.json",
     "api_config": "config/api_config.json",
     "api_config_example": "config/api_config.json.example",

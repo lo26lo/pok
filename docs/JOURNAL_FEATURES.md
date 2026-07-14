@@ -47,9 +47,9 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
-- **Dernière session** : 2026-07-12 (session 7)
-- **Feature en cours** : aucune — **les 10 features (F01–F10) sont terminées**, les 4 vagues sont complètes. Suite : 299 tests passés, 0 échec.
-- **Prochaine étape concrète** : plus de développement planifié dans ce cycle. Pistes du backlog (par fiche) : photos réelles F08 (action utilisateur, débloque la mesure d'amélioration F04 et un classifieur de coins F02), grading agrégé dans le scan F03, alertes mail/webhook F09, relevé de prix périodique F10, doigts plus élaborés F05, branchement intensité/catégories dans la génération F06.
+- **Dernière session** : 2026-07-12 (session 8)
+- **Feature en cours** : aucune — **les 10 features (F01–F10) sont terminées** et deux items de backlog sont réalisés (paramètres d'augmentation branchés F06 + grading agrégé dans le scan F03). Suite : 314 tests passés, 0 échec.
+- **Prochaine étape concrète** : plus de développement planifié dans ce cycle. Pistes de backlog restantes : photos réelles F08 (action utilisateur, débloque la mesure d'amélioration F04 et un classifieur de coins F02), alertes mail/webhook F09, relevé de prix périodique F10, doigts plus élaborés F05, bouton « ouvrir le dossier des scans » F03.
 - **⚠️ À valider en conditions réelles (réseau bloqué dans l'environnement de dev)** :
   - premier préchargement : `python tools/preload_prices.py --set sv08` (flux API réel) ;
   - benchmark F01 rejouable sur vos sets : `python tools/benchmark_card_embeddings.py --images images` ;
@@ -139,6 +139,7 @@ construit à partir de `images/` (base TCGdex). Plus besoin de réentraîner YOL
 
 **Notes de session** :
 - 2026-07-12 : implémentation complète, dans la même session que F01 (le scanner s'appuie sur `CardIdentifier`). Le scanner est découplé de la caméra (API `observe_frame`) : testable sans webcam et réutilisable pour un futur scan vidéo/dossier. Backlog : bouton « ouvrir le dossier des scans » dans la GUI, détection de doublons inter-sessions (F09 pourra s'appuyer sur l'inventaire).
+- 2026-07-12 (session 8) : **grading agrégé** — quand le grading F02 est actif pendant un scan, chaque carte retient le meilleur état observé et sa valeur est pondérée par le facteur de condition ; colonne `condition` dans les exports, totaux pondérés.
 
 ---
 
@@ -207,6 +208,7 @@ quand on modifie les paramètres, sans lancer une génération complète.
 
 **Notes de session** :
 - 2026-07-12 : le smoke test xvfb a attrapé un `RuntimeError: main thread is not in main loop` (appel `after()` depuis le worker) — corrigé avec le pattern v3.6 (queue + poller). Le module est import-safe sans tkinter (helpers testables headless). Backlog : passer `intensity/categories` au pipeline de génération complet (aujourd'hui la génération utilise toujours intensity=1.0, valeurs historiques).
+- 2026-07-12 (session 8) : **backlog réalisé** — la génération accepte `intensity/n_transforms/categories` (CLI `--intensity/--transforms/--categories`), bouton « 💾 Use for generation » dans la preview → `config/augmentation_params.json` lu par défaut par la génération (drapeaux CLI prioritaires, défauts historiques sans fichier). Au passage, **bug corrigé** : le CLI rejetait les arguments `--num_aug/--source/--target` envoyés par la GUI et le workflow (l'étape d'augmentation plantait) — alias rétablis.
 
 ---
 
@@ -298,6 +300,18 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 8) — Backlog : paramètres d'augmentation branchés + grading agrégé
+- **Features** : F06 (backlog), F03+F02 (backlog)
+- **Fait** :
+  - Génération d'augmentations paramétrable (`--intensity/--transforms/--categories`) ; calibration Live Preview persistée dans `config/augmentation_params.json` via le bouton « 💾 Use for generation », lue par défaut par GUI/workflow/CLI (drapeaux explicites prioritaires, défauts historiques sans fichier).
+  - 🐛 Bug corrigé au passage : le CLI d'augmentation rejetait `--num_aug/--source/--target` envoyés par la GUI et le workflow (argparse error) — alias rétablis, `--target X` → `output/X`.
+  - Scan de collection : meilleur état F02 observé retenu par carte, valeur pondérée par le facteur de condition, colonne `condition` dans les exports.
+  - 15 tests ; suite 314 passés / 0 échec.
+- **Décisions** :
+  - Un seul fichier de calibration (pas de duplication des sliders dans la vue Augmentation) — la Live Preview reste l'endroit où l'on calibre, la génération suit.
+  - Grading agrégé = MEILLEUR état observé (les frames dégradées sous-estiment l'état).
+- **Prochaine étape** : backlog restant (cf. point de reprise) ou nouveau cycle de features.
 
 ### 2026-07-12 (session 7, fin) — F09 et F02 implémentées : les 4 vagues sont complètes 🎉
 - **Features** : F09, F02

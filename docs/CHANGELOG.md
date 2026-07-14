@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ Backlog F06 : les paramètres calibrés pilotent la génération
+
+- La génération d'augmentations accepte enfin `intensity`,
+  `n_transforms` et `categories` (CLI : `--intensity/--transforms/
+  --categories`) — jusqu'ici la Live Preview permettait de calibrer des
+  paramètres que la génération ignorait (toujours intensity=1.0)
+- Nouveau bouton « 💾 Use for generation » dans la Live Preview :
+  sauvegarde la calibration dans `config/augmentation_params.json`,
+  lue par défaut par la génération (GUI, workflow ET CLI) ; les drapeaux
+  CLI explicites restent prioritaires ; sans fichier, comportement de
+  production historique inchangé (intensity=1.0, 3-6 transfos, toutes
+  catégories)
+- 🐛 **Fix** : le CLI d'augmentation rejetait les arguments envoyés par
+  la GUI et le workflow (`--num_aug/--source/--target` vs
+  `--count/--input/--output`) — l'étape d'augmentation plantait en
+  argparse error ; les deux jeux d'arguments sont désormais acceptés
+  (`--target X` → `output/X`)
+
+### ✨ Backlog F03+F02 : valeur d'inventaire pondérée par l'état
+
+- Le scan de collection agrège le grading F02 quand il est actif :
+  chaque carte de l'inventaire retient le **meilleur état observé**
+  (les frames floues/en biais sous-estiment l'état) et sa valeur est
+  pondérée par le facteur de condition (NM 1.0 → PL 0.5)
+- Colonne `condition` dans les exports CSV/Excel ; totaux pondérés
+- 15 nouveaux tests (`tests/test_generation_params.py`) —
+  suite : 314 passés, 0 échec
+
 ### ✨ F02 : Estimation de l'état de la carte (grading)
 
 - `core/card_grader.py` : estimation best effort de l'état depuis le crop

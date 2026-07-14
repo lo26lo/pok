@@ -176,6 +176,8 @@ if tk is not None:
                        command=self._choose_image).pack(fill=tk.X, pady=2)
             ttk.Button(btns, text="🎲 Random card",
                        command=self._random_image).pack(fill=tk.X, pady=2)
+            ttk.Button(btns, text="💾 Use for generation",
+                       command=self._save_for_generation).pack(fill=tk.X, pady=2)
 
             self.status_var = tk.StringVar(value="")
             tk.Label(panel, textvariable=self.status_var, bg=c['bg_card'],
@@ -239,6 +241,29 @@ if tk is not None:
                 "n_transforms": n if n > 0 else None,
                 "categories": categories if categories else None,
             }
+
+        def _save_for_generation(self):
+            """
+            Sauvegarde les paramètres courants pour la génération complète
+            (config/augmentation_params.json, lu par la génération GUI,
+            le workflow et le CLI — F06 backlog).
+            """
+            from core.augmentation_albumentations import save_generation_params
+            params = self.get_params()
+            if params["categories"] is None and not any(
+                    v.get() for v in self.category_vars.values()):
+                self.status_var.set("⚠️ Sélectionnez au moins une catégorie")
+                return
+            path = save_generation_params({
+                "intensity": params["intensity"],
+                "n_transforms": params["n_transforms"] or 0,
+                "categories": params["categories"],
+            })
+            n = params["n_transforms"]
+            self.status_var.set(
+                f"💾 Génération calibrée: intensité {params['intensity']:g}x, "
+                f"{n if n else '3-6'} transfos, "
+                f"{len(params['categories'] or [])} catégorie(s) — {path}")
 
         def refresh(self):
             """Régénère les aperçus dans un thread (l'UI reste fluide)."""
