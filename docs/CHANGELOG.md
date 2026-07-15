@@ -9,6 +9,168 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🖥️ GUI Qt : parité fonctionnelle avec les vagues 3 & 4
+
+- Rebase de l'interface PySide6 sur `main` (10 features F01–F10 intégrées) —
+  le GUI Qt était en retard sur les fonctionnalités récentes, désormais
+  à parité :
+  - **Vue Détection** : cases « 🎴 Identifier les cartes » (F01) et
+    « 🔍 Estimer l'état » (F02), bouton « 🧺 Scan de collection » + récap
+    et « 📂 Dossier des scans » (F03), carte « 💾 Prix hors-ligne » avec
+    indicateur de snapshot + « ⬇ Précharger les prix » (F10)
+  - **Fenêtre « 💹 Price History »** (`gui_qt/price_history_dialog.py`) :
+    sparkline dessinée au QPainter, synthèse actuel/min/max/tendance,
+    gestion des alertes de seuil (F09)
+  - **Vue Augmentation** : intensité globale, nombre de transformations et
+    catégories passés à la génération via les drapeaux CLI (F06)
+- 8 nouveaux tests (`tests/test_gui_qt.py`) — suite : 334 passés, 0 échec
+
+### ✨ Backlog F05 : mains plus réalistes dans les mosaïques
+
+- Doigts procéduraux avec **ongles** (ellipse claire + lunule, visible
+  paume vers soi ~50 % des cas) et **pouce** au premier plan (plus large,
+  incliné, ongle toujours visible) dans ~70 % des mains
+- **Éventails tenus depuis le bord bas** du canvas (~35 % des éventails,
+  layout 4) : main de joueur au premier plan, bas des cartes coupé par le
+  cadre — bboxes clippées et filtre de visibilité < 25 % déjà en place ;
+  doigts systématiques sur ces éventails
+- GUI : bouton « 📂 Open Scans Folder » dans la vue Detection (backlog F03)
+- 5 nouveaux tests — suite : 319 passés, 0 échec
+
+### ✨ Backlog F06 : les paramètres calibrés pilotent la génération
+
+- La génération d'augmentations accepte enfin `intensity`,
+  `n_transforms` et `categories` (CLI : `--intensity/--transforms/
+  --categories`) — jusqu'ici la Live Preview permettait de calibrer des
+  paramètres que la génération ignorait (toujours intensity=1.0)
+- Nouveau bouton « 💾 Use for generation » dans la Live Preview :
+  sauvegarde la calibration dans `config/augmentation_params.json`,
+  lue par défaut par la génération (GUI, workflow ET CLI) ; les drapeaux
+  CLI explicites restent prioritaires ; sans fichier, comportement de
+  production historique inchangé (intensity=1.0, 3-6 transfos, toutes
+  catégories)
+- 🐛 **Fix** : le CLI d'augmentation rejetait les arguments envoyés par
+  la GUI et le workflow (`--num_aug/--source/--target` vs
+  `--count/--input/--output`) — l'étape d'augmentation plantait en
+  argparse error ; les deux jeux d'arguments sont désormais acceptés
+  (`--target X` → `output/X`)
+
+### ✨ Backlog F03+F02 : valeur d'inventaire pondérée par l'état
+
+- Le scan de collection agrège le grading F02 quand il est actif :
+  chaque carte de l'inventaire retient le **meilleur état observé**
+  (les frames floues/en biais sous-estiment l'état) et sa valeur est
+  pondérée par le facteur de condition (NM 1.0 → PL 0.5)
+- Colonne `condition` dans les exports CSV/Excel ; totaux pondérés
+- 15 nouveaux tests (`tests/test_generation_params.py`) —
+  suite : 314 passés, 0 échec
+
+### ✨ F02 : Estimation de l'état de la carte (grading)
+
+- `core/card_grader.py` : estimation best effort de l'état depuis le crop
+  webcam — **centrage** mesuré par profils de gradients (premier edge
+  significatif depuis l'extérieur = transition bordure→cadre), précision
+  ±3 % mesurée (critère : ±5 %) ; **coins abîmés** détectés par
+  blanchiment (pixels clairs ET désaturés, toutes couleurs de bordure),
+  arrondi de la carte masqué, neutre sur bordure blanche ; **rayures hors
+  périmètre v1** (résolution webcam insuffisante — décision de design)
+- Barème NM/EX/GD/PL, facteur de prix 1.0/0.85/0.70/0.50, ~3 ms par carte
+- Overlay : badge d'état (« Skiploom [swsh7 003] [NM] ») et **prix
+  pondéré par l'état** ; jamais bloquant (la détection continue sans
+  grading si le crop est inexploitable)
+- Activation : case « 🔍 Grade Cards » (vue Detection) ou CLI `--grade` ;
+  champs condition/condition_score/price_factor sur `Detection`
+- 22 nouveaux tests (`tests/test_card_grader.py`) —
+  suite : 299 passés, 0 échec
+
+### ✨ F09 : Historique et alertes de prix
+
+- L'historique s'appuie sur la table append-only de F10 (chaque relevé de
+  préchargement est conservé, persistant entre sessions) — pas de couche
+  de persistance supplémentaire
+- Alertes de seuil persistantes (`price_alerts` en SQLite) : notifier
+  quand une carte **dépasse** (`above`) ou **passe sous** (`below`) un
+  prix ; cycle fiable sans spam — l'alerte se désarme au déclenchement et
+  se réarme quand la condition redevient fausse
+- Alertes évaluées à chaque relevé (fin de préchargement CLI et GUI) :
+  log « 🔔 ALERTE PRIX » + notification GUI
+- `gui/price_history_view.py` : fenêtre « 💹 Price History » — sparkline
+  de l'évolution (canvas Tk pur, zéro dépendance graphique), synthèse
+  (actuel/min/max/tendance), création/suppression d'alertes, bouton
+  « Check alerts »
+- 23 nouveaux tests (`tests/test_price_alerts.py`) —
+  suite : 277 passés, 0 échec
+
+### ✨ F10 : Cache API hors-ligne (snapshot des prix)
+
+- `core/price_cache.py` : snapshots de prix **append-only** en SQLite
+  (`models/price_cache.db`) — chaque relevé est horodaté, la table sert
+  aussi d'historique (socle de F09) ; TTL de fraîcheur 24 h (pilote le
+  rafraîchissement : hors-ligne, une entrée périmée est toujours servie
+  avec sa date) ; purge pour borner l'historique par carte
+- `TCGdexAPI(cache=...)` + `get_card_prices()` : couche transparente —
+  cache frais → API (enregistrée au passage) → cache périmé en mode avion
+  (« 📴 prix du JJ/MM ») ; variantes de padding du localId gérées
+  (sv08-019 vs swsh7-3)
+- `load_prices_with_cache()` : base YAML recouverte par les snapshots —
+  **détection et scan de collection 100 % fonctionnels sans réseau**
+  après préchargement
+- `tools/preload_prices.py` : préchargement d'un set (`--set sv08`),
+  de la base (`--database`) ou d'un inventaire de scan F03
+  (`--inventory scan.csv`) ; `--check` et `--purge N`
+- GUI : indicateur « 💾 N prix, snapshot du JJ/MM » + bouton
+  « ⬇ Preload Prices » dans la vue Detection
+- 27 nouveaux tests (`tests/test_price_cache.py`) —
+  suite : 254 passés, 0 échec
+
+### ✨ F03 : Mode « scan de collection »
+
+- `core/collection_scanner.py` : session de détection continue qui
+  **déduplique** les cartes vues et construit un inventaire — une carte
+  est confirmée après 3 frames d'identification (une même carte présentée
+  10 s n'apparaît qu'une fois), deux exemplaires côte à côte comptent
+  pour une quantité de 2 (max de détections simultanées)
+- Prix par card_id depuis la base locale (models/cards_database.yaml,
+  intégration Cardmarket/TCGPlayer existante) — agrégats : cartes uniques,
+  exemplaires, valeur totale min-max, durée de session
+- Export **CSV + Excel** (openpyxl optionnel) dans
+  `output/collection_scans/`, avec ligne de totaux
+- Webcam : compteur live sur l'overlay (« Scan: 3 cartes (4 ex.) |
+  12.50 EUR »), confirmations loggées en direct ;
+  CLI `python core/detection_manager.py <model> --webcam --scan`
+- GUI : bouton « 🧺 START COLLECTION SCAN » (vue Detection) avec récap de
+  fin de session ; **mode dégradé** par classe YOLO si l'index F01 manque
+- 22 nouveaux tests (`tests/test_collection_scanner.py`) —
+  suite : 227 passés, 0 échec
+
+### ✨ F01 : Identification fine de la carte (embeddings + index)
+
+- `core/card_identifier.py` : 2ᵉ étage de pipeline — après la localisation
+  YOLO, le crop de chaque bbox est identifié (set + numéro) par recherche
+  du plus proche voisin cosinus dans un index d'embeddings construit sur
+  les images TCGdex téléchargées ; **fonctionne sur des sets jamais vus
+  par YOLO**, sans réentraînement
+- Embedder par défaut : features MobileNetV2 1280-d via cv2.dnn
+  (`models/mobilenetv2_embeddings.onnx`, 9 Mo, tronqué à la couche
+  global-pool — aucune dépendance Python ajoutée) ; fallback « classic »
+  (grille Lab + gradients, pur OpenCV) si l'ONNX est absent
+- Recherche : FAISS (`faiss-cpu`, optionnel) avec fallback numpy
+  automatique ; références indexées en moyenne de 3 vues (native, 300 px,
+  300 px floutée) pour rapprocher l'index du domaine webcam
+- **Benchmark sur 245 cartes réelles** (requêtes dégradées type webcam :
+  perspective, éclairage, flou, bruit, JPEG, basse résolution) :
+  98,4 % top-1, 100 % top-5, ~7 ms par carte sur CPU
+  (`tools/benchmark_card_embeddings.py`) — critères F01 (≥ 90 %, < 50 ms)
+  dépassés
+- `tools/build_card_index.py` : construction de l'index depuis `images/`
+  (`--check` pour l'état, `--download-model` pour récupérer l'ONNX)
+- Détection : option `identify_cards` (GUI : case « 🎴 Identify Cards »,
+  CLI : `--identify`) — l'overlay affiche le nom exact + set + numéro
+  (« Skiploom [swsh7 003] ») et le prix est cherché directement par
+  card_id ; jamais bloquant si l'index manque
+- 33 nouveaux tests (`tests/test_card_identifier.py`) —
+  suite : 205 passés, 0 échec
+
 ### ✨ F07 : Onglet « 📊 Evaluation » dans la GUI
 
 - `core/run_analyzer.py` : parsing des artefacts Ultralytics
@@ -97,6 +259,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 17 nouveaux tests (`tests/test_background_generator.py`) —
   suite complète : 96 passés, 0 échec
 - Suivi : `docs/JOURNAL_FEATURES.md` (journal des features F01–F10)
+
+## [3.7.0] - 2026-07-04
+
+### 🖥️ Nouvelle interface Qt (PySide6) — thème clair/sombre
+
+#### Package `gui_qt/` (~2 300 lignes, remplace les ~7 100 lignes Tkinter)
+- `app.py` : fenêtre principale — sidebar de navigation (11 vues),
+  vues empilées, dock de logs, barre de statut avec progression + Stop
+- `theme.py` : **thème sombre (Catppuccin Mocha, identique à l'historique)
+  ET thème clair (Catppuccin Latte)**, commutables à chaud, persistés
+- `bridge.py` : QtTaskBridge — le TaskRunner (Phase 4) branché sur des
+  signaux Qt, thread-safe nativement (plus de file manuelle)
+- `views/` : un module par écran — home (stats + workflow auto), download
+  (TCGdex + régénération auto de la base), augmentation (+ pipeline holo),
+  mosaïques, validation & merge, export, training (presets Jetson inclus,
+  export ONNX/TensorRT), détection (webcam/image/dossier + prix), fake
+  images, tools, settings (7 onglets déclaratifs sur GuiConfig)
+- `GUI_qt.py` : point d'entrée
+
+#### Partage de code
+- `core/manifest_tools.py` : génération de cards_database.yaml depuis le
+  manifest extraite du GUI Tkinter — partagée par les deux interfaces
+- Le fichier `gui_config.json` est commun aux deux GUIs (mêmes clés)
+
+#### Lanceurs
+- `START.bat` et `start.sh` lancent l'interface Qt
+- Interface Tkinter conservée en secours : `START_LEGACY.bat` /
+  `start.sh --legacy` (suppression prévue après validation sur poste réel)
+
+#### Tests & CI
+- 7 tests pytest-qt exécutés **offscreen y compris en CI**
+  (navigation, thèmes, bridge succès/échec/état busy, settings roundtrip)
+- CI : PySide6 + pytest-qt installés, `QT_QPA_PLATFORM=offscreen`,
+  bibliothèques Qt ajoutées au runner Linux
+- Extra pip `[gui-qt]` (pyside6) dans pyproject
+
+---
 
 ## [3.6.0] - 2026-07-04
 

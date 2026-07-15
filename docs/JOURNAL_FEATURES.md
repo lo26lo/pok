@@ -19,16 +19,16 @@ Statuts : ⬜ À faire · 🔵 En design · 🟡 En cours · 🟢 Terminé · �
 
 | ID | Feature | Catégorie | Priorité | Statut | Avancement |
 |:---|:--------|:----------|:--------:|:------:|:----------:|
-| F01 | Identification fine de la carte (embeddings + FAISS) | Détection | ⭐ Haute | ⬜ | 0 % |
-| F02 | Estimation de l'état de la carte (grading) | Détection | Basse | ⬜ | 0 % |
-| F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | ⬜ | 0 % |
+| F01 | Identification fine de la carte (embeddings + FAISS) | Détection | ⭐ Haute | 🟢 | 100 % |
+| F02 | Estimation de l'état de la carte (grading) | Détection | Basse | 🟢 | 100 % |
+| F03 | Mode « scan de collection » (inventaire + valeur) | Détection | ⭐ Haute | 🟢 | 100 % |
 | F04 | Backgrounds réalistes automatiques | Dataset | ⭐ Haute | 🟡 | 90 % |
 | F05 | Occlusions réalistes (éventails, sleeves, mains) | Dataset | Moyenne | 🟢 | 100 % |
 | F06 | Prévisualisation live des augmentations (GUI) | Dataset | Moyenne | 🟢 | 100 % |
 | F07 | Onglet « Évaluation » (PR, confusion, pires prédictions) | Training | Moyenne | 🟢 | 100 % |
 | F08 | Set de validation « réel » annoté + métrique dédiée | Training | Moyenne | 🟡 | 80 % |
-| F09 | Historique et alertes de prix (SQLite + sparklines) | Prix | Basse | ⬜ | 0 % |
-| F10 | Cache API hors-ligne (snapshot des prix) | Prix | Basse | ⬜ | 0 % |
+| F09 | Historique et alertes de prix (SQLite + sparklines) | Prix | Basse | 🟢 | 100 % |
+| F10 | Cache API hors-ligne (snapshot des prix) | Prix | Basse | 🟢 | 100 % |
 
 ### Ordre de réalisation prévu
 
@@ -47,14 +47,23 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
-- **Dernière session** : 2026-07-12 (session 6)
-- **Feature en cours** : F07 terminée (100 %) — **la vague 2 (mesure) est complète** : F08 à 80 % (infrastructure prête, photos utilisateur attendues), F07 à 100 %.
-- **Prochaine étape concrète** : démarrer la **vague 3 (valeur produit)** par **F01 (identification fine de la carte)** — benchmark rapide du modèle d'embedding (CLIP vs CNN léger type MobileNet/ResNet tronqué) sur ~50 cartes, puis script de construction d'index FAISS depuis `images/`, puis `core/card_identifier.py` avec API `identify(crop)`. Attention : nouvelles dépendances potentielles (faiss-cpu, éventuellement open_clip/torchvision) — les garder optionnelles comme ultralytics.
-- **En attente de décision utilisateur** : 📸 **déposer des photos de vraies cartes dans `datasets/real_val/images/`** (suivre le README), puis `python tools/preannotate_real_val.py` et corriger les labels.
+- **Dernière session** : 2026-07-15 (session 9)
+- **Feature en cours** : aucune — les 10 features (F01–F10) sont dans `main` (PR #2 mergée). **Session 9** : relance de la branche GUI Qt/PySide6 — rebasée sur `main` et mise à parité avec les vagues 3 & 4 (F01/F02/F03/F10 dans la vue Détection, fenêtre Price History F09, params génération F06). Suite : 334 tests passés, 0 échec.
+- **Prochaine étape concrète** : décision produit sur le GUI Qt (le valider sur poste réel puis retirer le Tkinter, ou garder les deux). Pistes de backlog restantes : photos réelles F08 (action utilisateur, débloque la mesure d'amélioration F04 et un classifieur de coins F02), alertes mail/webhook F09, relevé de prix périodique F10.
+- **⚠️ À valider en conditions réelles (réseau bloqué dans l'environnement de dev)** :
+  - premier préchargement : `python tools/preload_prices.py --set sv08` (flux API réel) ;
+  - benchmark F01 rejouable sur vos sets : `python tools/benchmark_card_embeddings.py --images images` ;
+  - ouverture des fenêtres « 💹 Price History » et des nouvelles cases de la vue Detection (pas de smoke test xvfb possible ici — python3.11-tk intéléchargeable).
+- **En attente de décision utilisateur** :
+  - 📸 **déposer des photos de vraies cartes dans `datasets/real_val/images/`** (suivre le README), puis `python tools/preannotate_real_val.py` et corriger les labels (F08).
+  - 🎴 Optionnel : reconstruire l'index d'identification sur VOS sets téléchargés : `python tools/build_card_index.py` (l'index n'est pas committé ; le modèle ONNX l'est).
 - **Pièges / notes connues** :
   - `core/mosaic_optimized.py` : `_process_single_group` tourne dans des sous-processus (`ProcessPoolExecutor`) — tout nouvel état doit être picklable et passé via le tuple `args`.
   - Le combobox « Background Mode » de la GUI (`gui/settings_dialog.py`) stocke des chaînes `"3 - Realistic (Procedural)"` dans un `IntVar` — comportement hérité, ne pas « corriger » isolément.
   - Les effets caméra sont appliqués UNIQUEMENT en mode 3, après compositing (sinon double vignettage si on les mettait aussi dans le fond).
+  - `cv2.dnn` (OpenCV 5) **ignore le nom de couche passé à `forward()`** pour ce graphe ONNX : impossible d'extraire la couche pool du modèle complet — d'où le modèle TRONQUÉ livré dans `models/mobilenetv2_embeddings.onnx` (la troncature est refaite par `--download-model` si le package `onnx` est installé ; sinon logits 1000-d, ~91 % top-1 au lieu de 98 %).
+  - L'index et les requêtes doivent partager le même embedder : `CardIdentifier` lit la méthode dans `meta.json` de l'index ; si l'ONNX change, reconstruire l'index.
+  - `backgrounds/original/` contient 245 vraies cartes TCGdex (swsh7 + sv08) committées — utilisées par le benchmark et les tests de précision F01.
 
 ---
 
@@ -75,17 +84,18 @@ construit à partir de `images/` (base TCGdex). Plus besoin de réentraîner YOL
 
 **Fichiers/Modules concernés** : `core/detection_manager.py`, `core/tcgdex_api.py`, `core/card_mapping.py`, nouveau `core/card_identifier.py`
 
-- [ ] Design : choix du modèle d'embedding (CLIP vs CNN léger), benchmark rapide sur 50 cartes
-- [ ] Script de construction de l'index FAISS depuis `images/`
-- [ ] `core/card_identifier.py` : API `identify(crop) -> (card_id, score, top_k)`
-- [ ] Intégration dans `DetectionManager` (option activable, seuil de confiance)
-- [ ] Affichage GUI : nom exact + set + numéro dans l'overlay de détection
-- [ ] Tests : précision top-1/top-5 sur un échantillon, tests unitaires de l'index
-- [ ] Docs : section dans `docs/FEATURES.md` + entrée CHANGELOG
+- [x] Design : **CNN léger retenu** — MobileNetV2 (features global-pool 1280-d) via `cv2.dnn`, zéro dépendance Python ajoutée ; benchmark sur les 245 cartes réelles du dépôt (requêtes webcam simulées) : **dnn 98,4 % top-1 / 100 % top-5 / 6,6 ms** vs classic (descripteur Lab+gradients) 74,2 % / 1,5 ms. CLIP non retenu (poids intéléchargeables dans cet environnement, latence CPU défavorable, inutile pour du quasi-doublon)
+- [x] Script de construction de l'index : `tools/build_card_index.py` (scan `images/`, dédoublonnage multi-langues, `--check`, `--download-model`) → `models/card_index/` (embeddings.npy + cards.json + meta.json)
+- [x] `core/card_identifier.py` : API `identify(crop) -> IdentificationResult` (card_id, score, top_k) ; FAISS optionnel avec fallback numpy ; références moyennées sur 3 vues (natif/300px/300px flou : +11 pts de top-1)
+- [x] Intégration `DetectionManager` : `identify_cards` + `identify_min_score` dans la config, chargement best-effort (jamais bloquant), champs `card_id`/`exact_name`/`identify_score` sur `Detection`, CLI `--identify`
+- [x] Affichage GUI : case « 🎴 Identify Cards » (vue Detection) ; overlay « Skiploom [swsh7 003] » ; prix cherché directement par card_id (plus fiable que le mapping par nom de classe)
+- [x] Tests : 33 tests (`tests/test_card_identifier.py`) dont précision top-1 ≥ 90 % / top-5 ≥ 95 % sur 40 cartes réelles perturbées — suite : 205 passés, 0 échec
+- [x] Docs : section dans `docs/FEATURES.md` + entrée CHANGELOG
 
-**Critères d'acceptation** : top-1 ≥ 90 % sur cartes bien cadrées ; latence < 50 ms par carte sur CPU ; fonctionne sur un set jamais vu par YOLO.
+**Critères d'acceptation** : top-1 ≥ 90 % sur cartes bien cadrées ✅ (98,4 % mesuré sur requêtes dégradées) ; latence < 50 ms par carte sur CPU ✅ (~7 ms embed + <0,1 ms recherche) ; fonctionne sur un set jamais vu par YOLO ✅ (l'index est indépendant des classes YOLO — testé avec un YOLO nu sur l'index swsh7).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète. Le modèle ONNX **tronqué à la couche pool** est committé (`models/mobilenetv2_embeddings.onnx`, 9 Mo, Apache-2.0) car `cv2.dnn` (OpenCV 5) ne permet pas d'extraire une couche intermédiaire du modèle complet (les logits 1000-d donnent 91 % au lieu de 98 %). L'index n'est PAS committé : `python tools/build_card_index.py` le construit en ~30 s pour 245 cartes. Backlog : cache d'identification par tracking inter-frames (utile pour F03), seuil `identify_min_score` réglable dans la GUI.
 
 ---
 
@@ -95,16 +105,17 @@ construit à partir de `images/` (base TCGdex). Plus besoin de réentraîner YOL
 
 **Fichiers/Modules concernés** : `core/detection_manager.py`, nouveau `core/card_grader.py`
 
-- [ ] Design : quelles métriques sont réalistes avec une webcam (centrage = faisable ; rayures = difficile, à valider)
-- [ ] Détection du centrage (bords intérieurs/extérieurs, ratio)
-- [ ] Détection de coins abîmés (heuristique contours ou petit classifieur)
-- [ ] Pondération du prix selon l'état estimé
-- [ ] Affichage GUI (badge d'état sur l'overlay)
-- [ ] Tests + docs
+- [x] Design : métriques retenues = **centrage** (fiable) + **coins blanchis** (heuristique assumée) ; **rayures écartées en v1** (résolution webcam insuffisante pour être fiable — décision actée)
+- [x] Détection du centrage : profils de gradients moyennés sur le tiers central, **premier edge significatif depuis l'extérieur** dans la bande [2 %, 22 %] de chaque bord (= transition bordure→cadre, robuste aux edges du texte) ; ratios G/(G+D) et H/(H+B) — précision mesurée ±3 %
+- [x] Coins abîmés : blanchiment = pixels très clairs ET désaturés (signature commune aux bordures jaunes/argent/noires) ; arrondi de la carte masqué (coin de crop serré = fond) ; analyse restreinte à la bande de bordure ; neutre si bordure blanche (vieux sets, indétectable)
+- [x] Pondération du prix : barème NM/EX/GD/PL → facteurs 1.0/0.85/0.70/0.50 (score global = 60 % centrage + 40 % coins), prix de l'overlay multiplié par le facteur
+- [x] Affichage GUI : badge d'état dans le label de détection (« ... [NM] »), case « 🔍 Grade Cards », CLI `--grade`
+- [x] Tests (22, `tests/test_card_grader.py`) + docs
 
-**Critères d'acceptation** : centrage mesuré à ±5 % vs mesure manuelle ; l'estimation ne bloque jamais la détection (best effort).
+**Critères d'acceptation** : centrage mesuré à ±5 % ✅ (±3 % mesuré sur 4 configurations synthétiques paramétrées, ~50/50 confirmé sur scans TCGdex parfaits) ; l'estimation ne bloque jamais la détection ✅ (`grade()` ne lève jamais, testé sur crops dégénérés/uniformes).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète, ~3 ms par carte. Limites connues de l'heuristique coins : éléments graphiques blancs près des coins (ex. cartes V) peuvent baisser le score, et le centrage n'a pas de sens sur les full-arts sans cadre — badge à lire comme indicatif. Backlog : petit classifieur de coins si des photos réelles annotées deviennent disponibles (F08), grading agrégé dans le scan de collection (pondérer la valeur de l'inventaire).
 
 ---
 
@@ -117,16 +128,18 @@ construit à partir de `images/` (base TCGdex). Plus besoin de réentraîner YOL
 
 **Fichiers/Modules concernés** : `core/detection_manager.py`, `excel/`, nouveau `core/collection_scanner.py`, GUI (nouvelle vue ou mode dans la vue Détection)
 
-- [ ] Design : logique de déduplication (tracking + identification stable sur N frames)
-- [ ] `core/collection_scanner.py` : accumulation, dédup, agrégats (nb cartes, valeur totale)
-- [ ] Récupération des prix par carte (réutiliser l'intégration Cardmarket/TCGPlayer existante)
-- [ ] Export CSV + Excel de l'inventaire
-- [ ] GUI : bouton « Démarrer un scan », compteur live, écran récap de fin de session
-- [ ] Tests + docs
+- [x] Design : confirmation après **min_hits frames** (défaut 3, pas forcément consécutives) puis déduplication par clé pour toute la session — clé = `card_id` F01, ou `yolo:<classe>` en mode dégradé ; quantité = max de détections simultanées de la même clé dans une frame
+- [x] `core/collection_scanner.py` : `observe_frame(detections)` (duck-typé sur `Detection`), inventaire trié par première apparition, `summary()` (cartes uniques, exemplaires, valeur min-max, cartes sans prix, durée), `reset()`
+- [x] Prix par carte : base locale `models/cards_database.yaml` via `load_prices()` (aucun appel réseau) ; en mode dégradé, mapping classe→card_id réutilisé
+- [x] Export CSV + Excel : `output/collection_scans/scan_<timestamp>.{csv,xlsx}`, Excel avec ligne de totaux en gras (openpyxl optionnel, CSV toujours disponible)
+- [x] GUI : bouton « 🧺 START COLLECTION SCAN » (vue Detection, identification F01 forcée), compteur live sur l'overlay webcam, récap de fin (cartes, valeur, durée, chemins) ; CLI `--scan`
+- [x] Tests (22, `tests/test_collection_scanner.py`) + docs (FEATURES.md, CHANGELOG)
 
-**Critères d'acceptation** : une même carte présentée 10 s n'apparaît qu'une fois ; export Excel ouvrable avec totaux corrects.
+**Critères d'acceptation** : une même carte présentée 10 s n'apparaît qu'une fois ✅ (testé sur 300 frames, y compris départ/retour de la carte) ; export Excel ouvrable avec totaux corrects ✅ (relu par openpyxl dans les tests, totaux quantité/valeur vérifiés).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète, dans la même session que F01 (le scanner s'appuie sur `CardIdentifier`). Le scanner est découplé de la caméra (API `observe_frame`) : testable sans webcam et réutilisable pour un futur scan vidéo/dossier. Backlog : bouton « ouvrir le dossier des scans » dans la GUI, détection de doublons inter-sessions (F09 pourra s'appuyer sur l'inventaire).
+- 2026-07-12 (session 8) : **grading agrégé** — quand le grading F02 est actif pendant un scan, chaque carte retient le meilleur état observé et sa valeur est pondérée par le facteur de condition ; colonne `condition` dans les exports, totaux pondérés.
 
 ---
 
@@ -175,6 +188,7 @@ pour que le modèle gère les mains de cartes réelles.
 
 **Notes de session** :
 - 2026-07-12 : implémentation complète. Combiner layout 4 + background_mode 3 donne le rendu le plus réaliste (ombres + effets caméra inclus). Amélioration possible en backlog : doigts plus élaborés (pouce, ongle) et éventails tenus depuis le bord du canvas.
+- 2026-07-12 (session 8) : **backlog réalisé** — ongles (ellipse + lunule) sur les doigts, pouce plus large au premier plan (~70 % des mains), et ~35 % des éventails tenus depuis le bord bas du canvas (`fan_layout(edge_anchor=True)` : centres à 0,82–1,02 × hauteur, bas des cartes coupé par le cadre, doigts systématiques). Rendu validé visuellement avec de vraies cartes + bboxes tracées.
 
 ---
 
@@ -195,6 +209,7 @@ quand on modifie les paramètres, sans lancer une génération complète.
 
 **Notes de session** :
 - 2026-07-12 : le smoke test xvfb a attrapé un `RuntimeError: main thread is not in main loop` (appel `after()` depuis le worker) — corrigé avec le pattern v3.6 (queue + poller). Le module est import-safe sans tkinter (helpers testables headless). Backlog : passer `intensity/categories` au pipeline de génération complet (aujourd'hui la génération utilise toujours intensity=1.0, valeurs historiques).
+- 2026-07-12 (session 8) : **backlog réalisé** — la génération accepte `intensity/n_transforms/categories` (CLI `--intensity/--transforms/--categories`), bouton « 💾 Use for generation » dans la preview → `config/augmentation_params.json` lu par défaut par la génération (drapeaux CLI prioritaires, défauts historiques sans fichier). Au passage, **bug corrigé** : le CLI rejetait les arguments `--num_aug/--source/--target` envoyés par la GUI et le workflow (l'étape d'augmentation plantait) — alias rétablis.
 
 ---
 
@@ -248,17 +263,18 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 **Dépend de** : F10 (même couche de persistance des prix) ; F03 pour la notion d'inventaire.
 
-**Fichiers/Modules concernés** : nouveau `core/price_store.py`, `core/detection_manager.py`, GUI
+**Fichiers/Modules concernés** : `core/price_cache.py` (couche F10 réutilisée — pas de `price_store.py` séparé), `gui/price_history_view.py`, GUI
 
-- [ ] Design : schéma SQLite (carte, source, prix, devise, timestamp), fréquence de relevé
-- [ ] `core/price_store.py` : écriture à chaque relevé, requêtes d'historique
-- [ ] Sparklines dans la GUI (inventaire et/ou overlay)
-- [ ] Alertes de seuil (notification GUI ; extension possible : mail/webhook)
-- [ ] Tests + docs
+- [x] Design : schéma = table `price_snapshots` de F10 (carte, source, prix, devise, timestamp — append-only) + table `price_alerts` (seuil, direction, armement) ; fréquence de relevé = chaque préchargement (explicite, pas de démon)
+- [x] Écriture à chaque relevé + requêtes d'historique : déjà en place depuis F10 (`put()` append-only, `history()` antichronologique)
+- [x] Sparklines dans la GUI : fenêtre « 💹 Price History » (canvas Tk pur — cohérent avec la décision F07 « pas de matplotlib »), sélecteur de carte, synthèse actuel/min/max/tendance
+- [x] Alertes de seuil : `set_alert/remove_alert/list_alerts/check_alerts` — déclenchement fiable sans spam (désarmée au déclenchement, réarmée quand la condition redevient fausse) ; notification GUI + log après chaque préchargement ; mail/webhook laissé en extension
+- [x] Tests (23, `tests/test_price_alerts.py`) + docs
 
-**Critères d'acceptation** : historique persistant entre sessions ; alerte déclenchée de façon fiable au franchissement de seuil.
+**Critères d'acceptation** : historique persistant entre sessions ✅ (SQLite, testé sur réouverture) ; alerte déclenchée de façon fiable au franchissement ✅ (cycle armée→déclenchée→désarmée→réarmée testé dans les deux directions).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète sur la couche F10 comme prévu au point de reprise. Pas de smoke test xvfb possible dans cet environnement (python3.11-tk intéléchargeable, dépôt apt bloqué) : la fenêtre suit le pattern F06 (import-safe, helpers purs testés headless) — à vérifier visuellement à la première ouverture. Backlog : alertes mail/webhook, relevé périodique automatique.
 
 ---
 
@@ -268,15 +284,16 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 **Fichiers/Modules concernés** : `core/tcgdex_api.py`, intégrations prix existantes, nouveau cache (fichier ou SQLite partagé avec F09)
 
-- [ ] Design : stratégie de cache (TTL, invalidation, taille), format (SQLite recommandé pour préparer F09)
-- [ ] Couche cache transparente devant les appels API prix
-- [ ] Commande/bouton « Précharger les prix » pour un set ou l'inventaire
-- [ ] Mode hors-ligne explicite (indicateur GUI « prix du JJ/MM »)
-- [ ] Tests (hit/miss/expiration, mode avion) + docs
+- [x] Design : **SQLite append-only** (`models/price_cache.db`, table `price_snapshots` horodatée = déjà l'historique pour F09) ; TTL 24 h qui pilote le *rafraîchissement*, pas la validité (hors-ligne, l'entrée périmée est servie avec sa date) ; taille bornée par `purge(keep_per_card)`
+- [x] Couche transparente : `TCGdexAPI(cache=...)` + `get_card_prices()` — cache frais → API (snapshot enregistré au passage) → cache périmé en mode avion ; `load_prices_with_cache()` fusionne YAML + cache et remplace `load_prices()` dans la détection et le scanner F03
+- [x] Préchargement : `tools/preload_prices.py` (`--set sv08`, `--database`, `--inventory scan.csv`, `--check`, `--purge N`) + bouton GUI « ⬇ Preload Prices »
+- [x] Mode hors-ligne explicite : indicateur GUI « 💾 N prix, snapshot du JJ/MM » (vue Detection), log « 📴 Hors-ligne: prix du JJ/MM » à chaque service d'une entrée périmée, `price_date` exposée dans les prix fusionnés
+- [x] Tests (27, `tests/test_price_cache.py`) : hit/miss, expiration TTL, mode avion (entrée périmée servie, carte inconnue → None), historique/purge, fusion YAML+cache, variantes de padding, sources de préchargement + docs
 
-**Critères d'acceptation** : détection + affichage prix 100 % fonctionnels sans réseau après préchargement ; date du snapshot visible.
+**Critères d'acceptation** : détection + affichage prix 100 % fonctionnels sans réseau après préchargement ✅ (la couche fusionnée est purement locale ; testé avec API mockée coupée) ; date du snapshot visible ✅ (indicateur GUI + date par entrée).
 
-**Notes de session** : —
+**Notes de session** :
+- 2026-07-12 : implémentation complète. Identifiants normalisés entre TCGdex (`swsh7-3`) et le projet (`swsh7_003`) — le padding du localId varie selon les sets, `tcgdex_id_candidates()` essaie les deux formes. Le préchargement réseau n'a pas pu être exécuté ici (egress bloqué vers api.tcgdex.net) : flux validé avec API mockée ; à valider en conditions réelles au premier `--set`. Backlog : rafraîchissement automatique périodique (cron GUI) une fois F09 en place.
 
 ---
 
@@ -284,6 +301,72 @@ notifier quand une carte de l'inventaire dépasse un seuil.
 
 > Entrées antéchronologiques (la plus récente en haut).
 > Format : date, auteur/session, features touchées, ce qui a été fait, décisions prises.
+
+### 2026-07-12 (session 8) — Backlog : paramètres d'augmentation branchés + grading agrégé
+- **Features** : F06 (backlog), F03+F02 (backlog)
+- **Fait** :
+  - Génération d'augmentations paramétrable (`--intensity/--transforms/--categories`) ; calibration Live Preview persistée dans `config/augmentation_params.json` via le bouton « 💾 Use for generation », lue par défaut par GUI/workflow/CLI (drapeaux explicites prioritaires, défauts historiques sans fichier).
+  - 🐛 Bug corrigé au passage : le CLI d'augmentation rejetait `--num_aug/--source/--target` envoyés par la GUI et le workflow (argparse error) — alias rétablis, `--target X` → `output/X`.
+  - Scan de collection : meilleur état F02 observé retenu par carte, valeur pondérée par le facteur de condition, colonne `condition` dans les exports.
+  - Occlusions F05 : ongles + pouce au premier plan sur les mains procédurales, ~35 % des éventails tenus depuis le bord bas (`edge_anchor`), doigts systématiques dans ce cas ; bouton « 📂 Open Scans Folder » (backlog F03).
+  - 20 tests ; suite 319 passés / 0 échec.
+- **Décisions** :
+  - Un seul fichier de calibration (pas de duplication des sliders dans la vue Augmentation) — la Live Preview reste l'endroit où l'on calibre, la génération suit.
+  - Grading agrégé = MEILLEUR état observé (les frames dégradées sous-estiment l'état).
+- **Prochaine étape** : backlog restant (cf. point de reprise) ou nouveau cycle de features.
+
+### 2026-07-12 (session 7, fin) — F09 et F02 implémentées : les 4 vagues sont complètes 🎉
+- **Features** : F09, F02
+- **Fait** :
+  - F09 : table `price_alerts` (SQLite, même base que F10), cycle fiable armée→déclenchée→désarmée→réarmée, check en fin de préchargement (log + notification GUI), fenêtre « 💹 Price History » (sparkline canvas Tk pur, synthèse, gestion des alertes). 23 tests.
+  - F02 : `core/card_grader.py` — centrage par premier edge significatif depuis l'extérieur (±3 % mesuré), coins blanchis (clairs ET désaturés, arrondi masqué, bande de bordure, neutre sur bordure blanche), barème NM/EX/GD/PL avec prix pondéré, badge dans l'overlay, case GUI + CLI `--grade`. 22 tests.
+  - Suite finale : 299 passés / 0 échec ; ruff OK.
+- **Décisions** :
+  - F09 sur la couche F10 (pas de `price_store.py` séparé) ; sparklines en canvas Tk pur (cohérent avec « pas de matplotlib » de F07).
+  - F02 : rayures écartées en v1 (webcam insuffisante) ; heuristique coins assumée comme indicative (limites : graphismes blancs près des coins, full-arts sans cadre).
+- **Bilan de la session 7** : F01, F03, F10, F09, F02 — 5 features, 127 tests ajoutés (172 → 299), et le plan des 10 features validé le 2026-07-12 est entièrement réalisé.
+
+### 2026-07-12 (session 7, suite) — F10 implémentée, vague 4 entamée
+- **Features** : F10
+- **Fait** :
+  - `core/price_cache.py` : PriceCache SQLite append-only (get/put/latest_all/history/stats/purge), normalisation d'identifiants TCGdex↔projet, `load_prices_with_cache()`, `snapshot_status()`, `preload_prices()` (ThreadPool).
+  - `TCGdexAPI(cache=...)` + `get_card_prices()` (cache frais → API → périmé hors-ligne).
+  - Détection et scanner F03 branchés sur la fusion YAML+cache.
+  - `tools/preload_prices.py` (set / base / inventaire / check / purge) ; GUI : indicateur snapshot + bouton Preload.
+  - 27 tests ; suite 254 passés / 0 échec.
+- **Décisions** :
+  - Le TTL ne rend jamais une entrée inutilisable : il déclenche seulement le rafraîchissement réseau — hors-ligne, on sert le dernier snapshot avec sa date (critère « prix du JJ/MM »).
+  - Table append-only = historique de prix : F09 s'appuiera sur `history()` au lieu d'un nouveau `price_store.py`.
+  - Le cache GAGNE sur le YAML dans la fusion (préchargement explicite = plus récent), mais un snapshot sans prix n'efface pas un prix YAML.
+- **Prochaine étape** : F09 (sparklines + alertes sur la même table).
+
+### 2026-07-12 (session 7, suite) — F03 implémentée, vague 3 complète
+- **Features** : F03
+- **Fait** :
+  - `core/collection_scanner.py` : confirmation après min_hits frames, dédup par card_id (ou classe YOLO en dégradé), quantité par détections simultanées, prix locaux, agrégats, exports CSV/Excel avec totaux.
+  - `DetectionManager.detect_webcam(scanner=...)` : détections par frame vers le scanner, compteur live sur l'overlay, log des confirmations, CLI `--scan`.
+  - GUI : bouton « 🧺 START COLLECTION SCAN » + récap de fin de session.
+  - 22 tests ; suite 227 passés / 0 échec.
+- **Décisions** :
+  - Scanner découplé de la caméra (`observe_frame`) : testable sans webcam, réutilisable hors GUI.
+  - Les hits de confirmation n'ont pas besoin d'être consécutifs (robuste aux frames ratées) ; une carte confirmée reste dédupliquée même si elle sort du champ et revient.
+  - Prix uniquement depuis la base locale (pas d'appel API pendant le scan — F10 apportera le préchargement).
+- **Prochaine étape** : vague 4 — F10 (cache API hors-ligne).
+
+### 2026-07-12 (session 7) — F01 implémentée, vague 3 entamée
+- **Features** : F01
+- **Fait** :
+  - Benchmark d'embedding sur les 245 cartes réelles committées dans `backgrounds/original/` (requêtes webcam simulées : perspective, rotation, éclairage, flou, bruit, JPEG, 180-420 px) via `tools/benchmark_card_embeddings.py`.
+  - `core/card_identifier.py` : embedders `dnn` (MobileNetV2 pool 1280-d via cv2.dnn) et `classic` (Lab+gradients pur OpenCV), `CardIndex` (build/save/load, recherche FAISS→numpy), `CardIdentifier.identify(crop)`.
+  - `tools/build_card_index.py` (+ `--check`, `--download-model` avec troncature ONNX), `models/mobilenetv2_embeddings.onnx` committé (9 Mo).
+  - Intégration détection (config `identify_cards`/`identify_min_score`, overlay nom exact + set + numéro, prix par card_id, CLI `--identify`) et GUI (case « 🎴 Identify Cards »).
+  - 33 tests ; suite 205 passés / 0 échec ; ruff OK.
+- **Décisions** :
+  - MobileNetV2 via cv2.dnn plutôt que CLIP/torch : l'egress de l'environnement bloque api.tcgdex.net, download.pytorch.org et huggingface.co (constaté, non contourné) — et le CNN léger dépasse déjà largement les critères (98,4 % top-1). Le benchmark reste rejouable avec d'autres backends sur la machine utilisateur.
+  - Références indexées en **moyenne de 3 vues** (native, 300 px, 300 px floutée) : +11 pts de top-1 mesurés — le multicrop requête (+0,3 pt pour 2× la latence) est abandonné.
+  - Le modèle ONNX est **tronqué à la couche global-pool** et committé : cv2.dnn/OpenCV 5 ignore le nom de couche à `forward()`, impossible d'extraire les features du modèle complet (logits = 91 % seulement).
+  - Une seule langue par carte dans l'index (artwork identique, dédoublonnage au build).
+- **Prochaine étape** : F03 (mode « scan de collection », s'appuie sur F01).
 
 ### 2026-07-12 (session 6) — F07 implémentée, vague 2 complète
 - **Features** : F07

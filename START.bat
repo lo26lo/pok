@@ -19,7 +19,7 @@ REM Optional: enable Python faulthandler for better tracebacks
 set PYTHONFAULTHANDLER=1
 set PYTHONIOENCODING=utf-8
 
-echo [INFO] Starting GUI v3.1...
+echo [INFO] Starting GUI (Qt)...
 echo.
 
 echo [INFO] Verifying installed packages (pip check)...
@@ -29,14 +29,14 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 REM Check if GUI file exists
-if not exist "GUI_v3.1_modern.py" (
-    echo [ERROR] GUI_v3.1_modern.py not found!
+if not exist "GUI_qt.py" (
+    echo [ERROR] GUI_qt.py not found!
     pause
     exit /b 1
 )
 
-REM Run the GUI
-python GUI_v3.1_modern.py
+REM Run the Qt GUI (fallback: START_LEGACY.bat pour l'ancienne interface Tkinter)
+python GUI_qt.py
 
 if %ERRORLEVEL% NEQ 0 (
     echo.

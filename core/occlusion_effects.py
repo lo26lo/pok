@@ -102,13 +102,21 @@ def apply_sleeve(card: np.ndarray,
 
 
 def fan_layout(n_cards: int, canvas_w: int, canvas_h: int,
-               rng: Optional[np.random.Generator] = None
+               rng: Optional[np.random.Generator] = None,
+               edge_anchor: bool = False
                ) -> List[Tuple[float, float, float]]:
     """
     Calcule un éventail de n cartes comme tenu en main.
 
     Les centres des cartes sont sur un arc de cercle autour d'un pivot
     (le poignet), chaque carte tournée de son angle sur l'arc.
+
+    Args:
+        edge_anchor: éventail TENU DEPUIS LE BORD BAS du canvas — la main
+                     entre dans l'image, le bas des cartes peut être coupé
+                     (comme une main de joueur au premier plan). Les bboxes
+                     clippées et le filtre de visibilité gèrent la découpe.
+
     Retourne [(angle_deg, center_x, center_y), ...] dans l'ordre
     d'empilement (la dernière carte est au-dessus).
     """
@@ -119,9 +127,17 @@ def fan_layout(n_cards: int, canvas_w: int, canvas_h: int,
     delta = rng.uniform(9.0, 16.0) * (1 if rng.random() < 0.5 else -1)
     theta0 = rng.uniform(-15.0, 15.0) - delta * (n_cards - 1) / 2.0
 
-    margin_x, margin_y = int(canvas_w * 0.18), int(canvas_h * 0.28)
-    anchor_x = rng.uniform(margin_x, canvas_w - margin_x)
-    anchor_y = rng.uniform(margin_y, canvas_h - margin_y)
+    if edge_anchor:
+        # Main au bord bas : les centres des cartes sont proches du bord
+        # inférieur — le bas des cartes dépasse du canvas (occlusion par
+        # le cadre), le haut reste bien visible
+        margin_x = int(canvas_w * 0.15)
+        anchor_x = rng.uniform(margin_x, canvas_w - margin_x)
+        anchor_y = canvas_h * rng.uniform(0.82, 1.02)
+    else:
+        margin_x, margin_y = int(canvas_w * 0.18), int(canvas_h * 0.28)
+        anchor_x = rng.uniform(margin_x, canvas_w - margin_x)
+        anchor_y = rng.uniform(margin_y, canvas_h - margin_y)
     pivot_x, pivot_y = anchor_x, anchor_y + radius
 
     placements = []
@@ -173,8 +189,11 @@ def compute_visible_fractions(placements: Sequence[Tuple[np.ndarray, int, int]],
 
 
 def _make_finger(length: int, width: int, tone: Tuple[int, int, int],
-                 rng: np.random.Generator) -> np.ndarray:
-    """Doigt procédural vertical (bout arrondi en haut), image BGRA."""
+                 rng: np.random.Generator, nail: bool = True) -> np.ndarray:
+    """
+    Doigt procédural vertical (bout arrondi en haut), image BGRA —
+    avec ongle au bout (ellipse plus claire et légèrement rosée).
+    """
     h, w = int(length), int(width)
     img = np.zeros((h, w, 4), np.uint8)
 
@@ -191,6 +210,19 @@ def _make_finger(length: int, width: int, tone: Tuple[int, int, int],
     rgb = np.clip(base[None, None, :] * shade[None, :, None], 0, 255)
     img[:, :, :3] = rgb.astype(np.uint8)
 
+    # Ongle : ellipse claire au bout du doigt (vu de dos de la main)
+    if nail and w >= 12:
+        nail_color = tuple(int(min(255, c * 1.18 + 20)) for c in tone)
+        edge_color = tuple(int(c * 0.88) for c in tone)
+        center = (r, int(r * 0.95))
+        axes = (max(3, int(w * 0.28)), max(4, int(w * 0.38)))
+        cv2.ellipse(img, center, axes, 0, 0, 360, nail_color, -1)
+        cv2.ellipse(img, center, axes, 0, 0, 360, edge_color, 1)
+        # Lunule discrète à la base de l'ongle
+        cv2.ellipse(img, (r, int(r * 1.15)),
+                    (max(2, int(w * 0.16)), max(2, int(w * 0.10))),
+                    0, 0, 360, tuple(min(255, c + 25) for c in nail_color), -1)
+
     # Pli de phalange discret
     if h > width * 2:
         y_fold = int(h * rng.uniform(0.45, 0.65))
@@ -202,12 +234,28 @@ def _make_finger(length: int, width: int, tone: Tuple[int, int, int],
     return img
 
 
+def _rotate_bgra(image: np.ndarray, angle: float) -> np.ndarray:
+    """Rotation d'une image BGRA avec canvas étendu (aucun rognage)."""
+    h, w = image.shape[:2]
+    m = cv2.getRotationMatrix2D((w / 2, h / 2), angle, 1.0)
+    cos_v, sin_v = abs(m[0, 0]), abs(m[0, 1])
+    new_w = int(h * sin_v + w * cos_v)
+    new_h = int(h * cos_v + w * sin_v)
+    m[0, 2] += (new_w - w) / 2
+    m[1, 2] += (new_h - h) / 2
+    return cv2.warpAffine(image, m, (new_w, new_h), flags=cv2.INTER_LINEAR,
+                          borderMode=cv2.BORDER_CONSTANT,
+                          borderValue=(0, 0, 0, 0))
+
+
 def add_fingers(canvas: np.ndarray, x0: int, y0: int, x1: int, y1: int,
                 rng: Optional[np.random.Generator] = None) -> np.ndarray:
     """
-    Pose 2 à 4 doigts procéduraux sur le bas de la zone (x0,y0)-(x1,y1),
-    comme une main qui tient l'éventail. Occlusion photométrique
-    uniquement : les bboxes des cartes ne changent pas.
+    Pose une main procédurale sur le bas de la zone (x0,y0)-(x1,y1) :
+    2 à 4 doigts (avec ongles) qui montent depuis le bas, et un POUCE
+    plus large posé par-dessus les cartes dans ~70 % des cas — c'est lui
+    qu'on voit au premier plan quand on tient un éventail. Occlusion
+    photométrique uniquement : les bboxes des cartes ne changent pas.
     """
     if rng is None:
         rng = np.random.default_rng()
@@ -221,24 +269,27 @@ def add_fingers(canvas: np.ndarray, x0: int, y0: int, x1: int, y1: int,
 
     for k in range(n_fingers):
         length = int(finger_w * rng.uniform(2.6, 4.2))
-        finger = _make_finger(length, finger_w, tone, rng)
-
-        # Inclinaison légère, doigts écartés autour de la base
-        angle = float(rng.uniform(-18, 18))
-        m = cv2.getRotationMatrix2D((finger_w / 2, length / 2), angle, 1.0)
-        cos_v, sin_v = abs(m[0, 0]), abs(m[0, 1])
-        new_w = int(length * sin_v + finger_w * cos_v)
-        new_h = int(length * cos_v + finger_w * sin_v)
-        m[0, 2] += (new_w - finger_w) / 2
-        m[1, 2] += (new_h - length) / 2
-        finger = cv2.warpAffine(finger, m, (new_w, new_h),
-                                flags=cv2.INTER_LINEAR,
-                                borderMode=cv2.BORDER_CONSTANT,
-                                borderValue=(0, 0, 0, 0))
+        # L'ongle des doigts n'est visible que paume vers soi (~50 %)
+        finger = _make_finger(length, finger_w, tone, rng,
+                              nail=bool(rng.random() < 0.5))
+        finger = _rotate_bgra(finger, float(rng.uniform(-18, 18)))
 
         fx = base_x + int(k * finger_w * rng.uniform(1.05, 1.35))
-        fy = base_y - int(new_h * rng.uniform(0.55, 0.85))
+        fy = base_y - int(finger.shape[0] * rng.uniform(0.55, 0.85))
         canvas = blend_rgba(canvas, finger, fx, fy)
+
+    # Pouce au premier plan : plus large et plus court, incliné vers
+    # l'intérieur de l'éventail, ongle toujours visible
+    if rng.random() < 0.7:
+        thumb_w = int(finger_w * rng.uniform(1.35, 1.6))
+        thumb_len = int(thumb_w * rng.uniform(1.9, 2.6))
+        thumb = _make_finger(thumb_len, thumb_w, tone, rng, nail=True)
+        lean = float(rng.uniform(25, 55)) * (1 if rng.random() < 0.5 else -1)
+        thumb = _rotate_bgra(thumb, lean)
+
+        tx = base_x + int(zone_w * rng.uniform(0.05, 0.25))
+        ty = base_y - int(thumb.shape[0] * rng.uniform(0.75, 0.95))
+        canvas = blend_rgba(canvas, thumb, tx, ty)
 
     return canvas
 

@@ -401,8 +401,13 @@ class MosaicGeneratorOptimized:
         fans = split_into_fans(group)
         placements = []  # (rotated_card, pos_x, pos_y, polygon, path, fan_index)
 
+        # ~35 % des éventails sont tenus depuis le bord bas du canvas
+        # (main de joueur au premier plan, bas des cartes coupé)
+        edge_fans = {i for i in range(len(fans)) if rng.random() < 0.35}
+
         for fan_index, fan in enumerate(fans):
-            params = fan_layout(len(fan), canvas_width, canvas_height, rng)
+            params = fan_layout(len(fan), canvas_width, canvas_height, rng,
+                                edge_anchor=fan_index in edge_fans)
             for (card, path), (theta, cx, cy) in zip(fan, params):
                 if rng.random() < 0.5:
                     card = apply_sleeve(card, rng)
@@ -433,14 +438,18 @@ class MosaicGeneratorOptimized:
             )
             layout = self.overlay_on_canvas_vectorized(layout, rotated_card, pos_x, pos_y)
 
-        # Doigts posés sur le bas de certains éventails
+        # Doigts posés sur le bas de certains éventails — toujours quand
+        # l'éventail est tenu depuis le bord (une main y est forcément)
         for fan_index in range(len(fans)):
-            if random.random() < 0.5:
+            if fan_index in edge_fans or random.random() < 0.5:
                 pts = [pt for p in placements if p[5] == fan_index for pt in p[3]]
                 if pts:
                     xs = [pt[0] for pt in pts]
                     ys = [pt[1] for pt in pts]
-                    layout = add_fingers(layout, min(xs), min(ys), max(xs), max(ys), rng)
+                    # Pour un éventail au bord, la main part du bord bas
+                    y_max = canvas_height if fan_index in edge_fans else max(ys)
+                    layout = add_fingers(layout, min(xs), min(ys), max(xs),
+                                         y_max, rng)
 
         # Annotations : uniquement les cartes suffisamment visibles,
         # bbox clippée au canvas

@@ -28,6 +28,7 @@
     "output_dataset_images": "output/dataset/images",
     "output_dataset_labels": "output/dataset/labels",
     "output_dataset_merged": "output/dataset_merged",
+    "output_collection_scans": "output/collection_scans",
     
     "runs": "runs",
     "runs_train": "runs/train",
@@ -35,16 +36,20 @@
     "runs_train_weights": "runs/train/pokemon_detector/weights",
     
     "bbox_visualization": "bbox_visualization",
-    "examples": "examples"
+    "examples": "examples",
+
+    "card_index": "models/card_index"
   },
   
   "files": {
     "cards_database_yaml": "models/cards_database.yaml",
     "cards_with_prices_yaml": "models/cards_with_prices.yaml",
     "card_name_to_id_json": "models/card_name_to_id.json",
+    "price_cache_db": "models/price_cache.db",
     "yolo11n_model": "models/yolo11n.pt",
     "yolov8n_model": "models/yolov8n.pt",
-    
+    "embedding_model_onnx": "models/mobilenetv2_embeddings.onnx",
+
     "cards_info_excel": "excel/cards_info.xlsx",
     "cards_with_prices_excel": "excel/cards_with_prices.xlsx",
     
@@ -55,6 +60,7 @@
     "last_model": "runs/train/pokemon_detector/weights/last.pt",
     
     "gui_config": "config/gui_config.json",
+    "augmentation_params": "config/augmentation_params.json",
     "paths_config": "config/paths.json",
     "api_config": "config/api_config.json",
     "api_config_example": "config/api_config.json.example",

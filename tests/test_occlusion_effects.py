@@ -125,6 +125,53 @@ class TestFingersAndBlend:
         np.testing.assert_array_equal(canvas, before)
 
 
+class TestImprovedFingers:
+    """Backlog F05 : ongles, pouce, éventails tenus depuis le bord."""
+
+    def test_nail_brightens_finger_tip(self):
+        from core.occlusion_effects import _make_finger
+        tone = (60, 85, 125)
+        with_nail = _make_finger(160, 40, tone, np.random.default_rng(0),
+                                 nail=True)
+        without = _make_finger(160, 40, tone, np.random.default_rng(0),
+                               nail=False)
+        # Le bout du doigt (zone de l'ongle) est plus clair avec l'ongle
+        tip = slice(0, 40)
+        assert with_nail[tip, :, :3].astype(int).mean() \
+            > without[tip, :, :3].astype(int).mean() + 2
+
+    def test_small_finger_skips_nail(self):
+        from core.occlusion_effects import _make_finger
+        # Largeur < 12 px : pas d'ongle (trop petit pour être dessiné)
+        finger = _make_finger(40, 10, (60, 85, 125),
+                              np.random.default_rng(0), nail=True)
+        assert finger.shape == (40, 10, 4)
+
+    def test_add_fingers_with_thumb_runs_and_draws(self):
+        # Plusieurs seeds : le pouce (70 %) et les doigts s'appliquent
+        # sans erreur et modifient le canvas
+        for seed in range(6):
+            canvas = np.full((H, W, 3), 90, np.uint8)
+            out = add_fingers(canvas, 200, 100, 440, 300,
+                              rng=np.random.default_rng(seed))
+            assert (out != 90).any()
+
+    def test_fan_layout_edge_anchor_near_bottom(self):
+        placements = fan_layout(4, 1920, 1080,
+                                np.random.default_rng(1), edge_anchor=True)
+        ys = [cy for _, _, cy in placements]
+        # Centres proches du bord bas : le bas des cartes sort du canvas,
+        # le haut reste visible
+        assert min(ys) > 1080 * 0.70
+        assert max(ys) < 1080 * 1.35
+
+    def test_fan_layout_default_stays_inside(self):
+        placements = fan_layout(4, 1920, 1080,
+                                np.random.default_rng(1), edge_anchor=False)
+        ys = [cy for _, _, cy in placements]
+        assert all(0 < y < 1080 for y in ys)
+
+
 class TestSplitIntoFans:
     def test_all_cards_kept_and_fan_sizes(self):
         group = [(f"card{i}", f"path{i}") for i in range(8)]
