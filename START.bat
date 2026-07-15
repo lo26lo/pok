@@ -28,6 +28,21 @@ if %ERRORLEVEL% NEQ 0 (
     echo [WARN] Detected package compatibility issues above. The GUI may fail to start.
 )
 
+REM pip check only flags inconsistencies between installed packages; it does NOT
+REM detect requirements.txt entries that were simply never installed (e.g. an
+REM existing .venv created before a dependency like albumentations was added).
+echo [INFO] Verifying required packages are importable...
+python -c "import PySide6, cv2, numpy, pandas, albumentations" >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo [WARN] Missing dependencies detected. Installing from config\requirements.txt ...
+    pip install -r config\requirements.txt
+    if %ERRORLEVEL% NEQ 0 (
+        echo [ERROR] Failed to install missing dependencies. Run INSTALL.bat manually.
+        pause
+        exit /b 1
+    )
+)
+
 REM Check if GUI file exists
 if not exist "GUI_qt.py" (
     echo [ERROR] GUI_qt.py not found!
