@@ -47,9 +47,9 @@ Les features sont regroupées en vagues pour maximiser la réutilisation :
 
 > **⚠️ Section à mettre à jour EN FIN DE CHAQUE SESSION.** C'est la première chose à lire en reprenant le travail.
 
-- **Dernière session** : 2026-07-12 (session 8)
-- **Feature en cours** : aucune — **les 10 features (F01–F10) sont terminées** et deux items de backlog sont réalisés (paramètres d'augmentation branchés F06 + grading agrégé dans le scan F03). Suite : 314 tests passés, 0 échec.
-- **Prochaine étape concrète** : plus de développement planifié dans ce cycle. Pistes de backlog restantes : photos réelles F08 (action utilisateur, débloque la mesure d'amélioration F04 et un classifieur de coins F02), alertes mail/webhook F09, relevé de prix périodique F10.
+- **Dernière session** : 2026-07-15 (session 9)
+- **Feature en cours** : aucune — les 10 features (F01–F10) sont dans `main` (PR #2 mergée). **Session 9** : relance de la branche GUI Qt/PySide6 — rebasée sur `main` et mise à parité avec les vagues 3 & 4 (F01/F02/F03/F10 dans la vue Détection, fenêtre Price History F09, params génération F06). Suite : 334 tests passés, 0 échec.
+- **Prochaine étape concrète** : décision produit sur le GUI Qt (le valider sur poste réel puis retirer le Tkinter, ou garder les deux). Pistes de backlog restantes : photos réelles F08 (action utilisateur, débloque la mesure d'amélioration F04 et un classifieur de coins F02), alertes mail/webhook F09, relevé de prix périodique F10.
 - **⚠️ À valider en conditions réelles (réseau bloqué dans l'environnement de dev)** :
   - premier préchargement : `python tools/preload_prices.py --set sv08` (flux API réel) ;
   - benchmark F01 rejouable sur vos sets : `python tools/benchmark_card_embeddings.py --images images` ;

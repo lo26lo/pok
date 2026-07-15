@@ -1,13 +1,22 @@
 """Augmentation d'images (Albumentations) + pipeline holographic."""
 import sys
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QComboBox, QHBoxLayout, QLineEdit, QPushButton, QSpinBox, QWidget,
+    QCheckBox, QComboBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QSlider, QSpinBox, QWidget,
 )
 
+from core.augmentation_albumentations import AUGMENTATION_CATEGORIES
 from core.utils import PATHS
 from gui.task_runner import TaskError
 from gui_qt.widgets import Card, form_row, view_scaffold
+
+_CATEGORY_LABELS = {
+    "brightness": "💡 Luminosité", "color": "🎨 Couleurs",
+    "blur": "🌫️ Flou/Netteté", "noise": "📶 Bruit",
+    "environment": "🌤️ Environnement", "geometry": "📐 Géométrie",
+}
 
 
 class View(QWidget):
@@ -30,6 +39,34 @@ class View(QWidget):
         aug_card.add_layout(form_row("Variations par image", self.num_aug))
         aug_card.add_layout(form_row("Type", self.aug_type))
         aug_card.add_layout(form_row("Dossier cible", self.target))
+
+        # --- Paramètres du pipeline (F06) : intensité, nb transfos, catégories
+        self.intensity = QSlider(Qt.Horizontal)
+        self.intensity.setRange(10, 200)     # 0.1x – 2.0x (÷100)
+        self.intensity.setValue(100)
+        self.intensity_label = QLabel("1.00×")
+        self.intensity.valueChanged.connect(
+            lambda v: self.intensity_label.setText(f"{v / 100:.2f}×"))
+        int_row = QHBoxLayout()
+        int_row.addWidget(self.intensity, 1)
+        int_row.addWidget(self.intensity_label)
+        int_container = QWidget(); int_container.setLayout(int_row)
+        aug_card.add_layout(form_row("Intensité globale", int_container))
+
+        self.n_transforms = QSpinBox()
+        self.n_transforms.setRange(0, 25)
+        self.n_transforms.setSpecialValueText("aléatoire (3-6)")
+        aug_card.add_layout(form_row("Transformations / image", self.n_transforms))
+
+        aug_card.add(QLabel("Catégories incluses :"))
+        cats = QGridLayout()
+        self.category_boxes = {}
+        for i, cat in enumerate(AUGMENTATION_CATEGORIES):
+            box = QCheckBox(_CATEGORY_LABELS.get(cat, cat))
+            box.setChecked(True)
+            self.category_boxes[cat] = box
+            cats.addWidget(box, i // 3, i % 3)
+        aug_card.add_layout(cats)
 
         start = QPushButton("🎨 Lancer l'augmentation")
         start.setObjectName("primary")
@@ -57,21 +94,37 @@ class View(QWidget):
 
     # ------------------------------------------------------------ opérations
 
+    def _param_flags(self) -> list:
+        """Drapeaux CLI des paramètres calibrés (F06) pour la génération."""
+        flags = ["--intensity", f"{self.intensity.value() / 100:.2f}",
+                 "--transforms", str(self.n_transforms.value())]
+        selected = [c for c, b in self.category_boxes.items() if b.isChecked()]
+        if selected and len(selected) < len(AUGMENTATION_CATEGORIES):
+            flags += ["--categories", ",".join(selected)]
+        return flags
+
     def start_augmentation(self):
         main = self.main
         num_aug = self.num_aug.value()
         aug_type = self.aug_type.currentText()
         target = self.target.text().strip() or "augmented"
         holo_variations = int(main.config.get("holographic_variations", 3))
+        param_flags = self._param_flags()
 
-        main.log(f"🎨 Augmentation ({aug_type}): {num_aug} variations → {target}/")
+        if not any(b.isChecked() for b in self.category_boxes.values()):
+            main.notify_warning("Attention",
+                                "Sélectionnez au moins une catégorie d'augmentation.")
+            return
+
+        main.log(f"🎨 Augmentation ({aug_type}): {num_aug} variations → {target}/ "
+                 f"(intensité {self.intensity.value() / 100:.2f}×)")
 
         def work(runner):
             if aug_type in ("Standard", "Both"):
                 runner.log("🎨 Running standard augmentation (Albumentations)...")
                 returncode = runner.stream(
                     [sys.executable, "-u", "core/augmentation_albumentations.py",
-                     "--num_aug", str(num_aug), "--target", target])
+                     "--num_aug", str(num_aug), "--target", target, *param_flags])
                 if returncode != 0:
                     runner.log("❌ Standard augmentation failed!")
                     if aug_type == "Standard":

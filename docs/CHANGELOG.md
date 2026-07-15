@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🖥️ GUI Qt : parité fonctionnelle avec les vagues 3 & 4
+
+- Rebase de l'interface PySide6 sur `main` (10 features F01–F10 intégrées) —
+  le GUI Qt était en retard sur les fonctionnalités récentes, désormais
+  à parité :
+  - **Vue Détection** : cases « 🎴 Identifier les cartes » (F01) et
+    « 🔍 Estimer l'état » (F02), bouton « 🧺 Scan de collection » + récap
+    et « 📂 Dossier des scans » (F03), carte « 💾 Prix hors-ligne » avec
+    indicateur de snapshot + « ⬇ Précharger les prix » (F10)
+  - **Fenêtre « 💹 Price History »** (`gui_qt/price_history_dialog.py`) :
+    sparkline dessinée au QPainter, synthèse actuel/min/max/tendance,
+    gestion des alertes de seuil (F09)
+  - **Vue Augmentation** : intensité globale, nombre de transformations et
+    catégories passés à la génération via les drapeaux CLI (F06)
+- 8 nouveaux tests (`tests/test_gui_qt.py`) — suite : 334 passés, 0 échec
+
 ### ✨ Backlog F05 : mains plus réalistes dans les mosaïques
 
 - Doigts procéduraux avec **ongles** (ellipse claire + lunule, visible

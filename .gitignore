@@ -149,3 +149,13 @@ logs/
 
 # Config GUI runtime (racine) — réécrite à chaque changement de thème/settings
 /gui_config.json
+
+# État runtime des features (non versionné)
+# cache/historique de prix (F09/F10)
+models/price_cache.db
+# index d'identification (F01), reconstruit localement
+models/card_index/
+# calibration Live Preview (F06)
+config/augmentation_params.json
+# inventaires exportés (F03)
+output/collection_scans/
