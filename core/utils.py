@@ -20,13 +20,17 @@ Usage:
 import os
 import sys
 import cv2
-import pandas as pd
 import numpy as np
 import re
 import json
 from pathlib import Path
 from glob import glob
 from typing import Dict, List, Tuple, Optional
+
+# pandas n'est importé qu'à la demande (branche Excel legacy de load_card_data).
+# Import paresseux volontaire: le pipeline par défaut utilise YAML, donc un
+# pandas absent OU cassé (ex: mismatch ABI numpy/pandas) ne doit pas empêcher
+# le GUI et tout le reste de démarrer.
 
 # ==================== Regex Patterns ====================
 # Compiled regex patterns for card number extraction (performance optimization)
@@ -245,9 +249,15 @@ def load_card_data(source_path: str = None) -> Tuple[Dict[str, str], Dict[str, i
                 card_dict[number] = name
                 class_map[number] = class_id
     else:
-        # Charger depuis Excel (legacy)
+        # Charger depuis Excel (legacy) — pandas importé ici seulement
         try:
+            import pandas as pd
             df = pd.read_excel(source_path, usecols=["Set #", "Name"])
+        except ImportError:
+            raise Exception(
+                "pandas est requis pour lire un fichier Excel (format legacy). "
+                "Installez-le (pip install pandas openpyxl) ou utilisez le "
+                "format YAML (models/cards_database.yaml).")
         except Exception as e:
             raise Exception(f"Erreur lors de la lecture du fichier Excel : {e}")
 

@@ -3768,81 +3768,10 @@ class ModernPokemonGUI:
             return False
     
     def _generate_yaml_from_manifest(self, manifest_path: str, set_id: str, set_name: str):
-        """
-        Génère automatiquement cards_database.yaml depuis le manifest.csv du téléchargement
-        
-        Args:
-            manifest_path: Chemin vers manifest.csv
-            set_id: ID du set (ex: sv08, xyp)
-            set_name: Nom du set (ex: "Surging Sparks")
-        """
-        import yaml
-        import csv
-        from datetime import datetime
-        from pathlib import Path
-        import requests
-        
-        # Lire le manifest pour obtenir les IDs des cartes
-        # Format réel du manifest: id, localId, name, file, source_url
-        # Exemple: xyp-XY01, XY01, Chespin, images\xyp_XY01_en.png, https://...
-        cards_from_manifest = []
-        with open(manifest_path, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                card_id = row.get('id', '')  # ex: xyp-XY01
-                local_id = row.get('localId', '')  # ex: XY01
-                card_name = row.get('name', 'Unknown')
-                file_path = row.get('file', '')
-                
-                if card_id and file_path:
-                    # Extraire le nom du fichier sans extension ni langue
-                    # Ex: images\xyp_XY01_en.png → xyp_XY01
-                    filename = Path(file_path).stem  # xyp_XY01_en
-                    internal_id = '_'.join(filename.split('_')[:-1]) if '_' in filename else filename
-                    
-                    cards_from_manifest.append({
-                        'internal_id': internal_id,
-                        'tcgdex_id': card_id,
-                        'local_id': local_id,
-                        'name': card_name
-                    })
-        
-        # Récupérer les infos complètes depuis TCGdex API (optionnel, pour avoir rarity, etc.)
-        # Pour l'instant, on crée avec les infos du manifest
-        cards_data = {}
-        for card in cards_from_manifest:
-            cards_data[card['internal_id']] = {
-                'name': card['name'],
-                'set': set_name,
-                'set_full': f"{card['local_id']}/???",
-                'type': 'Pokemon',
-                'rarity': 'Common',
-                'price': None,
-                'price_max': None,
-                'price_source': '',
-                'last_updated': datetime.now().strftime('%Y-%m-%d')
-            }
-        
-        # Créer structure YAML
-        yaml_data = {
-            'metadata': {
-                'version': '1.0',
-                'format': 'YOLO-compatible card database',
-                'last_updated': datetime.now().strftime('%Y-%m-%d'),
-                'source': f'Auto-generated from Image Download ({set_id})',
-                'total_cards': len(cards_data),
-                'comment': 'Bounding boxes are generated dynamically during mosaic/augmentation'
-            },
-            'cards': cards_data
-        }
-        
-        # Sauvegarder YAML
-        yaml_path = Path(PATHS['files']['cards_database_yaml'])
-        yaml_path.parent.mkdir(exist_ok=True)
-        
-        with open(yaml_path, 'w', encoding='utf-8') as f:
-            yaml.dump(yaml_data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
-    
+        """Génère cards_database.yaml depuis le manifest (délégué à core.manifest_tools)"""
+        from core.manifest_tools import generate_yaml_from_manifest
+        count = generate_yaml_from_manifest(manifest_path, set_id, set_name)
+        self.log(f"   {count} cartes écrites dans la base")
     def detect_gpu_info(self):
         """V3.1: Détecter le GPU disponible de manière compacte
         

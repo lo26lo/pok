@@ -82,12 +82,13 @@ python -m pip install --upgrade pip setuptools wheel
 
 :: Install dependencies (prefer pre-built wheels for heavy packages to avoid compilation)
 echo Installing dependencies (favoring pre-built wheels for speed)...
-echo This will install NumPy ^<2.0 for imgaug compatibility.
+echo NumPy 2.x supporte (Albumentations) ; PySide6 pour l'interface Qt.
 
 REM Step 1: Pre-install heavy binary packages with wheels-only where possible
+REM PySide6 est volumineux et TOUJOURS distribue en wheel : on le met ici.
 echo.
 echo [1/2] Installing heavy packages from wheels (no compilation):
-pip install --only-binary=:all: "numpy<2.0" "opencv-python<4.10.0" "scipy<1.14" "scikit-image<0.23"
+pip install --only-binary=:all: "numpy>=1.24" "opencv-python>=4.8.0" "scipy>=1.11" "scikit-image>=0.21" "pyside6>=6.5"
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo WARNING: Some heavy packages could not be installed from wheels only.^>
@@ -113,7 +114,7 @@ if exist config\requirements.txt (
     )
 ) else (
     echo WARNING: config\requirements.txt not found, installing core packages manually...
-    pip install "numpy^<2.0" pandas "opencv-python^<4.10.0" pillow requests scipy scikit-image imgaug imagecorruptions openpyxl
+    pip install "numpy>=1.24" pandas "opencv-python>=4.8.0" pillow requests scipy scikit-image "albumentations>=1.3.0,<2.0" imagecorruptions openpyxl pyside6
     if %ERRORLEVEL% NEQ 0 (
         echo ERROR: Manual installation failed. See error message above.
         pause
@@ -126,15 +127,15 @@ echo ========================================
 echo Installation completed successfully!
 echo ========================================
 
-:: Create a helper to run GUI using the venv interpreter (points to GUI_v3.1_modern.py)
+:: Create a helper to run GUI using the venv interpreter (interface Qt)
 echo @echo off > run_with_env.bat
 echo cd /d "%~dp0" >> run_with_env.bat
 echo call .venv\Scripts\activate.bat >> run_with_env.bat
-echo python GUI_v3.1_modern.py %%* >> run_with_env.bat
+echo python GUI_qt.py %%* >> run_with_env.bat
 echo pause >> run_with_env.bat
 
-echo Created run_with_env.bat (use it to launch the GUI with the venv)
-echo Or simply use run_gui_v3.1.bat after installation
+echo Created run_with_env.bat (use it to launch the Qt GUI with the venv)
+echo Or simply use START.bat after installation (START_LEGACY.bat for Tkinter)
 echo To activate the venv now use: call .venv\Scripts\activate.bat
 pause
 ENDLOCAL

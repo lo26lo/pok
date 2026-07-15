@@ -31,16 +31,21 @@ excel = [
     "pandas>=2.0.0",
     "openpyxl>=3.1.0",
 ]
+# Interface Qt (PySide6) — l'interface Tkinter reste disponible sans extra
+gui-qt = [
+    "pyside6>=6.5",
+]
 # Outils de développement
 dev = [
     "pytest>=8.0",
+    "pytest-qt>=4.2",
     "ruff>=0.4",
     "pandas>=2.0.0",
     "openpyxl>=3.1.0",
 ]
 
 [tool.setuptools]
-packages = ["core", "gui"]
+packages = ["core", "gui", "gui_qt", "gui_qt.views"]
 
 # ============================================================================
 # pytest

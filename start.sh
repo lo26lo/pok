@@ -10,4 +10,9 @@ else
     PY="python3"
 fi
 
-exec "$PY" GUI_v3.1_modern.py "$@"
+# Interface Qt par défaut; --legacy lance l'ancienne interface Tkinter
+if [ "${1:-}" = "--legacy" ]; then
+    shift
+    exec "$PY" GUI_v3.1_modern.py "$@"
+fi
+exec "$PY" GUI_qt.py "$@"

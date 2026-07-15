@@ -1,12 +1,10 @@
 # Requirements for Pokemon Dataset Generator
 # ============================================
-# Version 3.3 - Migration Albumentations (NumPy 2.x compatible)
+# Version 3.7 - Interface Qt (PySide6) + Albumentations (NumPy 2.x compatible)
 #
-# CHANGEMENT MAJEUR: imgaug remplacé par Albumentations
-# - Compatible NumPy 2.x (plus de blocage de version)
-# - 30-50% plus rapide
-# - 25 augmentations (vs 19 avec imgaug)
-# - Maintenu activement (vs imgaug abandonné 2020)
+# - Interface Qt par défaut (pyside6) ; Tkinter legacy sans dépendance extra
+# - imgaug remplacé par Albumentations (compatible NumPy 2.x, plus rapide)
+# - pandas >=2.2.2 (ABI NumPy 2.x — évite le crash _pandas_datetime_CAPI)
 
 # Core - Pas de restriction de version (NumPy 2.x OK)
 numpy>=1.24.0
@@ -24,8 +22,15 @@ pyyaml>=6.0
 pillow>=10.0.0
 requests>=2.31.0
 
-# Optional: only for migration scripts (migrate_excel_to_yaml.py)
-pandas>=2.0.0
+# GUI - Interface Qt (PySide6)
+# Requis pour lancer GUI_qt.py (START.bat / start.sh).
+# L'ancienne interface Tkinter (START_LEGACY.bat) n'en a pas besoin.
+pyside6>=6.5
+
+# pandas / openpyxl : mapping Excel legacy + scripts de migration.
+# >=2.2.2 IMPÉRATIF : les versions <2.2.2 ne sont pas compilées contre
+# NumPy 2.x et lèvent "_pandas_datetime_CAPI ... circular import" au démarrage.
+pandas>=2.2.2
 openpyxl>=3.1.0
 
 # Image corruption effects (for augmentation)
