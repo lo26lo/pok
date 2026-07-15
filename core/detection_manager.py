@@ -52,7 +52,15 @@ class DetectionConfig:
     show_prices: bool = False
     excel_path: str = "excel/cards_info.xlsx"
     data_yaml_path: Optional[str] = None  # Auto-détecté si None
-    
+
+    # Identification fine (F01) : crop bbox -> embedding -> index k-NN
+    identify_cards: bool = False
+    identify_index_dir: Optional[str] = None   # None = models/card_index
+    identify_min_score: float = 0.5            # similarité cosinus minimale
+
+    # Grading (F02) : estimation de l'état (centrage, coins) sur le crop
+    grade_cards: bool = False
+
     def __post_init__(self):
         """Validation"""
         if not self.model_path.exists():
@@ -61,6 +69,8 @@ class DetectionConfig:
             raise ValueError("confidence doit être entre 0 et 1")
         if not 0 <= self.iou_threshold <= 1:
             raise ValueError("iou_threshold doit être entre 0 et 1")
+        if not -1 <= self.identify_min_score <= 1:
+            raise ValueError("identify_min_score doit être entre -1 et 1")
 
 
 @dataclass
@@ -70,8 +80,21 @@ class Detection:
     class_name: str
     confidence: float
     bbox: Tuple[float, float, float, float]  # x1, y1, x2, y2
-    
+
+    # Identification fine (F01) — renseignés si identify_cards est actif
+    card_id: Optional[str] = None            # ex: "swsh7_003"
+    exact_name: Optional[str] = None         # ex: "Skiploom [swsh7 003]"
+    identify_score: Optional[float] = None   # similarité cosinus du top-1
+
+    # Grading (F02) — renseignés si grade_cards est actif
+    condition: Optional[str] = None          # NM / EX / GD / PL
+    condition_score: Optional[float] = None  # score global [0, 1]
+    price_factor: Optional[float] = None     # pondération du prix affiché
+
     def __repr__(self) -> str:
+        if self.card_id:
+            return (f"Detection({self.class_name} -> {self.card_id}, "
+                    f"{self.confidence:.2%}, bbox={self.bbox})")
         return f"Detection({self.class_name}, {self.confidence:.2%}, bbox={self.bbox})"
 
 
@@ -102,27 +125,107 @@ class DetectionManager(BaseManager):
         self._model = None
         self._prices: Dict[str, Dict[str, Any]] = {}
         self._class_names: Dict[int, str] = {}
+        self._identifier = None
 
         # Charger les prix si demandé
         if self.config.show_prices:
             self._load_prices()
             self._load_class_names()
 
+        # Identification fine (F01) — best effort, ne bloque jamais la détection
+        if self.config.identify_cards:
+            self._load_identifier()
+
+        # Grading (F02) — best effort, ne bloque jamais la détection
+        self._grader = None
+        if self.config.grade_cards:
+            try:
+                try:
+                    from .card_grader import CardGrader
+                except ImportError:
+                    from card_grader import CardGrader
+                self._grader = CardGrader()
+                self._log("🔍 Grading activé (centrage + coins, heuristique)")
+            except Exception as e:
+                self._log(f"⚠️ Grading désactivé: {e}")
+
+    def _load_identifier(self) -> None:
+        """Charge l'index d'identification (F01) — best effort"""
+        try:
+            from .card_identifier import CardIdentifier
+        except ImportError:
+            from card_identifier import CardIdentifier
+        try:
+            self._identifier = CardIdentifier(self.config.identify_index_dir)
+            meta = self._identifier.index.meta
+            self._log(f"🎴 Index d'identification chargé: {meta['count']} cartes "
+                      f"(méthode '{meta['method']}', backend "
+                      f"{self._identifier.index.backend})")
+        except Exception as e:
+            self._identifier = None
+            self._log(f"⚠️ Identification désactivée: {e}")
+
+    def _identify_crop(self, frame, bbox) -> Optional[Any]:
+        """
+        Identifie la carte d'une bbox (frame PROPRE, avant annotations).
+
+        Returns:
+            IdentificationResult si le score atteint identify_min_score, sinon None
+        """
+        if self._identifier is None:
+            return None
+        try:
+            h, w = frame.shape[:2]
+            x1, y1, x2, y2 = map(int, bbox)
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(w, x2), min(h, y2)
+            if x2 - x1 < 16 or y2 - y1 < 16:
+                return None
+            result = self._identifier.identify(frame[y1:y2, x1:x2])
+            if result and result.score >= self.config.identify_min_score:
+                return result
+            return None
+        except Exception as e:
+            self._log(f"⚠️ Erreur identification: {e}")
+            return None
+
+    def _grade_crop(self, frame, bbox) -> Optional[Any]:
+        """
+        Estime l'état de la carte d'une bbox (frame PROPRE) — F02.
+
+        Returns:
+            GradeResult ou None (jamais d'exception : best effort)
+        """
+        if self._grader is None:
+            return None
+        try:
+            h, w = frame.shape[:2]
+            x1, y1, x2, y2 = map(int, bbox)
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(w, x2), min(h, y2)
+            if x2 - x1 < 48 or y2 - y1 < 48:
+                return None
+            return self._grader.grade(frame[y1:y2, x1:x2])
+        except Exception:
+            return None
+
 
     def _load_prices(self) -> None:
-        """Charge les prix depuis la base YAML (models/cards_database.yaml)"""
+        """Charge les prix : base YAML recouverte par le cache F10 (snapshot)"""
         try:
-            from .utils import load_prices, PATHS
             from .card_mapping import get_card_id_from_class_name
+            from .price_cache import load_prices_with_cache, snapshot_status
 
-            yaml_path = PATHS['files']['cards_database_yaml']
-            self._prices = load_prices(yaml_path)
+            self._prices = load_prices_with_cache()
             self._get_card_id = get_card_id_from_class_name  # Stocker la fonction de mapping
 
             if self._prices:
-                self._log(f"💰 {len(self._prices)} prix chargés depuis {yaml_path}")
+                status = snapshot_status()
+                extra = f" ({status})" if status else ""
+                self._log(f"💰 {len(self._prices)} prix chargés{extra}")
             else:
-                self._log(f"⚠️ Aucun prix trouvé dans {yaml_path}")
+                self._log("⚠️ Aucun prix trouvé (YAML et cache vides) — "
+                          "préchargez avec tools/preload_prices.py")
         except Exception as e:
             self._log(f"⚠️ Impossible de charger les prix: {e}")
             self._prices = {}
@@ -154,52 +257,130 @@ class DetectionManager(BaseManager):
             self._log(f"⚠️ Impossible de charger data.yaml: {e}")
             self._class_names = {}
     
-    def _get_card_info(self, class_id: int) -> Tuple[str, Optional[float], Optional[float]]:
+    def _get_card_info(self, class_id: int,
+                       ident=None) -> Tuple[str, Optional[float], Optional[float]]:
         """
         Récupère les infos d'une carte (nom, prix, prix_max)
-        
+
         Args:
             class_id: ID de la classe
-            
+            ident: IdentificationResult F01 (optionnel) — si fourni, le nom
+                   exact remplace le nom de classe et le prix est cherché
+                   directement par card_id (sans passer par le mapping)
+
         Returns:
             Tuple (card_name, price, price_max)
         """
-        # Récupérer le nom de la carte
-        card_name = self._class_names.get(class_id, f"class_{class_id}")
-        
-        # Convertir le nom de classe en card_id via le mapping
-        card_id = self._get_card_id(card_name) if hasattr(self, '_get_card_id') else None
-        
+        if ident is not None:
+            card_name = ident.display_name
+            card_id = ident.card_id
+        else:
+            # Récupérer le nom de la carte
+            card_name = self._class_names.get(class_id, f"class_{class_id}")
+
+            # Convertir le nom de classe en card_id via le mapping
+            card_id = self._get_card_id(card_name) if hasattr(self, '_get_card_id') else None
+
         # Récupérer le prix si disponible (avec le card_id)
         if card_id:
             card_info = self._prices.get(card_id, {})
         else:
             card_info = {}
-            
+
         price = card_info.get('price')
         price_max = card_info.get('price_max')
-        
+
         return card_name, price, price_max
-    
-    def _draw_detection_with_price(self, frame, box, class_id: int, confidence: float):
+
+    def _annotate_frame(self, frame, boxes):
+        """
+        Annote une frame avec les labels personnalisés (prix et/ou
+        identification F01). L'identification se fait sur la frame PROPRE
+        avant tout dessin.
+
+        Args:
+            frame: Image BGR non annotée
+            boxes: Boîtes du résultat YOLO (results[0].boxes)
+
+        Returns:
+            Copie annotée de la frame
+        """
+        idents = [self._identify_crop(frame, box.xyxy[0].tolist())
+                  for box in boxes]
+        grades = [self._grade_crop(frame, box.xyxy[0].tolist())
+                  for box in boxes]
+        annotated = frame.copy()
+        for box, ident, grade in zip(boxes, idents, grades):
+            cls_id = int(box.cls[0])
+            conf = float(box.conf[0])
+            bbox = box.xyxy[0].tolist()
+            annotated = self._draw_detection_with_price(annotated, bbox,
+                                                        cls_id, conf, ident,
+                                                        grade)
+        return annotated
+
+    def _boxes_to_detections(self, result, frame) -> List[Detection]:
+        """
+        Convertit les boxes d'un résultat YOLO en Detection (avec
+        identification F01 si active) — utilisé par le scan de collection.
+        """
+        detections = []
+        names = result.names
+        for box in result.boxes:
+            cls_id = int(box.cls[0])
+            x1, y1, x2, y2 = box.xyxy[0].tolist()
+            det = Detection(class_id=cls_id, class_name=names[cls_id],
+                            confidence=float(box.conf[0]),
+                            bbox=(x1, y1, x2, y2))
+            ident = self._identify_crop(frame, (x1, y1, x2, y2))
+            if ident:
+                det.card_id = ident.card_id
+                det.exact_name = ident.display_name
+                det.identify_score = ident.score
+            grade = self._grade_crop(frame, (x1, y1, x2, y2))
+            if grade:
+                det.condition = grade.label
+                det.condition_score = grade.score
+                det.price_factor = grade.price_factor
+            detections.append(det)
+        return detections
+
+    @property
+    def _custom_overlay(self) -> bool:
+        """Vrai si l'annotation personnalisée remplace le plot() Ultralytics"""
+        return (self.config.show_prices or self._identifier is not None
+                or self._grader is not None)
+
+    def _draw_detection_with_price(self, frame, box, class_id: int,
+                                   confidence: float, ident=None, grade=None):
         """
         Dessine une détection avec le prix sur l'image
-        
+
         Args:
             frame: Image (numpy array)
             box: Boîte [x1, y1, x2, y2]
             class_id: ID de la classe
             confidence: Confiance de détection
-            
+            ident: IdentificationResult F01 (optionnel)
+            grade: GradeResult F02 (optionnel) — badge d'état + prix pondéré
+
         Returns:
             Image annotée
         """
         import cv2
-        
+
         x1, y1, x2, y2 = map(int, box)
-        
+
         # Récupérer infos carte
-        card_name, price, price_max = self._get_card_info(class_id)
+        card_name, price, price_max = self._get_card_info(class_id, ident)
+
+        # Grading (F02) : badge d'état et pondération du prix affiché
+        if grade is not None:
+            card_name = f"{card_name} [{grade.label}]"
+            if price is not None:
+                price = price * grade.price_factor
+            if price_max is not None:
+                price_max = price_max * grade.price_factor
         
         # Couleur selon confiance
         if confidence >= 0.8:
@@ -292,16 +473,11 @@ class DetectionManager(BaseManager):
             
             # Sauvegarder si demandé
             if save_path:
-                if self.config.show_prices:
-                    # Dessiner avec prix personnalisés
+                if self._custom_overlay:
+                    # Dessiner avec prix/identification personnalisés
                     import cv2
-                    annotated = cv2.imread(str(image_path))
-                    boxes = results[0].boxes
-                    for box in boxes:
-                        cls_id = int(box.cls[0])
-                        conf = float(box.conf[0])
-                        bbox = box.xyxy[0].tolist()
-                        annotated = self._draw_detection_with_price(annotated, bbox, cls_id, conf)
+                    annotated = self._annotate_frame(cv2.imread(str(image_path)),
+                                                     results[0].boxes)
                 else:
                     # Utiliser l'annotation YOLO standard
                     annotated = results[0].plot(
@@ -370,14 +546,17 @@ class DetectionManager(BaseManager):
     def detect_webcam(self,
                       quit_key: str = 'q',
                       save_video: bool = False,
-                      output_path: Optional[str | Path] = None) -> None:
+                      output_path: Optional[str | Path] = None,
+                      scanner=None) -> None:
         """
         Détection en temps réel sur webcam
-        
+
         Args:
             quit_key: Touche pour quitter
             save_video: Enregistrer la vidéo
             output_path: Chemin de sauvegarde vidéo
+            scanner: CollectionScanner (F03) optionnel — reçoit les
+                     détections de chaque frame et affiche un compteur live
         """
         self._load_model()
         
@@ -432,16 +611,18 @@ class DetectionManager(BaseManager):
                     verbose=False
                 )
                 
+                # Scan de collection (F03) : accumuler les détections
+                if scanner is not None:
+                    detections = self._boxes_to_detections(results[0], frame)
+                    for card in scanner.observe_frame(detections):
+                        label = card.name if card.card_id is None \
+                            else f"{card.name} ({card.card_id})"
+                        self._log(f"🧺 Carte ajoutée à l'inventaire: {label}")
+
                 # Annoter
-                if self.config.show_prices:
-                    # Dessiner avec prix personnalisés
-                    annotated = frame.copy()
-                    boxes = results[0].boxes
-                    for box in boxes:
-                        cls_id = int(box.cls[0])
-                        conf = float(box.conf[0])
-                        bbox = box.xyxy[0].tolist()
-                        annotated = self._draw_detection_with_price(annotated, bbox, cls_id, conf)
+                if self._custom_overlay:
+                    # Dessiner avec prix/identification personnalisés
+                    annotated = self._annotate_frame(frame, results[0].boxes)
                 else:
                     # Utiliser l'annotation YOLO standard
                     annotated = results[0].plot(
@@ -456,6 +637,15 @@ class DetectionManager(BaseManager):
                     fps = frame_count / elapsed if elapsed > 0 else 0
                     cv2.putText(annotated, f"FPS: {fps:.1f}", (10, 30),
                                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+                # Compteur live du scan de collection (F03)
+                if scanner is not None:
+                    s = scanner.summary()
+                    counter = (f"Scan: {s['unique_cards']} cartes "
+                               f"({s['total_quantity']} ex.) | "
+                               f"{s['total_value']:.2f} EUR")
+                    cv2.putText(annotated, counter, (10, 65),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 200, 255), 2)
                 
                 # Afficher
                 cv2.imshow('Pokemon Card Detector', annotated)
@@ -502,27 +692,47 @@ class DetectionManager(BaseManager):
             Liste de Detection
         """
         detections = []
-        
+
         boxes = result.boxes
         names = result.names
-        
+        # Frame propre pour l'identification F01 (fournie par Ultralytics)
+        orig_img = getattr(result, 'orig_img', None)
+
         for box in boxes:
             cls_id = int(box.cls[0])
             conf = float(box.conf[0])
             x1, y1, x2, y2 = box.xyxy[0].tolist()
-            
+
             detection = Detection(
                 class_id=cls_id,
                 class_name=names[cls_id],
                 confidence=conf,
                 bbox=(x1, y1, x2, y2)
             )
-            
+
+            if self._identifier is not None and orig_img is not None:
+                ident = self._identify_crop(orig_img, (x1, y1, x2, y2))
+                if ident:
+                    detection.card_id = ident.card_id
+                    detection.exact_name = ident.display_name
+                    detection.identify_score = ident.score
+
+            if self._grader is not None and orig_img is not None:
+                grade = self._grade_crop(orig_img, (x1, y1, x2, y2))
+                if grade:
+                    detection.condition = grade.label
+                    detection.condition_score = grade.score
+                    detection.price_factor = grade.price_factor
+
             detections.append(detection)
-            
+
             # Log détection
-            self._log(f"   • {detection.class_name} ({conf:.2%})")
-        
+            if detection.card_id:
+                self._log(f"   • {detection.class_name} -> {detection.exact_name} "
+                          f"(sim {detection.identify_score:.2f}, conf {conf:.2%})")
+            else:
+                self._log(f"   • {detection.class_name} ({conf:.2%})")
+
         return detections
     
     def show_image(self, image_path: str | Path) -> None:
@@ -544,15 +754,10 @@ class DetectionManager(BaseManager):
                 verbose=False
             )
             
-            # Annoter avec ou sans prix
-            if self.config.show_prices:
-                annotated = cv2.imread(str(image_path))
-                boxes = results[0].boxes
-                for box in boxes:
-                    cls_id = int(box.cls[0])
-                    conf = float(box.conf[0])
-                    bbox = box.xyxy[0].tolist()
-                    annotated = self._draw_detection_with_price(annotated, bbox, cls_id, conf)
+            # Annoter avec ou sans prix/identification
+            if self._custom_overlay:
+                annotated = self._annotate_frame(cv2.imread(str(image_path)),
+                                                 results[0].boxes)
             else:
                 annotated = results[0].plot()
             
@@ -577,14 +782,25 @@ def main():
     parser.add_argument("--conf", type=float, default=0.25, help="Seuil de confiance")
     parser.add_argument("--camera", type=int, default=0, help="ID caméra")
     parser.add_argument("--output", help="Dossier/fichier de sortie")
-    
+    parser.add_argument("--identify", action="store_true",
+                        help="Identification fine F01 (nécessite l'index — "
+                             "cf. tools/build_card_index.py)")
+    parser.add_argument("--scan", action="store_true",
+                        help="Scan de collection F03 en mode webcam "
+                             "(inventaire + export CSV/Excel, implique --identify)")
+    parser.add_argument("--grade", action="store_true",
+                        help="Grading F02 : badge d'état (NM/EX/GD/PL) et "
+                             "prix pondéré sur l'overlay")
+
     args = parser.parse_args()
-    
+
     # Configuration
     config = DetectionConfig(
         model_path=Path(args.model),
         confidence=args.conf,
-        camera_id=args.camera
+        camera_id=args.camera,
+        identify_cards=args.identify or args.scan,
+        grade_cards=args.grade
     )
     
     # Manager
@@ -593,7 +809,23 @@ def main():
     
     try:
         if args.webcam:
-            manager.detect_webcam()
+            scanner = None
+            if args.scan:
+                try:
+                    from .collection_scanner import CollectionScanner
+                except ImportError:
+                    from collection_scanner import CollectionScanner
+                scanner = CollectionScanner()
+            manager.detect_webcam(scanner=scanner)
+            if scanner is not None:
+                s = scanner.summary()
+                csv_path = scanner.export_csv()
+                xlsx_path = scanner.export_excel()
+                print(f"\n🧺 Scan terminé: {s['unique_cards']} cartes uniques, "
+                      f"{s['total_quantity']} exemplaires, "
+                      f"valeur {s['total_value']:.2f}-{s['total_value_max']:.2f} EUR")
+                print(f"   Inventaire: {csv_path}"
+                      + (f" et {xlsx_path}" if xlsx_path else ""))
         elif args.image:
             detections = manager.detect_image(args.image, save_path=args.output)
             print(f"\n✅ {len(detections)} détection(s)")

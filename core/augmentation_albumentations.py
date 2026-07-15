@@ -70,6 +70,67 @@ AUG_LABELS_DIR = PATHS['directories']['output_augmented_labels']
 AUGMENTATION_CATEGORIES = ("brightness", "color", "blur", "noise",
                            "environment", "geometry")
 
+# Paramètres de génération calibrés via la Live Preview (F06). La génération
+# les lit par défaut ; les drapeaux CLI explicites restent prioritaires.
+PARAMS_FILE = PATHS.get('files', {}).get('augmentation_params',
+                                         'config/augmentation_params.json')
+
+
+def default_generation_params() -> dict:
+    """Valeurs de production historiques (aucune calibration)."""
+    return {"intensity": 1.0, "n_transforms": 0,
+            "categories": list(AUGMENTATION_CATEGORIES)}
+
+
+def load_generation_params(path: Optional[str] = None) -> dict:
+    """
+    Paramètres de génération calibrés (config/augmentation_params.json),
+    fusionnés avec les défauts et validés. Fichier absent ou invalide ->
+    défauts historiques (best effort, ne lève jamais).
+    """
+    import json
+    params = default_generation_params()
+    path = Path(path or PARAMS_FILE)
+    if not path.exists():
+        return params
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        intensity = float(data.get("intensity", params["intensity"]))
+        params["intensity"] = float(np.clip(intensity, 0.1, 2.0))
+        n = int(data.get("n_transforms") or 0)
+        params["n_transforms"] = max(0, n)
+        cats = data.get("categories")
+        if cats:
+            valid = [c for c in cats if c in AUGMENTATION_CATEGORIES]
+            if valid:
+                params["categories"] = valid
+        params["_source"] = str(path)
+    except Exception as e:
+        safe_print(f"⚠️ {path} illisible ({e}) — paramètres de production")
+    return params
+
+
+def save_generation_params(params: dict, path: Optional[str] = None) -> Path:
+    """
+    Sauvegarde les paramètres calibrés dans la Live Preview pour que la
+    génération complète les utilise (GUI, workflow et CLI).
+    """
+    import json
+    path = Path(path or PARAMS_FILE)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data = {
+        "intensity": float(np.clip(float(params.get("intensity", 1.0)), 0.1, 2.0)),
+        "n_transforms": int(params.get("n_transforms") or 0),
+        "categories": list(params.get("categories")
+                           or AUGMENTATION_CATEGORIES),
+        "comment": "Calibré via la Live Preview (F06) — supprimez ce fichier "
+                   "pour revenir aux valeurs de production historiques",
+    }
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=1)
+    return path
+
 
 def _odd(value: float) -> int:
     """Arrondit à l'entier impair >= 3 le plus proche (kernels OpenCV)."""
@@ -225,37 +286,58 @@ class AugmentationAlbumentations:
     - Distorsions géométriques (5)
     """
     
-    def __init__(self, num_workers: Optional[int] = None, use_gpu: bool = True):
+    def __init__(self, num_workers: Optional[int] = None, use_gpu: bool = True,
+                 intensity: float = 1.0,
+                 n_transforms: Optional[int] = None,
+                 categories: Optional[List[str]] = None):
         """
         Initialise l'augmenteur
-        
+
         Args:
             num_workers: Nombre de workers (None = auto)
             use_gpu: Utiliser GPU pour resize si disponible
+            intensity: multiplicateur global des amplitudes (0.1 à 2.0) —
+                       1.0 = valeurs de production historiques
+            n_transforms: transformations par image (None ou 0 = aléatoire
+                          3-6, comportement historique)
+            categories: sous-ensemble de AUGMENTATION_CATEGORIES
+                        (None = toutes) — mêmes clés que la Live Preview F06
         """
         self.num_workers = num_workers or max(1, mp.cpu_count() - 2)
         self.use_gpu = use_gpu and CUDA_AVAILABLE
-        
-        # Pipeline d'augmentation Albumentations (3 à 6 transformations aléatoires)
-        # Le pool est construit par build_transform_pool() (partagé avec la
-        # preview live F06) ; intensity=1.0 = valeurs de production historiques
-        transform_pool = build_transform_pool()
+        self.intensity = float(np.clip(intensity, 0.1, 2.0))
+        self.categories = (list(categories) if categories
+                           else list(AUGMENTATION_CATEGORIES))
+
+        # Pipeline d'augmentation Albumentations. Le pool est construit par
+        # build_transform_pool() (partagé avec la preview live F06) ;
+        # intensity=1.0 + toutes catégories = production historique
+        transform_pool = build_transform_pool(intensity=self.intensity,
+                                              categories=self.categories)
 
         # SomeOf n'accepte qu'un entier pour n (un tuple plante en 1.4+).
         # Pour appliquer "3 à 6" transformations, on pré-construit un SomeOf
         # par valeur de n et on tire n au hasard pour chaque image.
-        self._n_range = (3, 6)
+        if n_transforms:
+            fixed = max(1, min(int(n_transforms), len(transform_pool)))
+            self._n_range = (fixed, fixed)
+        else:
+            self._n_range = (min(3, len(transform_pool)),
+                             min(6, len(transform_pool)))
         self._transforms_by_n = {
             n: A.SomeOf(transform_pool, n=n, p=1.0)
             for n in range(self._n_range[0], self._n_range[1] + 1)
         }
 
-
+        n_lo, n_hi = self._n_range
+        per_image = str(n_lo) if n_lo == n_hi else f"{n_lo}-{n_hi} (aléatoire)"
         safe_print(f"🚀 Augmenteur Albumentations initialisé:")
         safe_print(f"   GPU: {'✅ Activé' if self.use_gpu else '❌ Désactivé'}")
         safe_print(f"   Workers: {self.num_workers} threads")
-        safe_print(f"   Pipeline: 25 augmentations (6 catégories)")
-        safe_print(f"   Par image: 3-6 transformations aléatoires")
+        safe_print(f"   Pipeline: {len(transform_pool)} augmentations "
+                   f"({len(self.categories)}/{len(AUGMENTATION_CATEGORIES)} catégories), "
+                   f"intensité {self.intensity:g}x")
+        safe_print(f"   Par image: {per_image} transformations")
     
     def resize_image_gpu(self, img: np.ndarray, target_size: Tuple[int, int]) -> np.ndarray:
         """Resize image avec GPU (PyTorch)"""
@@ -486,22 +568,33 @@ def main():
         description="Augmentation d'images de cartes Pokémon (Albumentations)"
     )
     parser.add_argument(
-        "--input", "-i",
+        "--input", "-i", "--source",
+        dest="input",
         type=str,
         default=BASE_IMAGES_DIR,
-        help=f"Dossier source des images (défaut: {BASE_IMAGES_DIR})"
+        help=f"Dossier source des images (défaut: {BASE_IMAGES_DIR}) "
+             f"[alias: --source]"
     )
     parser.add_argument(
         "--output", "-o",
         type=str,
-        default=AUG_OUTPUT_DIR,
+        default=None,
         help=f"Dossier destination (défaut: {AUG_OUTPUT_DIR})"
     )
     parser.add_argument(
-        "--count", "-n",
+        "--target",
+        type=str,
+        default=None,
+        help="Nom du dossier destination SOUS output/ (interface GUI/workflow, "
+             "ex: 'augmented' -> output/augmented)"
+    )
+    parser.add_argument(
+        "--count", "-n", "--num_aug",
+        dest="count",
         type=int,
         default=DEFAULT_NUM_AUG,
-        help=f"Nombre d'augmentations par image (défaut: {DEFAULT_NUM_AUG})"
+        help=f"Nombre d'augmentations par image (défaut: {DEFAULT_NUM_AUG}) "
+             f"[alias: --num_aug]"
     )
     parser.add_argument(
         "--workers", "-w",
@@ -514,21 +607,76 @@ def main():
         action="store_true",
         help="Désactiver l'utilisation du GPU"
     )
-    
+    # Paramètres du pipeline (F06) — sans drapeau explicite, la calibration
+    # de la Live Preview (config/augmentation_params.json) est utilisée
+    parser.add_argument(
+        "--intensity",
+        type=float,
+        default=None,
+        help="Intensité globale des transformations, 0.1-2.0 "
+             "(défaut: calibration Live Preview, sinon 1.0)"
+    )
+    parser.add_argument(
+        "--transforms",
+        type=int,
+        default=None,
+        help="Transformations par image, 0 = aléatoire 3-6 "
+             "(défaut: calibration Live Preview, sinon 0)"
+    )
+    parser.add_argument(
+        "--categories",
+        type=str,
+        default=None,
+        help="Catégories à inclure, séparées par des virgules "
+             f"(choix: {','.join(AUGMENTATION_CATEGORIES)} ; "
+             "défaut: calibration Live Preview, sinon toutes)"
+    )
+
     args = parser.parse_args()
-    
+
+    # Destination : --output explicite > --target (sous output/) > défaut
+    if args.output:
+        output_dir = args.output
+    elif args.target:
+        target = args.target
+        if os.path.isabs(target) or os.sep in target or '/' in target:
+            output_dir = target
+        else:
+            output_dir = os.path.join(PATHS['directories']['output_base'], target)
+    else:
+        output_dir = AUG_OUTPUT_DIR
+
+    # Paramètres du pipeline : CLI explicite > fichier calibré > défauts
+    params = load_generation_params()
+    source = params.pop("_source", None)
+    if args.intensity is not None:
+        params["intensity"] = args.intensity
+        source = "CLI"
+    if args.transforms is not None:
+        params["n_transforms"] = args.transforms
+        source = "CLI"
+    if args.categories is not None:
+        params["categories"] = [c.strip() for c in args.categories.split(',')
+                                if c.strip()]
+        source = "CLI"
+
     safe_print("=" * 60)
     safe_print("🎴 POKEMON CARD AUGMENTATION (Albumentations)")
     safe_print("=" * 60)
-    
+    if source:
+        safe_print(f"🎛️  Paramètres du pipeline: {source}")
+
     augmenter = AugmentationAlbumentations(
         num_workers=args.workers,
-        use_gpu=not args.no_gpu
+        use_gpu=not args.no_gpu,
+        intensity=params["intensity"],
+        n_transforms=params["n_transforms"] or None,
+        categories=params["categories"]
     )
-    
+
     total = augmenter.augment_directory(
         input_dir=args.input,
-        output_dir=args.output,
+        output_dir=output_dir,
         num_aug=args.count
     )
     

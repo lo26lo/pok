@@ -7,6 +7,7 @@ auto_evaluate_if_available (ne lève jamais). L'évaluation Ultralytics
 elle-même nécessite un modèle entraîné (hors périmètre CI).
 """
 import json
+import os
 import shutil
 
 import numpy as np
@@ -189,5 +190,5 @@ class TestListImages:
                 p.write_text("x")
             else:
                 cv2.imwrite(str(p), img)
-        names = [p.split("/")[-1] for p in list_images(str(tmp_path))]
+        names = [os.path.basename(p) for p in list_images(str(tmp_path))]
         assert names == ["a.png", "b.jpg", "d.jpeg"]

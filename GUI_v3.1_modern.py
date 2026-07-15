@@ -3310,8 +3310,52 @@ class ModernPokemonGUI:
         self.detect_show_prices_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(prices_frame, text="💰 Show Prices (from models/cards_database.yaml)",
                        variable=self.detect_show_prices_var).pack(anchor='w')
-        
+
         tk.Label(prices_frame, text="Display card prices alongside names in detection overlay",
+                bg=self.colors['bg_card'], fg='#888888',
+                font=('Segoe UI', 9)).pack(anchor='w', padx=20)
+
+        # Snapshot de prix hors-ligne (F10) : indicateur + préchargement
+        snapshot_frame = tk.Frame(prices_frame, bg=self.colors['bg_card'])
+        snapshot_frame.pack(anchor='w', padx=20, pady=(4, 0), fill=tk.X)
+
+        self.price_snapshot_label = tk.Label(snapshot_frame,
+                text=self._price_snapshot_text(),
+                bg=self.colors['bg_card'], fg='#6aa6ff',
+                font=('Segoe UI', 9))
+        self.price_snapshot_label.pack(side=tk.LEFT)
+
+        ttk.Button(snapshot_frame, text="⬇ Preload Prices",
+                  command=self.preload_prices_snapshot).pack(side=tk.LEFT, padx=15)
+
+        ttk.Button(snapshot_frame, text="💹 Price History",
+                  command=self.open_price_history).pack(side=tk.LEFT)
+
+        # Identify Cards checkbox (F01)
+        identify_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        identify_frame.pack(fill=tk.X, pady=10)
+
+        self.detect_identify_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(identify_frame, text="🎴 Identify Cards (embeddings index)",
+                       variable=self.detect_identify_var).pack(anchor='w')
+
+        tk.Label(identify_frame,
+                text="Show exact card name, set and number in the overlay "
+                     "(build the index first: python tools/build_card_index.py)",
+                bg=self.colors['bg_card'], fg='#888888',
+                font=('Segoe UI', 9)).pack(anchor='w', padx=20)
+
+        # Grade Cards checkbox (F02)
+        grade_frame = tk.Frame(config_content, bg=self.colors['bg_card'])
+        grade_frame.pack(fill=tk.X, pady=10)
+
+        self.detect_grade_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(grade_frame, text="🔍 Grade Cards (centering / corners)",
+                       variable=self.detect_grade_var).pack(anchor='w')
+
+        tk.Label(grade_frame,
+                text="Estimate card condition (NM/EX/GD/PL badge) and weight "
+                     "the displayed price accordingly — heuristic, best effort",
                 bg=self.colors['bg_card'], fg='#888888',
                 font=('Segoe UI', 9)).pack(anchor='w', padx=20)
         
@@ -3323,7 +3367,17 @@ class ModernPokemonGUI:
                   style='Accent.TButton',
                   command=self.start_webcam_detection,
                   width=30).pack(pady=5)
-        
+
+        ttk.Button(btn_frame, text="🧺 START COLLECTION SCAN",
+                  command=self.start_collection_scan,
+                  width=30).pack(pady=5)
+
+        ttk.Button(btn_frame, text="📂 Open Scans Folder",
+                  command=lambda: self.open_folder(
+                      PATHS['directories'].get('output_collection_scans',
+                                               'output/collection_scans')),
+                  width=30).pack(pady=5)
+
         ttk.Button(btn_frame, text="🖼️ Detect Single Image",
                   command=self.detect_single_image,
                   width=30).pack(pady=5)
@@ -5078,7 +5132,9 @@ Continuer ?"""
                     model_path=model_path,
                     confidence=conf,
                     camera_id=camera_id,
-                    show_prices=self.detect_show_prices_var.get()
+                    show_prices=self.detect_show_prices_var.get(),
+                    identify_cards=self.detect_identify_var.get(),
+                    grade_cards=self.detect_grade_var.get()
                 )
                 
                 manager = DetectionManager(config)
@@ -5099,7 +5155,142 @@ Continuer ?"""
                 self.show_error("Erreur", f"Erreur webcam:\n{e}")
         
         threading.Thread(target=task, daemon=True).start()
-    
+
+    def _price_snapshot_text(self) -> str:
+        """Libellé de l'indicateur de snapshot de prix hors-ligne (F10)"""
+        try:
+            from core.price_cache import snapshot_status
+            status = snapshot_status()
+        except Exception:
+            status = None
+        return f"💾 {status}" if status else "💾 No offline price snapshot yet"
+
+    def preload_prices_snapshot(self):
+        """Précharge le snapshot de prix hors-ligne (F10)"""
+        self.log("⬇️ Préchargement des prix (cartes de la base locale)...")
+
+        def task():
+            try:
+                from core.price_cache import database_card_ids, preload_prices
+
+                card_ids = database_card_ids()
+                if not card_ids:
+                    self.log("❌ models/cards_database.yaml vide — rien à précharger")
+                    self.show_warning("Preload Prices",
+                        "La base de cartes est vide.\n"
+                        "Générez-la d'abord (vue Excel/Prices) ou utilisez\n"
+                        "python tools/preload_prices.py --set <id>")
+                    return
+
+                result = preload_prices(
+                    card_ids=card_ids,
+                    progress_callback=lambda msg, cur, tot: self.log(msg))
+
+                # Rafraîchir l'indicateur depuis le thread principal
+                self.root.after(0, lambda: self.price_snapshot_label.config(
+                    text=self._price_snapshot_text()))
+
+                # F09 : notifier les alertes de seuil franchies par ce relevé
+                for t in result.get("alerts", []):
+                    self.log(f"🔔 ALERTE PRIX: {t.describe()}")
+                if result.get("alerts"):
+                    lines = "\n".join(f"• {t.describe()}"
+                                      for t in result["alerts"])
+                    self.show_info("🔔 Alertes de prix", lines)
+
+                if result["failed"] and not result["fetched"]:
+                    self.show_error("Preload Prices",
+                        "Préchargement impossible (réseau ?).\n"
+                        "Le snapshot existant reste utilisable hors-ligne.")
+            except Exception as e:
+                self.log(f"❌ Erreur préchargement: {e}")
+                self.show_error("Erreur", f"Erreur préchargement:\n{e}")
+
+        threading.Thread(target=task, daemon=True).start()
+
+    def open_price_history(self):
+        """Ouvre l'historique des prix et la gestion des alertes (F09)"""
+        try:
+            from gui.price_history_view import PriceHistoryDialog
+            PriceHistoryDialog(self.root, self.colors)
+        except Exception as e:
+            messagebox.showerror("Price History",
+                                 f"Impossible d'ouvrir l'historique:\n{e}")
+
+    def start_collection_scan(self):
+        """Scan de collection (F03) : webcam + inventaire dédupliqué + export"""
+        try:
+            model_path = Path(self.detect_model_var.get())
+            conf = self.detect_conf_var.get()
+            camera_id = int(self.detect_camera_var.get())
+        except Exception as e:
+            self.show_error("Error", f"Configuration invalide:\n{e}")
+            return
+
+        if not model_path.exists():
+            self.show_error("Error",
+                f"Modèle non trouvé!\n{model_path}\n\n"
+                "Entraînez d'abord un modèle.")
+            return
+
+        self.log("🧺 Démarrage du scan de collection...")
+        self.log("   Présentez vos cartes à la caméra ('q' pour terminer)")
+
+        def task():
+            try:
+                from core.collection_scanner import CollectionScanner
+
+                config = DetectionConfig(
+                    model_path=model_path,
+                    confidence=conf,
+                    camera_id=camera_id,
+                    show_prices=self.detect_show_prices_var.get(),
+                    identify_cards=True,  # identification exacte recommandée
+                    grade_cards=self.detect_grade_var.get()
+                )
+
+                manager = DetectionManager(config)
+                manager.set_log_callback(self.log)
+                scanner = CollectionScanner()
+
+                manager.detect_webcam(scanner=scanner)
+
+                # Récap de fin de session + exports
+                s = scanner.summary()
+                csv_path = scanner.export_csv()
+                xlsx_path = scanner.export_excel()
+
+                self.log(f"🧺 Scan terminé: {s['unique_cards']} cartes uniques, "
+                         f"{s['total_quantity']} exemplaires, "
+                         f"valeur {s['total_value']:.2f}-{s['total_value_max']:.2f}€")
+                self.log(f"   💾 Inventaire: {csv_path}")
+                if xlsx_path:
+                    self.log(f"   💾 Excel: {xlsx_path}")
+
+                unpriced = (f"\nCartes sans prix: {s['unpriced_cards']}"
+                            if s['unpriced_cards'] else "")
+                exports = f"CSV: {csv_path}" + (f"\nExcel: {xlsx_path}"
+                                                if xlsx_path else "")
+                self.show_info("Scan de collection terminé",
+                    f"🧺 {s['unique_cards']} cartes uniques "
+                    f"({s['total_quantity']} exemplaires)\n"
+                    f"💰 Valeur estimée: {s['total_value']:.2f}€ "
+                    f"à {s['total_value_max']:.2f}€\n"
+                    f"⏱️ Durée: {s['duration_s']:.0f}s"
+                    f"{unpriced}\n\n{exports}")
+
+            except ImportError:
+                self.log("❌ Packages manquants (ultralytics ou opencv)!")
+                self.show_error("Erreur",
+                    "Packages manquants!\n\n"
+                    "Installation:\n"
+                    "pip install ultralytics opencv-python")
+            except Exception as e:
+                self.log(f"❌ Erreur: {e}")
+                self.show_error("Erreur", f"Erreur scan:\n{e}")
+
+        threading.Thread(target=task, daemon=True).start()
+
     def detect_single_image(self):
         """Détecter cartes dans une image"""
         try:
@@ -5129,7 +5320,9 @@ Continuer ?"""
                 config = DetectionConfig(
                     model_path=model_path,
                     confidence=conf,
-                    show_prices=self.detect_show_prices_var.get()
+                    show_prices=self.detect_show_prices_var.get(),
+                    identify_cards=self.detect_identify_var.get(),
+                    grade_cards=self.detect_grade_var.get()
                 )
                 
                 manager = DetectionManager(config)
@@ -5171,7 +5364,9 @@ Continuer ?"""
                 config = DetectionConfig(
                     model_path=model_path,
                     confidence=conf,
-                    show_prices=self.detect_show_prices_var.get()
+                    show_prices=self.detect_show_prices_var.get(),
+                    identify_cards=self.detect_identify_var.get(),
+                    grade_cards=self.detect_grade_var.get()
                 )
                 
                 manager = DetectionManager(config)
