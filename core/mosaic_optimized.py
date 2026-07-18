@@ -296,6 +296,11 @@ class MosaicGeneratorOptimized:
             return generate_realistic_background(canvas_width, canvas_height)
 
         if background_mode == 0:
+            if not fake_images:
+                # Pas de fausses cartes disponibles : fond réaliste plutôt
+                # que d'utiliser de VRAIES cartes non annotées en fond (le
+                # modèle apprendrait à les ignorer)
+                return generate_realistic_background(canvas_width, canvas_height)
             canvas = np.ones((canvas_height, canvas_width, 3), dtype=np.uint8) * 255
             canvas = self.create_mosaic_background_optimized(canvas, fake_images)
             return canvas
@@ -722,9 +727,14 @@ def main():
     resized_images = generator.resize_cards_parallel(image_paths)
     safe_print(f"   {len(resized_images)} images chargées")
     
-    # Charger les fausses cartes
+    # Charger les fausses cartes. En leur absence, PAS de fallback sur les
+    # vraies cartes (elles apparaîtraient non annotées en fond) : le
+    # background_mode 0 bascule alors sur un fond réaliste procédural
     fake_image_paths = glob(os.path.join(FAKE_DIR, "*.png")) + glob(os.path.join(FAKE_DIR, "*.jpg"))
-    fake_images = generator.resize_cards_parallel(fake_image_paths) if fake_image_paths else resized_images.copy()
+    fake_images = generator.resize_cards_parallel(fake_image_paths) if fake_image_paths else []
+    if not fake_images:
+        safe_print("⚠️ Aucune fausse carte dans "
+                   f"{FAKE_DIR} — fonds réalistes utilisés à la place")
     
     if args.layout_mode.lower() == "all":
         safe_print("⚠️ Mode ALL non encore optimisé dans cette version")

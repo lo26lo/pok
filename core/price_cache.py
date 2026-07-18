@@ -231,10 +231,17 @@ class PriceCache:
         """Dernier snapshot de CHAQUE carte : {card_id: PriceEntry}."""
         now = time.time()
         with self._connect() as conn:
+            # Jointure explicite sur le max plutôt que le comportement
+            # SQLite « bare columns avec MAX() » (correct en SQLite mais
+            # non portable et facilement cassé par un refactor)
             rows = conn.execute(
-                "SELECT card_id, price, price_max, source, currency, "
-                "       MAX(fetched_at) "
-                "FROM price_snapshots GROUP BY card_id").fetchall()
+                "SELECT p.card_id, p.price, p.price_max, p.source, "
+                "       p.currency, p.fetched_at "
+                "FROM price_snapshots p "
+                "JOIN (SELECT card_id, MAX(fetched_at) AS max_fetched "
+                "      FROM price_snapshots GROUP BY card_id) m "
+                "  ON p.card_id = m.card_id "
+                " AND p.fetched_at = m.max_fetched").fetchall()
         return {row[0]: self._row_to_entry(row, now) for row in rows}
 
     def history(self, card_id: str, limit: int = 100) -> List[PriceEntry]:

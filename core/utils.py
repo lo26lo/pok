@@ -256,6 +256,7 @@ def load_card_data(source_path: str = None) -> Tuple[Dict[str, str], Dict[str, i
         if 'cards' not in data:
             raise Exception(f"Structure YAML invalide (clé 'cards' manquante)")
 
+        short_key_collisions = []
         for class_id, (card_id, card_info) in enumerate(data['cards'].items()):
             name = card_info['name'].replace(" ", "_")
 
@@ -264,13 +265,25 @@ def load_card_data(source_path: str = None) -> Tuple[Dict[str, str], Dict[str, i
                 card_dict[card_id] = name
                 class_map[card_id] = class_id
 
-            # Clé 2: numéro court (ex: "019"), padder si numérique
-            number = card_id.split('_')[-1] if '_' in card_id else card_id
-            if number.isdigit():
-                number = number.zfill(3)
-            if number not in card_dict:
-                card_dict[number] = name
-                class_map[number] = class_id
+            # Clé 2: numéro court (ex: "019"), padder si numérique.
+            # ⚠️ En multi-sets, deux cartes peuvent partager le même numéro
+            # court : la PREMIÈRE déclarée gagne — les fichiers dont seul le
+            # numéro court est extractible doivent utiliser la clé complète
+            if number := (card_id.split('_')[-1] if '_' in card_id else card_id):
+                if number.isdigit():
+                    number = number.zfill(3)
+                if number not in card_dict:
+                    card_dict[number] = name
+                    class_map[number] = class_id
+                elif class_map[number] != class_id:
+                    short_key_collisions.append(number)
+
+        if short_key_collisions:
+            safe_print(
+                f"⚠️ {len(short_key_collisions)} collision(s) de numéro court "
+                f"entre sets (ex: {short_key_collisions[:3]}) — la première "
+                f"carte déclarée garde la clé courte ; utilisez les "
+                f"identifiants complets (set_numéro) dans les noms de fichiers")
     else:
         # Charger depuis Excel (legacy) — pandas importé ici seulement
         try:
@@ -352,9 +365,10 @@ def extract_card_number(filename: str) -> Optional[str]:
     if match:
         return match.group(1)
     
-    # Fallback: XXX_XXX_XXX
+    # Fallback: XXX_XXX_XXX (exactement 3 chiffres — sans ancrage de fin,
+    # "1234" serait accepté comme numéro de carte)
     match = PATTERN_FALLBACK_1.search(filename)
-    if match and re.match(r'\d{3}', match.group(1)):
+    if match and re.fullmatch(r'\d{3}', match.group(1)):
         return match.group(1)
     
     # Dernier recours

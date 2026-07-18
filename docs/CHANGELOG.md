@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🔧 Audit juillet 2026 — findings mineurs (clôture de l'audit)
+
+- **fix(core)** : fallback d'`extract_card_number` ancré (« 1234 » n'est
+  plus pris pour un numéro de carte) ; collisions de numéros courts entre
+  sets détectées et signalées par `load_card_data`
+- **fix(core)** : mosaïques — sans fausses cartes, le background_mode 0
+  bascule sur un fond réaliste au lieu d'utiliser de vraies cartes non
+  annotées en fond ; `latest_all()` du cache de prix réécrit en jointure
+  SQL explicite ; boucle de `random_erasing` bornée à 100 essais
+- **fix(scripts)** : merge_dataset fusionne aussi les `.jpg`/`.jpeg` ;
+  workflow_optimized compte les vraies cartes source (plus de « 8 » codé
+  en dur)
+- **docs** : labels d'augmentation plein cadre conservés par décision
+  mesurée — le transport de bboxes de SafeRotate est cassé dans
+  albumentations 1.4.x (vérifié empiriquement, détail dans le rapport)
+- Suite de tests : 320 passés, 0 échec (les tests albumentations
+  s'exécutent désormais)
+
 ### 🔧 Audit juillet 2026 — derniers findings (M2, M4, M11)
 
 - **fix(scripts)** : split train/val **sans fuite** dans merge_dataset —

@@ -5,11 +5,11 @@ par lecture ligne à ligne des 25 modules du core et des points d'orchestration.
 Les findings sont classés par gravité. Chaque entrée référence les fichiers et
 lignes concernés (état du dépôt au commit `c30aa8e`).
 
-> **Mise à jour** : les correctifs ont été appliqués dans les commits qui
-> suivent ce rapport sur la même branche. Statut par finding : ✅ corrigé,
-> 📝 documenté/non corrigé. Tous les findings critiques, élevés et moyens
-> sont désormais corrigés (M2, M4 et M11 inclus) ; seuls des mineurs
-> documentés restent ouverts.
+> **Mise à jour finale** : TOUS les findings sont corrigés (critiques,
+> élevés, moyens et mineurs), à une exception près conservée par décision
+> mesurée — voir la section Mineurs (labels d'augmentation : le correctif
+> bbox-aware est plus buggé que le statu quo avec albumentations 1.4.x).
+> Statut par finding : ✅ corrigé, 📝 documenté/écarté.
 
 ---
 
@@ -242,33 +242,34 @@ ne sont atteignables qu'en CLI.
 
 ## 🔵 Mineurs
 
-- `core/utils.py:333-334` — le fallback de `extract_card_number` valide
-  `re.match(r'\d{3}', ...)` sans ancrage de fin : « 1234 » passe.
-- `core/utils.py:236-250` — collision des clés courtes de `load_card_data` :
-  deux sets contenant le numéro « 019 » → la clé courte pointe le premier set
-  chargé (comportement à documenter ; les clés complètes sont sûres).
-- `core/augmentation_albumentations.py:439` — labels toujours
-  `0.5 0.5 1.0 1.0` ; correct pour une carte plein cadre, légèrement trop
-  large après `SafeRotate`/`Perspective` (la carte n'occupe plus tout le
-  cadre).
-- `core/mosaic_optimized.py:716-718` — sans fonds « fake », les vraies cartes
-  servent de fond **sans annotation** : le modèle apprend à ignorer des cartes
-  réelles.
-- `core/detection_manager.py:479` — `cv2.imread()` non vérifié avant
-  `_annotate_frame` (crash si l'image devient illisible entre détection et
-  annotation).
-- `core/auto_balancer_optimized.py:85-92` — l'affichage de la distribution
-  duplique des classes quand il y en a ≤ 20 (tranches `[:10]` et `[-10:]` qui
-  se recouvrent).
-- `core/price_cache.py:230-238` — `latest_all()` repose sur le comportement
-  SQLite « bare columns with MAX() » ; correct en SQLite mais fragile si la
-  requête est portée ailleurs.
-- `scripts/merge_dataset.py:36` — seuls les `*.png` sont fusionnés ; des
-  sources `.jpg` seraient silencieusement ignorées.
-- `core/random_erasing.py:44-59` — boucle de rejet potentiellement longue
-  quand le rectangle tiré dépasse l'image (pas de borne d'essais).
+Tous corrigés sauf un (justification empirique ci-dessous) :
 
----
+- ✅ `core/utils.py` — fallback de `extract_card_number` ancré
+  (`re.fullmatch(r'\d{3}')`) : « 1234 » n'est plus accepté comme numéro.
+- ✅ `core/utils.py` — collisions de clés courtes de `load_card_data`
+  détectées et signalées (avertissement listant les numéros en conflit ;
+  la première carte déclarée garde la clé, comportement documenté).
+- 📝 `core/augmentation_albumentations.py` — labels plein cadre
+  `0.5 0.5 1.0 1.0`. Correctif bbox-aware ÉCARTÉ après vérification
+  empirique : avec albumentations 1.4.x (version épinglée `<2.0`), le
+  transport de bboxes de `SafeRotate` est cassé (bbox 0.9×0.9 tournée de
+  10° → hauteur 0.064) — les labels transformés seraient bien pires que la
+  légère surestimation actuelle (~qq %). À revisiter lors du passage à
+  albumentations 2.x.
+- ✅ `core/mosaic_optimized.py` — plus de fallback des vraies cartes en
+  fond : sans fausses cartes, le background_mode 0 bascule sur un fond
+  réaliste procédural (aucune carte réelle non annotée en fond).
+- ✅ `core/detection_manager.py` — annotation depuis `orig_img` Ultralytics
+  (plus de relecture disque pouvant renvoyer None).
+- ✅ `core/auto_balancer_optimized.py` — affichage de la distribution sans
+  recouvrement quand ≤ 20 classes.
+- ✅ `core/price_cache.py` — `latest_all()` réécrit avec une jointure
+  explicite sur MAX(fetched_at) (plus de dépendance au comportement SQLite
+  « bare columns »).
+- ✅ `scripts/merge_dataset.py` — les `.jpg`/`.jpeg` sont fusionnés comme
+  les `.png` (copie ET split).
+- ✅ `core/random_erasing.py` — boucle de tirage bornée à 100 essais
+  (image renvoyée inchangée si aucun rectangle valide).
 
 ## ✅ Points vérifiés sans problème notable
 

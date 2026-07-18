@@ -20,7 +20,18 @@ def load_paths():
 
 PATHS = load_paths()
 
-def copy_files(src_images: Path, src_labels: Path, 
+# Extensions d'images gérées par le pipeline (les .jpg ne sont plus
+# silencieusement ignorés)
+IMAGE_GLOBS = ("*.png", "*.jpg", "*.jpeg")
+
+
+def _iter_images(directory: Path):
+    """Itère les images d'un dossier, toutes extensions gérées, triées."""
+    for pattern in IMAGE_GLOBS:
+        yield from sorted(directory.glob(pattern))
+
+
+def copy_files(src_images: Path, src_labels: Path,
                dst_images: Path, dst_labels: Path) -> int:
     """
     Copie les images et labels d'un dossier source vers destination
@@ -29,12 +40,12 @@ def copy_files(src_images: Path, src_labels: Path,
         Nombre de fichiers copiés
     """
     count = 0
-    
+
     if not src_images.exists():
         print(f"⚠️  {src_images} n'existe pas")
         return 0
-    
-    for img in src_images.glob("*.png"):
+
+    for img in _iter_images(src_images):
         # Ne copier que les paires image+label complètes : une image sans
         # label serait traitée en « background » silencieux par YOLO
         label = src_labels / f"{img.stem}.txt"
@@ -83,7 +94,7 @@ def create_train_val_split(images_dir: Path, train_ratio: float = 0.8) -> Tuple[
     Returns:
         (train_files, val_files)
     """
-    all_images = list(images_dir.glob("*.png"))
+    all_images = list(_iter_images(images_dir))
 
     # Regrouper par carte source, puis affecter groupe par groupe
     groups = {}
