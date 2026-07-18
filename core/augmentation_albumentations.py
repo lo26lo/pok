@@ -11,6 +11,7 @@ Avantages vs imgaug:
 - Nouvelles augmentations exclusives (Shadow, SunFlare, Perspective, etc.)
 - Maintenu activement (vs imgaug abandonné 2020)
 """
+import math
 import os
 import sys
 import cv2
@@ -186,21 +187,29 @@ def build_transform_pool(intensity: float = 1.0,
             A.Sharpen(alpha=(0.1, min(1.0, 0.4 * i)), lightness=(0.8, 1.2), p=1.0),
         ],
         # 4. BRUIT — capteur, compression
+        # ⚠️ API albumentations 2.x. Les anciens arguments 1.x (var_limit,
+        # quality_lower/upper, *_lower/*_upper) sont IGNORÉS SILENCIEUSEMENT
+        # par 2.x (retombée sur les défauts) — tests/test_augmentation_amplitudes.py
+        # verrouille les valeurs effectives.
         "noise": [
-            A.GaussNoise(var_limit=(10.0, 40.0 * i), p=1.0),
+            # var_limit 1.x = variance sur [0,255] ; std_range 2.x =
+            # écart-type normalisé [0,1] : std = sqrt(var)/255. La borne
+            # haute est plafonnée à la basse (2.x valide l'ordre du range)
+            A.GaussNoise(std_range=(math.sqrt(10.0) / 255.0,
+                                    math.sqrt(max(10.0, 40.0 * i)) / 255.0),
+                         p=1.0),
             A.ISONoise(color_shift=(0.01, 0.03),
                        intensity=(0.1, max(0.1, 0.3 * i)), p=1.0),
-            A.ImageCompression(quality_lower=60, quality_upper=95, p=1.0),
+            A.ImageCompression(quality_range=(60, 95), p=1.0),
         ],
         # 5. EFFETS ENVIRONNEMENT — prise de vue réaliste
         "environment": [
             A.RandomShadow(shadow_roi=(0, 0, 1, 1), num_shadows_limit=(1, 2),
                            shadow_dimension=5, p=1.0),
-            A.RandomSunFlare(flare_roi=(0, 0, 1, 0.5), angle_lower=0,
-                             angle_upper=1, num_flare_circles_lower=3,
-                             num_flare_circles_upper=6, src_radius=100,
+            A.RandomSunFlare(flare_roi=(0, 0, 1, 0.5), angle_range=(0, 1),
+                             num_flare_circles_range=(3, 6), src_radius=100,
                              src_color=(255, 255, 255), p=1.0),
-            A.RandomFog(fog_coef_lower=0.1, fog_coef_upper=max(0.1, 0.3 * i),
+            A.RandomFog(fog_coef_range=(0.1, max(0.1, 0.3 * i)),
                         alpha_coef=0.1, p=1.0),
             A.Posterize(num_bits=5, p=1.0),
         ],

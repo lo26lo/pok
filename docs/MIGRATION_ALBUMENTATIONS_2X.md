@@ -42,20 +42,20 @@ d'albumentations au lieu de la reconstruction par keypoints.
 ### ✅ Phase 0 — Ce plan (commit d'ancrage)
 - [x] `docs/MIGRATION_ALBUMENTATIONS_2X.md` rédigé, commité, poussé
 
-### ⬜ Phase 1 — Migration du pool de transforms
-- [ ] `config/requirements.txt` : `albumentations>=1.3.0,<2.0` → `>=2.0,<3`
-- [ ] `build_transform_pool()` : les 4 transforms du tableau ci-dessus
+### ✅ Phase 1 — Migration du pool de transforms
+- [x] `config/requirements.txt` : `albumentations>=1.3.0,<2.0` → `>=2.0,<3`
+- [x] `build_transform_pool()` : les 4 transforms du tableau ci-dessus
       passés aux arguments 2.x (avec conversion pour GaussNoise)
-- [ ] Vérifier les mentions de version dans `docs/INSTALLATION.md` et
+- [x] Vérifier les mentions de version dans `docs/INSTALLATION.md` et
       `config/requirements_extra.txt`
-- [ ] Env de dev : `pip install "albumentations>=2.0,<3"` puis suite verte
+- [x] Env de dev : `pip install "albumentations>=2.0,<3"` puis suite verte
 
-### ⬜ Phase 2 — Test de régression des amplitudes
-- [ ] Nouveau test : instancier le pool (i=1.0) et vérifier les valeurs
+### ✅ Phase 2 — Test de régression des amplitudes
+- [x] Nouveau test : instancier le pool (i=1.0) et vérifier les valeurs
       EFFECTIVES des attributs (`std_range`, `quality_range`,
       `num_flare_circles_range`, `fog_coef_range` + échantillon des 21
       autres) — c'est LA protection contre les défauts silencieux
-- [ ] Vérifier aussi la mise à l'échelle par `intensity` (i=2.0)
+- [x] Vérifier aussi la mise à l'échelle par `intensity` (i=2.0)
 
 ### ⬜ Phase 3 — Labels bbox-aware (finding 📝 de l'audit)
 - [ ] `AugmentationAlbumentations` : envelopper chaque `SomeOf` de
