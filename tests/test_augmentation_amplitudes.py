@@ -96,3 +96,57 @@ class TestIntensityScaling:
         (fog,) = pool_low["RandomFog"]
         lo, hi = fog.fog_coef_range
         assert lo <= hi
+
+
+class TestBboxAwareLabels:
+    """Phase 3 migration 2.x : les labels suivent les transforms géométriques."""
+
+    def _augmenter(self):
+        from core.augmentation_albumentations import AugmentationAlbumentations
+        return AugmentationAlbumentations(num_workers=1, use_gpu=False)
+
+    def _img(self):
+        import numpy as np
+        rng = np.random.default_rng(0)
+        return (rng.random((380, 280, 3)) * 255).astype("uint8")
+
+    def test_augment_with_bbox_valid_and_sane(self):
+        aug = self._augmenter()
+        img = self._img()
+        for _ in range(20):
+            out, (cx, cy, w, h) = aug.augment_with_bbox(img, class_id=3)
+            assert out.shape == img.shape
+            # bbox dans [0,1] et jamais dégénérée (garde-fou _MIN_BBOX_AREA)
+            assert -1e-6 <= cx - w / 2 and cx + w / 2 <= 1 + 1e-6
+            assert -1e-6 <= cy - h / 2 and cy + h / 2 <= 1 + 1e-6
+            assert w * h >= aug._MIN_BBOX_AREA
+
+    def test_augment_image_backward_compatible(self):
+        aug = self._augmenter()
+        out = aug.augment_image(self._img())
+        assert out.shape == (380, 280, 3)
+
+    def test_augment_batch_writes_transformed_labels(self, tmp_path):
+        import cv2
+        aug = self._augmenter()
+        src = tmp_path / "card.png"
+        cv2.imwrite(str(src), self._img())
+        images_dir = tmp_path / "images"
+        labels_dir = tmp_path / "labels"
+        images_dir.mkdir()
+        labels_dir.mkdir()
+
+        img = cv2.imread(str(src))
+        count = aug.augment_batch([(img, str(src), 7)], num_aug=5,
+                                  output_images_dir=str(images_dir),
+                                  output_labels_dir=str(labels_dir))
+        assert count == 5
+        labels = sorted(labels_dir.glob("*.txt"))
+        assert len(labels) == 5
+        for label in labels:
+            parts = label.read_text().split()
+            assert len(parts) == 5
+            assert int(parts[0]) == 7
+            cx, cy, w, h = map(float, parts[1:])
+            assert 0 < w <= 1 and 0 < h <= 1
+            assert 0 <= cx <= 1 and 0 <= cy <= 1

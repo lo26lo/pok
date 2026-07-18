@@ -57,15 +57,15 @@ d'albumentations au lieu de la reconstruction par keypoints.
       autres) — c'est LA protection contre les défauts silencieux
 - [x] Vérifier aussi la mise à l'échelle par `intensity` (i=2.0)
 
-### ⬜ Phase 3 — Labels bbox-aware (finding 📝 de l'audit)
-- [ ] `AugmentationAlbumentations` : envelopper chaque `SomeOf` de
+### ✅ Phase 3 — Labels bbox-aware (finding 📝 de l'audit)
+- [x] `AugmentationAlbumentations` : envelopper chaque `SomeOf` de
       génération dans `A.Compose(..., bbox_params=BboxParams(format='yolo',
       label_fields=['class_labels'], clip=True))`
-- [ ] `augment_image()` accepte/retourne la bbox ; `augment_batch()` écrit
+- [x] `augment_image()` accepte/retourne la bbox ; `augment_batch()` écrit
       la bbox transformée (fallback plein cadre si liste vide)
-- [ ] La preview (`preview_augmentations`) reste image-seule (inchangée)
-- [ ] Test : labels générés dans [0,1], ≤ plein cadre, class_id préservé
-- [ ] Passer le finding correspondant du rapport d'audit à ✅
+- [x] La preview (`preview_augmentations`) reste image-seule (inchangée)
+- [x] Test : labels générés dans [0,1], ≤ plein cadre, class_id préservé
+- [x] Passer le finding correspondant du rapport d'audit à ✅
 
 ### ⬜ Phase 4 — Port du balancer imgaug → albumentations
 - [ ] Remplacer le pipeline `iaa.Sequential` par l'équivalent albumentations :

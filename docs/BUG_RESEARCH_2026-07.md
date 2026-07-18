@@ -249,13 +249,12 @@ Tous corrigés sauf un (justification empirique ci-dessous) :
 - ✅ `core/utils.py` — collisions de clés courtes de `load_card_data`
   détectées et signalées (avertissement listant les numéros en conflit ;
   la première carte déclarée garde la clé, comportement documenté).
-- 📝 `core/augmentation_albumentations.py` — labels plein cadre
-  `0.5 0.5 1.0 1.0`. Correctif bbox-aware ÉCARTÉ après vérification
-  empirique : avec albumentations 1.4.x (version épinglée `<2.0`), le
-  transport de bboxes de `SafeRotate` est cassé (bbox 0.9×0.9 tournée de
-  10° → hauteur 0.064) — les labels transformés seraient bien pires que la
-  légère surestimation actuelle (~qq %). À revisiter lors du passage à
-  albumentations 2.x.
+- ✅ `core/augmentation_albumentations.py` — labels bbox-aware ACTIVÉS
+  avec la migration albumentations 2.x (le blocage 1.4.x est levé) : la
+  bbox suit les transforms géométriques via `bbox_params`, avec un
+  garde-fou plein cadre pour le cas SafeRotate+BORDER_REFLECT_101 dont le
+  transport de bbox reste cassé en 2.0.x (bug amont, vérifié). Cf.
+  docs/MIGRATION_ALBUMENTATIONS_2X.md.
 - ✅ `core/mosaic_optimized.py` — plus de fallback des vraies cartes en
   fond : sans fausses cartes, le background_mode 0 bascule sur un fond
   réaliste procédural (aucune carte réelle non annotée en fond).
