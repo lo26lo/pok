@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🔧 Correctifs de l'audit de juillet 2026 (20 bugs corrigés)
+
+Corrections des findings du rapport `docs/BUG_RESEARCH_2026-07.md`
+(7 critiques, 5 élevés, 8 moyens — statut ✅/📝 détaillé dans le rapport) :
+
+- **fix(core)** : `generate_yaml_from_manifest` FUSIONNE désormais avec la
+  base existante au lieu de l'écraser — cartes des autres sets, prix et
+  class_id YOLO préservés (C1)
+- **fix(core)** : workflow automatique — l'étape mosaïques utilise
+  `--max-groups` (quick=25, standard=62, custom=N, complete=∞) au lieu du
+  mode `all` non implémenté qui réussissait sans rien produire (C2, C3)
+- **fix(core)** : auto-balancer — les bboxes des images `_balN` sont
+  corrigées pour le flip ET le scale (mesure de la transformation réelle via
+  3 keypoints), comptage par image et non par occurrence, images préchargées
+  réellement utilisées (C4, E2, M9)
+- **fix(core)** : auto-balancer — `train.txt`/`val.txt` sont mis à jour après
+  balancing (nouvelles images ajoutées au train, fichiers supprimés retirés,
+  split val préservé) (C5)
+- **fix(core)** : tcgdex_api — codes de sets corrigés et alignés sur
+  `POPULAR_SETS` (Obsidian Flames=sv03, Paradox Rift=sv04, 151=sv03.5…),
+  prix à 0.0 acceptés, padding du localId testé dans les deux variantes
+  (C6, M5)
+- **fix(core)** : workflow — stratégies `undersample`/`remove` traduites en
+  `reduce` pour le balancer ; sous-processus lus en UTF-8 tolérant (C7, M6)
+- **fix(core)** : mosaïques — bboxes clippées au canvas dans les layouts 1-3
+  (parité avec le layout 4) ; dossiers `corrupted/` et fonds web ancrés dans
+  `output/` au lieu du CWD (E3, M8)
+- **fix(core)** : detection/training — device auto-détecté (`0` si CUDA
+  disponible, sinon `cpu`) ; annotation depuis `orig_img` Ultralytics au lieu
+  d'une relecture disque (E4)
+- **fix(core)** : fallback de `load_paths()` complété avec toutes les clés
+  requises par les modules (E5) ; effet holographique — gradient normalisé
+  min-max (angles > 90°) et palette convertie en BGR (M3) ; export Roboflow —
+  `names` indexé par class_id (M7) ; scanner de collection — expiration des
+  tracks non confirmés après 10 s (M10)
+- **fix(scripts)** : workflow_optimized appelle `scripts/merge_dataset.py`
+  (chemin corrigé) (E1) ; merge_dataset — garde contre les sources vides,
+  paires image+label complètes uniquement, fallback des noms de classes si
+  `data.yaml` est présent mais sans `names` (M1)
+- Suite de tests : 281 passés, 0 échec (7 skips liés aux dépendances)
+
 ### 🐛 Audit : recherche approfondie de bugs (juillet 2026)
 
 - Nouveau rapport `docs/BUG_RESEARCH_2026-07.md` : audit ligne à ligne des

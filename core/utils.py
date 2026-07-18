@@ -52,17 +52,40 @@ def load_paths() -> Dict:
         with open(config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        # Fallback to default paths if file doesn't exist
+        # Fallback si le fichier n'existe pas — doit couvrir TOUTES les clés
+        # accédées directement (PATHS['directories'][...]) par les modules
+        # du core, sinon leur import plante en KeyError
         return {
             "directories": {
                 "images": "images",
+                "backgrounds_original": "backgrounds/original",
                 "excel": "excel",
                 "models": "models",
-                "output_base": "output"
+                "output_base": "output",
+                "output_holographic": "output/holographic",
+                "output_augmented": "output/augmented",
+                "output_augmented_images": "output/augmented/images",
+                "output_augmented_labels": "output/augmented/labels",
+                "output_backgrounds": "output/backgrounds",
+                "output_mosaics": "output/mosaics",
+                "output_mosaics_images": "output/mosaics/images",
+                "output_mosaics_labels": "output/mosaics/labels",
+                "output_dataset": "output/dataset",
+                "output_dataset_images": "output/dataset/images",
+                "output_dataset_labels": "output/dataset/labels",
+                "output_dataset_merged": "output/dataset_merged",
+                "output_collection_scans": "output/collection_scans",
+                "runs_train": "runs/train",
+                "card_index": "models/card_index"
             },
             "files": {
                 "cards_info_excel": "excel/cards_info.xlsx",
-                "cards_database_yaml": "models/cards_database.yaml"
+                "cards_database_yaml": "models/cards_database.yaml",
+                "card_name_to_id_json": "models/card_name_to_id.json",
+                "price_cache_db": "models/price_cache.db",
+                "embedding_model_onnx": "models/mobilenetv2_embeddings.onnx",
+                "augmentation_params": "config/augmentation_params.json",
+                "best_model": "runs/train/pokemon_detector/weights/best.pt"
             }
         }
 

@@ -18,7 +18,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Optional, Callable, List, Dict, Any, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 import yaml
 
@@ -30,6 +30,16 @@ except ImportError:
     from base_manager import BaseManager
 
 
+def default_device() -> str:
+    """GPU 0 si CUDA est disponible, sinon CPU (évite le plantage
+    'Invalid CUDA device' d'Ultralytics sur machine sans GPU)."""
+    try:
+        import torch
+        return "0" if torch.cuda.is_available() else "cpu"
+    except ImportError:
+        return "cpu"
+
+
 @dataclass
 class DetectionConfig:
     """Configuration pour la détection"""
@@ -37,7 +47,7 @@ class DetectionConfig:
     confidence: float = 0.25
     iou_threshold: float = 0.45
     max_detections: int = 300
-    device: str = "0"  # "0", "cpu"
+    device: str = field(default_factory=default_device)  # "0", "cpu"
     
     # Webcam
     camera_id: int = 0
@@ -473,11 +483,12 @@ class DetectionManager(BaseManager):
             
             # Sauvegarder si demandé
             if save_path:
-                if self._custom_overlay:
+                # Frame propre fournie par Ultralytics (évite une relecture
+                # disque qui peut renvoyer None)
+                frame = getattr(results[0], 'orig_img', None)
+                if self._custom_overlay and frame is not None:
                     # Dessiner avec prix/identification personnalisés
-                    import cv2
-                    annotated = self._annotate_frame(cv2.imread(str(image_path)),
-                                                     results[0].boxes)
+                    annotated = self._annotate_frame(frame, results[0].boxes)
                 else:
                     # Utiliser l'annotation YOLO standard
                     annotated = results[0].plot(
@@ -755,9 +766,9 @@ class DetectionManager(BaseManager):
             )
             
             # Annoter avec ou sans prix/identification
-            if self._custom_overlay:
-                annotated = self._annotate_frame(cv2.imread(str(image_path)),
-                                                 results[0].boxes)
+            frame = getattr(results[0], 'orig_img', None)
+            if self._custom_overlay and frame is not None:
+                annotated = self._annotate_frame(frame, results[0].boxes)
             else:
                 annotated = results[0].plot()
             

@@ -75,29 +75,33 @@ class HolographicAugmenterOptimized:
         
         # Version CPU optimisée avec NumPy
         angle_rad = np.deg2rad(angle)
-        
+
         # Créer grille de coordonnées (vectorisé)
         y, x = np.mgrid[0:height, 0:width]
-        
-        # Position relative selon l'angle (vectorisé)
-        pos = (x * np.cos(angle_rad) + y * np.sin(angle_rad))
-        pos = pos / (width * np.cos(angle_rad) + height * np.sin(angle_rad))
-        
+
+        # Position relative selon l'angle, normalisée min-max : robuste pour
+        # tout angle (l'ancien dénominateur w·cos+h·sin s'annulait ou
+        # devenait négatif pour angle > 90°)
+        pos = (x * np.cos(angle_rad) + y * np.sin(angle_rad)).astype(np.float32)
+        pos = (pos - pos.min()) / max(1e-6, float(pos.max() - pos.min()))
+
         # Mapper aux couleurs (vectorisé)
         num_colors = len(self.rainbow_colors) - 1
         pos_scaled = pos * num_colors
         color_idx = np.clip(pos_scaled.astype(int), 0, num_colors - 1)
-        
+
         # Interpolation linéaire entre couleurs
         t = pos_scaled - color_idx
         t = np.clip(t, 0, 1)[:, :, np.newaxis]
-        
+
         color1 = self.rainbow_colors[color_idx]
         color2 = self.rainbow_colors[np.clip(color_idx + 1, 0, num_colors)]
-        
+
         rainbow = color1 * (1 - t) + color2 * t
-        rainbow = (rainbow * intensity).astype(np.uint8)
-        
+        # Palette déclarée en RGB, images OpenCV en BGR → inverser les canaux
+        rainbow = np.ascontiguousarray(
+            (rainbow * intensity).astype(np.uint8)[:, :, ::-1])
+
         return rainbow
     
     def _create_rainbow_gpu(self, width: int, height: int, angle: float, intensity: float) -> np.ndarray:
@@ -108,24 +112,25 @@ class HolographicAugmenterOptimized:
         y = torch.arange(height, device=DEVICE).view(-1, 1).float()
         x = torch.arange(width, device=DEVICE).view(1, -1).float()
         
-        # Position relative
+        # Position relative, normalisée min-max (robuste pour tout angle)
         pos = (x * np.cos(angle_rad) + y * np.sin(angle_rad))
-        pos = pos / (width * np.cos(angle_rad) + height * np.sin(angle_rad))
-        
+        pos = (pos - pos.min()) / torch.clamp(pos.max() - pos.min(), min=1e-6)
+
         # Mapper aux couleurs
         num_colors = len(self.rainbow_colors) - 1
         pos_scaled = pos * num_colors
         color_idx = torch.clamp(pos_scaled.long(), 0, num_colors - 1)
-        
+
         t = torch.clamp(pos_scaled - color_idx.float(), 0, 1).unsqueeze(-1)
-        
+
         colors_tensor = torch.from_numpy(self.rainbow_colors).to(DEVICE)
         color1 = colors_tensor[color_idx]
         color2 = colors_tensor[torch.clamp(color_idx + 1, 0, num_colors)]
-        
+
         rainbow = color1 * (1 - t) + color2 * t
-        rainbow = (rainbow * intensity).clamp(0, 255).byte()
-        
+        # Palette RGB → BGR pour rester cohérent avec les images OpenCV
+        rainbow = (rainbow * intensity).clamp(0, 255).byte().flip(-1)
+
         return rainbow.cpu().numpy()
     
     def add_dynamic_glare_vectorized(self, image: np.ndarray, num_glares: int = 3, 

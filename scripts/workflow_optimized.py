@@ -115,7 +115,7 @@ def main():
     
     # ÉTAPE 4: Fusion dataset
     if not run_command(
-        f'{python_exe} merge_dataset.py',
+        f'{python_exe} scripts/merge_dataset.py',
         "ÉTAPE 4/5 - Fusion du dataset final"
     ):
         return False

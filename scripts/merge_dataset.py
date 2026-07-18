@@ -34,17 +34,16 @@ def copy_files(src_images: Path, src_labels: Path,
         return 0
     
     for img in src_images.glob("*.png"):
-        # Copier image
-        shutil.copy2(img, dst_images / img.name)
-        
-        # Copier label si existe
+        # Ne copier que les paires image+label complètes : une image sans
+        # label serait traitée en « background » silencieux par YOLO
         label = src_labels / f"{img.stem}.txt"
         if label.exists():
+            shutil.copy2(img, dst_images / img.name)
             shutil.copy2(label, dst_labels / label.name)
             count += 1
         else:
-            print(f"⚠️  Label manquant pour {img.name}")
-    
+            print(f"⚠️  Label manquant pour {img.name} — image ignorée")
+
     return count
 
 
@@ -173,7 +172,11 @@ def merge_dataset():
     
     total = count_aug + count_mosaic
     print(f"\n📊 Total: {total} images dans le dataset")
-    
+
+    if total == 0:
+        print("❌ Aucune image à fusionner (sources vides ?) — abandon")
+        return
+
     # Créer train/val split
     print("\n🔀 Création du split train/val...")
     train_files, val_files = create_train_val_split(dataset_dir / "images", train_ratio=0.8)
@@ -207,12 +210,12 @@ def merge_dataset():
     augmented_yaml = augmented_dir / "data.yaml"
     if augmented_yaml.exists():
         with open(augmented_yaml, "r") as f:
-            aug_data = yaml.safe_load(f)
+            aug_data = yaml.safe_load(f) or {}
             if 'names' in aug_data:
                 for idx, name in enumerate(aug_data['names']):
                     class_names[idx] = name
-    else:
-        # Sinon, utiliser IDs
+    if not class_names:
+        # Fallback (data.yaml absent ou sans 'names') : IDs génériques
         for class_id in class_counts.keys():
             class_names[class_id] = f"class_{class_id}"
     

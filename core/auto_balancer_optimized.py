@@ -16,7 +16,7 @@ from collections import defaultdict
 import random
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 import multiprocessing as mp
 
 # Import safe_print
@@ -57,39 +57,43 @@ class DatasetBalancerOptimized:
         
         label_files = list(self.labels_dir.glob("*.txt"))
         
-        # Lecture parallèle des labels
+        # Lecture parallèle des labels. IMPORTANT: une image ne compte
+        # qu'UNE fois par classe (set), même si elle contient plusieurs
+        # instances — sinon les cibles sont faussées et _reduce_class
+        # peut tirer plusieurs fois le même fichier.
         def read_label(label_path):
-            class_ids = []
+            class_ids = set()
             try:
                 with open(label_path, 'r') as f:
                     for line in f:
                         parts = line.strip().split()
                         if len(parts) >= 5:
-                            class_ids.append(int(parts[0]))
+                            class_ids.add(int(parts[0]))
             except Exception:
                 pass
             return label_path.stem, class_ids
-        
+
         # Lire tous les labels en parallèle
         with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
             results = executor.map(read_label, label_files)
-            
+
             for img_name, class_ids in results:
                 for class_id in class_ids:
                     self.class_distribution[class_id].append(img_name)
-        
+
         # Afficher la distribution
         safe_print(f"\n📊 Distribution actuelle:")
         sorted_classes = sorted(self.class_distribution.items(), key=lambda x: len(x[1]))
-        
-        for class_id, images in sorted_classes[:10]:  # Afficher les 10 premières
-            safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
-        
-        if len(sorted_classes) > 20:
+
+        if len(sorted_classes) <= 20:
+            for class_id, images in sorted_classes:
+                safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
+        else:
+            for class_id, images in sorted_classes[:10]:
+                safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
             safe_print(f"   ... ({len(sorted_classes) - 20} classes cachées)")
-        
-        for class_id, images in sorted_classes[-10:]:  # Afficher les 10 dernières
-            safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
+            for class_id, images in sorted_classes[-10:]:
+                safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
         
         min_count = len(sorted_classes[0][1]) if sorted_classes else 0
         max_count = len(sorted_classes[-1][1]) if sorted_classes else 0
@@ -171,10 +175,56 @@ class DatasetBalancerOptimized:
                 except Exception as e:
                     safe_print(f"❌ Erreur classe {class_id}: {e}")
         
+        # Répercuter les ajouts/suppressions sur train.txt / val.txt :
+        # le data.yaml du dataset final pointe ces listes figées au merge,
+        # sans quoi les images _balN sont ignorées à l'entraînement et les
+        # images supprimées restent référencées.
+        self._refresh_split_files()
+
         elapsed = time.time() - start_time
         safe_print(f"\n✅ Balancing terminé en {elapsed:.1f}s!")
         if total_generated > 0:
             safe_print(f"   {total_generated} images générées ({total_generated/elapsed:.1f} img/s)")
+
+    def _refresh_split_files(self):
+        """
+        Met à jour train.txt / val.txt (listes de chemins absolus créées par
+        merge_dataset) après le balancing :
+        - retire les entrées dont le fichier n'existe plus (strategy reduce)
+        - ajoute les nouvelles images (non référencées) au train
+        Le split val existant est préservé (pas de re-shuffle).
+        """
+        train_txt = self.dataset_dir / "train.txt"
+        val_txt = self.dataset_dir / "val.txt"
+        if not train_txt.exists() and not val_txt.exists():
+            return  # dataset sans listes de split : rien à faire
+
+        def load_existing(path: Path) -> List[str]:
+            if not path.exists():
+                return []
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip()]
+            return [line for line in lines if Path(line).exists()]
+
+        train_list = load_existing(train_txt)
+        val_list = load_existing(val_txt)
+        referenced = {str(Path(p).resolve()) for p in train_list + val_list}
+
+        added = 0
+        for ext in ('*.png', '*.jpg', '*.jpeg'):
+            for img_path in self.images_dir.glob(ext):
+                resolved = str(img_path.resolve())
+                if resolved not in referenced:
+                    train_list.append(resolved)
+                    referenced.add(resolved)
+                    added += 1
+
+        with open(train_txt, 'w', encoding='utf-8') as f:
+            f.write("\n".join(train_list))
+        with open(val_txt, 'w', encoding='utf-8') as f:
+            f.write("\n".join(val_list))
+        safe_print(f"📝 Splits mis à jour: {len(train_list)} train "
+                   f"(+{added} nouvelles), {len(val_list)} val")
     
     def _load_image_with_cache(self, img_name: str) -> Tuple[np.ndarray, str]:
         """Charge une image avec gestion du cache"""
@@ -186,76 +236,95 @@ class DatasetBalancerOptimized:
                     return img, ext
         return None, None
     
-    def _adjust_yolo_bbox_for_augmentation(self, bbox_line: str, was_flipped: bool, scale_factor: float = 1.0) -> str:
-        """Ajuste les coordonnées YOLO après augmentation"""
+    def _adjust_yolo_bbox_for_augmentation(self, bbox_line: str,
+                                           ax: float, bx: float,
+                                           ay: float, by: float) -> Optional[str]:
+        """
+        Ajuste une bbox YOLO après une transformation affine axiale
+        x' = ax·x + bx, y' = ay·y + by (coordonnées normalisées) — couvre
+        le flip (ax < 0) ET le scale (|ax| ≠ 1) du pipeline imgaug.
+        Retourne None si la bbox devient dégénérée après clipping.
+        """
         parts = bbox_line.strip().split()
         if len(parts) != 5:
-            return bbox_line
-        
+            return bbox_line.strip() or None
+
         class_id = parts[0]
-        center_x, center_y, width, height = map(float, parts[1:])
-        
-        # Appliquer le flip horizontal
-        if was_flipped:
-            center_x = 1.0 - center_x
-        
-        # Appliquer le scale (les bbox restent dans [0,1])
-        # Le scale imgaug n'affecte pas les coordonnées normalisées YOLO
-        
-        return f"{class_id} {center_x:.6f} {center_y:.6f} {width:.6f} {height:.6f}"
-    
+        cx, cy, w, h = map(float, parts[1:])
+
+        cx = ax * cx + bx
+        cy = ay * cy + by
+        w = abs(ax) * w
+        h = abs(ay) * h
+
+        # Clipper aux bords de l'image (un zoom > 1 peut faire déborder)
+        x0 = max(0.0, min(1.0, cx - w / 2))
+        x1 = max(0.0, min(1.0, cx + w / 2))
+        y0 = max(0.0, min(1.0, cy - h / 2))
+        y1 = max(0.0, min(1.0, cy + h / 2))
+        if x1 - x0 < 1e-4 or y1 - y0 < 1e-4:
+            return None
+
+        return (f"{class_id} {(x0 + x1) / 2:.6f} {(y0 + y1) / 2:.6f} "
+                f"{x1 - x0:.6f} {y1 - y0:.6f}")
+
     def _augment_single_image(self, args: Tuple) -> bool:
         """Augmente une seule image (pour parallélisation)"""
-        source_img_name, generated_idx, aug, ext = args
-        
+        img, source_img_name, generated_idx, aug, ext = args
+
         try:
-            # Charger l'image source
-            img_path = self.images_dir / (source_img_name + ext)
-            img = cv2.imread(str(img_path))
-            if img is None:
-                return False
-            
             # Appliquer l'augmentation avec détection des transformations
             import imgaug as ia
-            import numpy as np
-            
-            # Créer des keypoints pour détecter le flip
+
+            h, w = img.shape[:2]
+
+            # 3 keypoints (coin + axes) pour mesurer la transformation
+            # affine réellement appliquée (flip ET scale)
             kps = ia.KeypointsOnImage([
                 ia.Keypoint(x=0, y=0),
-                ia.Keypoint(x=img.shape[1]-1, y=0)
+                ia.Keypoint(x=w - 1, y=0),
+                ia.Keypoint(x=0, y=h - 1),
             ], shape=img.shape)
-            
+
             # Appliquer l'augmentation
             img_aug, kps_aug = aug(image=img, keypoints=kps)
-            
-            # Détecter si flip horizontal a été appliqué
-            was_flipped = kps_aug.keypoints[0].x > kps_aug.keypoints[1].x
-            
+
+            # Reconstruire la transformation axiale en coordonnées normalisées
+            k0, k1, k2 = kps_aug.keypoints
+            ax = (k1.x - k0.x) / max(1, w - 1)
+            ay = (k2.y - k0.y) / max(1, h - 1)
+            bx = k0.x / w
+            by = k0.y / h
+
             # Générer un nouveau nom
             new_name = f"{source_img_name}_bal{generated_idx}"
             new_img_path = self.images_dir / (new_name + ext)
             new_label_path = self.labels_dir / (new_name + ".txt")
-            
+
             # Sauvegarder l'image avec compression PNG optimisée
             if ext == '.png':
                 cv2.imwrite(str(new_img_path), img_aug, [cv2.IMWRITE_PNG_COMPRESSION, 1])
             else:
                 cv2.imwrite(str(new_img_path), img_aug)
-            
+
             # Ajuster et sauvegarder le label
             source_label = self.labels_dir / (source_img_name + ".txt")
             if source_label.exists():
                 with open(source_label, 'r') as f:
                     lines = f.readlines()
-                
-                # Ajuster chaque bounding box
-                adjusted_lines = [self._adjust_yolo_bbox_for_augmentation(line, was_flipped) for line in lines]
-                
+
+                # Ajuster chaque bounding box (les dégénérées sont écartées)
+                adjusted_lines = [
+                    adjusted for line in lines
+                    if (adjusted := self._adjust_yolo_bbox_for_augmentation(
+                        line, ax, bx, ay, by)) is not None
+                ]
+
                 with open(new_label_path, 'w') as f:
                     f.write('\n'.join(adjusted_lines))
-            
+
             return True
-        except Exception as e:
+        except Exception:
             return False
     
     def _augment_class_parallel(self, class_id, existing_images, needed):
@@ -286,13 +355,15 @@ class DatasetBalancerOptimized:
         if not source_images:
             return 0
         
-        # Préparer les tâches de génération
+        # Préparer les tâches de génération (les images préchargées sont
+        # passées directement : pas de relecture disque par variante)
         tasks = []
         for i in range(needed):
             source_img_name = random.choice(existing_images)
             if source_img_name in source_images:
                 ext = extensions[source_img_name]
-                tasks.append((source_img_name, i, aug, ext))
+                tasks.append((source_images[source_img_name],
+                              source_img_name, i, aug, ext))
         
         # Générer toutes les images en parallèle (BATCH PROCESSING)
         success_count = 0

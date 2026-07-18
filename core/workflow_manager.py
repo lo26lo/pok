@@ -67,8 +67,9 @@ class WorkflowConfig:
     enable_balancing: bool = False
     enable_training: bool = False
     
-    # Configuration balancing
-    balance_strategy: str = "augment"  # "augment", "undersample", "remove"
+    # Configuration balancing (stratégies du balancer : augment/reduce/both ;
+    # les alias historiques undersample/remove sont acceptés → reduce)
+    balance_strategy: str = "augment"
     balance_target: int = 50
     
     # Configuration training
@@ -273,14 +274,18 @@ class WorkflowManager(BaseManager):
         self._update_progress(current, total, "Génération des mosaïques...")
         
         try:
-            # Déterminer la commande selon le mode (utilise version optimisée)
-            if self.config.mosaic_mode == "complete":
-                cmd = [sys.executable, "core/mosaic_optimized.py", "all"]
+            # Commande selon le mode. Le mode "all" du script n'est pas
+            # implémenté (no-op) : on pilote la quantité via --max-groups
+            # (1 groupe = 1 mosaïque), comme le fait la GUI.
+            base_cmd = [sys.executable, "core/mosaic_optimized.py", "1", "0", "0"]
+            if self.config.mosaic_mode == "quick":
+                cmd = base_cmd + ["--max-groups", "25"]     # ≈ 200 cartes
+            elif self.config.mosaic_mode == "standard":
+                cmd = base_cmd + ["--max-groups", "62"]     # ≈ 500 cartes
             elif self.config.mosaic_mode == "custom":
-                cmd = [sys.executable, "core/mosaic_optimized.py", str(self.config.mosaic_count), "0", "0"]
-            else:
-                # quick ou standard = all pour l'instant
-                cmd = [sys.executable, "core/mosaic_optimized.py", "all"]
+                cmd = base_cmd + ["--max-groups", str(self.config.mosaic_count)]
+            else:  # complete : toutes les images disponibles
+                cmd = base_cmd
             
             success = self._run_subprocess(cmd)
             duration = time.time() - start_time
@@ -421,11 +426,16 @@ class WorkflowManager(BaseManager):
         self._update_progress(current, total, "Équilibrage des classes...")
         
         try:
+            # Traduire les alias historiques vers les stratégies du balancer
+            strategy = {
+                "undersample": "reduce",
+                "remove": "reduce",
+            }.get(self.config.balance_strategy, self.config.balance_strategy)
             cmd = [
                 sys.executable,
                 "core/auto_balancer_optimized.py",
                 str(self.config.dataset_dir),
-                "--strategy", self.config.balance_strategy,
+                "--strategy", strategy,
                 "--target", str(self.config.balance_target)
             ]
             
@@ -521,7 +531,9 @@ class WorkflowManager(BaseManager):
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True
+                text=True,
+                encoding='utf-8',
+                errors='replace'
             )
             
             # Lire et logger la sortie

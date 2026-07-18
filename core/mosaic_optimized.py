@@ -75,6 +75,11 @@ MOSAIC_DIR = "mosaic"  # Legacy
 MOSAIC_OUTPUT_DIR = PATHS['directories']['output_mosaics']
 MOSAIC_IMAGES_DIR = PATHS['directories']['output_mosaics_images']
 MOSAIC_LABELS_DIR = PATHS['directories']['output_mosaics_labels']
+# Dossiers de travail ancrés dans output/ (et non le CWD courant)
+CORRUPTED_DIR = os.path.join(PATHS['directories'].get('output_base', 'output'),
+                             'corrupted')
+WEB_BACKGROUNDS_DIR = os.path.join(PATHS['directories'].get('output_base', 'output'),
+                                   'web_backgrounds')
 
 
 class MosaicGeneratorOptimized:
@@ -126,9 +131,9 @@ class MosaicGeneratorOptimized:
         try:
             img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
             if img is None:
-                # Image corrompue - déplacer dans corrupted/
-                corrupted_dir = Path("corrupted")
-                corrupted_dir.mkdir(exist_ok=True)
+                # Image corrompue - déplacer dans output/corrupted/
+                corrupted_dir = Path(CORRUPTED_DIR)
+                corrupted_dir.mkdir(parents=True, exist_ok=True)
                 
                 img_file = Path(img_path)
                 dest_path = corrupted_dir / img_file.name
@@ -152,9 +157,9 @@ class MosaicGeneratorOptimized:
             
             return (img, img_path)
         except Exception as e:
-            # Erreur lors du traitement - déplacer dans corrupted/
-            corrupted_dir = Path("corrupted")
-            corrupted_dir.mkdir(exist_ok=True)
+            # Erreur lors du traitement - déplacer dans output/corrupted/
+            corrupted_dir = Path(CORRUPTED_DIR)
+            corrupted_dir.mkdir(parents=True, exist_ok=True)
             
             img_file = Path(img_path)
             dest_path = corrupted_dir / img_file.name
@@ -310,7 +315,7 @@ class MosaicGeneratorOptimized:
                 url = "https://picsum.photos/1920/1080"
                 resp = requests.get(url, timeout=5)
                 if resp.status_code == 200:
-                    web_dir = "web"
+                    web_dir = WEB_BACKGROUNDS_DIR
                     os.makedirs(web_dir, exist_ok=True)
                     filename = os.path.join(web_dir, f"background_{int(time.time())}.jpg")
                     with open(filename, "wb") as f:
@@ -599,17 +604,21 @@ class MosaicGeneratorOptimized:
                         transformed_corners = cv2.transform(np.array([corners]), rot_matrix)[0] + [pos_x, pos_y]
                         polygon = [(int(px), int(py)) for px, py in transformed_corners]
                     
-                    # Calcul bounding box
+                    # Calcul bounding box, clippée au canvas (la projection
+                    # 3D peut déborder de la cellule → coordonnées YOLO
+                    # hors [0,1] sinon), comme le fait déjà le layout 4
                     xs = [pt[0] for pt in polygon]
                     ys = [pt[1] for pt in polygon]
-                    min_x, max_x = min(xs), max(xs)
-                    min_y, max_y = min(ys), max(ys)
-                    
+                    min_x, max_x = max(0, min(xs)), min(canvas_width, max(xs))
+                    min_y, max_y = max(0, min(ys)), min(canvas_height, max(ys))
+                    if max_x - min_x < 8 or max_y - min_y < 8:
+                        continue
+
                     bbox_cx = (min_x + max_x) / 2 / canvas_width
                     bbox_cy = (min_y + max_y) / 2 / canvas_height
                     bbox_w = (max_x - min_x) / canvas_width
                     bbox_h = (max_y - min_y) / canvas_height
-                    
+
                     annotation_line = f"{new_class_id} {bbox_cx:.6f} {bbox_cy:.6f} {bbox_w:.6f} {bbox_h:.6f}"
                     annotations.append(annotation_line)
             

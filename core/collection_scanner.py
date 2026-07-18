@@ -95,6 +95,7 @@ class _Track:
     name: Optional[str] = None
     card_id: Optional[str] = None
     first_seen: float = field(default_factory=time.time)
+    last_seen: float = field(default_factory=time.time)
     condition: Optional[str] = None
     condition_score: Optional[float] = None
     price_factor: Optional[float] = None
@@ -109,12 +110,17 @@ class CollectionScanner:
         min_hits: frames où une carte doit être vue avant confirmation
         prices: {card_id: {'name', 'price', 'price_max'}} — None charge la
                 base locale (models/cards_database.yaml), {} désactive les prix
+        track_ttl_s: durée sans détection au-delà de laquelle un track non
+                     confirmé est abandonné (évite que des faux positifs
+                     espacés sur toute la session finissent « confirmés »)
     """
 
-    def __init__(self, min_hits: int = 3, prices: Optional[Dict] = None):
+    def __init__(self, min_hits: int = 3, prices: Optional[Dict] = None,
+                 track_ttl_s: float = 10.0):
         if min_hits < 1:
             raise ValueError("min_hits doit être >= 1")
         self.min_hits = min_hits
+        self.track_ttl_s = track_ttl_s
         if prices is None:
             try:
                 try:
@@ -161,6 +167,12 @@ class CollectionScanner:
         now = timestamp if timestamp is not None else time.time()
         self.frames_seen += 1
 
+        # Expirer les tracks non confirmés trop anciens (faux positifs)
+        stale = [key for key, track in self._tracks.items()
+                 if now - track.last_seen > self.track_ttl_s]
+        for key in stale:
+            del self._tracks[key]
+
         # Regrouper la frame par clé (occurrences simultanées)
         frame_counts: Dict[str, List[Any]] = {}
         for det in detections:
@@ -187,6 +199,7 @@ class CollectionScanner:
 
             track = self._tracks.setdefault(key, _Track(first_seen=now))
             track.hits += 1
+            track.last_seen = now
             track.max_simultaneous = max(track.max_simultaneous, len(dets))
             if best and (track.best_score is None or best > track.best_score):
                 track.best_score = best

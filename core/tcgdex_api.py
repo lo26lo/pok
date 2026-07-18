@@ -39,17 +39,21 @@ class TCGdexAPI:
         self.language = language
         self.cache = cache
         
-        # Mapping des noms de sets vers codes TCGdex (les plus récents et courants)
+        # Mapping des noms de sets vers codes TCGdex — mêmes codes que
+        # POPULAR_SETS de core/image_downloader.py (les demi-sets utilisent
+        # la notation décimale TCGdex : sv03.5, sv04.5, sv06.5…)
         self.set_mapping = {
             'surging sparks': 'sv08',
             'stellar crown': 'sv07',
-            'shrouded fable': 'sv06',
-            'twilight masquerade': 'sv05',
-            'temporal forces': 'sv04',
-            'paldean fates': 'sv03',
-            'paradox rift': 'sv02',
-            'obsidian flames': 'sv01',
-            '151': 'sv151',
+            'shrouded fable': 'sv06.5',
+            'twilight masquerade': 'sv06',
+            'temporal forces': 'sv05',
+            'paldean fates': 'sv04.5',
+            'paradox rift': 'sv04',
+            '151': 'sv03.5',
+            'obsidian flames': 'sv03',
+            'paldea evolved': 'sv02',
+            'scarlet & violet': 'sv01',
             'base set': 'base1',
             'jungle': 'base2',
             'fossil': 'base3',
@@ -144,17 +148,19 @@ class TCGdexAPI:
         cardmarket = pricing.get('cardmarket', {})
         if cardmarket:
             prices = []
-            
-            # Priorité: trend > avg > low
-            cm_price = cardmarket.get('trend') or cardmarket.get('avg') or cardmarket.get('low')
-            
-            if cm_price:
+
+            # Priorité: trend > avg > low (0.0 est un prix valide)
+            cm_price = next((cardmarket.get(k)
+                             for k in ('trend', 'avg', 'low')
+                             if cardmarket.get(k) is not None), None)
+
+            if cm_price is not None:
                 prices.append(cm_price)
-            
+
             # Ajouter les prix holo si disponibles
             for key in ['trend-holo', 'avg-holo', 'low-holo']:
                 val = cardmarket.get(key)
-                if val:
+                if val is not None:
                     prices.append(val)
             
             if prices:
@@ -169,12 +175,10 @@ class TCGdexAPI:
             for variant_data in tcgplayer.values():
                 if isinstance(variant_data, dict):
                     # Priorité: marketPrice > midPrice > lowPrice
-                    price = (
-                        variant_data.get('marketPrice') or 
-                        variant_data.get('midPrice') or 
-                        variant_data.get('lowPrice')
-                    )
-                    if price:
+                    price = next((variant_data.get(k)
+                                  for k in ('marketPrice', 'midPrice', 'lowPrice')
+                                  if variant_data.get(k) is not None), None)
+                    if price is not None:
                         prices.append(price)
             
             if prices:
@@ -264,15 +268,18 @@ class TCGdexAPI:
                 if set_code:
                     # Extraire juste le numéro (avant le /)
                     number = str(card_number).split('/')[0].strip()
-                    # Construire l'ID: sv08-001
-                    card_id = f"{set_code}-{number.zfill(3)}"
-                    
-                    # Essayer de récupérer directement
-                    card_full = self.get_card(card_id)
-                    
-                    if card_full:
-                        price_avg, price_max, source = self.extract_prices(card_full)
-                        return price_avg, price_max, card_full
+                    # Le zero-padding du localId dépend du set : tester
+                    # les deux variantes (sv08-019 puis sv08-19)
+                    candidates = [f"{set_code}-{number.zfill(3)}"]
+                    stripped = number.lstrip('0') or '0'
+                    if f"{set_code}-{stripped}" not in candidates:
+                        candidates.append(f"{set_code}-{stripped}")
+
+                    for card_id in candidates:
+                        card_full = self.get_card(card_id)
+                        if card_full:
+                            price_avg, price_max, source = self.extract_prices(card_full)
+                            return price_avg, price_max, card_full
             
             # STRATÉGIE 2: Recherche classique par nom (plus lent, fallback)
             # 1. Rechercher les cartes
