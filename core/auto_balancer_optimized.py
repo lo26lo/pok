@@ -246,65 +246,38 @@ class DatasetBalancerOptimized:
                     return img, ext
         return None, None
     
-    def _adjust_yolo_bbox_for_augmentation(self, bbox_line: str,
-                                           ax: float, bx: float,
-                                           ay: float, by: float) -> Optional[str]:
-        """
-        Ajuste une bbox YOLO après une transformation affine axiale
-        x' = ax·x + bx, y' = ay·y + by (coordonnées normalisées) — couvre
-        le flip (ax < 0) ET le scale (|ax| ≠ 1) du pipeline imgaug.
-        Retourne None si la bbox devient dégénérée après clipping.
-        """
-        parts = bbox_line.strip().split()
-        if len(parts) != 5:
-            return bbox_line.strip() or None
-
-        class_id = parts[0]
-        cx, cy, w, h = map(float, parts[1:])
-
-        cx = ax * cx + bx
-        cy = ay * cy + by
-        w = abs(ax) * w
-        h = abs(ay) * h
-
-        # Clipper aux bords de l'image (un zoom > 1 peut faire déborder)
-        x0 = max(0.0, min(1.0, cx - w / 2))
-        x1 = max(0.0, min(1.0, cx + w / 2))
-        y0 = max(0.0, min(1.0, cy - h / 2))
-        y1 = max(0.0, min(1.0, cy + h / 2))
-        if x1 - x0 < 1e-4 or y1 - y0 < 1e-4:
-            return None
-
-        return (f"{class_id} {(x0 + x1) / 2:.6f} {(y0 + y1) / 2:.6f} "
-                f"{x1 - x0:.6f} {y1 - y0:.6f}")
+    def _read_source_bboxes(self, source_img_name: str):
+        """Lit le label YOLO source en (bboxes, class_labels) pour
+        albumentations. Les lignes invalides sont ignorées."""
+        bboxes, class_labels = [], []
+        source_label = self.labels_dir / (source_img_name + ".txt")
+        if not source_label.exists():
+            return bboxes, class_labels
+        with open(source_label, 'r') as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) != 5:
+                    continue
+                try:
+                    cls = int(parts[0])
+                    cx, cy, w, h = map(float, parts[1:])
+                except ValueError:
+                    continue
+                bboxes.append((cx, cy, w, h))
+                class_labels.append(cls)
+        return bboxes, class_labels
 
     def _augment_single_image(self, args: Tuple) -> bool:
         """Augmente une seule image (pour parallélisation)"""
-        img, source_img_name, generated_idx, aug, ext = args
+        img, source_img_name, generated_idx, transform, ext = args
 
         try:
-            # Appliquer l'augmentation avec détection des transformations
-            import imgaug as ia
-
-            h, w = img.shape[:2]
-
-            # 3 keypoints (coin + axes) pour mesurer la transformation
-            # affine réellement appliquée (flip ET scale)
-            kps = ia.KeypointsOnImage([
-                ia.Keypoint(x=0, y=0),
-                ia.Keypoint(x=w - 1, y=0),
-                ia.Keypoint(x=0, y=h - 1),
-            ], shape=img.shape)
-
-            # Appliquer l'augmentation
-            img_aug, kps_aug = aug(image=img, keypoints=kps)
-
-            # Reconstruire la transformation axiale en coordonnées normalisées
-            k0, k1, k2 = kps_aug.keypoints
-            ax = (k1.x - k0.x) / max(1, w - 1)
-            ay = (k2.y - k0.y) / max(1, h - 1)
-            bx = k0.x / w
-            by = k0.y / h
+            # Les bboxes traversent le pipeline via bbox_params : flip ET
+            # scale sont répercutés (et clippés) par albumentations
+            bboxes, class_labels = self._read_source_bboxes(source_img_name)
+            result = transform(image=img, bboxes=bboxes,
+                               class_labels=class_labels)
+            img_aug = result['image']
 
             # Générer un nouveau nom
             new_name = f"{source_img_name}_bal{generated_idx}"
@@ -317,41 +290,40 @@ class DatasetBalancerOptimized:
             else:
                 cv2.imwrite(str(new_img_path), img_aug)
 
-            # Ajuster et sauvegarder le label
-            source_label = self.labels_dir / (source_img_name + ".txt")
-            if source_label.exists():
-                with open(source_label, 'r') as f:
-                    lines = f.readlines()
-
-                # Ajuster chaque bounding box (les dégénérées sont écartées)
-                adjusted_lines = [
-                    adjusted for line in lines
-                    if (adjusted := self._adjust_yolo_bbox_for_augmentation(
-                        line, ax, bx, ay, by)) is not None
+            # Sauvegarder le label transformé
+            if bboxes:
+                lines = [
+                    f"{int(cls)} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}"
+                    for (cx, cy, w, h), cls in zip(result['bboxes'],
+                                                   result['class_labels'])
                 ]
-
                 with open(new_label_path, 'w') as f:
-                    f.write('\n'.join(adjusted_lines))
+                    f.write('\n'.join(lines))
 
             return True
         except Exception:
             return False
-    
+
     def _augment_class_parallel(self, class_id, existing_images, needed):
         """Augmente le nombre d'images d'une classe (VERSION PARALLÈLE)"""
-        # Importer ici pour éviter les dépendances
-        import imgaug.augmenters as iaa
-        
-        # Définir les augmentations (SANS rotation pour éviter les bordures noires)
-        aug = iaa.Sequential([
-            iaa.Sometimes(0.5, iaa.Fliplr(1.0)),
-            # PAS de rotation pour éviter les coins noirs dans les mosaïques!
-            iaa.Sometimes(0.3, iaa.Multiply((0.8, 1.2))),
-            iaa.Sometimes(0.3, iaa.GaussianBlur(sigma=(0, 1.0))),
-            iaa.Sometimes(0.2, iaa.AdditiveGaussianNoise(scale=(0, 0.05*255))),
-            iaa.Sometimes(0.2, iaa.Affine(scale=(0.9, 1.1))),
-            iaa.Sometimes(0.2, iaa.GammaContrast((0.8, 1.2)))
-        ])
+        # Import local : albumentations n'est requis que pour la stratégie
+        # augment (remplace imgaug, incompatible NumPy 2.x et abandonné)
+        import albumentations as A
+
+        # Mêmes effets que l'ancien pipeline imgaug, SANS rotation pour
+        # éviter les coins noirs dans les mosaïques. Transforms neutres vis-
+        # à-vis de l'ordre des canaux : pas de conversion BGR/RGB nécessaire.
+        transform = A.Compose([
+            A.HorizontalFlip(p=0.5),
+            A.RandomBrightnessContrast(brightness_limit=0.2,
+                                       contrast_limit=0.0, p=0.3),
+            A.GaussianBlur(blur_limit=(3, 5), p=0.3),
+            A.GaussNoise(std_range=(0.0, 0.05), p=0.2),
+            A.Affine(scale=(0.9, 1.1), p=0.2),
+            A.RandomGamma(gamma_limit=(80, 120), p=0.2),
+        ], bbox_params=A.BboxParams(format='yolo',
+                                    label_fields=['class_labels'],
+                                    clip=True))
         
         # Pré-charger TOUTES les images sources (OPTIMISATION)
         source_images = {}
@@ -373,7 +345,7 @@ class DatasetBalancerOptimized:
             if source_img_name in source_images:
                 ext = extensions[source_img_name]
                 tasks.append((source_images[source_img_name],
-                              source_img_name, i, aug, ext))
+                              source_img_name, i, transform, ext))
         
         # Générer toutes les images en parallèle (BATCH PROCESSING)
         success_count = 0

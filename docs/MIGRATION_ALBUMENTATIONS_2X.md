@@ -67,8 +67,8 @@ d'albumentations au lieu de la reconstruction par keypoints.
 - [x] Test : labels générés dans [0,1], ≤ plein cadre, class_id préservé
 - [x] Passer le finding correspondant du rapport d'audit à ✅
 
-### ⬜ Phase 4 — Port du balancer imgaug → albumentations
-- [ ] Remplacer le pipeline `iaa.Sequential` par l'équivalent albumentations :
+### ✅ Phase 4 — Port du balancer imgaug → albumentations
+- [x] Remplacer le pipeline `iaa.Sequential` par l'équivalent albumentations :
       `Sometimes(0.5, Fliplr)` → `HorizontalFlip(p=0.5)` ;
       `Multiply(0.8-1.2)@0.3` → `RandomBrightnessContrast(brightness_limit=0.2,
       contrast_limit=0, p=0.3)` ; `GaussianBlur(sigma 0-1)@0.3` →
@@ -76,13 +76,13 @@ d'albumentations au lieu de la reconstruction par keypoints.
       `GaussNoise(std_range=(0, 0.05), p=0.2)` ; `Affine(scale 0.9-1.1)@0.2`
       → `Affine(scale=(0.9, 1.1), p=0.2)` ; `GammaContrast(0.8-1.2)@0.2` →
       `RandomGamma(gamma_limit=(80, 120), p=0.2)`
-- [ ] Bboxes via `bbox_params` (supprime la reconstruction par keypoints
+- [x] Bboxes via `bbox_params` (supprime la reconstruction par keypoints
       et `_adjust_yolo_bbox_for_augmentation`)
-- [ ] Supprimer l'import `imgaug` ; le balancer dépend d'albumentations
+- [x] Supprimer l'import `imgaug` ; le balancer dépend d'albumentations
       (déjà dans requirements)
-- [ ] Nouveau test fonctionnel du balancer : dataset synthétique →
+- [x] Nouveau test fonctionnel du balancer : dataset synthétique →
       stratégie augment → compte + labels valides
-- [ ] Mettre à jour la note « balancer nécessite imgaug » où elle existe
+- [x] Mettre à jour la note « balancer nécessite imgaug » où elle existe
 
 ### ⬜ Phase 5 — Clôture
 - [ ] Suite complète verte sous albumentations 2.x
