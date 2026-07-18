@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ⬆️ Migration albumentations 1.x → 2.x
+
+Plan et détails : `docs/MIGRATION_ALBUMENTATIONS_2X.md`.
+
+- **feat(core)** : pool d'augmentation porté à l'API 2.x — les 4 transforms
+  dont 2.x IGNORAIT silencieusement les arguments 1.x sont convertis
+  (GaussNoise variance→écart-type normalisé, ImageCompression,
+  RandomSunFlare, RandomFog) ; `config/requirements.txt` passe à
+  `albumentations>=2.0,<3`
+- **test** : nouveau `tests/test_augmentation_amplitudes.py` qui verrouille
+  les amplitudes EFFECTIVES du pool (protection contre les retombées
+  silencieuses sur les défauts lors des futurs upgrades)
+- **feat(core)** : labels d'augmentation **bbox-aware** — la bbox suit les
+  transforms géométriques via `bbox_params` au lieu du plein cadre
+  systématique (dernier finding 📝 de l'audit, débloqué par 2.x) ;
+  garde-fou plein cadre pour SafeRotate+BORDER_REFLECT_101 dont le
+  transport de bbox est cassé en 2.0.x (bug amont vérifié)
+- **fix(core)** : auto-balancer porté d'imgaug (abandonné, absent des
+  requirements → la stratégie augment échouait en ImportError) vers
+  albumentations, bboxes transportées nativement ; spec PyInstaller mise
+  à jour ; 3 tests fonctionnels ajoutés
+- Suite de tests : 333 passés, 0 échec
+
 ### 🔧 Audit juillet 2026 — findings mineurs (clôture de l'audit)
 
 - **fix(core)** : fallback d'`extract_card_number` ancré (« 1234 » n'est

@@ -1,8 +1,7 @@
 # 🔄 Migration albumentations 1.x → 2.x — Plan d'exécution
 
 **Branche** : `claude/bug-research-deep-dive-z0zhgj` (suite de la PR #7)
-**Statut global** : 🟡 EN COURS — les cases ci-dessous sont cochées au fil des
-commits ; en cas d'interruption, reprendre à la première case non cochée.
+**Statut global** : ✅ TERMINÉ — toutes les phases exécutées et testées.
 
 ## Contexte (résumé de l'analyse préalable)
 
@@ -84,11 +83,11 @@ d'albumentations au lieu de la reconstruction par keypoints.
       stratégie augment → compte + labels valides
 - [x] Mettre à jour la note « balancer nécessite imgaug » où elle existe
 
-### ⬜ Phase 5 — Clôture
-- [ ] Suite complète verte sous albumentations 2.x
-- [ ] `docs/CHANGELOG.md` + rapport d'audit mis à jour
-- [ ] Ce plan : toutes les cases cochées, statut passé à ✅ TERMINÉ
-- [ ] Push final
+### ✅ Phase 5 — Clôture
+- [x] Suite complète verte sous albumentations 2.x
+- [x] `docs/CHANGELOG.md` + rapport d'audit mis à jour
+- [x] Ce plan : toutes les cases cochées, statut passé à ✅ TERMINÉ
+- [x] Push final
 
 ## Commandes de validation (à relancer en cas de reprise)
 
@@ -98,4 +97,8 @@ python -m pytest tests/ -q                      # suite complète
 python -m pytest tests/test_augmentation_amplitudes.py -v   # anti-régression
 ```
 
-**Statut final** : 🟡 EN COURS (mettre à jour à la clôture).
+**Statut final** : ✅ TERMINÉ — 333 tests passés, 0 échec.
+Découverte notable en cours de route : le transport de bbox de SafeRotate
+reste cassé en 2.0.8 QUAND `border_mode=BORDER_REFLECT_101` est passé
+(60/60 tirages dégénérés, 0/60 avec le border par défaut) — contourné par
+un garde-fou plein cadre, à re-tester aux prochaines versions amont.
