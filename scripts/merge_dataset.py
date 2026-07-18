@@ -5,6 +5,7 @@ Crée train/val split et data.yaml
 """
 import shutil
 import json
+import re
 from pathlib import Path
 from typing import List, Tuple
 import random
@@ -19,7 +20,18 @@ def load_paths():
 
 PATHS = load_paths()
 
-def copy_files(src_images: Path, src_labels: Path, 
+# Extensions d'images gérées par le pipeline (les .jpg ne sont plus
+# silencieusement ignorés)
+IMAGE_GLOBS = ("*.png", "*.jpg", "*.jpeg")
+
+
+def _iter_images(directory: Path):
+    """Itère les images d'un dossier, toutes extensions gérées, triées."""
+    for pattern in IMAGE_GLOBS:
+        yield from sorted(directory.glob(pattern))
+
+
+def copy_files(src_images: Path, src_labels: Path,
                dst_images: Path, dst_labels: Path) -> int:
     """
     Copie les images et labels d'un dossier source vers destination
@@ -28,48 +40,81 @@ def copy_files(src_images: Path, src_labels: Path,
         Nombre de fichiers copiés
     """
     count = 0
-    
+
     if not src_images.exists():
         print(f"⚠️  {src_images} n'existe pas")
         return 0
-    
-    for img in src_images.glob("*.png"):
-        # Copier image
-        shutil.copy2(img, dst_images / img.name)
-        
-        # Copier label si existe
+
+    for img in _iter_images(src_images):
+        # Ne copier que les paires image+label complètes : une image sans
+        # label serait traitée en « background » silencieux par YOLO
         label = src_labels / f"{img.stem}.txt"
         if label.exists():
+            shutil.copy2(img, dst_images / img.name)
             shutil.copy2(label, dst_labels / label.name)
             count += 1
         else:
-            print(f"⚠️  Label manquant pour {img.name}")
-    
+            print(f"⚠️  Label manquant pour {img.name} — image ignorée")
+
     return count
+
+
+# Suffixes de variantes générées depuis une même image source :
+# _aug_000 (albumentations), _bal3 (auto-balancer), _holo1 (holographique),
+# y compris enchaînés (ex: sv08_019_en_holo1_aug_003)
+_VARIANT_SUFFIX = re.compile(r'(?:_(?:aug_\d+|bal\d+|holo\d+))+$')
+
+
+def split_group_key(stem: str) -> str:
+    """
+    Clé de groupe d'une image pour le split train/val : les variantes d'une
+    même carte source partagent la même clé (les mosaïques, sans suffixe de
+    variante, restent chacune leur propre groupe).
+
+    >>> split_group_key("sv08_019_en_aug_003")
+    'sv08_019_en'
+    >>> split_group_key("sv08_019_en_holo1_aug_003")
+    'sv08_019_en'
+    >>> split_group_key("L1_B0_T0_layout_042")
+    'L1_B0_T0_layout_042'
+    """
+    return _VARIANT_SUFFIX.sub('', stem)
 
 
 def create_train_val_split(images_dir: Path, train_ratio: float = 0.8) -> Tuple[List[str], List[str]]:
     """
-    Crée un split train/val
-    
+    Crée un split train/val SANS FUITE : les variantes augmentées d'une même
+    carte source (même split_group_key) vont toutes dans le même split —
+    sinon la val mesure la mémorisation, pas la généralisation.
+
     Args:
         images_dir: Dossier contenant les images
         train_ratio: Ratio pour le train (0.8 = 80% train, 20% val)
-    
+
     Returns:
         (train_files, val_files)
     """
-    all_images = list(images_dir.glob("*.png"))
-    random.shuffle(all_images)
-    
-    split_idx = int(len(all_images) * train_ratio)
-    train_files = all_images[:split_idx]
-    val_files = all_images[split_idx:]
-    
+    all_images = list(_iter_images(images_dir))
+
+    # Regrouper par carte source, puis affecter groupe par groupe
+    groups = {}
+    for img in all_images:
+        groups.setdefault(split_group_key(img.stem), []).append(img)
+    group_list = list(groups.values())
+    random.shuffle(group_list)
+
+    target_train = int(len(all_images) * train_ratio)
+    train_files, val_files = [], []
+    for group in group_list:
+        if len(train_files) < target_train:
+            train_files.extend(group)
+        else:
+            val_files.extend(group)
+
     # Convertir en chemins absolus (YOLO a besoin de chemins absolus ou relatifs au path de data.yaml)
     train_paths = [str(img.absolute()) for img in train_files]
     val_paths = [str(img.absolute()) for img in val_files]
-    
+
     return train_paths, val_paths
 
 
@@ -173,7 +218,11 @@ def merge_dataset():
     
     total = count_aug + count_mosaic
     print(f"\n📊 Total: {total} images dans le dataset")
-    
+
+    if total == 0:
+        print("❌ Aucune image à fusionner (sources vides ?) — abandon")
+        return
+
     # Créer train/val split
     print("\n🔀 Création du split train/val...")
     train_files, val_files = create_train_val_split(dataset_dir / "images", train_ratio=0.8)
@@ -207,12 +256,12 @@ def merge_dataset():
     augmented_yaml = augmented_dir / "data.yaml"
     if augmented_yaml.exists():
         with open(augmented_yaml, "r") as f:
-            aug_data = yaml.safe_load(f)
+            aug_data = yaml.safe_load(f) or {}
             if 'names' in aug_data:
                 for idx, name in enumerate(aug_data['names']):
                     class_names[idx] = name
-    else:
-        # Sinon, utiliser IDs
+    if not class_names:
+        # Fallback (data.yaml absent ou sans 'names') : IDs génériques
         for class_id in class_counts.keys():
             class_names[class_id] = f"class_{class_id}"
     

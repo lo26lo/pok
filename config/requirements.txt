@@ -15,7 +15,7 @@ scikit-image>=0.21.0
 # Augmentation - Albumentations remplace imgaug
 # <2.0 : l'API 2.x renomme/supprime des transformations utilisées
 # (GaussNoise var_limit, ImageCompression quality_lower/upper, etc.)
-albumentations>=1.3.0,<2.0
+albumentations>=2.0,<3
 
 # Data formats
 pyyaml>=6.0

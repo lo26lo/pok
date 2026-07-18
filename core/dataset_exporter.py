@@ -281,11 +281,28 @@ class DatasetExporter:
                 if label_path.exists():
                     shutil.copy(label_path, split_dir / "labels" / (img_path.stem + ".txt"))
         
-        # Créer data.yaml
+        # Créer data.yaml — names doit être indexé par class_id (les IDs
+        # peuvent être non contigus) ; sans mapping fourni, dériver les
+        # classes réellement présentes dans les labels
+        if self.class_names:
+            max_id = max(self.class_names.keys())
+            names_list = [self.class_names.get(i, f"class_{i}")
+                          for i in range(max_id + 1)]
+        else:
+            unique_classes = set()
+            for label_file in self.labels_dir.glob("*.txt"):
+                with open(label_file, 'r') as f:
+                    for line in f:
+                        parts = line.strip().split()
+                        if parts:
+                            unique_classes.add(int(parts[0]))
+            max_id = max(unique_classes) if unique_classes else 0
+            names_list = [f"class_{i}" for i in range(max_id + 1)]
+
         yaml_content = f"""train: train/images
 val: valid/images
-nc: {len(set(self.class_names.keys())) if self.class_names else 1}
-names: {list(self.class_names.values()) if self.class_names else ['class_0']}
+nc: {len(names_list)}
+names: {names_list}
 """
         
         with open(temp_dir / "data.yaml", 'w') as f:

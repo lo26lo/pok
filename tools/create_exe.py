@@ -81,12 +81,11 @@ def create_exe():
         "--hidden-import=cv2",
         "--hidden-import=pandas",
         "--hidden-import=numpy",
-        "--hidden-import=imgaug",
+        "--hidden-import=albumentations",
         "--hidden-import=PIL",
         "--hidden-import=openpyxl",
         "--hidden-import=tkinter",
-        "--collect-all=imgaug",
-        "--collect-all=imagecorruptions",
+        "--collect-all=albumentations",
     ]
     
     # Ajouter l'icône Pikachu si elle existe

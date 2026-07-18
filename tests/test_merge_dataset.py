@@ -49,6 +49,16 @@ class TestCopyFiles:
         assert count == 0
 
 
+class TestSplitGroupKey:
+    def test_strips_variant_suffixes(self):
+        assert merge_dataset.split_group_key("sv08_019_en_aug_003") == "sv08_019_en"
+        assert merge_dataset.split_group_key("sv08_019_en_bal7") == "sv08_019_en"
+        assert merge_dataset.split_group_key("sv08_019_en_holo1_aug_003") == "sv08_019_en"
+
+    def test_mosaics_are_their_own_group(self):
+        assert merge_dataset.split_group_key("L1_B0_T0_layout_042") == "L1_B0_T0_layout_042"
+
+
 class TestTrainValSplit:
     def test_split_ratio(self, tmp_path):
         src = _make_tree(tmp_path, "data", [f"img{i}" for i in range(10)], 0)
@@ -60,6 +70,19 @@ class TestTrainValSplit:
         assert not set(train) & set(val)
         # chemins absolus (requis par YOLO)
         assert all(Path(p).is_absolute() for p in train + val)
+
+    def test_variants_never_split_across_train_and_val(self, tmp_path):
+        # 5 cartes source × 4 variantes augmentées : les variantes d'une
+        # même carte doivent rester dans le MÊME split (anti-fuite)
+        stems = [f"c{i}_en_aug_{j:03d}" for i in range(5) for j in range(4)]
+        src = _make_tree(tmp_path, "data", stems, 0)
+        train, val = merge_dataset.create_train_val_split(src / "images",
+                                                          train_ratio=0.8)
+        assert len(train) + len(val) == 20
+        assert val, "le split doit garder un set de validation"
+        train_groups = {merge_dataset.split_group_key(Path(p).stem) for p in train}
+        val_groups = {merge_dataset.split_group_key(Path(p).stem) for p in val}
+        assert not train_groups & val_groups
 
 
 class TestExtractClassInfo:

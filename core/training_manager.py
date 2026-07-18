@@ -25,7 +25,7 @@ try:
 except ImportError:
     from utils import safe_print
 from typing import Optional, Callable, Dict, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,17 +36,27 @@ except ImportError:
     from base_manager import BaseManager
 
 
+def default_device() -> str:
+    """GPU 0 si CUDA est disponible, sinon CPU (évite le plantage
+    'Invalid CUDA device' d'Ultralytics sur machine sans GPU)."""
+    try:
+        import torch
+        return "0" if torch.cuda.is_available() else "cpu"
+    except ImportError:
+        return "cpu"
+
+
 @dataclass
 class TrainingConfig:
     """Configuration pour l'entraînement YOLO"""
     # Modèle de base
     model_name: str = "yolov8n.pt"  # n, s, m, l, x
-    
+
     # Hyperparamètres
     epochs: int = 50
     batch_size: int = 16
     image_size: int = 640
-    device: str = "0"  # "0", "cpu", "0,1,2,3"
+    device: str = field(default_factory=default_device)  # "0", "cpu", "0,1,2,3"
     workers: int = 4  # Nombre de workers pour le dataloader
     cache: str = "False"  # False, ram, disk
     

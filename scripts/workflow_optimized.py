@@ -54,10 +54,14 @@ def main():
     safe_print(f"   - Variations holographiques : {num_variations_holo}")
     safe_print(f"   - Augmentations par variation : {num_augmentations}")
     safe_print(f"   - Mosaïques : {num_mosaics}")
-    
-    total_images = 8  # Nombre de cartes source
+
+    # Compter les vraies cartes source (plus de valeur codée en dur)
+    images_src = Path(PATHS['directories']['images'])
+    total_images = len([p for p in images_src.iterdir()
+                        if p.suffix.lower() in ('.png', '.jpg', '.jpeg')]) \
+        if images_src.is_dir() else 0
     total_holo = total_images * num_variations_holo
-    total_aug = total_holo * num_augmentations
+    total_aug = total_images * num_augmentations  # étape 2 : depuis images/
     total_final = total_aug + num_mosaics
     
     safe_print(f"\n📊 Images attendues:")
@@ -115,7 +119,7 @@ def main():
     
     # ÉTAPE 4: Fusion dataset
     if not run_command(
-        f'{python_exe} merge_dataset.py',
+        f'{python_exe} scripts/merge_dataset.py',
         "ÉTAPE 4/5 - Fusion du dataset final"
     ):
         return False

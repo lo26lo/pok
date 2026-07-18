@@ -11,6 +11,7 @@ Avantages vs imgaug:
 - Nouvelles augmentations exclusives (Shadow, SunFlare, Perspective, etc.)
 - Maintenu activement (vs imgaug abandonné 2020)
 """
+import math
 import os
 import sys
 import cv2
@@ -186,21 +187,29 @@ def build_transform_pool(intensity: float = 1.0,
             A.Sharpen(alpha=(0.1, min(1.0, 0.4 * i)), lightness=(0.8, 1.2), p=1.0),
         ],
         # 4. BRUIT — capteur, compression
+        # ⚠️ API albumentations 2.x. Les anciens arguments 1.x (var_limit,
+        # quality_lower/upper, *_lower/*_upper) sont IGNORÉS SILENCIEUSEMENT
+        # par 2.x (retombée sur les défauts) — tests/test_augmentation_amplitudes.py
+        # verrouille les valeurs effectives.
         "noise": [
-            A.GaussNoise(var_limit=(10.0, 40.0 * i), p=1.0),
+            # var_limit 1.x = variance sur [0,255] ; std_range 2.x =
+            # écart-type normalisé [0,1] : std = sqrt(var)/255. La borne
+            # haute est plafonnée à la basse (2.x valide l'ordre du range)
+            A.GaussNoise(std_range=(math.sqrt(10.0) / 255.0,
+                                    math.sqrt(max(10.0, 40.0 * i)) / 255.0),
+                         p=1.0),
             A.ISONoise(color_shift=(0.01, 0.03),
                        intensity=(0.1, max(0.1, 0.3 * i)), p=1.0),
-            A.ImageCompression(quality_lower=60, quality_upper=95, p=1.0),
+            A.ImageCompression(quality_range=(60, 95), p=1.0),
         ],
         # 5. EFFETS ENVIRONNEMENT — prise de vue réaliste
         "environment": [
             A.RandomShadow(shadow_roi=(0, 0, 1, 1), num_shadows_limit=(1, 2),
                            shadow_dimension=5, p=1.0),
-            A.RandomSunFlare(flare_roi=(0, 0, 1, 0.5), angle_lower=0,
-                             angle_upper=1, num_flare_circles_lower=3,
-                             num_flare_circles_upper=6, src_radius=100,
+            A.RandomSunFlare(flare_roi=(0, 0, 1, 0.5), angle_range=(0, 1),
+                             num_flare_circles_range=(3, 6), src_radius=100,
                              src_color=(255, 255, 255), p=1.0),
-            A.RandomFog(fog_coef_lower=0.1, fog_coef_upper=max(0.1, 0.3 * i),
+            A.RandomFog(fog_coef_range=(0.1, max(0.1, 0.3 * i)),
                         alpha_coef=0.1, p=1.0),
             A.Posterize(num_bits=5, p=1.0),
         ],
@@ -315,17 +324,24 @@ class AugmentationAlbumentations:
         transform_pool = build_transform_pool(intensity=self.intensity,
                                               categories=self.categories)
 
-        # SomeOf n'accepte qu'un entier pour n (un tuple plante en 1.4+).
+        # SomeOf n'accepte qu'un entier pour n (un tuple plante).
         # Pour appliquer "3 à 6" transformations, on pré-construit un SomeOf
         # par valeur de n et on tire n au hasard pour chaque image.
+        # Chaque SomeOf est enveloppé dans un Compose avec bbox_params :
+        # les transforms géométriques (Perspective, distorsions…)
+        # transportent ainsi la bbox de la carte — les labels ne sont plus
+        # systématiquement plein cadre.
         if n_transforms:
             fixed = max(1, min(int(n_transforms), len(transform_pool)))
             self._n_range = (fixed, fixed)
         else:
             self._n_range = (min(3, len(transform_pool)),
                              min(6, len(transform_pool)))
+        bbox_params = A.BboxParams(format='yolo',
+                                   label_fields=['class_labels'], clip=True)
         self._transforms_by_n = {
-            n: A.SomeOf(transform_pool, n=n, p=1.0)
+            n: A.Compose([A.SomeOf(transform_pool, n=n, p=1.0)],
+                         bbox_params=bbox_params)
             for n in range(self._n_range[0], self._n_range[1] + 1)
         }
 
@@ -396,17 +412,43 @@ class AugmentationAlbumentations:
         
         return resized_images
     
-    def augment_image(self, image: np.ndarray) -> np.ndarray:
-        """Applique 3 à 6 augmentations aléatoires à une image"""
+    # Garde-fou bbox : sous cette aire relative, la bbox transformée est
+    # considérée dégénérée et remplacée par le plein cadre. Nécessaire car
+    # SafeRotate + border_mode=BORDER_REFLECT_101 casse le transport de
+    # bbox dans albumentations 2.0.x (vérifié empiriquement : aire ~0.07
+    # pour une carte plein cadre tournée de quelques degrés).
+    _MIN_BBOX_AREA = 0.5
+
+    def augment_with_bbox(self, image: np.ndarray,
+                          class_id: int = 0) -> Tuple[np.ndarray,
+                                                      Tuple[float, float, float, float]]:
+        """
+        Applique 3 à 6 augmentations aléatoires à une image de carte plein
+        cadre et retourne (image_augmentée, bbox_yolo) — la bbox suit les
+        transforms géométriques (fallback plein cadre si dégénérée).
+        """
         # Albumentations attend RGB, OpenCV utilise BGR
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         # Tirer le nombre de transformations pour cette image
         n = random.randint(self._n_range[0], self._n_range[1])
-        augmented = self._transforms_by_n[n](image=image_rgb)
+        augmented = self._transforms_by_n[n](
+            image=image_rgb,
+            bboxes=[(0.5, 0.5, 1.0, 1.0)],
+            class_labels=[class_id])
+
+        bbox = (0.5, 0.5, 1.0, 1.0)
+        if len(augmented['bboxes']):
+            cx, cy, w, h = (float(v) for v in augmented['bboxes'][0])
+            if w * h >= self._MIN_BBOX_AREA:
+                bbox = (cx, cy, w, h)
 
         # Reconvertir en BGR pour OpenCV
-        return cv2.cvtColor(augmented['image'], cv2.COLOR_RGB2BGR)
+        return cv2.cvtColor(augmented['image'], cv2.COLOR_RGB2BGR), bbox
+
+    def augment_image(self, image: np.ndarray) -> np.ndarray:
+        """Applique 3 à 6 augmentations aléatoires à une image"""
+        return self.augment_with_bbox(image)[0]
     
     def augment_batch(self, images_data: List[Tuple[np.ndarray, str, int]], 
                      num_aug: int, output_images_dir: str, output_labels_dir: str) -> int:
@@ -425,18 +467,20 @@ class AugmentationAlbumentations:
                 random.seed(int(time.time() * 1000000) % (2**31) + i + count)
                 np.random.seed(int(time.time() * 1000000) % (2**31) + i + count)
                 
-                # Appliquer augmentation
-                aug_img = self.augment_image(img)
-                
+                # Appliquer augmentation (la bbox suit les transforms
+                # géométriques au lieu du plein cadre systématique)
+                aug_img, bbox = self.augment_with_bbox(img, class_id)
+
                 # Sauvegarder image
                 out_img_name = f"{base_name}_aug_{i:03d}.png"
                 out_img_path = os.path.join(output_images_dir, out_img_name)
                 cv2.imwrite(out_img_path, aug_img)
-                
+
                 # Sauvegarder label YOLO
                 out_label_name = f"{base_name}_aug_{i:03d}.txt"
                 out_label_path = os.path.join(output_labels_dir, out_label_name)
-                annotation_line = f"{class_id} 0.5 0.5 1.0 1.0"
+                annotation_line = (f"{class_id} {bbox[0]:.6f} {bbox[1]:.6f} "
+                                   f"{bbox[2]:.6f} {bbox[3]:.6f}")
                 with open(out_label_path, "w") as f:
                     f.write(annotation_line)
                 

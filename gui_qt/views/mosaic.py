@@ -6,9 +6,10 @@ from PySide6.QtWidgets import QComboBox, QPushButton, QWidget
 from gui_qt.widgets import Card, form_row, view_scaffold
 
 MODES = ["Quick (200)", "Standard (500)", "Complete (All combinations)"]
-LAYOUTS = ["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement"]
+LAYOUTS = ["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement",
+           "4 - Fan / Occlusions (F05)"]
 BACKGROUNDS = ["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)",
-               "2 - Web Image (Lorem Picsum)"]
+               "2 - Web Image (Lorem Picsum)", "3 - Realistic Procedural (F04)"]
 TRANSFORMS = ["0 - 2D Rotation", "1 - 3D Perspective Projection"]
 
 

@@ -39,8 +39,9 @@ def random_erasing(image, p=0.5, sl=0.02, sh=0.4, r1=0.3, r2=3.3):
     H, W, C = img_np.shape  # Hauteur, largeur, nombre de canaux
     S = W * H               # Aire totale de l'image
 
-    # Boucle pour sélectionner une région valide
-    while True:
+    # Boucle BORNÉE pour sélectionner une région valide (un rectangle trop
+    # grand pour l'image peut faire échouer beaucoup de tirages)
+    for _ in range(100):
         # Calcul de l'aire du rectangle à effacer : Se = Rand(sl, sh) * S
         Se = random.uniform(sl, sh) * S
         # Choix aléatoire du ratio d'aspect dans [r1, r2]
@@ -56,9 +57,10 @@ def random_erasing(image, p=0.5, sl=0.02, sh=0.4, r1=0.3, r2=3.3):
             # Remplissage de la zone avec des valeurs aléatoires pour chaque canal
             erase_area = np.random.randint(0, 256, size=(He, We, C), dtype=np.uint8)
             img_np[ye:ye+He, xe:xe+We, :] = erase_area
-            break
+            return Image.fromarray(img_np), True
 
-    return Image.fromarray(img_np), True
+    # Aucun tirage valide : renvoyer l'image inchangée
+    return image, False
 
 def process_images(input_dir, output_dir, p, sl, sh, r1, r2):
     os.makedirs(output_dir, exist_ok=True)

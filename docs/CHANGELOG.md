@@ -9,6 +9,116 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ⬆️ Migration albumentations 1.x → 2.x
+
+Plan et détails : `docs/MIGRATION_ALBUMENTATIONS_2X.md`.
+
+- **feat(core)** : pool d'augmentation porté à l'API 2.x — les 4 transforms
+  dont 2.x IGNORAIT silencieusement les arguments 1.x sont convertis
+  (GaussNoise variance→écart-type normalisé, ImageCompression,
+  RandomSunFlare, RandomFog) ; `config/requirements.txt` passe à
+  `albumentations>=2.0,<3`
+- **test** : nouveau `tests/test_augmentation_amplitudes.py` qui verrouille
+  les amplitudes EFFECTIVES du pool (protection contre les retombées
+  silencieuses sur les défauts lors des futurs upgrades)
+- **feat(core)** : labels d'augmentation **bbox-aware** — la bbox suit les
+  transforms géométriques via `bbox_params` au lieu du plein cadre
+  systématique (dernier finding 📝 de l'audit, débloqué par 2.x) ;
+  garde-fou plein cadre pour SafeRotate+BORDER_REFLECT_101 dont le
+  transport de bbox est cassé en 2.0.x (bug amont vérifié)
+- **fix(core)** : auto-balancer porté d'imgaug (abandonné, absent des
+  requirements → la stratégie augment échouait en ImportError) vers
+  albumentations, bboxes transportées nativement ; spec PyInstaller mise
+  à jour ; 3 tests fonctionnels ajoutés
+- Suite de tests : 333 passés, 0 échec
+
+### 🔧 Audit juillet 2026 — findings mineurs (clôture de l'audit)
+
+- **fix(core)** : fallback d'`extract_card_number` ancré (« 1234 » n'est
+  plus pris pour un numéro de carte) ; collisions de numéros courts entre
+  sets détectées et signalées par `load_card_data`
+- **fix(core)** : mosaïques — sans fausses cartes, le background_mode 0
+  bascule sur un fond réaliste au lieu d'utiliser de vraies cartes non
+  annotées en fond ; `latest_all()` du cache de prix réécrit en jointure
+  SQL explicite ; boucle de `random_erasing` bornée à 100 essais
+- **fix(scripts)** : merge_dataset fusionne aussi les `.jpg`/`.jpeg` ;
+  workflow_optimized compte les vraies cartes source (plus de « 8 » codé
+  en dur)
+- **docs** : labels d'augmentation plein cadre conservés par décision
+  mesurée — le transport de bboxes de SafeRotate est cassé dans
+  albumentations 1.4.x (vérifié empiriquement, détail dans le rapport)
+- Suite de tests : 320 passés, 0 échec (les tests albumentations
+  s'exécutent désormais)
+
+### 🔧 Audit juillet 2026 — derniers findings (M2, M4, M11)
+
+- **fix(scripts)** : split train/val **sans fuite** dans merge_dataset —
+  les variantes d'une même carte source (`_aug_N`, `_balN`, `_holoN`, même
+  enchaînés) restent dans le même split via `split_group_key()` ; chaque
+  mosaïque reste son propre groupe (M2)
+- **fix(core)** : l'auto-balancer place chaque image `_balN` dans le split
+  de son image SOURCE (une variante d'une image de val n'atterrit plus en
+  train) (M2)
+- **perf(core)** : `search_cards` filtre côté serveur
+  (`/cards?name=…`) au lieu de télécharger le catalogue complet ; le filtre
+  par set utilise le préfixe d'id via `set_mapping` (le champ `set` n'existe
+  pas dans les objets brefs — l'ancien filtre vidait les résultats) (M4)
+- **feat(gui)** : layout « 4 - Fan / Occlusions (F05) » et background
+  « 3 - Realistic Procedural (F04) » exposés dans les vues Mosaïques des
+  deux interfaces (Qt et Tkinter) (M11)
+- 3 nouveaux tests (split par groupe) — suite : 284 passés, 0 échec
+
+### 🔧 Correctifs de l'audit de juillet 2026 (20 bugs corrigés)
+
+Corrections des findings du rapport `docs/BUG_RESEARCH_2026-07.md`
+(7 critiques, 5 élevés, 8 moyens — statut ✅/📝 détaillé dans le rapport) :
+
+- **fix(core)** : `generate_yaml_from_manifest` FUSIONNE désormais avec la
+  base existante au lieu de l'écraser — cartes des autres sets, prix et
+  class_id YOLO préservés (C1)
+- **fix(core)** : workflow automatique — l'étape mosaïques utilise
+  `--max-groups` (quick=25, standard=62, custom=N, complete=∞) au lieu du
+  mode `all` non implémenté qui réussissait sans rien produire (C2, C3)
+- **fix(core)** : auto-balancer — les bboxes des images `_balN` sont
+  corrigées pour le flip ET le scale (mesure de la transformation réelle via
+  3 keypoints), comptage par image et non par occurrence, images préchargées
+  réellement utilisées (C4, E2, M9)
+- **fix(core)** : auto-balancer — `train.txt`/`val.txt` sont mis à jour après
+  balancing (nouvelles images ajoutées au train, fichiers supprimés retirés,
+  split val préservé) (C5)
+- **fix(core)** : tcgdex_api — codes de sets corrigés et alignés sur
+  `POPULAR_SETS` (Obsidian Flames=sv03, Paradox Rift=sv04, 151=sv03.5…),
+  prix à 0.0 acceptés, padding du localId testé dans les deux variantes
+  (C6, M5)
+- **fix(core)** : workflow — stratégies `undersample`/`remove` traduites en
+  `reduce` pour le balancer ; sous-processus lus en UTF-8 tolérant (C7, M6)
+- **fix(core)** : mosaïques — bboxes clippées au canvas dans les layouts 1-3
+  (parité avec le layout 4) ; dossiers `corrupted/` et fonds web ancrés dans
+  `output/` au lieu du CWD (E3, M8)
+- **fix(core)** : detection/training — device auto-détecté (`0` si CUDA
+  disponible, sinon `cpu`) ; annotation depuis `orig_img` Ultralytics au lieu
+  d'une relecture disque (E4)
+- **fix(core)** : fallback de `load_paths()` complété avec toutes les clés
+  requises par les modules (E5) ; effet holographique — gradient normalisé
+  min-max (angles > 90°) et palette convertie en BGR (M3) ; export Roboflow —
+  `names` indexé par class_id (M7) ; scanner de collection — expiration des
+  tracks non confirmés après 10 s (M10)
+- **fix(scripts)** : workflow_optimized appelle `scripts/merge_dataset.py`
+  (chemin corrigé) (E1) ; merge_dataset — garde contre les sources vides,
+  paires image+label complètes uniquement, fallback des noms de classes si
+  `data.yaml` est présent mais sans `names` (M1)
+- Suite de tests : 281 passés, 0 échec (7 skips liés aux dépendances)
+
+### 🐛 Audit : recherche approfondie de bugs (juillet 2026)
+
+- Nouveau rapport `docs/BUG_RESEARCH_2026-07.md` : audit ligne à ligne des
+  25 modules du core + orchestration (workflow, merge, GUIs)
+- 7 bugs critiques identifiés (écrasement de `cards_database.yaml` à chaque
+  téléchargement de set, étape mosaïques du workflow en no-op silencieux,
+  bboxes faussées par le scale de l'auto-balancer, mapping TCGdex des sets
+  décalé, balancing invisible pour train.txt…), 5 élevés, 11 moyens,
+  9 mineurs — aucun correctif appliqué dans ce commit (recherche seule)
+
 ### 🖥️ GUI Qt : parité fonctionnelle avec les vagues 3 & 4
 
 - Rebase de l'interface PySide6 sur `main` (10 features F01–F10 intégrées) —

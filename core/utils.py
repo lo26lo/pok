@@ -52,17 +52,40 @@ def load_paths() -> Dict:
         with open(config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        # Fallback to default paths if file doesn't exist
+        # Fallback si le fichier n'existe pas — doit couvrir TOUTES les clés
+        # accédées directement (PATHS['directories'][...]) par les modules
+        # du core, sinon leur import plante en KeyError
         return {
             "directories": {
                 "images": "images",
+                "backgrounds_original": "backgrounds/original",
                 "excel": "excel",
                 "models": "models",
-                "output_base": "output"
+                "output_base": "output",
+                "output_holographic": "output/holographic",
+                "output_augmented": "output/augmented",
+                "output_augmented_images": "output/augmented/images",
+                "output_augmented_labels": "output/augmented/labels",
+                "output_backgrounds": "output/backgrounds",
+                "output_mosaics": "output/mosaics",
+                "output_mosaics_images": "output/mosaics/images",
+                "output_mosaics_labels": "output/mosaics/labels",
+                "output_dataset": "output/dataset",
+                "output_dataset_images": "output/dataset/images",
+                "output_dataset_labels": "output/dataset/labels",
+                "output_dataset_merged": "output/dataset_merged",
+                "output_collection_scans": "output/collection_scans",
+                "runs_train": "runs/train",
+                "card_index": "models/card_index"
             },
             "files": {
                 "cards_info_excel": "excel/cards_info.xlsx",
-                "cards_database_yaml": "models/cards_database.yaml"
+                "cards_database_yaml": "models/cards_database.yaml",
+                "card_name_to_id_json": "models/card_name_to_id.json",
+                "price_cache_db": "models/price_cache.db",
+                "embedding_model_onnx": "models/mobilenetv2_embeddings.onnx",
+                "augmentation_params": "config/augmentation_params.json",
+                "best_model": "runs/train/pokemon_detector/weights/best.pt"
             }
         }
 
@@ -233,6 +256,7 @@ def load_card_data(source_path: str = None) -> Tuple[Dict[str, str], Dict[str, i
         if 'cards' not in data:
             raise Exception(f"Structure YAML invalide (clé 'cards' manquante)")
 
+        short_key_collisions = []
         for class_id, (card_id, card_info) in enumerate(data['cards'].items()):
             name = card_info['name'].replace(" ", "_")
 
@@ -241,13 +265,25 @@ def load_card_data(source_path: str = None) -> Tuple[Dict[str, str], Dict[str, i
                 card_dict[card_id] = name
                 class_map[card_id] = class_id
 
-            # Clé 2: numéro court (ex: "019"), padder si numérique
-            number = card_id.split('_')[-1] if '_' in card_id else card_id
-            if number.isdigit():
-                number = number.zfill(3)
-            if number not in card_dict:
-                card_dict[number] = name
-                class_map[number] = class_id
+            # Clé 2: numéro court (ex: "019"), padder si numérique.
+            # ⚠️ En multi-sets, deux cartes peuvent partager le même numéro
+            # court : la PREMIÈRE déclarée gagne — les fichiers dont seul le
+            # numéro court est extractible doivent utiliser la clé complète
+            if number := (card_id.split('_')[-1] if '_' in card_id else card_id):
+                if number.isdigit():
+                    number = number.zfill(3)
+                if number not in card_dict:
+                    card_dict[number] = name
+                    class_map[number] = class_id
+                elif class_map[number] != class_id:
+                    short_key_collisions.append(number)
+
+        if short_key_collisions:
+            safe_print(
+                f"⚠️ {len(short_key_collisions)} collision(s) de numéro court "
+                f"entre sets (ex: {short_key_collisions[:3]}) — la première "
+                f"carte déclarée garde la clé courte ; utilisez les "
+                f"identifiants complets (set_numéro) dans les noms de fichiers")
     else:
         # Charger depuis Excel (legacy) — pandas importé ici seulement
         try:
@@ -329,9 +365,10 @@ def extract_card_number(filename: str) -> Optional[str]:
     if match:
         return match.group(1)
     
-    # Fallback: XXX_XXX_XXX
+    # Fallback: XXX_XXX_XXX (exactement 3 chiffres — sans ancrage de fin,
+    # "1234" serait accepté comme numéro de carte)
     match = PATTERN_FALLBACK_1.search(filename)
-    if match and re.match(r'\d{3}', match.group(1)):
+    if match and re.fullmatch(r'\d{3}', match.group(1)):
         return match.group(1)
     
     # Dernier recours

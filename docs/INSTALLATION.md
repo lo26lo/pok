@@ -184,7 +184,7 @@ PyYAML>=6.0
 
 # Augmentation
 imgaug>=0.4.0
-albumentations>=1.3.0
+albumentations>=2.0
 
 # Deep Learning
 ultralytics>=8.3.0  # YOLOv8 + YOLO11

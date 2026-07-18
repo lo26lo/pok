@@ -7,6 +7,7 @@ Performance: 10-20x plus rapide que la version originale
 - Pré-chargement optimisé des images
 """
 import os
+import re
 import sys
 import cv2
 import numpy as np
@@ -16,7 +17,7 @@ from collections import defaultdict
 import random
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 import multiprocessing as mp
 
 # Import safe_print
@@ -57,39 +58,43 @@ class DatasetBalancerOptimized:
         
         label_files = list(self.labels_dir.glob("*.txt"))
         
-        # Lecture parallèle des labels
+        # Lecture parallèle des labels. IMPORTANT: une image ne compte
+        # qu'UNE fois par classe (set), même si elle contient plusieurs
+        # instances — sinon les cibles sont faussées et _reduce_class
+        # peut tirer plusieurs fois le même fichier.
         def read_label(label_path):
-            class_ids = []
+            class_ids = set()
             try:
                 with open(label_path, 'r') as f:
                     for line in f:
                         parts = line.strip().split()
                         if len(parts) >= 5:
-                            class_ids.append(int(parts[0]))
+                            class_ids.add(int(parts[0]))
             except Exception:
                 pass
             return label_path.stem, class_ids
-        
+
         # Lire tous les labels en parallèle
         with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
             results = executor.map(read_label, label_files)
-            
+
             for img_name, class_ids in results:
                 for class_id in class_ids:
                     self.class_distribution[class_id].append(img_name)
-        
+
         # Afficher la distribution
         safe_print(f"\n📊 Distribution actuelle:")
         sorted_classes = sorted(self.class_distribution.items(), key=lambda x: len(x[1]))
-        
-        for class_id, images in sorted_classes[:10]:  # Afficher les 10 premières
-            safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
-        
-        if len(sorted_classes) > 20:
+
+        if len(sorted_classes) <= 20:
+            for class_id, images in sorted_classes:
+                safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
+        else:
+            for class_id, images in sorted_classes[:10]:
+                safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
             safe_print(f"   ... ({len(sorted_classes) - 20} classes cachées)")
-        
-        for class_id, images in sorted_classes[-10:]:  # Afficher les 10 dernières
-            safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
+            for class_id, images in sorted_classes[-10:]:
+                safe_print(f"   Classe {class_id:3d}: {len(images):4d} images")
         
         min_count = len(sorted_classes[0][1]) if sorted_classes else 0
         max_count = len(sorted_classes[-1][1]) if sorted_classes else 0
@@ -171,10 +176,65 @@ class DatasetBalancerOptimized:
                 except Exception as e:
                     safe_print(f"❌ Erreur classe {class_id}: {e}")
         
+        # Répercuter les ajouts/suppressions sur train.txt / val.txt :
+        # le data.yaml du dataset final pointe ces listes figées au merge,
+        # sans quoi les images _balN sont ignorées à l'entraînement et les
+        # images supprimées restent référencées.
+        self._refresh_split_files()
+
         elapsed = time.time() - start_time
         safe_print(f"\n✅ Balancing terminé en {elapsed:.1f}s!")
         if total_generated > 0:
             safe_print(f"   {total_generated} images générées ({total_generated/elapsed:.1f} img/s)")
+
+    def _refresh_split_files(self):
+        """
+        Met à jour train.txt / val.txt (listes de chemins absolus créées par
+        merge_dataset) après le balancing :
+        - retire les entrées dont le fichier n'existe plus (strategy reduce)
+        - ajoute chaque nouvelle image _balN au SPLIT DE SON IMAGE SOURCE
+          (une variante d'une image de val en train serait une fuite) ;
+          les images sans source connue vont au train
+        Pas de re-shuffle : le split existant est préservé.
+        """
+        train_txt = self.dataset_dir / "train.txt"
+        val_txt = self.dataset_dir / "val.txt"
+        if not train_txt.exists() and not val_txt.exists():
+            return  # dataset sans listes de split : rien à faire
+
+        def load_existing(path: Path) -> List[str]:
+            if not path.exists():
+                return []
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip()]
+            return [line for line in lines if Path(line).exists()]
+
+        train_list = load_existing(train_txt)
+        val_list = load_existing(val_txt)
+        referenced = {str(Path(p).resolve()) for p in train_list + val_list}
+        val_stems = {Path(p).stem for p in val_list}
+
+        added_train = added_val = 0
+        for ext in ('*.png', '*.jpg', '*.jpeg'):
+            for img_path in self.images_dir.glob(ext):
+                resolved = str(img_path.resolve())
+                if resolved in referenced:
+                    continue
+                referenced.add(resolved)
+                source_stem = re.sub(r'_bal\d+$', '', img_path.stem)
+                if source_stem in val_stems:
+                    val_list.append(resolved)
+                    added_val += 1
+                else:
+                    train_list.append(resolved)
+                    added_train += 1
+
+        with open(train_txt, 'w', encoding='utf-8') as f:
+            f.write("\n".join(train_list))
+        with open(val_txt, 'w', encoding='utf-8') as f:
+            f.write("\n".join(val_list))
+        safe_print(f"📝 Splits mis à jour: {len(train_list)} train "
+                   f"(+{added_train}), {len(val_list)} val (+{added_val})")
     
     def _load_image_with_cache(self, img_name: str) -> Tuple[np.ndarray, str]:
         """Charge une image avec gestion du cache"""
@@ -186,93 +246,84 @@ class DatasetBalancerOptimized:
                     return img, ext
         return None, None
     
-    def _adjust_yolo_bbox_for_augmentation(self, bbox_line: str, was_flipped: bool, scale_factor: float = 1.0) -> str:
-        """Ajuste les coordonnées YOLO après augmentation"""
-        parts = bbox_line.strip().split()
-        if len(parts) != 5:
-            return bbox_line
-        
-        class_id = parts[0]
-        center_x, center_y, width, height = map(float, parts[1:])
-        
-        # Appliquer le flip horizontal
-        if was_flipped:
-            center_x = 1.0 - center_x
-        
-        # Appliquer le scale (les bbox restent dans [0,1])
-        # Le scale imgaug n'affecte pas les coordonnées normalisées YOLO
-        
-        return f"{class_id} {center_x:.6f} {center_y:.6f} {width:.6f} {height:.6f}"
-    
+    def _read_source_bboxes(self, source_img_name: str):
+        """Lit le label YOLO source en (bboxes, class_labels) pour
+        albumentations. Les lignes invalides sont ignorées."""
+        bboxes, class_labels = [], []
+        source_label = self.labels_dir / (source_img_name + ".txt")
+        if not source_label.exists():
+            return bboxes, class_labels
+        with open(source_label, 'r') as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) != 5:
+                    continue
+                try:
+                    cls = int(parts[0])
+                    cx, cy, w, h = map(float, parts[1:])
+                except ValueError:
+                    continue
+                bboxes.append((cx, cy, w, h))
+                class_labels.append(cls)
+        return bboxes, class_labels
+
     def _augment_single_image(self, args: Tuple) -> bool:
         """Augmente une seule image (pour parallélisation)"""
-        source_img_name, generated_idx, aug, ext = args
-        
+        img, source_img_name, generated_idx, transform, ext = args
+
         try:
-            # Charger l'image source
-            img_path = self.images_dir / (source_img_name + ext)
-            img = cv2.imread(str(img_path))
-            if img is None:
-                return False
-            
-            # Appliquer l'augmentation avec détection des transformations
-            import imgaug as ia
-            import numpy as np
-            
-            # Créer des keypoints pour détecter le flip
-            kps = ia.KeypointsOnImage([
-                ia.Keypoint(x=0, y=0),
-                ia.Keypoint(x=img.shape[1]-1, y=0)
-            ], shape=img.shape)
-            
-            # Appliquer l'augmentation
-            img_aug, kps_aug = aug(image=img, keypoints=kps)
-            
-            # Détecter si flip horizontal a été appliqué
-            was_flipped = kps_aug.keypoints[0].x > kps_aug.keypoints[1].x
-            
+            # Les bboxes traversent le pipeline via bbox_params : flip ET
+            # scale sont répercutés (et clippés) par albumentations
+            bboxes, class_labels = self._read_source_bboxes(source_img_name)
+            result = transform(image=img, bboxes=bboxes,
+                               class_labels=class_labels)
+            img_aug = result['image']
+
             # Générer un nouveau nom
             new_name = f"{source_img_name}_bal{generated_idx}"
             new_img_path = self.images_dir / (new_name + ext)
             new_label_path = self.labels_dir / (new_name + ".txt")
-            
+
             # Sauvegarder l'image avec compression PNG optimisée
             if ext == '.png':
                 cv2.imwrite(str(new_img_path), img_aug, [cv2.IMWRITE_PNG_COMPRESSION, 1])
             else:
                 cv2.imwrite(str(new_img_path), img_aug)
-            
-            # Ajuster et sauvegarder le label
-            source_label = self.labels_dir / (source_img_name + ".txt")
-            if source_label.exists():
-                with open(source_label, 'r') as f:
-                    lines = f.readlines()
-                
-                # Ajuster chaque bounding box
-                adjusted_lines = [self._adjust_yolo_bbox_for_augmentation(line, was_flipped) for line in lines]
-                
+
+            # Sauvegarder le label transformé
+            if bboxes:
+                lines = [
+                    f"{int(cls)} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}"
+                    for (cx, cy, w, h), cls in zip(result['bboxes'],
+                                                   result['class_labels'])
+                ]
                 with open(new_label_path, 'w') as f:
-                    f.write('\n'.join(adjusted_lines))
-            
+                    f.write('\n'.join(lines))
+
             return True
-        except Exception as e:
+        except Exception:
             return False
-    
+
     def _augment_class_parallel(self, class_id, existing_images, needed):
         """Augmente le nombre d'images d'une classe (VERSION PARALLÈLE)"""
-        # Importer ici pour éviter les dépendances
-        import imgaug.augmenters as iaa
-        
-        # Définir les augmentations (SANS rotation pour éviter les bordures noires)
-        aug = iaa.Sequential([
-            iaa.Sometimes(0.5, iaa.Fliplr(1.0)),
-            # PAS de rotation pour éviter les coins noirs dans les mosaïques!
-            iaa.Sometimes(0.3, iaa.Multiply((0.8, 1.2))),
-            iaa.Sometimes(0.3, iaa.GaussianBlur(sigma=(0, 1.0))),
-            iaa.Sometimes(0.2, iaa.AdditiveGaussianNoise(scale=(0, 0.05*255))),
-            iaa.Sometimes(0.2, iaa.Affine(scale=(0.9, 1.1))),
-            iaa.Sometimes(0.2, iaa.GammaContrast((0.8, 1.2)))
-        ])
+        # Import local : albumentations n'est requis que pour la stratégie
+        # augment (remplace imgaug, incompatible NumPy 2.x et abandonné)
+        import albumentations as A
+
+        # Mêmes effets que l'ancien pipeline imgaug, SANS rotation pour
+        # éviter les coins noirs dans les mosaïques. Transforms neutres vis-
+        # à-vis de l'ordre des canaux : pas de conversion BGR/RGB nécessaire.
+        transform = A.Compose([
+            A.HorizontalFlip(p=0.5),
+            A.RandomBrightnessContrast(brightness_limit=0.2,
+                                       contrast_limit=0.0, p=0.3),
+            A.GaussianBlur(blur_limit=(3, 5), p=0.3),
+            A.GaussNoise(std_range=(0.0, 0.05), p=0.2),
+            A.Affine(scale=(0.9, 1.1), p=0.2),
+            A.RandomGamma(gamma_limit=(80, 120), p=0.2),
+        ], bbox_params=A.BboxParams(format='yolo',
+                                    label_fields=['class_labels'],
+                                    clip=True))
         
         # Pré-charger TOUTES les images sources (OPTIMISATION)
         source_images = {}
@@ -286,13 +337,15 @@ class DatasetBalancerOptimized:
         if not source_images:
             return 0
         
-        # Préparer les tâches de génération
+        # Préparer les tâches de génération (les images préchargées sont
+        # passées directement : pas de relecture disque par variante)
         tasks = []
         for i in range(needed):
             source_img_name = random.choice(existing_images)
             if source_img_name in source_images:
                 ext = extensions[source_img_name]
-                tasks.append((source_img_name, i, aug, ext))
+                tasks.append((source_images[source_img_name],
+                              source_img_name, i, transform, ext))
         
         # Générer toutes les images en parallèle (BATCH PROCESSING)
         success_count = 0
