@@ -65,33 +65,44 @@ class TCGdexAPI:
     
     def search_cards(self, card_name: str, set_name: Optional[str] = None) -> List[Dict]:
         """
-        Recherche des cartes par nom
-        
+        Recherche des cartes par nom (filtrage CÔTÉ SERVEUR — l'endpoint
+        /cards sans filtre renvoie le catalogue complet, des dizaines de
+        milliers d'entrées)
+
         Args:
             card_name: Nom de la carte
             set_name: Nom de l'extension (optionnel pour filtrage)
-            
+
         Returns:
-            Liste de cartes trouvées
+            Liste de cartes trouvées (objets brefs: id, localId, name, image)
         """
         try:
-            url = f"{self.base_url}/cards"
+            from urllib.parse import quote
+            url = f"{self.base_url}/cards?name={quote(card_name)}"
             response = requests.get(url, timeout=15)
             response.raise_for_status()
-            
+
             cards = response.json()
-            
-            # Filtrer par nom (case-insensitive)
+            if not isinstance(cards, list):
+                return []
+
+            # Re-filtrer par nom (le filtre serveur est un 'like' large)
             name_lower = card_name.lower()
             filtered = [c for c in cards if name_lower in c.get('name', '').lower()]
-            
-            # Filtrer par set si fourni
+
+            # Filtrer par set si fourni. Les objets brefs de l'endpoint
+            # liste n'ont PAS de champ 'set' : on filtre sur le préfixe de
+            # l'id (ex: "sv08-019") via le mapping nom -> code. Set inconnu
+            # du mapping : ne pas filtrer (mieux vaut trop large que vide).
             if set_name and filtered:
-                set_lower = set_name.lower()
-                filtered = [c for c in filtered if set_lower in c.get('set', {}).get('name', '').lower()]
-            
+                set_code = self.set_mapping.get(set_name.lower().strip())
+                if set_code:
+                    prefix = f"{set_code}-"
+                    filtered = [c for c in filtered
+                                if str(c.get('id', '')).startswith(prefix)]
+
             return filtered
-            
+
         except Exception as e:
             safe_print(f"Erreur TCGdex search_cards: {e}")
             return []

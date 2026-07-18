@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🔧 Audit juillet 2026 — derniers findings (M2, M4, M11)
+
+- **fix(scripts)** : split train/val **sans fuite** dans merge_dataset —
+  les variantes d'une même carte source (`_aug_N`, `_balN`, `_holoN`, même
+  enchaînés) restent dans le même split via `split_group_key()` ; chaque
+  mosaïque reste son propre groupe (M2)
+- **fix(core)** : l'auto-balancer place chaque image `_balN` dans le split
+  de son image SOURCE (une variante d'une image de val n'atterrit plus en
+  train) (M2)
+- **perf(core)** : `search_cards` filtre côté serveur
+  (`/cards?name=…`) au lieu de télécharger le catalogue complet ; le filtre
+  par set utilise le préfixe d'id via `set_mapping` (le champ `set` n'existe
+  pas dans les objets brefs — l'ancien filtre vidait les résultats) (M4)
+- **feat(gui)** : layout « 4 - Fan / Occlusions (F05) » et background
+  « 3 - Realistic Procedural (F04) » exposés dans les vues Mosaïques des
+  deux interfaces (Qt et Tkinter) (M11)
+- 3 nouveaux tests (split par groupe) — suite : 284 passés, 0 échec
+
 ### 🔧 Correctifs de l'audit de juillet 2026 (20 bugs corrigés)
 
 Corrections des findings du rapport `docs/BUG_RESEARCH_2026-07.md`

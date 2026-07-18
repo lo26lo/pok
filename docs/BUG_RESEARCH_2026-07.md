@@ -7,7 +7,9 @@ lignes concernés (état du dépôt au commit `c30aa8e`).
 
 > **Mise à jour** : les correctifs ont été appliqués dans les commits qui
 > suivent ce rapport sur la même branche. Statut par finding : ✅ corrigé,
-> 📝 documenté/non corrigé (design ou hors périmètre du correctif).
+> 📝 documenté/non corrigé. Tous les findings critiques, élevés et moyens
+> sont désormais corrigés (M2, M4 et M11 inclus) ; seuls des mineurs
+> documentés restent ouverts.
 
 ---
 
@@ -159,7 +161,7 @@ KeyError au lieu du fonctionnement dégradé voulu.
 - si `augmented/data.yaml` existe mais sans clé `names`, `class_names={}` →
   `data.yaml` final avec `nc: 1` et `names: ["unused"]`.
 
-### 📝 M2. Split train/val avec fuite de données
+### ✅ M2. Split train/val avec fuite de données
 `scripts/merge_dataset.py:51-73`
 
 Le split aléatoire ne sépare pas les variantes : les 30 augmentations d'une
@@ -176,7 +178,7 @@ synthétique distincte du set réel F08, déjà géré).
   pour θ > 90° (l'angle est tiré dans [0, 180]) : gradient dégénéré sur ~la
   moitié des tirages (pas de crash, mais rendu incohérent).
 
-### 📝 M4. tcgdex search_cards télécharge le catalogue complet
+### ✅ M4. tcgdex search_cards télécharge le catalogue complet
 `core/tcgdex_api.py:62-93`
 
 `GET /{lang}/cards` renvoie l'intégralité des cartes (dizaines de milliers)
@@ -228,7 +230,7 @@ autres faux positifs de la même classe, même à 20 minutes d'écart, suffisent
 à le « confirmer » dans l'inventaire. Ajouter une expiration (dernier hit trop
 ancien → reset).
 
-### 📝 M11. GUI : layout 4 (éventails F05) et background 3 (réaliste F04)
+### ✅ M11. GUI : layout 4 (éventails F05) et background 3 (réaliste F04)
 inaccessibles
 `gui_qt/views/mosaic.py:8-12`, GUI Tkinter (combos équivalents)
 

@@ -7,6 +7,7 @@ Performance: 10-20x plus rapide que la version originale
 - Pré-chargement optimisé des images
 """
 import os
+import re
 import sys
 import cv2
 import numpy as np
@@ -191,8 +192,10 @@ class DatasetBalancerOptimized:
         Met à jour train.txt / val.txt (listes de chemins absolus créées par
         merge_dataset) après le balancing :
         - retire les entrées dont le fichier n'existe plus (strategy reduce)
-        - ajoute les nouvelles images (non référencées) au train
-        Le split val existant est préservé (pas de re-shuffle).
+        - ajoute chaque nouvelle image _balN au SPLIT DE SON IMAGE SOURCE
+          (une variante d'une image de val en train serait une fuite) ;
+          les images sans source connue vont au train
+        Pas de re-shuffle : le split existant est préservé.
         """
         train_txt = self.dataset_dir / "train.txt"
         val_txt = self.dataset_dir / "val.txt"
@@ -209,22 +212,29 @@ class DatasetBalancerOptimized:
         train_list = load_existing(train_txt)
         val_list = load_existing(val_txt)
         referenced = {str(Path(p).resolve()) for p in train_list + val_list}
+        val_stems = {Path(p).stem for p in val_list}
 
-        added = 0
+        added_train = added_val = 0
         for ext in ('*.png', '*.jpg', '*.jpeg'):
             for img_path in self.images_dir.glob(ext):
                 resolved = str(img_path.resolve())
-                if resolved not in referenced:
+                if resolved in referenced:
+                    continue
+                referenced.add(resolved)
+                source_stem = re.sub(r'_bal\d+$', '', img_path.stem)
+                if source_stem in val_stems:
+                    val_list.append(resolved)
+                    added_val += 1
+                else:
                     train_list.append(resolved)
-                    referenced.add(resolved)
-                    added += 1
+                    added_train += 1
 
         with open(train_txt, 'w', encoding='utf-8') as f:
             f.write("\n".join(train_list))
         with open(val_txt, 'w', encoding='utf-8') as f:
             f.write("\n".join(val_list))
         safe_print(f"📝 Splits mis à jour: {len(train_list)} train "
-                   f"(+{added} nouvelles), {len(val_list)} val")
+                   f"(+{added_train}), {len(val_list)} val (+{added_val})")
     
     def _load_image_with_cache(self, img_name: str) -> Tuple[np.ndarray, str]:
         """Charge une image avec gestion du cache"""

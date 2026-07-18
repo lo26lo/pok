@@ -2614,7 +2614,8 @@ class ModernPokemonGUI:
                 font=self.FONT_BUTTON).pack(side=tk.LEFT)
         
         self.mosaic_layout_var = ttk.Combobox(layout_frame,
-            values=["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement"],
+            values=["1 - Grid (Standard)", "2 - Grid with 3D Rotation", "3 - Random Placement",
+                    "4 - Fan / Occlusions (F05)"],
             state='readonly', width=self.COMBOBOX_WIDTH)
         self.mosaic_layout_var.pack(side=tk.LEFT, padx=10)
         self.mosaic_layout_var.current(0)
@@ -2628,7 +2629,8 @@ class ModernPokemonGUI:
                 font=self.FONT_BUTTON).pack(side=tk.LEFT)
         
         self.mosaic_background_var = ttk.Combobox(bg_frame,
-            values=["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)", "2 - Web Image (Lorem Picsum)"],
+            values=["0 - Fake Cards Mosaic", "1 - Local Image (mosaic/)", "2 - Web Image (Lorem Picsum)",
+                    "3 - Realistic Procedural (F04)"],
             state='readonly', width=self.ENTRY_WIDTH)
         self.mosaic_background_var.pack(side=tk.LEFT, padx=10)
         self.mosaic_background_var.current(0)

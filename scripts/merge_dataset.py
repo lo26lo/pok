@@ -5,6 +5,7 @@ Crée train/val split et data.yaml
 """
 import shutil
 import json
+import re
 from pathlib import Path
 from typing import List, Tuple
 import random
@@ -47,28 +48,62 @@ def copy_files(src_images: Path, src_labels: Path,
     return count
 
 
+# Suffixes de variantes générées depuis une même image source :
+# _aug_000 (albumentations), _bal3 (auto-balancer), _holo1 (holographique),
+# y compris enchaînés (ex: sv08_019_en_holo1_aug_003)
+_VARIANT_SUFFIX = re.compile(r'(?:_(?:aug_\d+|bal\d+|holo\d+))+$')
+
+
+def split_group_key(stem: str) -> str:
+    """
+    Clé de groupe d'une image pour le split train/val : les variantes d'une
+    même carte source partagent la même clé (les mosaïques, sans suffixe de
+    variante, restent chacune leur propre groupe).
+
+    >>> split_group_key("sv08_019_en_aug_003")
+    'sv08_019_en'
+    >>> split_group_key("sv08_019_en_holo1_aug_003")
+    'sv08_019_en'
+    >>> split_group_key("L1_B0_T0_layout_042")
+    'L1_B0_T0_layout_042'
+    """
+    return _VARIANT_SUFFIX.sub('', stem)
+
+
 def create_train_val_split(images_dir: Path, train_ratio: float = 0.8) -> Tuple[List[str], List[str]]:
     """
-    Crée un split train/val
-    
+    Crée un split train/val SANS FUITE : les variantes augmentées d'une même
+    carte source (même split_group_key) vont toutes dans le même split —
+    sinon la val mesure la mémorisation, pas la généralisation.
+
     Args:
         images_dir: Dossier contenant les images
         train_ratio: Ratio pour le train (0.8 = 80% train, 20% val)
-    
+
     Returns:
         (train_files, val_files)
     """
     all_images = list(images_dir.glob("*.png"))
-    random.shuffle(all_images)
-    
-    split_idx = int(len(all_images) * train_ratio)
-    train_files = all_images[:split_idx]
-    val_files = all_images[split_idx:]
-    
+
+    # Regrouper par carte source, puis affecter groupe par groupe
+    groups = {}
+    for img in all_images:
+        groups.setdefault(split_group_key(img.stem), []).append(img)
+    group_list = list(groups.values())
+    random.shuffle(group_list)
+
+    target_train = int(len(all_images) * train_ratio)
+    train_files, val_files = [], []
+    for group in group_list:
+        if len(train_files) < target_train:
+            train_files.extend(group)
+        else:
+            val_files.extend(group)
+
     # Convertir en chemins absolus (YOLO a besoin de chemins absolus ou relatifs au path de data.yaml)
     train_paths = [str(img.absolute()) for img in train_files]
     val_paths = [str(img.absolute()) for img in val_files]
-    
+
     return train_paths, val_paths
 
 
