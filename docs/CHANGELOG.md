@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🐛 Audit : recherche approfondie de bugs (juillet 2026)
+
+- Nouveau rapport `docs/BUG_RESEARCH_2026-07.md` : audit ligne à ligne des
+  25 modules du core + orchestration (workflow, merge, GUIs)
+- 7 bugs critiques identifiés (écrasement de `cards_database.yaml` à chaque
+  téléchargement de set, étape mosaïques du workflow en no-op silencieux,
+  bboxes faussées par le scale de l'auto-balancer, mapping TCGdex des sets
+  décalé, balancing invisible pour train.txt…), 5 élevés, 11 moyens,
+  9 mineurs — aucun correctif appliqué dans ce commit (recherche seule)
+
 ### 🖥️ GUI Qt : parité fonctionnelle avec les vagues 3 & 4
 
 - Rebase de l'interface PySide6 sur `main` (10 features F01–F10 intégrées) —
